@@ -107,16 +107,11 @@
 				<template #dropdown>
 					<el-dropdown-menu>
 						<!-- *规则管理器入口按钮 -->
-						<RuleEditor />
-						<!-- <el-dropdown-item command="openRuleEditor">
-								<AppRuleEditor />
-							</el-dropdown-item> -->
+						<el-dropdown-item :icon="Management" @click="ruleEditor.container.open = true">
+							规则管理器
+						</el-dropdown-item>
 						<!-- *设置菜单入口按钮 -->
-						<!-- <AppSettingMenu /> -->
-
-						<!-- <el-dropdown-item command="openAppSettingMenu">
-								<SettingMenu />
-							</el-dropdown-item> -->
+						<el-dropdown-item :icon="Tools" @click=""> 设置 </el-dropdown-item>
 					</el-dropdown-menu>
 				</template>
 			</el-dropdown>
@@ -125,22 +120,25 @@
 </template>
 
 <script setup>
-	import SettingMenu from "./SettingMenu.vue";
-	import RuleEditor from "./RuleEditor.vue";
+	import {useAppInfoStore, useRuleEditorStore} from "../store/mainStore.js";
 
 	import {getBlobByUrl, getOriginByUrl, getNameByUrl, buildUUID} from "../js/public.js";
 
-	import {RefreshRight, Download, MoreFilled} from "@element-plus/icons-vue"; //? element icon导入
+	import {RefreshRight, Download, MoreFilled, Management, Tools} from "@element-plus/icons-vue"; //? element icon导入
 
 	import CheckboxNone from "/src/svg/checkbox-blank-line.svg"; //? svg导入
 	import CheckboxIndeterminate from "/src/svg/checkbox-indeterminate-fill.svg"; //? svg导入
 	import CheckboxAll from "/src/svg/checkbox-fill.svg"; //? svg导入
 
+	const appInfo = useAppInfoStore();
+	const ruleEditor = useRuleEditorStore();
+
 	const props = defineProps({
-		data: Object,
 		info: Object,
 		loading: Object,
 	});
+
+	const data = appInfo.data
 
 	//* 过滤器参数
 	const filter = reactive({
@@ -167,7 +165,7 @@
 		let regex = filter.formats.value.length
 			? new RegExp(`\\.(${filter.formats.value.join("|")})$`)
 			: new RegExp("");
-		const result = props.data.cardList.filter(
+		const result = data.cardList.filter(
 			(card) =>
 				card.width >= filter.size.width.value[0] &&
 				card.width <= filter.size.width.value[1] &&
@@ -175,7 +173,7 @@
 				card.height <= filter.size.height.value[1] &&
 				regex.test(card.url)
 		);
-		props.data.filterCards = result;
+		data.filterCards = result;
 		return result;
 	});
 
@@ -186,7 +184,7 @@
 
 	//f  选中的卡片列表
 	const selectedCards = computed(() => {
-		return props.data.cardList.filter((card) => card.selected);
+		return data.cardList.filter((card) => card.selected);
 	});
 
 	//f 全选切换
@@ -302,8 +300,8 @@
 		props.loading.init();
 		let finallyCount = 0;
 
-		let oldUrlList = new Set(props.data.cardList.map((card) => card.url)); //* 获取旧对象对应的url集合
-		const taskList = cardDomList.map((dom) => {
+		let oldUrlList = new Set(data.cardList.map((card) => card.url)); //* 获取旧对象对应的url集合
+		taskQueue.taskList = cardDomList.map((dom) => {
 			return async () => {
 				//* 从得到的dom中找出符合条件的dom并生成card对象
 
@@ -497,14 +495,13 @@
 					let card = temp;
 					delete card.match; //*消除临时属性
 					card.id = buildUUID(); //* 生成id
-					props.data.cardList.push(card);
+					data.cardList.push(card);
 					return ["符合条件（添加）", card.dom];
 				} else {
 					return ["不符合条件（排除）"];
 				}
 			};
 		});
-		taskQueue.taskList = taskList;
 
 		taskQueue.singleCallback = () => {
 			finallyCount++;

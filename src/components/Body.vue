@@ -18,6 +18,10 @@
 	import List from "./List.vue";
 	import Toolbar from "./Toolbar.vue";
 
+	import {useAppInfoStore} from "../store/mainStore.js";
+
+	const appInfo = useAppInfoStore();
+
 	let toolbar = ref(null);
 
 	//* 记录子组件方法
@@ -32,10 +36,7 @@
 	});
 
 	//* 数据
-	const data = reactive({
-		cardList: [], //* 卡片列表
-		filterCards: [], //* 过滤后的结果
-	});
+	const data = appInfo.data;
 
 	//* 进度(条)
 	const loading = reactive({

@@ -2,12 +2,10 @@
 	<div
 		class="onlineGallery-container"
 		ref="container"
-		:data-open="info.open"
+		:data-open="appInfo.container.open"
 		:style="{
-			'--width': info.window.width * info.widthPercentage * 0.01 + 'px',
-		}"
-		@focus="focus"
-		@blur="blur">
+			'--width': appInfo.window.width * appInfo.container.widthPercentage * 0.01 + 'px',
+		}">
 		<Body ref="body"></Body>
 		<!-- *关闭按钮 -->
 		<el-button
@@ -17,27 +15,59 @@
 			circle
 			@click="openSwitch" />
 		<!-- *切换按钮 -->
-		<el-button
-			type="primary"
-			size="default"
-			class="onlineGallery-button-drawerOpen"
-			@click="openSwitch">
-			<template #icon>
-				<el-icon><ArrowRightBold /></el-icon>
+		<el-popover
+			placement="top-start"
+			title="快捷菜单"
+			:width="'auto'"
+			trigger="hover"
+			:disabled="appInfo.container.open">
+			<!-- *触发 Popover 显示的 HTML 元素(按钮) -->
+			<template #reference>
+				<el-button
+					type="primary"
+					size="default"
+					@click="openSwitch"
+					class="onlineGallery-button-drawerOpen">
+					<template #icon>
+						<el-icon><ArrowRightBold style="pointer-events: none" /></el-icon>
+					</template>
+				</el-button>
 			</template>
-		</el-button>
+			<!-- *Popover内容 -->
+			<template #default>
+				<el-button type="success" size="small" @click="openSwitch" :icon="Grid">
+					<el-badge :value="appInfo.data.cardList.length" :max="999"> 图库 </el-badge>
+				</el-button>
+				<el-button
+					type="primary"
+					size="small"
+					@click="ruleEditor.container.open = true"
+					:icon="Management"
+					>规则管理</el-button
+				>
+				<el-button type="primary" size="small" @click="" :icon="Tools">设置</el-button>
+			</template>
+		</el-popover>
 	</div>
 	<!-- *子窗口容器 -->
-	<div class="onlineGallery-child-window-container"></div>
+	<div class="onlineGallery-child-window-container">
+		<!-- *规则管理器窗口 -->
+		<RuleEditor />
+		<!-- *设置窗口 -->
+		<!-- <AppSettingMenu /> -->
+	</div>
 </template>
 
 <script setup>
-	import {useAppInfoStore} from "./store/mainStore.js"; //* 从共享仓库引入共享信息
+	//* 从共享仓库引入共享信息
+	import {useAppInfoStore, useRuleEditorStore} from "./store/mainStore.js";
 	import Body from "./components/Body.vue";
-	import {ArrowRightBold, Close} from "@element-plus/icons-vue"; //* element图标导入
+	//* element图标导入
+	import {ArrowRightBold, Close, Management, Tools, Grid} from "@element-plus/icons-vue";
 
 	//* App - 信息
-	const info = useAppInfoStore();
+	const appInfo = useAppInfoStore();
+	const ruleEditor = useRuleEditorStore();
 
 	//* 组件或html元素的接收器定义
 	const container = ref(null); //*接收container dom
@@ -46,11 +76,10 @@
 	//f 开关切换
 	const openSwitch = async () => {
 		// 开关切换
-		info.switchOpen();
-		if (info.open) {
+		appInfo.container.open = !appInfo.container.open;
+		if (appInfo.container.open) {
 			document.documentElement.dataset.showScrollbar = false.toString(); //* 页面隐藏滚动条
-			// console.log(container, body.value);
-			if (body.value.data.cardList.length < 1) {
+			if (appInfo.data.cardList.length < 1) {
 				setTimeout(() => body.value.getCards(), 1000);
 			}
 			container.value.focus();
@@ -58,30 +87,22 @@
 			document.documentElement.dataset.showScrollbar = true.toString(); //* 还原页面滚动条
 		}
 	};
-	//f 获取焦点事件
-	const focus = () => {
-		// console.log("获得焦点");
-	};
-	//f 失去焦点事件
-	const blur = () => {
-		// console.log("失去焦点");
-	};
 
 	//! 挂载完成时执行
-	onMounted(() => {
+	onMounted(async () => {
 		ElNotification({
 			title: "提示",
 			message: h("i", {style: "color: teal"}, "onlineGallery 已加载"),
 			// type: "success",
 			duration: 3000,
 		});
-
-		if (info.open) {
+		if (appInfo.container.open) {
 			document.documentElement.dataset.showScrollbar = false; //* 页面隐藏滚动条
 			container.value.focus();
 		} else {
 			document.documentElement.dataset.showScrollbar = true; //* 还原页面滚动条
 		}
+		setTimeout(() => body.value.getCards(), 1000);
 	});
 </script>
 

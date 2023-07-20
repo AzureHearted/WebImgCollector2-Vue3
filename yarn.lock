@@ -1742,6 +1742,11 @@ vue-types@^3.0.0:
   dependencies:
     is-plain-object "3.0.1"
 
+vue3-touch-events@^4.1.3:
+  version "4.1.3"
+  resolved "https://registry.npmmirror.com/vue3-touch-events/-/vue3-touch-events-4.1.3.tgz#41da6525d0c052e6074bae25ee35a34104c4cdfa"
+  integrity sha512-uXTclRzn7de1mgiDIZ8N4J/wnWl1vBPLTWr60fqoLXu7ifhDKpl83Q2m9qA20KfEiAy+L4X/xXGc5ptGmdPh4A==
+
 vue@^3.3.4:
   version "3.3.4"
   resolved "https://registry.npmmirror.com/vue/-/vue-3.3.4.tgz#8ed945d3873667df1d0fcf3b2463ada028f88bd6"

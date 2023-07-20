@@ -1,81 +1,78 @@
 <template>
-	<el-dropdown-item :icon="Management" @click="info.open = true">
-		规则管理器
-		<teleport to=".onlineGallery-child-window-container" v-if="info.open">
-			<div class="onlineGallery-RuleEditor-modal">
-				<!-- *规则管理器 -->
-				<el-dialog
-					style="pointer-events: auto !important; padding: 0px"
-					v-model="info.open"
-					width="60%"
-					:before-close="handleClose"
-					:modal="false"
-					:close-on-click-modal="false"
-					top="10vh"
-					draggable
-					:lock-scroll="false">
-					<!-- *标题部分 -->
-					<template #header>
-						<span style="color: black; font-size: large">规则管理器</span>
-					</template>
-					<!-- *内容主体 -->
-					<template #default>
-						<el-container style="user-select: none">
-							<!-- f左侧树形列表 -->
-							<el-aside width="200px" show-checkbox highlight-current style="padding: 5px">
-								<!-- *过滤框 -->
-								<el-input
-									size="small"
-									v-model="info.tree.query"
-									placeholder="输入关键词"
-									@input="onQueryChanged" />
-								<!-- *树形列表本体 -->
-								<el-tree-v2
-									ref="treeRef"
-									:data="treeData"
-									:props="treeProps"
-									:height="208"
-									highlight-current
-									:current-node-key="info.showRuleId"
-									:filter-method="treeFilterMethod"
-									@node-click="treeNodeClick">
-									<template #default="{node}">
-										<div v-if="node.key != '#'" class="tree-item tree-item-normal">
-											<span class="ruleName">{{ node.label }}</span>
-											<span class="icon-button-deleteRule">
-												<HoverButton @click.stop="deleteRule(node.key, node)" />
-											</span>
-										</div>
-										<div v-if="node.key == '#'" class="tree-item tree-item-add-button">
-											<el-button
-												type="primary"
-												size="small"
-												:icon="CirclePlusFilled"
-												@click="createRule"
-												>{{ node.label }}
-											</el-button>
-										</div>
-									</template>
-								</el-tree-v2>
-							</el-aside>
-							<!-- f表单主体 -->
-							<el-main style="padding: 5px">
-								<RuleForm :formData="info.form.realTimeData" />
-							</el-main>
-						</el-container>
-					</template>
-					<!-- *底部 -->
-					<template #footer>
-						<el-button type="primary" @click="allSave">全部保存</el-button>
-						<el-button @click="handleClose">取消</el-button>
-					</template>
-				</el-dialog>
-			</div>
-		</teleport>
-	</el-dropdown-item>
+	<div class="onlineGallery-RuleEditor-modal">
+		<!-- *规则管理器 -->
+		<el-dialog
+			style="pointer-events: auto !important; padding: 0px"
+			v-model="ruleEditor.container.open"
+			width="60%"
+			:before-close="handleClose"
+			:modal="false"
+			:close-on-click-modal="false"
+			top="10vh"
+			draggable
+			:lock-scroll="false">
+			<!-- *标题部分 -->
+			<template #header>
+				<span style="color: black; font-size: large">规则管理器</span>
+			</template>
+			<!-- *内容主体 -->
+			<template #default>
+				<el-container style="user-select: none">
+					<!-- f左侧树形列表 -->
+					<el-aside width="200px" show-checkbox highlight-current style="padding: 5px">
+						<!-- *过滤框 -->
+						<el-input
+							size="small"
+							v-model="info.tree.query"
+							placeholder="输入关键词"
+							@input="onQueryChanged" />
+						<!-- *树形列表本体 -->
+						<el-tree-v2
+							ref="treeRef"
+							:data="treeData"
+							:props="treeProps"
+							:height="208"
+							highlight-current
+							:current-node-key="info.showRuleId"
+							:filter-method="treeFilterMethod"
+							@node-click="treeNodeClick">
+							<template #default="{node}">
+								<div v-if="node.key != '#'" class="tree-item tree-item-normal">
+									<span class="ruleName">{{ node.label }}</span>
+									<span class="icon-button-deleteRule">
+										<HoverButton @click.stop="deleteRule(node.key, node)" />
+									</span>
+								</div>
+								<div v-if="node.key == '#'" class="tree-item tree-item-add-button">
+									<el-button
+										type="primary"
+										size="small"
+										:icon="CirclePlusFilled"
+										@click="createRule"
+										>{{ node.label }}
+									</el-button>
+								</div>
+							</template>
+						</el-tree-v2>
+					</el-aside>
+					<!-- f表单主体 -->
+					<el-main style="padding: 5px">
+						<RuleForm :formData="info.form.realTimeData" />
+					</el-main>
+				</el-container>
+			</template>
+			<!-- *底部 -->
+			<template #footer>
+				<el-button type="primary" @click="allSave">全部保存</el-button>
+				<el-button @click="handleClose">取消</el-button>
+			</template>
+		</el-dialog>
+	</div>
 </template>
 
 <script setup>
+	import {useRuleEditorStore} from "../store/mainStore.js"; //* 共享信息导入
+
 	import HoverButton from "./HoverButton.vue";
 	import RuleForm from "./RuleForm.vue";
 
@@ -83,11 +80,12 @@
 
 	import {Management, CirclePlusFilled} from "@element-plus/icons-vue"; //? element icon导入
 
+	const ruleEditor = useRuleEditorStore();
+
 	/**
 	 * * 信息对象
 	 */
 	const info = reactive({
-		open: false,
 		showRuleId: "#",
 		form: {
 			activeName: "main",
@@ -260,7 +258,7 @@
 			lockScroll: false,
 		})
 			.then(() => {
-				info.open = false;
+				ruleEditor.container.open = false;
 				initDialog();
 				cleanData();
 				// console.log("关闭窗口");
@@ -282,7 +280,7 @@
 	//f 全部保存操作
 	const allSave = async () => {
 		GM_setValue("ruleList", JSON.stringify(data.ruleList));
-		info.open = false;
+		ruleEditor.container.open = false;
 		cleanData();
 	};
 
@@ -299,7 +297,7 @@
 
 	//* 监听open状态
 	watch(
-		() => info.open,
+		() => ruleEditor.container.open,
 		(newVal, oldVal) => {
 			if (newVal) {
 				//* 初始化窗口

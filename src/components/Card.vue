@@ -136,8 +136,7 @@
 	const toPosition = async () => {
 		const dom = props.card.dom;
 		if (dom != null) {
-			// console.log(appInfo);
-			appInfo.switchOpen()
+			appInfo.container.open = !appInfo.container.open;
 			dom.scrollIntoView({
 				behavior: "smooth",
 				block: "center",
@@ -231,18 +230,17 @@
 				font-size: small;
 				box-shadow: var(--el-box-shadow-light);
 
-				//* 下载按钮比定位按钮更靠近用户
 				&.download {
-					z-index: 1;
-				}
-				&.toPosition{
 					z-index: 0;
+				}
+				&.toPosition {
+					z-index: 1;
 				}
 			}
 			//* 鼠标悬浮按钮组时候的样式
 			&:hover {
 				//* 定位按钮样式
-				.button.toPosition {
+				.button.download {
 					transform: translateY(26px);
 				}
 			}

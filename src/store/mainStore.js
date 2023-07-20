@@ -6,29 +6,33 @@ import {createPinia, defineStore} from "pinia";
  ** appInfo 信息共享
  */
 export const useAppInfoStore = defineStore("appInfo", () => {
-	const open = ref(false); //* 开关标识符
-	/**
-	 * f 开关切换
-	 */
-	function switchOpen() {
-		open.value = !open.value;
-	}
+	//* 容器信息
+	const container = reactive({
+		open: false, //* 开关标识符
+		widthPercentage: 100, //* 宽度百分比
+	});
 
-	const widthPercentage = ref(100); //* 宽度百分比
-	/**
-	 * f 设置宽度百分比
-	 * @param {number} num 百分比数值(0~100)
-	 */
-	function setWidthPercentage(num) {
-		if (num > 0 && num <= 100) {
-			widthPercentage.value = num;
-		} else if (num > 100) {
-			widthPercentage.value = 100;
-		}
-	}
+	//* 窗口信息
 	const window = reactive({
 		width: useWindowSize().width,
 		height: useWindowSize().height,
 	});
-	return {open, switchOpen, widthPercentage, setWidthPercentage, window};
+
+	//* 数据
+	const data = reactive({
+		cardList: [], //* 卡片列表
+		filterCards: [], //* 过滤后的结果
+	});
+
+	return {data, container, window};
+});
+
+/**
+ * * 规则编辑窗口 共享信息
+ */
+export const useRuleEditorStore = defineStore("ruleEditor", () => {
+	const container = reactive({
+		open: false,
+	});
+	return {container};
 });

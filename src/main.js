@@ -1,4 +1,5 @@
 import {createApp} from "vue";
+import Vue3TouchEvents from "vue3-touch-events"; //* vue3移动端touch事件支持
 import {createPinia} from "pinia"; //* 引入Pinia构造器
 import "./style/scss/global.scss"; //* 自定义全局样式引入
 // import {globalStyle} from "./js/globalStyle.js";
@@ -22,7 +23,7 @@ const id = `app_vue_${Date.now()}`;
 appDom.id = id;
 
 const pinia = createPinia(); //* 创建pinia
-const app = createApp(App).use(pinia);
+const app = createApp(App).use(pinia).use(Vue3TouchEvents);
 document.documentElement.append(appDom);
 // document.body.appendChild(appDom);
 app.mount(`#${id}`);
