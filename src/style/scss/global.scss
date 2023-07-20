@@ -1,0 +1,14 @@
+.el-popper,
+.el-message,
+.el-notification,
+.is-message-box {
+	z-index: 9147483647 !important;
+}
+
+:root {
+	&[data-show-scrollbar="false"] > ::-webkit-scrollbar {
+		width: 0px !important;
+		height: 0px !important;
+		transition: all 0.5s;
+	}
+}

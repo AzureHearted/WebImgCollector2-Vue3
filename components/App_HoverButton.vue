@@ -1,0 +1,1 @@
+<template><el-icon class="icon-button-deleteRule"><component v-if="!isHover" :is="Delete" /><component v-if="isHover" :is="DeleteFilled" /></el-icon></template><script setup lang="ts">import {Delete, DeleteFilled} from "@element-plus/icons-vue"; let isHover = ref(false);onMounted(() => {});</script><style lang="scss" scoped></style>
