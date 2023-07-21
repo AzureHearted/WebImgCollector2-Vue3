@@ -16,15 +16,14 @@
 	</div>
 </template>
 
-<script setup>
-	import Card from "./Card.vue";
+<script setup lang="ts">
 	const props = defineProps({
 		nowColumn: {
 			type: Number,
 			default: 3,
 		},
 		cards: {
-			type: Array,
+			type: Object,
 			default: [],
 		},
 	});

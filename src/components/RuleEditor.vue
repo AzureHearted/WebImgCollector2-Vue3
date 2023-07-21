@@ -4,7 +4,7 @@
 		<el-dialog
 			style="pointer-events: auto !important; padding: 0px"
 			v-model="ruleEditor.container.open"
-			width="60%"
+			width="70%"
 			:before-close="handleClose"
 			:modal="false"
 			:close-on-click-modal="false"
@@ -14,6 +14,9 @@
 			<!-- *标题部分 -->
 			<template #header>
 				<span style="color: black; font-size: large">规则管理器</span>
+				<span style="color: black; font-size: large"
+					>(共{{ ruleEditor.data.ruleList.length }}条规则)</span
+				>
 			</template>
 			<!-- *内容主体 -->
 			<template #default>
@@ -29,8 +32,8 @@
 						<!-- *树形列表本体 -->
 						<el-tree-v2
 							ref="treeRef"
-							:data="treeData"
-							:props="treeProps"
+							:data="ruleEditor.treeData"
+							:props="ruleEditor.treeProps"
 							:height="208"
 							highlight-current
 							:current-node-key="info.showRuleId"
@@ -40,16 +43,15 @@
 								<div v-if="node.key != '#'" class="tree-item tree-item-normal">
 									<span class="ruleName">{{ node.label }}</span>
 									<span class="icon-button-deleteRule">
-										<HoverButton @click.stop="deleteRule(node.key, node)" />
+										<HoverButton @click.stop="deleteRule(node.key, node)"></HoverButton>
 									</span>
 								</div>
 								<div v-if="node.key == '#'" class="tree-item tree-item-add-button">
-									<el-button
-										type="primary"
-										size="small"
-										:icon="CirclePlusFilled"
-										@click="createRule"
-										>{{ node.label }}
+									<el-button type="primary" size="small" @click="createRule">
+										<template #icon>
+											<el-icon><i-ep-CirclePlusFilled /></el-icon>
+										</template>
+										{{ node.label }}
 									</el-button>
 								</div>
 							</template>
@@ -57,7 +59,7 @@
 					</el-aside>
 					<!-- f表单主体 -->
 					<el-main style="padding: 5px">
-						<RuleForm :formData="info.form.realTimeData" />
+						<RuleForm :formData="<Rule|undefined>info.form.realTimeData" />
 					</el-main>
 				</el-container>
 			</template>
@@ -70,96 +72,42 @@
 	</div>
 </template>
 
-<script setup>
-	import {useRuleEditorStore} from "../store/mainStore.js"; //* 共享信息导入
+<script setup lang="ts">
+	import {useRuleEditorStore} from "../store/mainStore"; //* 导入ruleEditor数据仓库
+	import {Rule} from "../js/class/Rule";
 
-	import HoverButton from "./HoverButton.vue";
-	import RuleForm from "./RuleForm.vue";
+	const ruleEditor = useRuleEditorStore(); //* 创建ruleEditor数据仓库
 
-	import {Rule, buildUUID} from "../js/public.js";
+	//* 信息对象
+	const info = ruleEditor.info;
 
-	import {Management, CirclePlusFilled} from "@element-plus/icons-vue"; //? element icon导入
-
-	const ruleEditor = useRuleEditorStore();
-
-	/**
-	 * * 信息对象
-	 */
-	const info = reactive({
-		showRuleId: "#",
-		form: {
-			activeName: "main",
-			realTimeData: null,
-		},
-		tree: {
-			query: "", //* 查询(过滤)文本
-		},
-	});
-
-	/**
-	 * * 数据对象
-	 */
-	const data = reactive({
-		ruleList: [],
-	});
-
-	/**
-	 * * 树形列表配置对象
-	 */
-	const treeProps = reactive({
-		value: "id",
-		label: "label",
-		children: "children",
-		disabled: "disabled",
-	});
+	//* 数据对象
+	const data = ruleEditor.data;
 
 	/**
 	 *f 导入表单数据 & 显示
 	 * @param {Rule} ruleData 留空 - 表示还原表单到初始状态
 	 */
-	const inputFormData = async (ruleData = {}) => {
-		if (ruleData.constructor === Rule) {
+	const inputFormData = async (ruleData?: Rule) => {
+		if (ruleData != undefined) {
 			if (!ruleData.status.editing && !ruleData.status.isNewCreated) {
 				ruleData.createBackup(); //* 创建备份
-				ruleData.status.editing == true; //* 标记为编辑ing
+				ruleData.status.editing = true; //* 标记为编辑ing
 			}
 			ruleData.status.isNewCreated = false; //* 只要查看过都不再是新创建的规则
 			info.form.realTimeData = ruleData; //* 将待编辑rule对象传递给表单
 			info.showRuleId = ruleData.id; //* 同步左侧树形列表激活的位置
 			info.form.activeName = "main"; //* 标签页位置初始化
 		} else {
-			info.form.realTimeData = null;
+			info.form.realTimeData = undefined;
 			info.showRuleId = "#"; //* 同步左侧树形列表激活的位置
 		}
 	};
 
 	/**
-	 * ? 树形列表数据
-	 */
-	const treeData = computed(() => {
-		let result = data.ruleList.map((rule) => {
-			return {
-				id: rule.id,
-				label: rule.main.name,
-				children: [],
-				disabled: false,
-				isNew: rule.status.isNewCreated,
-			};
-		});
-		result.push({
-			id: "#",
-			label: "创建规则",
-			children: [],
-			disabled: false,
-			icon: CirclePlusFilled,
-		});
-		return result;
-	});
-
-	/**
 	 * * 用于接收树形列表的实例对象
 	 */
-	const treeRef = ref(null);
+	const treeRef = ref();
 
 	/**
 	 * f el-input查询框内容变化时触发的回调函数 (定义)
@@ -178,9 +126,9 @@
 	 * - 返回值为 true 表示 显示
 	 * - 返回值为 false 表示 隐藏
 	 */
-	const treeFilterMethod = (query, node) => {
+	const treeFilterMethod = (query, node: any) => {
 		/**
-		 * 过滤逻辑
+		 * ?过滤逻辑
 		 */
 		return node.label.includes(query);
 	};
@@ -191,14 +139,15 @@
 	 * @param {TreeNode} node 所点击的节点node数据
 	 * @param {MouseEvent} e 鼠标对象
 	 */
-	const treeNodeClick = (nodeData, node, e) => {
+	const treeNodeClick = (nodeData, node) => {
 		console.log(node);
 		// console.log(nodeData.id, e.target);
 		const ruleIndex = data.ruleList.findIndex((item) => item.id === nodeData.id);
 		// console.log(ruleIndex);
 
 		if (ruleIndex >= 0) {
-			inputFormData(data.ruleList[ruleIndex]);
+			const rule = data.ruleList[ruleIndex];
+			inputFormData(rule);
 		}
 	};
 
@@ -207,7 +156,7 @@
 	 */
 	const createRule = async () => {
 		let rule = new Rule(); //* 通过Rule创建一个rule对象
-		// console.log(rule);
+		console.log(rule);
 		data.ruleList.push(rule); //* 并将其push进ruleList
 
 		//* 激活表单
@@ -226,7 +175,7 @@
 		// console.log(rule);
 		const ruleName = rule.main.name;
 
-		ElMessageBox.confirm(`确认删除规则 “${ruleName}” ？(此操作无法恢复)`, null, {
+		ElMessageBox.confirm(`确认删除规则 “${ruleName}” ？(此操作无法恢复)`, "标题", {
 			confirmButtonText: "确认",
 			cancelButtonText: "取消",
 			lockScroll: false,
@@ -252,7 +201,7 @@
 
 	//f 关闭前的处理(不保存关闭)
 	const handleClose = async () => {
-		ElMessageBox.confirm("确认关闭？", null, {
+		ElMessageBox.confirm("确认关闭？", "标题", {
 			confirmButtonText: "确认",
 			cancelButtonText: "取消",
 			lockScroll: false,
@@ -303,10 +252,10 @@
 				//* 初始化窗口
 				initDialog();
 				//* 如果打开了就读取本地存储的数据
-				let localRuleList = GM_getValue("ruleList");
+				let localRuleList = GM_getValue<string>("ruleList");
 				if (localRuleList != null) {
 					//* 本地数据不为空则直接赋值给组件
-					data.ruleList = JSON.parse(localRuleList).map((rawRule) => {
+					data.ruleList = JSON.parse(localRuleList).map((rawRule: Object) => {
 						return new Rule(rawRule); //* 这里将本地数据解析出来的对象进一步转为Rule对象
 					});
 					console.log("数据已导入", data);
@@ -340,9 +289,16 @@
 
 		//* 对话框主体框架样式
 		.el-dialog__body {
+			position: relative;
 			padding: 10px;
-			min-height: 300px;
-
+			//* body内容容器样式
+			.el-container {
+				min-height: 300px;
+				//* body标签页样式
+				.el-tabs {
+					height: 100%;
+				}
+			}
 			//* tree-item通用样式
 			.tree-item {
 				& {
@@ -358,7 +314,7 @@
 					//* 规则删除 - 图标按钮
 					> .icon-button-deleteRule {
 						position: absolute;
-						right: 12px;
+						right: 2px;
 						display: flex;
 						justify-content: center;
 						align-items: center;

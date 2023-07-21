@@ -1,13 +1,53 @@
 <template>
-	<el-icon @mouseenter="isHover = true" @mouseleave="isHover = false">
-		<component v-if="!isHover" :is="Delete" />
-		<component v-if="isHover" :is="DeleteFilled" />
-	</el-icon>
+	<span class="container" @mouseenter="isHover = true" @mouseleave="isHover = false">
+		<transition>
+			<!-- *默认样式 -->
+			<span class="default" v-if="!isHover">
+				<slot>
+					<el-icon><i-ep-Delete /></el-icon>
+				</slot>
+			</span>
+		</transition>
+		<transition>
+			<!-- *悬浮样式 -->
+			<span class="hover" v-if="isHover">
+				<slot name="hover">
+					<el-icon><i-ep-DeleteFilled /></el-icon>
+				</slot>
+			</span>
+		</transition>
+	</span>
 </template>
 
-<script setup>
-	import {Delete, DeleteFilled} from "@element-plus/icons-vue"; //? element icon导入
+<script setup lang="ts">
 	let isHover = ref(false);
 </script>
 
-<style lang="scss"></style>
+<style lang="scss" scoped>
+	.container {
+		position: relative;
+		width: 24px;
+		aspect-ratio: 1;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		cursor: pointer;
+
+		> * {
+			position: absolute;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+	}
+
+	.v-enter-active,
+	.v-leave-active {
+		transition: opacity 0.5s ease;
+	}
+
+	.v-enter-from,
+	.v-leave-to {
+		opacity: 0;
+	}
+</style>

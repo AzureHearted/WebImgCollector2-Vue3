@@ -5,7 +5,7 @@
 			class="loadingBar"
 			v-show="loading.show"
 			:percentage="Math.round(loading.percentage)"
-			:status="loading.state"
+			:status="<any>loading.state"
 			striped
 			striped-flow />
 		<!-- *工具栏 -->
@@ -14,11 +14,8 @@
 	</div>
 </template>
 
-<script setup>
-	import List from "./List.vue";
-	import Toolbar from "./Toolbar.vue";
-
-	import {useAppInfoStore} from "../store/mainStore.js";
+<script setup lang="ts">
+	import {useAppInfoStore} from "../store/mainStore.ts";
 
 	const appInfo = useAppInfoStore();
 

@@ -31,28 +31,32 @@
 				type="primary"
 				size="small"
 				circle
-				:icon="Download"
 				@click.stop="download"
-				:loading="downloading" />
+				:loading="downloading">
+				<template #icon>
+					<el-icon><i-ep-Download /></el-icon>
+				</template>
+			</el-button>
+
 			<!-- *定位按钮 -->
 			<el-button
 				class="button toPosition"
 				type="primary"
 				size="small"
 				circle
-				:icon="LocationFilled"
 				@click.stop="toPosition"
-				:loading="downloading" />
+				:loading="downloading">
+				<template #icon>
+					<el-icon><i-ep-LocationFilled /></el-icon>
+				</template>
+			</el-button>
 		</div>
 	</div>
 </template>
 
-<script setup>
-	import {useAppInfoStore} from "../store/mainStore.js"; //* 从状态共享仓库中引入pinia实例
-	import Img from "./Img.vue";
-	import {getBlobByUrl} from "../js/public.js";
-	import {Download, LocationFilled} from "@element-plus/icons-vue"; //? element icon导入
-	import {collapseContextKey} from "element-plus";
+<script setup lang="ts">
+	import {useAppInfoStore} from "../store/mainStore.ts"; //* 从状态共享仓库中引入pinia实例
+
 	const {text, isSupported, copy} = useClipboard(); //* 剪切板
 
 	const props = defineProps({

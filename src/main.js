@@ -5,7 +5,8 @@ import "./style/scss/global.scss"; //* 自定义全局样式引入
 // import {globalStyle} from "./js/globalStyle.js";
 import JSZip from "jszip";
 import {saveAs} from "file-saver"; //* 用于原生浏览器"保存"来实现文件保存
-import {TaskQueue, buildUUID} from "./js/public.js"; //* 导入自定义js库
+import {TaskQueue, buildUUID} from "./js/public"; //* 导入自定义js库
+
 
 //* 向window挂载方法(方法全局挂载)
 window.JSZip = JSZip;

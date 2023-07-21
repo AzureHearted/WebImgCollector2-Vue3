@@ -8,12 +8,11 @@
 		}">
 		<Body ref="body"></Body>
 		<!-- *关闭按钮 -->
-		<el-button
-			class="onlineGallery-button-close"
-			type="danger"
-			:icon="Close"
-			circle
-			@click="openSwitch" />
+		<el-button class="onlineGallery-button-close" type="danger" circle @click="openSwitch">
+			<template #icon>
+				<el-icon><i-ep-Close /></el-icon>
+			</template>
+		</el-button>
 		<!-- *切换按钮 -->
 		<el-popover
 			placement="top-start"
@@ -29,23 +28,31 @@
 					@click="openSwitch"
 					class="onlineGallery-button-drawerOpen">
 					<template #icon>
-						<el-icon><ArrowRightBold style="pointer-events: none" /></el-icon>
+						<el-icon><i-ep-ArrowRightBold style="pointer-events: none" /></el-icon>
 					</template>
 				</el-button>
 			</template>
 			<!-- *Popover内容 -->
 			<template #default>
-				<el-button type="success" size="small" @click="openSwitch" :icon="Grid">
+				<el-button type="success" size="small" @click="openSwitch">
+					<template #icon>
+						<el-icon><i-ep-Grid /></el-icon>
+					</template>
 					<el-badge :value="appInfo.data.cardList.length" :max="999"> 图库 </el-badge>
 				</el-button>
-				<el-button
-					type="primary"
-					size="small"
-					@click="ruleEditor.container.open = true"
-					:icon="Management"
-					>规则管理</el-button
+				<el-button type="primary" size="small" @click="ruleEditor.container.open = true">
+					<template #icon>
+						<el-icon><i-ep-Management /></el-icon>
+					</template>
+					规则管理</el-button
 				>
-				<el-button type="primary" size="small" @click="" :icon="Tools">设置</el-button>
+				<el-button type="primary" size="small" @click="">
+					<template #icon>
+						<el-icon><i-ep-Tools /></el-icon>
+					</template>
+					设置
+				</el-button>
+				<!-- <el-icon><i-ep-CameraFilled /></el-icon> -->
 			</template>
 		</el-popover>
 	</div>
@@ -58,12 +65,9 @@
 	</div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 	//* 从共享仓库引入共享信息
-	import {useAppInfoStore, useRuleEditorStore} from "./store/mainStore.js";
-	import Body from "./components/Body.vue";
-	//* element图标导入
-	import {ArrowRightBold, Close, Management, Tools, Grid} from "@element-plus/icons-vue";
+	import {useAppInfoStore, useRuleEditorStore} from "./store/mainStore.ts";
 
 	//* App - 信息
 	const appInfo = useAppInfoStore();
@@ -97,10 +101,10 @@
 			duration: 3000,
 		});
 		if (appInfo.container.open) {
-			document.documentElement.dataset.showScrollbar = false; //* 页面隐藏滚动条
+			document.documentElement.dataset.showScrollbar = "false"; //* 页面隐藏滚动条
 			container.value.focus();
 		} else {
-			document.documentElement.dataset.showScrollbar = true; //* 还原页面滚动条
+			document.documentElement.dataset.showScrollbar = "true"; //* 还原页面滚动条
 		}
 		setTimeout(() => body.value.getCards(), 1000);
 	});
@@ -234,4 +238,3 @@
 		overflow: visible;
 	}
 </style>
-./store/mainStore.js

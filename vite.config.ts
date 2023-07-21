@@ -3,7 +3,10 @@ import vue from "@vitejs/plugin-vue"; //* vue解析插件
 import AutoImport from "unplugin-auto-import/vite"; //* 依赖自动导入插件
 import Components from "unplugin-vue-components/vite"; //* 组件自动导入插件
 import {ElementPlusResolver, AntDesignVueResolver} from "unplugin-vue-components/resolvers";
+import Icons from "unplugin-icons/vite";
+import IconsResolver from "unplugin-icons/resolver";
 import svgLoader from "vite-svg-loader"; //* 用于在vue项目中使用svg文件
+
 import viteCompression from "vite-plugin-compression"; //? gzip打包压缩插件
 import monkey, {util, cdn} from "vite-plugin-monkey"; //* 油猴支持插件
 
@@ -16,12 +19,6 @@ export default defineConfig({
 		svgLoader(),
 		//f 自动引入(imports)的插件
 		AutoImport({
-			// include: [
-			// 	/\.[tj]sx?$/, // .ts, .tsx, .js, .jsx
-			// 	/\.vue$/,
-			// 	/\.vue\?vue/, // .vue
-			// 	/\.md$/, // .md
-			// ],
 			imports: [
 				"vue",
 				"vue-router",
@@ -30,13 +27,33 @@ export default defineConfig({
 				"@vueuse/core",
 				util.unimportPreset,
 			],
-			//? 可以选择auto-import.d.ts生成的位置，使用ts建议设置为'src/auto-import.d.ts'
-			resolvers: [ElementPlusResolver()],
+			resolvers: [
+				//f 自动导入 Element Plus 相关函数，如：ElMessage, ElMessageBox... (带样式)
+				ElementPlusResolver(),
+				//f 自动导入图标组件
+				IconsResolver({
+					prefix: "Icon",
+				}),
+			],
+			dirs: ["src/js", "src/components", "file-saver", "jszip"],
+			// 生成自动导入的TS声明文件
+			dts: "types/auto-import.d.ts",
 		}),
 		Components({
 			//? 配置文件生成位置
-			resolvers: [ElementPlusResolver(), AntDesignVueResolver()],
-			// dirs: ["src/components", "src/otherComponents"], //* 用户组件自动导入设置
+			resolvers: [
+				//f 自动导入 Element Plus 组件
+				ElementPlusResolver(),
+				//f 自动注册图标组件
+				IconsResolver({
+					enabledCollections: ["ep"],
+				}),
+				AntDesignVueResolver(),
+			],
+			dts: "types/components.d.ts",
+		}),
+		Icons({
+			autoInstall: true,
 		}),
 		//f gzip打包压缩插件
 		// viteCompression({
@@ -57,6 +74,7 @@ export default defineConfig({
 				require: [],
 				"run-at": "document-start",
 			},
+			// server: {mountGmApi: true},
 			build: {
 				externalGlobals: {
 					jszip: cdn.bootcdn("JSZip", "jszip.min.js"),

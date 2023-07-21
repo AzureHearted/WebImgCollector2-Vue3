@@ -5,6 +5,12 @@
  * @constructor
  */
 export class TaskQueue {
+	public max: number;
+	public initMax: number;
+	public taskList: Function[];
+	public showMessage: boolean;
+	public singleCallback: Function;
+	public finallyCallback: Function;
 	/**
 	 * @param {Object={}} options
 	 * @param {Function=()} singleCallback
@@ -25,24 +31,10 @@ export class TaskQueue {
 	}
 	/**
 	 * * 添加任务到队列
-	 * @param {Promise|Function} task 任务项
+	 * @param {Function} task 任务项
 	 */
-	addTask(task) {
-		if (task instanceof Function) {
-			this.taskList.push(task);
-		} else {
-			//* 如果输入对象不是prmoise则包装成prmoise
-			this.taskList.push(() => {
-				return new Promise((resolve, reject) => {
-					try {
-						task();
-						resolve(true);
-					} catch {
-						reject(false);
-					}
-				});
-			});
-		}
+	public addTask(task: Function) {
+		this.taskList.push(task);
 	}
 	run() {
 		const length = this.taskList.length;
@@ -104,7 +96,7 @@ export const getBlobByUrl = (url, mode = "Fetch", referer = null) => {
 					referer: referer,
 				};
 			}
-			GM_xmlhttpRequest({
+			GM_xmlhttpRequest(<any>{
 				methods: "GET",
 				url: url,
 				responseType: "blob",
@@ -184,5 +176,9 @@ export const getNameByUrl = (url) => {
 };
 
 //? rule类 - 规则数据结构
-import {Rule} from "./class/Rule.js";
+import {Rule} from "./class/Rule";
 export {Rule};
+
+// import JSZip from "jszip";
+// import {saveAs} from "file-saver"; //* 用于原生浏览器"保存"来实现文件保存
+// export {JSZip, saveAs};

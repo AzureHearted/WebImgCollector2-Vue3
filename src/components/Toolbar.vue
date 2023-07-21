@@ -72,13 +72,10 @@
 		<!-- *按钮组 -->
 		<el-button-group class="button-group">
 			<!-- *刷新按钮 -->
-			<el-button
-				type="primary"
-				@click="refresh"
-				size="small"
-				round
-				:loading="loading.value"
-				:icon="RefreshRight">
+			<el-button type="primary" @click="refresh" size="small" round :loading="loading.value">
+				<template #icon>
+					<el-icon><i-ep-RefreshRight /></el-icon>
+				</template>
 				刷新
 			</el-button>
 			<!-- *全选按钮 -->
@@ -97,21 +94,31 @@
 				@click="downloadSelected"
 				size="small"
 				round
-				:loading="loading.value"
-				:icon="Download">
+				:loading="loading.value">
+				<template #icon>
+					<el-icon><i-ep-Download /></el-icon>
+				</template>
 				下载选中项
 			</el-button>
 			<!-- *下拉菜单 -->
 			<el-dropdown size="small">
-				<el-button type="primary" size="small" :icon="MoreFilled"></el-button>
+				<el-button type="primary" size="small">
+					<template #icon>
+						<el-icon><i-ep-MoreFilled /></el-icon>
+					</template>
+				</el-button>
 				<template #dropdown>
 					<el-dropdown-menu>
 						<!-- *规则管理器入口按钮 -->
-						<el-dropdown-item :icon="Management" @click="ruleEditor.container.open = true">
+						<el-dropdown-item @click="ruleEditor.container.open = true">
+							<el-icon><i-ep-Management /></el-icon>
 							规则管理器
 						</el-dropdown-item>
 						<!-- *设置菜单入口按钮 -->
-						<el-dropdown-item :icon="Tools" @click=""> 设置 </el-dropdown-item>
+						<el-dropdown-item @click="">
+							<el-icon><i-ep-Tools /></el-icon>
+							设置
+						</el-dropdown-item>
 					</el-dropdown-menu>
 				</template>
 			</el-dropdown>
@@ -119,15 +126,10 @@
 	</div>
 </template>
 
-<script setup>
-	import {useAppInfoStore, useRuleEditorStore} from "../store/mainStore.js";
-
-	import {getBlobByUrl, getOriginByUrl, getNameByUrl, buildUUID} from "../js/public.js";
-
-	import {RefreshRight, Download, MoreFilled, Management, Tools} from "@element-plus/icons-vue"; //? element icon导入
+<script setup lang="ts">
+	import {useAppInfoStore, useRuleEditorStore} from "../store/mainStore.ts";
 
 	import CheckboxNone from "/src/svg/checkbox-blank-line.svg"; //? svg导入
-	import CheckboxIndeterminate from "/src/svg/checkbox-indeterminate-fill.svg"; //? svg导入
 	import CheckboxAll from "/src/svg/checkbox-fill.svg"; //? svg导入
 
 	const appInfo = useAppInfoStore();
@@ -138,7 +140,7 @@
 		loading: Object,
 	});
 
-	const data = appInfo.data
+	const data = appInfo.data;
 
 	//* 过滤器参数
 	const filter = reactive({
@@ -284,6 +286,12 @@
 
 	//f 获取卡片
 	const getCards = async () => {
+		interface metaInterFace {
+			isOk: boolean;
+			width: number;
+			height: number;
+		}
+
 		let cardDomList = await getImgOrVideoDom(); //* 先获取dom
 		if (!cardDomList.length) {
 			ElMessage({
@@ -326,29 +334,26 @@
 						const blob = await fetch(temp.url)
 							.then((res) => res.blob())
 							.catch((err) => {
-								// console.log(err);
-								return {
-									type: "none",
-								};
+								return new Blob(null, {type: "none"});
 							});
 						// console.log(`是否是img文件：${/^image/.test(blob.type)}`);
 						if (/^image/.test(blob.type)) {
 							// 读取获取meta信息
-							const meta = await new Promise((resolve, reject) => {
+							const meta: metaInterFace = await new Promise((resolve, reject) => {
 								let reader = new FileReader();
 								reader.readAsDataURL(blob);
-								reader.onload = function (theFile) {
+								reader.onload = (theFile) => {
 									let image = new Image();
-									image.src = theFile.target.result;
-									image.onload = function () {
+									image.src = <string>theFile.target.result;
+									image.onload = () => {
 										// console.log(`图片尺寸：${this.width}*${this.height}`,this);
 										resolve({
 											isOk: true,
-											width: this.width,
-											height: this.height,
+											width: image.width,
+											height: image.height,
 										});
 									};
-									image.onerror = function () {
+									image.onerror = () => {
 										reject({
 											isOk: false,
 											width: 0,
@@ -398,28 +403,25 @@
 							const blob = await fetch(temp.url)
 								.then((res) => res.blob())
 								.catch((err) => {
-									// console.log(err);
-									return {
-										type: "none",
-									};
+									return new Blob(null, {type: "none"});
 								});
 							if (/^image/.test(blob.type)) {
 								// 读取获取meta信息
-								const meta = await new Promise((resolve, reject) => {
+								const meta: metaInterFace = await new Promise((resolve, reject) => {
 									let reader = new FileReader();
-									reader.readAsDataURL(blob);
-									reader.onload = function (theFile) {
+									reader.readAsDataURL(<Blob>blob);
+									reader.onload = (theFile) => {
 										let image = new Image();
-										image.src = theFile.target.result;
-										image.onload = function () {
+										image.src = <string>theFile.target.result;
+										image.onload = () => {
 											// console.log(`图片尺寸：${this.width}*${this.height}`,this);
 											resolve({
 												isOk: true,
-												width: this.width,
-												height: this.height,
+												width: image.width,
+												height: image.height,
 											});
 										};
-										image.onerror = function () {
+										image.onerror = () => {
 											reject({
 												isOk: false,
 												width: 0,
@@ -446,28 +448,25 @@
 						const blob = await fetch(temp.url)
 							.then((res) => res.blob())
 							.catch((err) => {
-								// console.log(err);
-								return {
-									type: "none",
-								};
+								return new Blob(null, {type: "none"});
 							});
 						if (/^image/.test(blob.type)) {
 							// 读取获取meta信息
-							const meta = await new Promise((resolve, reject) => {
+							const meta: metaInterFace = await new Promise((resolve, reject) => {
 								let reader = new FileReader();
 								reader.readAsDataURL(blob);
-								reader.onload = function (theFile) {
+								reader.onload = (theFile) => {
 									let image = new Image();
-									image.src = theFile.target.result;
-									image.onload = function () {
+									image.src = <string>theFile.target.result;
+									image.onload = () => {
 										// console.log(`图片尺寸：${this.width}*${this.height}`,this);
 										resolve({
 											isOk: true,
-											width: this.width,
-											height: this.height,
+											width: image.width,
+											height: image.height,
 										});
 									};
-									image.onerror = function () {
+									image.onerror = () => {
 										reject({
 											isOk: false,
 											width: 0,
@@ -494,7 +493,7 @@
 					filter.size.height.max = Math.max(filter.size.height.max, temp.height);
 					let card = temp;
 					delete card.match; //*消除临时属性
-					card.id = buildUUID(); //* 生成id
+					card["id"] = buildUUID(); //* 生成id
 					data.cardList.push(card);
 					return ["符合条件（添加）", card.dom];
 				} else {
@@ -508,7 +507,7 @@
 			props.loading.percentage = (finallyCount / cardDomList.length) * 100;
 		};
 		taskQueue.finallyCallback = () => {
-			console.log("更新成功");
+			// console.log("更新成功");
 			ElMessage({
 				message: "数据更新成功!",
 				type: "success",
