@@ -119,17 +119,17 @@
 
 			//* 先尝试通过Fetch方法获取
 			let blob = await getBlobByUrl(url, "Fetch");
-			if (!blob) {
+			if (blob.type==='none') {
 				//* Fetch失败后尝试通过GM不指定referer方式获取
 				blob = await getBlobByUrl(url, "GM");
 			}
-			if (!blob) {
+			if (blob.type==='none') {
 				//* 再次失败后尝试通过GM指定referer方式获取
 				blob = await getBlobByUrl(url, "GM", location.origin);
 			}
 
-			// console.log(blob);
-			if (blob) {
+			console.log(blob);
+			if (blob&&blob['type']!=='none') {
 				await saveAs(blob, props.card.name);
 				downloading.value = false;
 			} else {

@@ -1,4 +1,4 @@
-import { MatchRule } from "./class/MatchRule";
+import {MatchRule} from "./class/MatchRule";
 
 /**
  * f 任务队列
@@ -77,7 +77,7 @@ export const getBlobByUrl = (
 	url: string,
 	mode: "Fetch" | "GM" = "Fetch",
 	referer: string | undefined = undefined
-): any => {
+): Promise<Blob>|Blob => {
 	if (mode === "Fetch") {
 		return new Promise(async (resolve, reject) => {
 			let blob = await fetch(url)
@@ -125,6 +125,8 @@ export const getBlobByUrl = (
 				},
 			});
 		});
+	} else {
+		return new Blob(undefined, {type: "none"});
 	}
 };
 
@@ -341,5 +343,3 @@ export const urlCompletion = (url: string) => {
 };
 
 export const getDomByRule = (rule: MatchRule) => {};
-
-

@@ -20,7 +20,6 @@
 						:debounce="500"
 						class="slider"
 						label="宽度"
-						
 						v-model="filter.size.width.value"
 						range
 						:min="0"
@@ -33,7 +32,6 @@
 						:debounce="500"
 						class="slider"
 						label="高度"
-						
 						v-model="filter.size.height.value"
 						range
 						:min="0"
@@ -46,7 +44,6 @@
 				<span class="label">格式</span>
 				<el-select-v2
 					class="select"
-					
 					v-model="filter.formats.value"
 					filterable
 					clearable
@@ -74,11 +71,7 @@
 		<!-- *按钮组 -->
 		<el-button-group class="button-group">
 			<!-- *刷新按钮 -->
-			<el-button
-				type="primary"
-				@click="refresh"
-				
-				:loading="loading.value">
+			<el-button type="primary" @click="refresh" :loading="loading.value">
 				刷新
 				<template #icon>
 					<el-icon><i-ep-RefreshRight /></el-icon>
@@ -88,7 +81,6 @@
 			<el-button
 				type="primary"
 				@click="allSelectSwitch"
-				
 				:loading="loading.value"
 				:icon="listStore.info.allSelected ? CheckboxAll : CheckboxNone">
 				{{ listStore.info.allSelected ? "全选" : "取消全选" }}
@@ -97,7 +89,6 @@
 			<el-button
 				type="primary"
 				@click="downloadSelected"
-				
 				:loading="loading.value">
 				下载选中
 				<template #icon>
@@ -106,8 +97,8 @@
 			</el-button>
 		</el-button-group>
 		<!-- *下拉菜单 -->
-		<el-dropdown >
-			<el-button type="primary" >
+		<el-dropdown>
+			<el-button type="primary">
 				<template #icon>
 					<el-icon><i-ep-MoreFilled /></el-icon>
 				</template>
@@ -193,18 +184,18 @@
 
 					//* 先尝试通过Fetch方法获取
 					let blob = await getBlobByUrl(url, "Fetch");
-					if (!blob) {
+					if (blob.type === "none") {
 						//* Fetch失败后尝试通过GM不指定referer方式获取
 						blob = await getBlobByUrl(url, "GM");
 					}
-					if (!blob) {
+					if (blob.type === "none") {
 						//* 再次失败后尝试通过GM指定referer方式获取
 						blob = await getBlobByUrl(url, "GM", location.origin);
 					}
 
 					card.blob = blob;
 
-					if (card.blob != null) {
+					if (card.blob && card.blob["type"] !== "none") {
 						return [card.name, "处理成功!"];
 					} else {
 						return [card.name, "处理失败"];
