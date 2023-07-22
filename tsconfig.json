@@ -1,35 +1,39 @@
 {
-  "compilerOptions": {
+	"compilerOptions": {
 		"target": "ES2020",
 		"useDefineForClassFields": true,
 		"module": "ESNext",
 		"lib": ["ES2020", "DOM", "DOM.Iterable"],
-		"skipLibCheck": true,// 所有的声明文件（*.d.ts）的类型检查, 解决：打包不报错
+		"skipLibCheck": true, // 所有的声明文件（*.d.ts）的类型检查, 解决：打包不报错
 
 		/* Bundler mode */
 		"moduleResolution": "node",
 		"allowImportingTsExtensions": true,
+		"allowSyntheticDefaultImports": true,
 		"resolveJsonModule": true,
 		"isolatedModules": true,
 		"noEmit": true,
 		"jsx": "preserve",
 
 		/* Linting */
-		"strict": false,
+		"strict": true,
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false, // 不允许隐式的 any 类型
-    "removeComments": true // 删除注释
-    // "types":["element-plus/global"]
+		"noImplicitAny": false, // 不允许隐式的 any 类型
+		"removeComments": true // 删除注释
+		// "types":["element-plus/global"]
 	},
-  "include": [
+	"include": [
 		"src/**/*.ts",
 		"src/**/*.d.ts",
-		"src/**/*.tsx",
 		"src/**/*.vue",
-		"types/auto-import.d.ts",
-		"types/components.d.ts",
-    "types/custom.d.ts"
-	],
+		"src/stores/**.ts",
+		"src/ts/*.ts",
+		"src/ts/class/MatchRule.ts",
+		"types/**/**.ts",
+		"types/**/**.d.ts",
+		"types/user/lib.interface.d.ts",
+		"src/main.ts"
+	]
 }

@@ -1,5 +1,8 @@
 //? rule类 - 规则数据结构
-export class Rule {
+export class MatchRule {
+	//? 静态成员
+	static count = 0; //* 计数器
+
 	//* 主要数据枚举
 	public enumMainKey = ["main", "domItem", "linkUrl", "picUrl", "name", "meta"];
 	public enumMatchItemKey = ["selector", "attribute"];
@@ -9,7 +12,10 @@ export class Rule {
 	public main: {
 		name: string; //* 规则名称
 		domainName: string; //* 作用域
-		pathFilter: string; //* 路径过滤(正则)
+		pathFilter: {
+			pattern: string;
+			flags: string[];
+		}; //* 路径过滤(正则)
 		titleSelector: string; //* 标题选择器
 	};
 	public domItem: {
@@ -59,7 +65,10 @@ export class Rule {
 			main: <Object | undefined>{
 				name: <string | undefined>undefined, //* 规则名称
 				domainName: <string | undefined>undefined, //* 作用域
-				pathFilter: <string | undefined>undefined, //* 路径过滤(正则)
+				pathFilter: {
+					pattern: <string | undefined>undefined, //* 作用域
+					flags: <string[] | undefined>undefined, //* 作用域
+				},
 				titleSelector: <string | undefined>undefined, //* 标题选择器
 			},
 			domItem: <Object | undefined>{
@@ -99,12 +108,13 @@ export class Rule {
 			isNewCreated: false,
 		}
 	) {
-		Rule.count++;
+		MatchRule.count++;
 		// console.log(rule);
 		//! 主要参数
 		//* 修正结果
 		rule = rule || {};
 		rule["main"] = rule["main"] || {};
+		rule["main"]["pathFilter"] = rule["main"]["pathFilter"] || {};
 		rule["domItem"] = rule["domItem"] || {};
 		rule["linkUrl"] = rule["linkUrl"] || {};
 		rule["picUrl"] = rule["picUrl"] || {};
@@ -115,7 +125,10 @@ export class Rule {
 		this.main = {
 			name: rule["main"].name || "新规则",
 			domainName: rule["main"].domainName || location.origin,
-			pathFilter: rule["main"].pathFilter || "",
+			pathFilter: {
+				pattern: rule["main"]["pathFilter"].pattern || "",
+				flags: rule["main"]["pathFilter"].flags || [],
+			},
 			titleSelector: rule["main"].titleSelector || "",
 		};
 		this.domItem = {
@@ -160,9 +173,6 @@ export class Rule {
 		this.backup = null; //* 备份(默认为空)
 	}
 
-	//? 静态成员
-	static count = 0; //* 计数器
-
 	//f 获取当前匹配条目数量
 	public getMatchItemCount = (): number => {
 		let max = 0;
@@ -179,7 +189,7 @@ export class Rule {
 	};
 
 	//f 创建备份
-	public createBackup = () => {
+	public createBackup = (): void => {
 		this.backup = {};
 		for (const key of this.enumMainKey) {
 			this.backup[key] = JSON.parse(JSON.stringify(this[key]));
@@ -187,12 +197,12 @@ export class Rule {
 	};
 
 	//f 删除备份
-	public removeBackup = () => {
+	public removeBackup = (): void => {
 		this.backup = null;
 	};
 
 	//f 通过备份还原
-	public restoreByBackup = () => {
+	public restoreByBackup = (): void => {
 		//* 判断是否有备份
 		if (this.backup != null) {
 			//* 备份不为空才进行还原
@@ -203,8 +213,9 @@ export class Rule {
 	};
 
 	//f 生成JSON数据(用于存储)
-	public getJsonData = () => {
+	public getJsonData = (): string => {
 		const jsonObj = {
+			id: this.id,
 			main: this.main,
 			domItem: this.domItem,
 			linkUrl: this.linkUrl,
@@ -236,3 +247,5 @@ export class Rule {
 		return uuid.replace(/-/g, "");
 	};
 }
+//* Rule类的接口
+export interface ruleInterFace extends MatchRule {}

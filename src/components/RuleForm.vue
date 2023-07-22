@@ -1,5 +1,9 @@
 <template>
-	<el-tabs v-model="info.activeName" type="border-card" @tab-click="" v-if="formData != undefined">
+	<el-tabs
+		v-model="info.activeName"
+		type="border-card"
+		@tab-click=""
+		v-if="formData != undefined">
 		<!-- !首选项 -->
 		<el-tab-pane label="首选项" name="main">
 			<el-form :model="formData.main" label-width="100px">
@@ -10,11 +14,49 @@
 					<el-input v-model="formData.main.domainName" />
 				</el-form-item>
 				<el-form-item label="路径过滤器">
-					<el-input v-model="formData.main.pathFilter" />
+					<el-input
+						v-model="formData.main.pathFilter.pattern"
+						placeholder="(正则表达式)">
+						<!-- *输入框前置内容 -->
+						<!-- <template #prepend> 正则 </template> -->
+						<!-- *输入框头部内容 -->
+						<template #prefix> / </template>
+						<!-- *输入框尾部内容 -->
+						<template #suffix> / </template>
+						<!-- *输入框后置内容 -->
+						<template #append>
+							<el-select
+								style="width: 180px"
+								multiple
+								v-model="formData.main.pathFilter.flags"
+								placeholder="修饰符">
+								<el-tooltip
+									:show-after="500"
+									effect="dark"
+									content="global - 全局匹配"
+									placement="top">
+									<el-option :value="'g'" label="g" />
+								</el-tooltip>
+								<el-tooltip
+									:show-after="500"
+									effect="dark"
+									content="ignore - 不区分大小写"
+									placement="top">
+									<el-option :value="'i'" label="i" />
+								</el-tooltip>
+								<el-tooltip
+									:show-after="500"
+									effect="dark"
+									content="特殊字符圆点 . 中包含换行符 \n"
+									placement="top">
+									<el-option :value="'s'" label="s" />
+								</el-tooltip>
+							</el-select>
+						</template>
+					</el-input>
 				</el-form-item>
 				<!-- f标题选择器 -->
-				<el-form-item
-					label="标题选择器">
+				<el-form-item label="标题选择器">
 					<!-- *输入框-->
 					<span style="flex-grow: 1">
 						<el-input v-model="formData.main.titleSelector" type="text" />
@@ -101,7 +143,9 @@
 				</el-form-item>
 				<!-- f提取类型 -->
 				<el-form-item label="提取类型">
-					<el-select v-model="formData.linkUrl.infoType" placeholder="选择要提取的类型">
+					<el-select
+						v-model="formData.linkUrl.infoType"
+						placeholder="选择要提取的类型">
 						<el-option :value="1" label="值" />
 						<el-option :value="2" label="Attribute属性" />
 						<el-option :value="3" label="Property属性" />
@@ -186,7 +230,9 @@
 				</el-form-item>
 				<!-- f提取类型 -->
 				<el-form-item label="提取类型" v-if="formData.picUrl.enable">
-					<el-select v-model="formData.picUrl.infoType" placeholder="选择要提取的类型">
+					<el-select
+						v-model="formData.picUrl.infoType"
+						placeholder="选择要提取的类型">
 						<el-option :value="1" label="值" />
 						<el-option :value="2" label="Attribute属性" />
 						<el-option :value="3" label="Property属性" />
@@ -272,7 +318,9 @@
 				</el-form-item>
 				<!-- f提取类型 -->
 				<el-form-item label="提取类型" v-if="formData.name.enable">
-					<el-select v-model="formData.name.infoType" placeholder="选择要提取的类型">
+					<el-select
+						v-model="formData.name.infoType"
+						placeholder="选择要提取的类型">
 						<el-option :value="1" label="值" />
 						<el-option :value="2" label="Attribute属性" />
 						<el-option :value="3" label="Property属性" />
@@ -367,7 +415,9 @@
 				</el-form-item>
 				<!-- f提取类型 -->
 				<el-form-item label="提取类型" v-if="formData.meta.enable">
-					<el-select v-model="formData.meta.infoType" placeholder="选择要提取的类型">
+					<el-select
+						v-model="formData.meta.infoType"
+						placeholder="选择要提取的类型">
 						<el-option :value="1" label="值" />
 						<el-option :value="2" label="Attribute属性" />
 						<el-option :value="3" label="Property属性" />
@@ -415,11 +465,11 @@
 </template>
 
 <script setup lang="ts">
-	import {Rule} from "../js/class/Rule";
+	import {MatchRule} from "../ts/class/MatchRule";
 
 	const props = defineProps({
 		formData: {
-			type: Rule,
+			type: MatchRule,
 		},
 	});
 
@@ -429,7 +479,7 @@
 
 	//f 指定位置后追加的匹配项
 	const pushMatchItem = (index: number): void => {
-		const rule = props.formData;
+		const rule = <MatchRule>props.formData;
 		// console.log("新增条目");
 		for (const key of rule.enumMainKey) {
 			for (const item of Object.keys(rule[key])) {
@@ -443,7 +493,7 @@
 
 	//f 删除指定下标的匹配项
 	const removeMatchItem = (index: number): void => {
-		const rule = props.formData;
+		const rule = <MatchRule>props.formData;
 		if (rule.matchItemCount <= 1) {
 			return;
 		}
@@ -460,7 +510,6 @@
 	watch(
 		() => props.formData,
 		(newVal, oldVal) => {
-			console.log("当前表格的规则数据", props.formData);
 			info.activeName = "main";
 		}
 	);
@@ -483,3 +532,4 @@
 		}
 	}
 </style>
+

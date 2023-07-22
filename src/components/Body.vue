@@ -5,26 +5,20 @@
 			class="loadingBar"
 			v-show="loading.show"
 			:percentage="Math.round(loading.percentage)"
-			:status="<any>loading.state"
+			:status="loading.state"
 			striped
 			striped-flow />
 		<!-- *工具栏 -->
-		<Toolbar ref="toolbar" :data="data" :info="info" :loading="loading" class="toolBar" />
-		<List ref="list" class="listContainer" :cards="data.filterCards" :nowColumn="info.nowColumn" />
+		<Toolbar ref="toolbar" class="toolBar" />
+		<List ref="list" class="listContainer" />
 	</div>
 </template>
 
 <script setup lang="ts">
-	import {useAppInfoStore} from "../store/mainStore.ts";
+	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
+	const cardsStore = useCardsStore(); //* 实例化cardsStore数据仓库
 
-	const appInfo = useAppInfoStore();
-
-	let toolbar = ref(null);
-
-	//* 记录子组件方法
-	let getCards = () => {
-		toolbar.value.getCards();
-	};
+	let toolbar = ref();
 
 	//* 信息
 	const info = reactive({
@@ -33,35 +27,15 @@
 	});
 
 	//* 数据
-	const data = appInfo.data;
+	const data = cardsStore.data;
 
 	//* 进度(条)
-	const loading = reactive({
-		value: false,
-		show: false,
-		state: "",
-		percentage: 0,
-		//f 进度条初始化函数
-		init: () => {
-			loading.value = true;
-			loading.show = true;
-			loading.percentage = 0;
-			loading.state = "";
-		},
-		//f 进度条重置函数
-		reset: () => {
-			setTimeout(() => {
-				loading.value = false;
-				loading.state = "success";
+	const loading = appInfo.loading;
 
-				setTimeout(() => {
-					loading.show = false;
-					loading.percentage = 0;
-					loading.state = "";
-				}, 1500);
-			}, 500);
-		},
-	});
+	//* 记录子组件方法
+	let getCards = () => {
+		toolbar.value.getCards();
+	};
 
 	defineExpose({
 		data,

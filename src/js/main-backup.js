@@ -1,5 +1,4 @@
 import {createApp} from "vue";
-import "./less/global.less";
 import {globalStyle} from "./js/globalStyle.js";
 import JSZip from "jszip-sync";
 import {saveAs} from "file-saver"; //* 用于原生浏览器"保存"来实现文件保存

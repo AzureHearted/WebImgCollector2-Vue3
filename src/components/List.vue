@@ -1,36 +1,33 @@
 <template>
 	<div ref="listContainer">
 		<el-scrollbar ref="scrollbarRef">
-			<div class="onlineGallery-listBody" ref="listBody" :style="getStyle">
+			<transition-group
+				class="onlineGallery-listBody"
+				ref="listBody"
+				:style="getStyle"
+				name="list"
+				tag="div">
 				<Card
-					v-for="(card, index) in cards"
+					v-for="(card, index) in cardsStore.data.filterCards"
 					:card="card"
 					:key="card.id"
 					:data-index="index"
 					:style="{
-						'--aspect-ratio': card.aspectRatio,
+						'--aspect-ratio': card.meta.aspectRatio,
 					}">
 				</Card>
-			</div>
+			</transition-group>
 		</el-scrollbar>
 	</div>
 </template>
 
 <script setup lang="ts">
-	const props = defineProps({
-		nowColumn: {
-			type: Number,
-			default: 3,
-		},
-		cards: {
-			type: Object,
-			default: [],
-		},
-	});
+	const listContainer = ref(); //* 用于接收list容器的dom
+	const listBody = ref(); //* 用于接收list本体的dom
+	const scrollbarRef = ref();
 
-	const listContainer = ref(null); //* 用于接收list容器的dom
-	const listBody = ref(null); //* 用于接收list本体的dom
-	const scrollbarRef = ref(null);
+	const listStore = useListInfoStore();
+	const cardsStore = useCardsStore();
 
 	//f 获取list的样式(计算属性)
 	const getStyle = computed(() => {
@@ -40,18 +37,19 @@
 
 		const containerInfo = listContainer.value.getBoundingClientRect();
 		let style = {
-			"--nowColumn": props.nowColumn,
-			"--listHeight": containerInfo.height - 8 * props.nowColumn - 10 + "px",
+			"--nowColumn": listStore.info.nowColumn,
+			"--listHeight":
+				containerInfo.height - 8 * listStore.info.nowColumn - 10 + "px",
 			"--cardMaxHeight": `calc(var(--listHeight) / var(--nowColumn))`,
 		};
-		if (props.nowColumn <= 0) {
+		if (listStore.info.nowColumn <= 0) {
 			style["--cardMaxHeight"] = "1000%";
 		}
 		return style;
 	});
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	* {
 		border: 0;
 		margin: 0;
@@ -75,5 +73,33 @@
 		user-select: none;
 		/* 禁止图文拖拽 */
 		-webkit-user-drag: none;
+	}
+
+	.v-enter-active,
+	.v-leave-active {
+		transition: opacity 0.5s ease;
+	}
+
+	.v-enter-from,
+	.v-leave-to {
+		opacity: 0;
+	}
+
+	//* 对移动中的元素应用的过渡
+	.list-move,
+	.list-enter-active,
+	.list-leave-active {
+		transition: all 0.5s ease;
+	}
+
+	.list-enter-from,
+	.list-leave-to {
+		opacity: 0;
+		transform: translateX(30px);
+	}
+
+	//* 确保将离开的元素从布局流中删除以便能够正确地计算移动的动画。
+	.list-leave-active {
+		position: absolute;
 	}
 </style>

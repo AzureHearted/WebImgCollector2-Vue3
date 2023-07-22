@@ -9,8 +9,10 @@
 				round
 				size="small"
 				type="info"
-				@click.right.prevent="copyTagContent(`${card.width}x${card.height}`)"
-				>{{ card.width }}x{{ card.height }}
+				@click.right.prevent="
+					copyTagContent(`${card.meta.width}x${card.meta.height}`)
+				"
+				>{{ card.meta.width }}x{{ card.meta.height }}
 			</el-tag>
 			<!-- *名称标签 -->
 			<el-tag
@@ -55,25 +57,25 @@
 </template>
 
 <script setup lang="ts">
-	import {useAppInfoStore} from "../store/mainStore.ts"; //* 从状态共享仓库中引入pinia实例
-
 	const {text, isSupported, copy} = useClipboard(); //* 剪切板
-
-	const props = defineProps({
-		card: {
-			type: Object,
-			default() {
-				return {
-					name: "",
-					url: "",
-					originUrls: [],
+	
+	interface Props {
+		card: matchCard;
+	}
+	const props = withDefaults(defineProps<Props>(), {
+		card: () => {
+			return {
+				name: "",
+				url: "",
+				originUrls: [],
+				meta: <metaInterFace>{
 					width: 0,
 					height: 0,
 					aspectRatio: 3 / 4,
-					selected: false, //? 选中标识符
-					dom: null,
-				};
-			},
+				},
+				selected: false, //? 选中标识符
+				dom: null,
+			};
 		},
 	});
 

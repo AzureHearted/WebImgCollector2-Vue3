@@ -1,8 +1,12 @@
 import {defineConfig} from "vite";
+import path from "path";
 import vue from "@vitejs/plugin-vue"; //* vue解析插件
 import AutoImport from "unplugin-auto-import/vite"; //* 依赖自动导入插件
 import Components from "unplugin-vue-components/vite"; //* 组件自动导入插件
-import {ElementPlusResolver, AntDesignVueResolver} from "unplugin-vue-components/resolvers";
+import {
+	ElementPlusResolver,
+	AntDesignVueResolver,
+} from "unplugin-vue-components/resolvers";
 import Icons from "unplugin-icons/vite";
 import IconsResolver from "unplugin-icons/resolver";
 import svgLoader from "vite-svg-loader"; //* 用于在vue项目中使用svg文件
@@ -11,6 +15,12 @@ import viteCompression from "vite-plugin-compression"; //? gzip打包压缩插�
 import monkey, {util, cdn} from "vite-plugin-monkey"; //* 油猴支持插件
 
 export default defineConfig({
+	resolve: {
+		alias: {
+			//* 路径别名
+			"@": path.resolve(__dirname, "./src"),
+		},
+	},
 	//* 插件配置项
 	plugins: [
 		//f .vue文件的解析插件
@@ -35,8 +45,23 @@ export default defineConfig({
 					prefix: "Icon",
 				}),
 			],
-			dirs: ["src/js", "src/components", "file-saver", "jszip"],
-			// 生成自动导入的TS声明文件
+			//* 自动包含的目录
+			dirs: [
+				"src/*.vue",
+				"src/ts/**",
+				"src/ts/class/**",
+				"src/stores/**",
+				"src/components/**",
+				"src/**/*.ts",
+				"src/**/*.d.ts",
+				"src/**/*.vue",
+				"src/stores/**.ts",
+				"src/ts/*.ts",
+				"file-saver",
+				"jszip",
+			],
+			vueTemplate: true,
+			//* 生成自动导入的TS声明文件
 			dts: "types/auto-import.d.ts",
 		}),
 		Components({
@@ -50,6 +75,7 @@ export default defineConfig({
 				}),
 				AntDesignVueResolver(),
 			],
+			dirs: ["src/*.vue", "src/components/**"],
 			dts: "types/components.d.ts",
 		}),
 		Icons({
@@ -61,7 +87,7 @@ export default defineConfig({
 		// })
 		//f 油猴插件支持的插件
 		monkey({
-			entry: "/src/main.js",
+			entry: "./src/main.ts",
 			userscript: {
 				author: "Lxs",
 				icon: "https://vitejs.dev/logo.svg",
@@ -74,7 +100,9 @@ export default defineConfig({
 				require: [],
 				"run-at": "document-start",
 			},
-			// server: {mountGmApi: true},
+			server: {
+				open: false,
+			},
 			build: {
 				externalGlobals: {
 					jszip: cdn.bootcdn("JSZip", "jszip.min.js"),
@@ -85,9 +113,6 @@ export default defineConfig({
 	//* 预处理器配置项
 	css: {
 		preprocessorOptions: {
-			less: {
-				match: "always",
-			},
 			scss: {},
 		},
 	},

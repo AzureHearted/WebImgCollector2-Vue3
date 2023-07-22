@@ -4,54 +4,72 @@
 		<el-dialog
 			style="pointer-events: auto !important; padding: 0px"
 			v-model="ruleEditor.container.open"
-			width="70%"
+			:width="appInfo.window.width > 800 ? '800px' : '100%'"
 			:before-close="handleClose"
 			:modal="false"
 			:close-on-click-modal="false"
-			top="10vh"
+			:lock-scroll="false"
+			destroy-on-close
 			draggable
-			:lock-scroll="false">
+			@open="handleOpen"
+			@closed="handleClosed">
 			<!-- *标题部分 -->
 			<template #header>
 				<span style="color: black; font-size: large">规则管理器</span>
-				<span style="color: black; font-size: large"
-					>(共{{ ruleEditor.data.ruleList.length }}条规则)</span
-				>
+				<span style="color: black; font-size: large">
+					(共{{ ruleEditor.data.ruleList.length }}条规则)
+				</span>
 			</template>
 			<!-- *内容主体 -->
 			<template #default>
 				<el-container style="user-select: none">
 					<!-- f左侧树形列表 -->
-					<el-aside width="200px" show-checkbox highlight-current style="padding: 5px">
+					<el-aside
+						width="200px"
+						show-checkbox
+						highlight-current
+						style="padding: 5px">
 						<!-- *过滤框 -->
 						<el-input
-							size="small"
-							v-model="info.tree.query"
+							clearable
+							v-model="tree.query"
 							placeholder="输入关键词"
 							@input="onQueryChanged" />
 						<!-- *树形列表本体 -->
 						<el-tree-v2
 							ref="treeRef"
-							:data="ruleEditor.treeData"
-							:props="ruleEditor.treeProps"
-							:height="208"
+							:data="tree.treeData"
+							:props="tree.treeProps"
+							:height="400"
 							highlight-current
 							:current-node-key="info.showRuleId"
 							:filter-method="treeFilterMethod"
-							@node-click="treeNodeClick">
+							@node-click="treeNodeClick"
+							:item-size="32">
 							<template #default="{node}">
+								<!-- *规则项 -->
 								<div v-if="node.key != '#'" class="tree-item tree-item-normal">
-									<span class="ruleName">{{ node.label }}</span>
+									<el-tooltip
+										:show-after="500"
+										effect="dark"
+										:content="node.label"
+										placement="top">
+										<span class="label-ruleName">{{ node.label }}</span>
+									</el-tooltip>
 									<span class="icon-button-deleteRule">
-										<HoverButton @click.stop="deleteRule(node.key, node)"></HoverButton>
+										<HoverButton
+											@click.stop="deleteRule(node.key, node)"></HoverButton>
 									</span>
 								</div>
-								<div v-if="node.key == '#'" class="tree-item tree-item-add-button">
-									<el-button type="primary" size="small" @click="createRule">
+								<!-- *规则创建按钮 -->
+								<div
+									v-if="node.key == '#'"
+									class="tree-item tree-item-add-button">
+									<el-button type="primary" @click="createRule">
 										<template #icon>
 											<el-icon><i-ep-CirclePlusFilled /></el-icon>
 										</template>
-										{{ node.label }}
+										<span> {{ node.label }} </span>
 									</el-button>
 								</div>
 							</template>
@@ -59,7 +77,7 @@
 					</el-aside>
 					<!-- f表单主体 -->
 					<el-main style="padding: 5px">
-						<RuleForm :formData="<Rule|undefined>info.form.realTimeData" />
+						<RuleForm :formData="<MatchRule|undefined>form.realTimeData" />
 					</el-main>
 				</el-container>
 			</template>
@@ -73,48 +91,52 @@
 </template>
 
 <script setup lang="ts">
-	import {useRuleEditorStore} from "../store/mainStore"; //* 导入ruleEditor数据仓库
-	import {Rule} from "../js/class/Rule";
+	import {MatchRule} from "../ts/class/MatchRule";
 
-	const ruleEditor = useRuleEditorStore(); //* 创建ruleEditor数据仓库
+	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
+	const ruleEditor = useRuleEditorStore(); //* 实例化ruleEditor数据仓库
+
+	//* 用于接收树形列表的实例对象
+	const treeRef = ref();
 
 	//* 信息对象
 	const info = ruleEditor.info;
+
+	//* 表单信息
+	const form = ruleEditor.info.form;
+
+	//* 虚拟列表信息
+	const tree = ruleEditor.info.tree;
 
 	//* 数据对象
 	const data = ruleEditor.data;
 
 	/**
 	 *f 导入表单数据 & 显示
-	 * @param {Rule} ruleData 留空 - 表示还原表单到初始状态
+	 * @param {MatchRule} ruleData 留空 - 表示还原表单到初始状态
 	 */
-	const inputFormData = async (ruleData?: Rule) => {
+	const inputFormData = async (ruleData?: MatchRule) => {
 		if (ruleData != undefined) {
 			if (!ruleData.status.editing && !ruleData.status.isNewCreated) {
 				ruleData.createBackup(); //* 创建备份
 				ruleData.status.editing = true; //* 标记为编辑ing
 			}
 			ruleData.status.isNewCreated = false; //* 只要查看过都不再是新创建的规则
-			info.form.realTimeData = ruleData; //* 将待编辑rule对象传递给表单
+			form.realTimeData = ruleData; //* 将待编辑rule对象传递给表单
 			info.showRuleId = ruleData.id; //* 同步左侧树形列表激活的位置
-			info.form.activeName = "main"; //* 标签页位置初始化
+			form.activeName = "main"; //* 标签页位置初始化
 		} else {
-			info.form.realTimeData = undefined;
-			info.showRuleId = "#"; //* 同步左侧树形列表激活的位置
+			form.realTimeData = undefined;
+			info.showRuleId = "-1"; //* 同步左侧树形列表激活的位置
 		}
 	};
-
-	/**
-	 * * 用于接收树形列表的实例对象
-	 */
-	const treeRef = ref();
 
 	/**
 	 * f el-input查询框内容变化时触发的回调函数 (定义)
 	 * @param {string} query 查询(过滤)内容
 	 * - 由el-input组件返回
 	 */
-	const onQueryChanged = (query) => {
+	const onQueryChanged = (query: string) => {
 		treeRef.value.filter(query); //* 触发过滤
 	};
 
@@ -126,10 +148,7 @@
 	 * - 返回值为 true 表示 显示
 	 * - 返回值为 false 表示 隐藏
 	 */
-	const treeFilterMethod = (query, node: any) => {
-		/**
-		 * ?过滤逻辑
-		 */
+	const treeFilterMethod = (query: string, node: any): boolean => {
 		return node.label.includes(query);
 	};
 
@@ -139,15 +158,15 @@
 	 * @param {TreeNode} node 所点击的节点node数据
 	 * @param {MouseEvent} e 鼠标对象
 	 */
-	const treeNodeClick = (nodeData, node) => {
-		console.log(node);
-		// console.log(nodeData.id, e.target);
-		const ruleIndex = data.ruleList.findIndex((item) => item.id === nodeData.id);
-		// console.log(ruleIndex);
+	const treeNodeClick = (nodeData: any, node: any, e: MouseEvent) => {
+		// console.log(node);
+		const ruleIndex = data.ruleList.findIndex(
+			(item) => item.id === nodeData.id
+		);
 
 		if (ruleIndex >= 0) {
 			const rule = data.ruleList[ruleIndex];
-			inputFormData(rule);
+			inputFormData(<any>rule);
 		}
 	};
 
@@ -155,10 +174,7 @@
 	 * f 创建规则
 	 */
 	const createRule = async () => {
-		let rule = new Rule(); //* 通过Rule创建一个rule对象
-		console.log(rule);
-		data.ruleList.push(rule); //* 并将其push进ruleList
-
+		const rule = await ruleEditor.createRule();
 		//* 激活表单
 		inputFormData(rule);
 	};
@@ -168,24 +184,15 @@
 	 * @param {string} id 要删除的规则的id
 	 * @param {*} node
 	 */
-	const deleteRule = async (id, node) => {
-		const index = data.ruleList.findIndex((item) => item.id === id);
-		// console.log(index, node);
-		let rule = data.ruleList[index];
-		// console.log(rule);
-		const ruleName = rule.main.name;
-
-		ElMessageBox.confirm(`确认删除规则 “${ruleName}” ？(此操作无法恢复)`, "标题", {
+	const deleteRule = async (id: string, node: any) => {
+		const ruleName = node.label;
+		ElMessageBox.confirm(`确认删除规则 “${ruleName}” ？`, "提示", {
 			confirmButtonText: "确认",
 			cancelButtonText: "取消",
 			lockScroll: false,
 		})
 			.then(() => {
-				delete data.ruleList[index];
-				data.ruleList.splice(index, 1);
-				Rule.count--;
-
-				// console.log("当前规则数", Rule.count);
+				ruleEditor.deleteRule(id);
 				inputFormData();
 				ElMessage({
 					type: "success",
@@ -199,73 +206,60 @@
 			.catch(() => {});
 	};
 
+	//f 打开时的处理
+	const handleOpen = () => {
+		//* 初始化窗口
+		initDialog();
+		//*	获取用户本地规则信息
+		ruleEditor.getLocationRule();
+		console.log("规则管理器 - Open");
+	};
+
 	//f 关闭前的处理(不保存关闭)
 	const handleClose = async () => {
-		ElMessageBox.confirm("确认关闭？", "标题", {
+		ElMessageBox.confirm("确认关闭？", "提示", {
 			confirmButtonText: "确认",
 			cancelButtonText: "取消",
 			lockScroll: false,
 		})
 			.then(() => {
-				ruleEditor.container.open = false;
-				initDialog();
-				cleanData();
-				// console.log("关闭窗口");
+				ruleEditor.container.open = false; //! 关闭窗口
 			})
-			.catch(() => {
-				// catch error
-				// console.log("取消关闭窗口");
-			});
+			.catch(() => {});
+	};
+
+	//f 关闭后的处理(任何关闭操作)
+	const handleClosed = async () => {
+		initDialog();
+		cleanTempData();
+		console.log("规则管理器 - Close");
+	};
+
+	/**
+	 * f 清空组件临时数据
+	 */
+	const cleanTempData = async () => {
+		for (let i = 0, len = data.ruleList.length; i < len; i++) {
+			delete data.ruleList[i];
+			MatchRule.count--;
+		}
+		data.ruleList = [];
 	};
 
 	/**
 	 * f 初始化窗口
 	 */
 	const initDialog = async () => {
-		info.form.activeName = "main";
+		form.activeName = "main";
 		inputFormData();
 	};
 
 	//f 全部保存操作
 	const allSave = async () => {
-		GM_setValue("ruleList", JSON.stringify(data.ruleList));
-		ruleEditor.container.open = false;
-		cleanData();
+		//*	存储修改后的最新数据到脚本的用户存储中
+		ruleEditor.saveRuleToLocation();
+		ruleEditor.container.open = false; //! 关闭窗口
 	};
-
-	/**
-	 * f 清空数据
-	 */
-	const cleanData = async () => {
-		for (let i = 0, len = data.ruleList.length; i < len; i++) {
-			delete data.ruleList[i];
-			Rule.count--;
-		}
-		data.ruleList = [];
-	};
-
-	//* 监听open状态
-	watch(
-		() => ruleEditor.container.open,
-		(newVal, oldVal) => {
-			if (newVal) {
-				//* 初始化窗口
-				initDialog();
-				//* 如果打开了就读取本地存储的数据
-				let localRuleList = GM_getValue<string>("ruleList");
-				if (localRuleList != null) {
-					//* 本地数据不为空则直接赋值给组件
-					data.ruleList = JSON.parse(localRuleList).map((rawRule: Object) => {
-						return new Rule(rawRule); //* 这里将本地数据解析出来的对象进一步转为Rule对象
-					});
-					console.log("数据已导入", data);
-				} else {
-					data.ruleList = [];
-					console.log("本地数据为空 -> 初始化数据", data);
-				}
-			}
-		}
-	);
 </script>
 
 <style lang="scss">
@@ -289,31 +283,41 @@
 
 		//* 对话框主体框架样式
 		.el-dialog__body {
-			position: relative;
 			padding: 10px;
 			//* body内容容器样式
 			.el-container {
+				position: relative;
+				height: max-content;
 				min-height: 300px;
 				//* body标签页样式
 				.el-tabs {
-					height: 100%;
+					height: 90%;
 				}
 			}
 			//* tree-item通用样式
 			.tree-item {
 				& {
-					width: 100%;
 					display: flex;
 					align-items: center;
 					justify-content: space-between;
-					padding-right: 10px;
+					// padding-right: 10px;
+					overflow: hidden;
 				}
 
 				//* 普通tree-item
 				&.tree-item-normal {
+					position: relative;
+					flex-grow: 1;
+					//* 名称样式
+					> .label-ruleName {
+						flex-grow: 1;
+						overflow: hidden;
+						text-overflow: ellipsis;
+						white-space: nowrap;
+					}
 					//* 规则删除 - 图标按钮
 					> .icon-button-deleteRule {
-						position: absolute;
+						// position: relative;
 						right: 2px;
 						display: flex;
 						justify-content: center;
@@ -322,6 +326,7 @@
 						font-size: medium;
 					}
 				}
+
 				//* 增加按钮的tree-item
 				&.tree-item-add-button {
 					> button {

@@ -38,7 +38,7 @@
 					<template #icon>
 						<el-icon><i-ep-Grid /></el-icon>
 					</template>
-					<el-badge :value="appInfo.data.cardList.length" :max="999"> 图库 </el-badge>
+					<el-badge :value="cardsStore.data.cardList.length" :max="999"> 图库 </el-badge>
 				</el-button>
 				<el-button type="primary" size="small" @click="ruleEditor.container.open = true">
 					<template #icon>
@@ -66,16 +66,14 @@
 </template>
 
 <script setup lang="ts">
-	//* 从共享仓库引入共享信息
-	import {useAppInfoStore, useRuleEditorStore} from "./store/mainStore.ts";
-
 	//* App - 信息
-	const appInfo = useAppInfoStore();
-	const ruleEditor = useRuleEditorStore();
+	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
+	const cardsStore = useCardsStore(); //* 实例化cardsStore数据仓库
+	const ruleEditor = useRuleEditorStore(); //* 实例化ruleEditor数据仓库
 
 	//* 组件或html元素的接收器定义
-	const container = ref(null); //*接收container dom
-	const body = ref(null); //*接收container dom
+	const container = ref(); //*接收container dom
+	const body = ref(); //*接收container dom
 
 	//f 开关切换
 	const openSwitch = async () => {
@@ -83,7 +81,7 @@
 		appInfo.container.open = !appInfo.container.open;
 		if (appInfo.container.open) {
 			document.documentElement.dataset.showScrollbar = false.toString(); //* 页面隐藏滚动条
-			if (appInfo.data.cardList.length < 1) {
+			if (cardsStore.data.cardList.length < 1) {
 				setTimeout(() => body.value.getCards(), 1000);
 			}
 			container.value.focus();
