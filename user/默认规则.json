@@ -1,0 +1,52 @@
+{
+	"id": "#",
+	"main": {
+		"name": "默认规则",
+		"domainName": "",
+		"pathFilter": {"pattern": "", "flags": []},
+		"titleSelector": "",
+		"iconUrl": ""
+	},
+	"domItem": {"enable": false, "method": 0, "selector": ["", "", "", ""]},
+	"linkUrl": {
+		"method": 0,
+		"selector": [
+			"meta[property=\"og:image\"]",
+			"img[data-src]",
+			"img[src]",
+			"[srcset]"
+		],
+		"infoType": 2,
+		"attribute": [
+			"content",
+			"srcset|data-src|src",
+			"srcset|data-src|src",
+			"srcset|data-src|src"
+		]
+	},
+	"picUrl": {
+		"enable": false,
+		"origin": 0,
+		"method": 0,
+		"selector": ["", "", "", ""],
+		"infoType": 3,
+		"attribute": ["", "", "", ""]
+	},
+	"name": {
+		"enable": false,
+		"origin": 0,
+		"method": 0,
+		"selector": ["", "", "", ""],
+		"infoType": 4,
+		"attribute": ["", "", "", ""]
+	},
+	"meta": {
+		"enable": true,
+		"origin": 2,
+		"method": 0,
+		"selector": ["", "", "", ""],
+		"infoType": 0,
+		"attribute": ["", "", "", ""],
+		"getMethod": 0
+	}
+}

@@ -1,9 +1,33 @@
 <template>
-	<img :parentSelector="parentSelector" v-lazy="src" />
+	<img :parentSelector="parentSelector" v-lazy="src" data-fancybox="gallery" />
+
 	<!-- <el-image ref="img" :src="src" loading="lazy"></el-image> -->
 </template>
 
 <script setup>
+	import {Fancybox} from "@fancyapps/ui";
+	onMounted(() => {
+		//* 绑定图像
+		Fancybox.bind('[data-fancybox="onlineGallery"]', {
+			Thumbs: {type: "modern"},
+			Toolbar: {
+				display: {
+					left: ["infobar"],
+					middle: [
+						"zoomIn",
+						"zoomOut",
+						"toggle1to1",
+						"rotateCCW",
+						"rotateCW",
+						"flipX",
+						"flipY",
+					],
+					right: ["slideshow", "thumbs", "close"],
+				},
+			},
+		});
+	});
+
 	defineProps({
 		src: String,
 		parentSelector: {

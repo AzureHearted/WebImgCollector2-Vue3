@@ -9,168 +9,77 @@ export class MatchRule {
 	public matchItemCount = 1; //* 当前匹配项条数
 
 	public id: string;
-	public main: {
-		name: string; //* 规则名称
-		domainName: string; //* 作用域
-		pathFilter: {
-			pattern: string;
-			flags: string[];
-		}; //* 路径过滤(正则)
-		titleSelector: string; //* 标题选择器
-	};
-	public domItem: {
-		//* 时候启用dom限定(开启后将以该项指定的dom作为起点查找查询其他项目)
-		enable: boolean;
-		selector: string[];
-	};
-	public linkUrl: {
-		selector: string[];
-		infoType: number;
-		attribute: string[];
-	};
-	public picUrl: {
-		enable: boolean;
-		//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
-		origin: number;
-		selector: string[];
-		infoType: number;
-		attribute: string[];
-	};
-	public name: {
-		enable: boolean;
-		//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
-		origin: number;
-		selector: string[];
-		infoType: number;
-		attribute: string[];
-	};
-	public meta: {
-		enable: boolean;
-		//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
-		origin: number;
-		selector: string[];
-		infoType: number;
-		attribute: string[];
-	};
+	public main: IORule_main;
+	public domItem: IORule_domItem;
+	public linkUrl: IORule_linkUrl;
+	public picUrl: IORule_picUrl;
+	public name: IORule_name;
+	public meta: IORule_meta;
 
-	public status: {
-		editing: boolean; //* 标记是否为新创建的规则
-		isNewCreated: boolean; //* 标记是否为新创建的规则
-	}; //* 状态对象;
-	public backup: any;
+	public status: IOMatchRule_status;
+	public backup: IRule;
 
-	constructor(
-		rule: Object | undefined = {
-			id: <string | undefined>undefined, //* 规则id
-			main: <Object | undefined>{
-				name: <string | undefined>undefined, //* 规则名称
-				domainName: <string | undefined>undefined, //* 作用域
-				pathFilter: {
-					pattern: <string | undefined>undefined, //* 作用域
-					flags: <string[] | undefined>undefined, //* 作用域
-				},
-				titleSelector: <string | undefined>undefined, //* 标题选择器
-			},
-			domItem: <Object | undefined>{
-				//* 时候启用dom限定(开启后将以该项指定的dom作为起点查找查询其他项目)
-				enable: <boolean | undefined>undefined,
-				selector: <string[] | undefined>undefined,
-			},
-			linkUrl: <Object | undefined>{
-				selector: <string[] | undefined>undefined,
-				infoType: <number | undefined>undefined,
-				attribute: <string[] | undefined>undefined,
-			},
-			picUrl: <Object | undefined>{
-				enable: <boolean | undefined>undefined,
-				origin: <number | undefined>undefined,
-				selector: <string[] | undefined>undefined,
-				infoType: <number | undefined>undefined,
-				attribute: <string[] | undefined>undefined,
-			},
-			name: <Object | undefined>{
-				enable: <boolean | undefined>undefined,
-				origin: <number | undefined>undefined,
-				selector: <string[] | undefined>undefined,
-				infoType: <number | undefined>undefined,
-				attribute: <string[] | undefined>undefined,
-			},
-			meta: <Object | undefined>{
-				enable: <boolean | undefined>undefined,
-				origin: <number | undefined>undefined,
-				selector: <string[] | undefined>undefined,
-				infoType: <number | undefined>undefined,
-				attribute: <string[] | undefined>undefined,
-			},
-		},
-		status: Object | undefined = {
-			editing: false,
-			isNewCreated: false,
-		}
-	) {
+	constructor(rule?: IRule, status?: IMatchRule_status) {
 		MatchRule.count++;
-		// console.log(rule);
-		//! 主要参数
-		//* 修正结果
-		rule = rule || {};
-		rule["main"] = rule["main"] || {};
-		rule["main"]["pathFilter"] = rule["main"]["pathFilter"] || {};
-		rule["domItem"] = rule["domItem"] || {};
-		rule["linkUrl"] = rule["linkUrl"] || {};
-		rule["picUrl"] = rule["picUrl"] || {};
-		rule["name"] = rule["name"] || {};
-		rule["meta"] = rule["meta"] || {};
 
-		this.id = rule["id"] || (() => this.buildUUID())();
+		//* 主要信息
+		this.id = rule?.id || (() => this.buildUUID())();
 		this.main = {
-			name: rule["main"].name || "新规则",
-			domainName: rule["main"].domainName || location.origin,
+			name: rule?.main?.name || "新规则",
+			domainName: rule?.main?.domainName || "",
 			pathFilter: {
-				pattern: rule["main"]["pathFilter"].pattern || "",
-				flags: rule["main"]["pathFilter"].flags || [],
+				pattern: rule?.main?.pathFilter?.pattern || "",
+				flags: rule?.main?.pathFilter?.flags || [],
 			},
-			titleSelector: rule["main"].titleSelector || "",
+			titleSelector: rule?.main?.titleSelector || "",
+			iconUrl: rule?.main?.iconUrl || "",
 		};
 		this.domItem = {
-			enable: rule["domItem"].enable || false,
-			selector: rule["domItem"].selector || [""],
+			enable: rule?.domItem?.enable || false,
+			method: rule?.domItem?.method || 0,
+			selector: rule?.domItem?.selector || [""],
 		};
 		this.linkUrl = {
-			selector: rule["linkUrl"].selector || [""],
-			infoType: rule["linkUrl"].infoType || 3,
-			attribute: rule["linkUrl"].attribute || [""],
+			method: rule?.linkUrl?.method || 0,
+			selector: rule?.linkUrl?.selector || [""],
+			infoType: rule?.linkUrl?.infoType || 3,
+			attribute: rule?.linkUrl?.attribute || [""],
 		};
 		this.picUrl = {
-			enable: rule["picUrl"].enable || false,
-			origin: rule["picUrl"].origin || 0,
-			selector: rule["picUrl"].selector || [""],
-			infoType: rule["picUrl"].infoType || 3,
-			attribute: rule["picUrl"].attribute || [""],
+			enable: rule?.picUrl?.enable || false,
+			origin: rule?.picUrl?.origin || 0,
+			method: rule?.picUrl?.method || 0,
+			selector: rule?.picUrl?.selector || [""],
+			infoType: rule?.picUrl?.infoType || 3,
+			attribute: rule?.picUrl?.attribute || [""],
 		};
 		this.name = {
-			enable: rule["name"].enable || false,
-			origin: rule["name"].origin || 0,
-			selector: rule["name"].selector || [""],
-			infoType: rule["name"].infoType || 4,
-			attribute: rule["name"].attribute || [""],
+			enable: rule?.name?.enable || false,
+			origin: rule?.name?.origin || 0,
+			method: rule?.name?.method || 0,
+			selector: rule?.name?.selector || [""],
+			infoType: rule?.name?.infoType || 4,
+			attribute: rule?.name?.attribute || [""],
 		};
 		this.meta = {
-			enable: rule["meta"].enable || true,
-			origin: rule["meta"].origin || 0,
-			selector: rule["meta"].selector || [""],
-			infoType: rule["meta"].infoType || 3,
-			attribute: rule["meta"].attribute || [""],
+			enable: rule?.meta?.enable || true,
+			origin: rule?.meta?.origin || 2,
+			method: rule?.meta?.method || 0,
+			selector: rule?.meta?.selector || [""],
+			infoType: rule?.meta?.infoType !== undefined ? rule?.meta?.infoType : 0,
+			attribute: rule?.meta?.attribute || [""],
+			getMethod:
+				rule?.meta?.getMethod !== undefined ? rule?.meta?.getMethod : 0,
 		};
 
-		//? 其他
-		//* 修正结果
-		status = status || {};
+		//? 状态信息
 		this.status = {
-			editing: status["editing"] || false, //* 编辑状态标记
-			isNewCreated: status["isNewCreated"] || false, //* 标记是否为新创建的规则
+			editing: status?.editing || false, //* 编辑状态标记
+			isNewCreated: status?.isNewCreated || false, //* 标记是否为新创建的规则
 		}; //* 状态对象
 
-		this.backup = null; //* 备份(默认为空)
+		//* 备份(默认为空)
+		this.backup = {};
 	}
 
 	//f 获取当前匹配条目数量
@@ -198,17 +107,17 @@ export class MatchRule {
 
 	//f 删除备份
 	public removeBackup = (): void => {
-		this.backup = null;
+		this.backup = {};
 	};
 
 	//f 通过备份还原
 	public restoreByBackup = (): void => {
 		//* 判断是否有备份
-		if (this.backup != null) {
+		if (this.backup != undefined) {
 			//* 备份不为空才进行还原
-			this.enumMainKey.forEach((key) => {
-				this[key] = this.backup[key];
-			});
+			for (const key of this.enumMainKey) {
+				this[key] = JSON.parse(JSON.stringify(this.backup[key]));
+			}
 		}
 	};
 
@@ -247,5 +156,167 @@ export class MatchRule {
 		return uuid.replace(/-/g, "");
 	};
 }
-//* Rule类的接口
-export interface ruleInterFace extends MatchRule {}
+
+//! Rule类的仅输入接口
+export interface IMatchRule extends IRule {
+	status?: IMatchRule_status;
+}
+
+//* rule的仅输入接口
+export interface IRule {
+	id?: string;
+	main?: IRule_main;
+	domItem?: IRule_domItem;
+	linkUrl?: IRule_linkUrl;
+	picUrl?: IRule_picUrl;
+	name?: IRule_name;
+	meta?: IRule_meta;
+}
+
+//* rule-main仅输入接口
+interface IRule_main {
+	name?: string; //* 规则名称
+	domainName?: string; //* 作用域
+	pathFilter?: {
+		pattern?: string; //* 正则表达式
+		flags?: string[]; //* 正则修饰符
+	};
+	titleSelector?: string; //* 标题选择器
+	iconUrl?: string; //* 站点图标链接
+}
+
+//* rule-domItem仅输入接口
+interface IRule_domItem {
+	//* 时候启用dom限定(开启后将以该项指定的dom作为起点查找查询其他项目)
+	enable?: boolean;
+	method?: 0 | 1;
+	selector?: string[];
+}
+
+//* rule-linkUrl仅输入接口
+interface IRule_linkUrl {
+	method?: 0 | 1;
+	selector?: string[];
+	infoType?: 1 | 2 | 3 | 4 | 5 | 6;
+	attribute?: string[];
+}
+
+//* rule-picUrl仅输入接口
+interface IRule_picUrl {
+	enable?: boolean;
+	//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+	origin?: number;
+	method?: 0 | 1;
+	selector?: string[];
+	infoType?: 1 | 2 | 3 | 4 | 5 | 6;
+	attribute?: string[];
+}
+
+//* rule-name仅输入接口
+interface IRule_name {
+	enable?: boolean;
+	//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+	origin?: number;
+	method?: 0 | 1;
+	selector?: string[];
+	infoType?: 1 | 2 | 3 | 4 | 5 | 6;
+	attribute?: string[];
+}
+
+//* rule-meta仅输入接口
+interface IRule_meta {
+	enable?: boolean;
+	//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+	origin?: 0 | 1 | 2 | 3;
+	method?: 0 | 1;
+	selector?: string[];
+	infoType?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+	attribute?: string[];
+	getMethod?: 0 | 1 | 2 | 3; //* 元信息获取方式
+}
+
+//? rule-status仅输入接口
+interface IMatchRule_status {
+	editing?: boolean;
+	isNewCreated?: boolean;
+}
+
+//! 输入输出接口
+//* rule的输入输出接口
+export interface IORule {
+	id: string;
+	main: IORule_main;
+	domItem: IORule_domItem;
+	linkUrl: IORule_linkUrl;
+	picUrl: IORule_picUrl;
+	name: IORule_name;
+	meta: IORule_meta;
+}
+
+//* rule-main输入输出接口
+interface IORule_main {
+	name: string; //* 规则名称
+	domainName: string; //* 作用域
+	pathFilter: {
+		pattern: string; //* 正则表达式
+		flags: string[]; //* 正则修饰符
+	};
+	titleSelector: string; //* 标题选择器
+	iconUrl: string; //* 站点图标链接
+}
+
+//* rule-domItem输入输出接口
+interface IORule_domItem {
+	//* 时候启用dom限定(开启后将以该项指定的dom作为起点查找查询其他项目)
+	enable: boolean;
+	method: 0 | 1;
+	selector: string[];
+}
+
+//* rule-linkUrl输入输出接口
+interface IORule_linkUrl {
+	method: 0 | 1;
+	selector: string[];
+	infoType: 1 | 2 | 3 | 4 | 5 | 6;
+	attribute: string[];
+}
+
+//* rule-picUrl输入输出接口
+interface IORule_picUrl {
+	enable: boolean;
+	//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+	origin: number;
+	method: 0 | 1;
+	selector: string[];
+	infoType: 1 | 2 | 3 | 4 | 5 | 6;
+	attribute: string[];
+}
+
+//* rule-name输入输出接口
+interface IORule_name {
+	enable: boolean;
+	//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+	origin: number;
+	method: 0 | 1;
+	selector: string[];
+	infoType: 1 | 2 | 3 | 4 | 5 | 6;
+	attribute: string[];
+}
+
+//* rule-meta输入输出接口
+interface IORule_meta {
+	enable: boolean;
+	//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+	origin: 0 | 1 | 2 | 3;
+	method: 0 | 1;
+	selector: string[];
+	infoType: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+	attribute: string[];
+	getMethod: 0 | 1 | 2 | 3; //* 元信息获取方式
+}
+
+//? rule-status输入输出接口
+interface IOMatchRule_status {
+	editing: boolean;
+	isNewCreated: boolean;
+}

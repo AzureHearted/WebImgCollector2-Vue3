@@ -2,6 +2,7 @@ import {createApp} from "vue";
 import Vue3TouchEvents from "vue3-touch-events"; //* vue3移动端touch事件支持
 import {createPinia} from "pinia"; //* 引入Pinia构造器
 import "./style/scss/global.scss"; //* 自定义全局样式引入
+import "@fancyapps/ui/dist/fancybox/fancybox.css";
 // import {globalStyle} from "./js/globalStyle.js";
 import JSZip from "jszip";
 import {saveAs} from "file-saver"; //* 用于原生浏览器"保存"来实现文件保存

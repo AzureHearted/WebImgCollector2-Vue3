@@ -177,6 +177,11 @@
   resolved "https://registry.npmmirror.com/@esbuild/win32-x64/-/win32-x64-0.18.12.tgz#1da26735ce5954bf914f8f2117b5096c548bbba2"
   integrity sha512-O0UYQVkvfM/jO8a4OwoV0mAKSJw+mjWTAd1MJd/1FCX6uiMdLmMRPK/w6e9OQ0ob2WGxzIm9va/KG0Ja4zIOgg==
 
+"@fancyapps/ui@^5.0.20":
+  version "5.0.20"
+  resolved "https://registry.npmmirror.com/@fancyapps/ui/-/ui-5.0.20.tgz#c9e25d333ad27568ee950e0092d0747ae42b8237"
+  integrity sha512-g7go/W0mIplnpVCWNm6uHF6VZeDSAJnPHzx0bxyETfzyYqtwpv0LpNYP8TbWqFELvXdXwNkQwHvHxkI9FvGlqQ==
+
 "@floating-ui/core@^1.3.1":
   version "1.3.1"
   resolved "https://registry.npmmirror.com/@floating-ui/core/-/core-1.3.1.tgz#4d795b649cc3b1cbb760d191c80dcb4353c9a366"

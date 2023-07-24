@@ -1,7 +1,6 @@
 <template>
 	<el-tabs
 		v-model="info.activeName"
-		type="border-card"
 		@tab-click=""
 		v-if="formData != undefined">
 		<!-- !首选项 -->
@@ -60,6 +59,13 @@
 					<!-- *输入框-->
 					<span style="flex-grow: 1">
 						<el-input v-model="formData.main.titleSelector" type="text" />
+					</span>
+				</el-form-item>
+				<!-- f站点图标 -->
+				<el-form-item label="站点图标Url">
+					<!-- *输入框-->
+					<span style="flex-grow: 1">
+						<el-input v-model="formData.main.iconUrl" type="text" />
 					</span>
 				</el-form-item>
 			</el-form>
@@ -372,8 +378,8 @@
 					<el-checkbox v-model="formData.meta.enable" type="checkbox" />
 				</el-form-item>
 				<!-- f提取来源 -->
-				<el-form-item label="提取类型" v-if="formData.meta.enable">
-					<el-select v-model="formData.meta.origin" placeholder="提取来源">
+				<el-form-item label="来源" v-if="formData.meta.enable">
+					<el-select v-model="formData.meta.origin" placeholder="来源">
 						<el-option :value="0" label="单独指定目标dom" />
 						<el-option :value="1" label="从“链接”dom获取" />
 						<el-option :value="2" label="从“图链”dom获取" />
@@ -418,6 +424,7 @@
 					<el-select
 						v-model="formData.meta.infoType"
 						placeholder="选择要提取的类型">
+						<el-option :value="0" label="来源对应的dom和链接" />
 						<el-option :value="1" label="值" />
 						<el-option :value="2" label="Attribute属性" />
 						<el-option :value="3" label="Property属性" />
@@ -428,7 +435,7 @@
 				</el-form-item>
 				<!-- f匹配属性 -->
 				<el-form-item
-					v-if="formData.meta.enable"
+					v-if="formData.meta.enable && formData.meta.infoType !== 0"
 					:label="`匹配属性${index + 1}`"
 					v-for="(attribute, index) in formData.meta.attribute"
 					:key="index">
@@ -459,19 +466,29 @@
 						</HoverButton>
 					</span>
 				</el-form-item>
+				<!-- f获取方式 -->
+				<el-form-item label="获取方式" v-if="formData.meta.enable">
+					<el-select
+						v-model="formData.meta.getMethod"
+						placeholder="选择要提取的类型">
+						<el-option :value="0" label="自动" />
+						<el-option :value="1" label="通过natural宽高(仅img标签有效)" />
+						<el-option :value="2" label="通过Image对象(仅对图片链接有效)" />
+						<el-option :value="3" label="通过Blob获取(获取实际可能较长)" />
+					</el-select>
+				</el-form-item>
 			</el-form>
 		</el-tab-pane>
 	</el-tabs>
 </template>
 
 <script setup lang="ts">
-	import {MatchRule} from "../ts/class/MatchRule";
+import {MatchRule} from "../ts/class/MatchRule";
 
-	const props = defineProps({
-		formData: {
-			type: MatchRule,
-		},
-	});
+	interface Props {
+		formData?: MatchRule;
+	}
+	const props = defineProps<Props>();
 
 	const info = reactive({
 		activeName: "main",
@@ -532,4 +549,3 @@
 		}
 	}
 </style>
-

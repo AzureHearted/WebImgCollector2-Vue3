@@ -1,6 +1,6 @@
 import {defineConfig} from "vite";
-import path from "path";
 import vue from "@vitejs/plugin-vue"; //* vue解析插件
+import path from "path";
 import AutoImport from "unplugin-auto-import/vite"; //* 依赖自动导入插件
 import Components from "unplugin-vue-components/vite"; //* 组件自动导入插件
 import {

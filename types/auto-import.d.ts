@@ -65,9 +65,16 @@ declare global {
   const effectScope: typeof import('vue')['effectScope']
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const getBlobByUrl: typeof import('../src/ts/public')['getBlobByUrl']
+  const getBlobByUrlAuto: typeof import('../src/ts/public')['getBlobByUrlAuto']
+  const getCardsByRule: typeof import('../src/ts/public')['getCardsByRule']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
+  const getDom: typeof import('../src/ts/public')['getDom']
   const getDomByRule: typeof import('../src/ts/public')['getDomByRule']
+  const getExtByBlob: typeof import('../src/ts/public')['getExtByBlob']
+  const getFavicon: typeof import('../src/ts/public')['getFavicon']
+  const getImgMetaByBlob: typeof import('../src/ts/public')['getImgMetaByBlob']
+  const getImgMetaByImage: typeof import('../src/ts/public')['getImgMetaByImage']
   const getMetaByBlob: typeof import('../src/ts/public')['getMetaByBlob']
   const getNameByUrl: typeof import('../src/ts/public')['getNameByUrl']
   const getOriginByUrl: typeof import('../src/ts/public')['getOriginByUrl']
@@ -79,6 +86,7 @@ declare global {
   const inject: typeof import('vue')['inject']
   const isDefined: typeof import('@vueuse/core')['isDefined']
   const isEmpty: typeof import('../src/ts/public')['isEmpty']
+  const isPath: typeof import('../src/ts/public')['isPath']
   const isProxy: typeof import('vue')['isProxy']
   const isReactive: typeof import('vue')['isReactive']
   const isReadonly: typeof import('vue')['isReadonly']
@@ -86,6 +94,7 @@ declare global {
   const isUrl: typeof import('../src/ts/public')['isUrl']
   const makeDestructurable: typeof import('@vueuse/core')['makeDestructurable']
   const markRaw: typeof import('vue')['markRaw']
+  const mixSort: typeof import('../src/ts/public')['mixSort']
   const monkeyWindow: typeof import('vite-plugin-monkey/dist/client')['monkeyWindow']
   const nextTick: typeof import('vue')['nextTick']
   const onActivated: typeof import('vue')['onActivated']
@@ -129,6 +138,7 @@ declare global {
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
   const shallowRef: typeof import('vue')['shallowRef']
+  const strAutofill: typeof import('../src/ts/public')['strAutofill']
   const syncRef: typeof import('@vueuse/core')['syncRef']
   const syncRefs: typeof import('@vueuse/core')['syncRefs']
   const templateRef: typeof import('@vueuse/core')['templateRef']
@@ -403,10 +413,15 @@ declare module 'vue' {
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
     readonly getBlobByUrl: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrl']>
+    readonly getBlobByUrlAuto: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrlAuto']>
+    readonly getCardsByRule: UnwrapRef<typeof import('../src/ts/public')['getCardsByRule']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
-    readonly getDomByRule: UnwrapRef<typeof import('../src/ts/public')['getDomByRule']>
-    readonly getMetaByBlob: UnwrapRef<typeof import('../src/ts/public')['getMetaByBlob']>
+    readonly getDom: UnwrapRef<typeof import('../src/ts/public')['getDom']>
+    readonly getExtByBlob: UnwrapRef<typeof import('../src/ts/public')['getExtByBlob']>
+    readonly getFavicon: UnwrapRef<typeof import('../src/ts/public')['getFavicon']>
+    readonly getImgMetaByBlob: UnwrapRef<typeof import('../src/ts/public')['getImgMetaByBlob']>
+    readonly getImgMetaByImage: UnwrapRef<typeof import('../src/ts/public')['getImgMetaByImage']>
     readonly getNameByUrl: UnwrapRef<typeof import('../src/ts/public')['getNameByUrl']>
     readonly getOriginByUrl: UnwrapRef<typeof import('../src/ts/public')['getOriginByUrl']>
     readonly getSrcsetMaximumValue: UnwrapRef<typeof import('../src/ts/public')['getSrcsetMaximumValue']>
@@ -416,6 +431,7 @@ declare module 'vue' {
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
     readonly isEmpty: UnwrapRef<typeof import('../src/ts/public')['isEmpty']>
+    readonly isPath: UnwrapRef<typeof import('../src/ts/public')['isPath']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
@@ -423,6 +439,7 @@ declare module 'vue' {
     readonly isUrl: UnwrapRef<typeof import('../src/ts/public')['isUrl']>
     readonly makeDestructurable: UnwrapRef<typeof import('@vueuse/core')['makeDestructurable']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
+    readonly mixSort: UnwrapRef<typeof import('../src/ts/public')['mixSort']>
     readonly monkeyWindow: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['monkeyWindow']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
@@ -465,6 +482,7 @@ declare module 'vue' {
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
+    readonly strAutofill: UnwrapRef<typeof import('../src/ts/public')['strAutofill']>
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>
     readonly templateRef: UnwrapRef<typeof import('@vueuse/core')['templateRef']>
@@ -733,10 +751,15 @@ declare module '@vue/runtime-core' {
     readonly effectScope: UnwrapRef<typeof import('vue')['effectScope']>
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
     readonly getBlobByUrl: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrl']>
+    readonly getBlobByUrlAuto: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrlAuto']>
+    readonly getCardsByRule: UnwrapRef<typeof import('../src/ts/public')['getCardsByRule']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
-    readonly getDomByRule: UnwrapRef<typeof import('../src/ts/public')['getDomByRule']>
-    readonly getMetaByBlob: UnwrapRef<typeof import('../src/ts/public')['getMetaByBlob']>
+    readonly getDom: UnwrapRef<typeof import('../src/ts/public')['getDom']>
+    readonly getExtByBlob: UnwrapRef<typeof import('../src/ts/public')['getExtByBlob']>
+    readonly getFavicon: UnwrapRef<typeof import('../src/ts/public')['getFavicon']>
+    readonly getImgMetaByBlob: UnwrapRef<typeof import('../src/ts/public')['getImgMetaByBlob']>
+    readonly getImgMetaByImage: UnwrapRef<typeof import('../src/ts/public')['getImgMetaByImage']>
     readonly getNameByUrl: UnwrapRef<typeof import('../src/ts/public')['getNameByUrl']>
     readonly getOriginByUrl: UnwrapRef<typeof import('../src/ts/public')['getOriginByUrl']>
     readonly getSrcsetMaximumValue: UnwrapRef<typeof import('../src/ts/public')['getSrcsetMaximumValue']>
@@ -746,6 +769,7 @@ declare module '@vue/runtime-core' {
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
     readonly isEmpty: UnwrapRef<typeof import('../src/ts/public')['isEmpty']>
+    readonly isPath: UnwrapRef<typeof import('../src/ts/public')['isPath']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
     readonly isReadonly: UnwrapRef<typeof import('vue')['isReadonly']>
@@ -753,6 +777,7 @@ declare module '@vue/runtime-core' {
     readonly isUrl: UnwrapRef<typeof import('../src/ts/public')['isUrl']>
     readonly makeDestructurable: UnwrapRef<typeof import('@vueuse/core')['makeDestructurable']>
     readonly markRaw: UnwrapRef<typeof import('vue')['markRaw']>
+    readonly mixSort: UnwrapRef<typeof import('../src/ts/public')['mixSort']>
     readonly monkeyWindow: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['monkeyWindow']>
     readonly nextTick: UnwrapRef<typeof import('vue')['nextTick']>
     readonly onActivated: UnwrapRef<typeof import('vue')['onActivated']>
@@ -795,6 +820,7 @@ declare module '@vue/runtime-core' {
     readonly shallowReactive: UnwrapRef<typeof import('vue')['shallowReactive']>
     readonly shallowReadonly: UnwrapRef<typeof import('vue')['shallowReadonly']>
     readonly shallowRef: UnwrapRef<typeof import('vue')['shallowRef']>
+    readonly strAutofill: UnwrapRef<typeof import('../src/ts/public')['strAutofill']>
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>
     readonly templateRef: UnwrapRef<typeof import('@vueuse/core')['templateRef']>

@@ -1,22 +1,33 @@
 <template>
 	<div ref="listContainer">
-		<el-scrollbar ref="scrollbarRef">
+		<el-scrollbar ref="scrollbarRef" @scroll="handleScroll">
 			<transition-group
+				id="onlineGallery-listBody"
 				class="onlineGallery-listBody"
 				ref="listBody"
 				:style="getStyle"
 				name="list"
 				tag="div">
 				<Card
-					v-for="(card, index) in cardsStore.data.filterCards"
+					v-for="(card, index) in cardsStore.filterCards"
 					:card="card"
 					:key="card.id"
+					:index="index"
 					:data-index="index"
 					:style="{
 						'--aspect-ratio': card.meta.aspectRatio,
 					}">
 				</Card>
 			</transition-group>
+			<transition name="backTop">
+				<div
+					v-show="backTopShow"
+					ref="backTop"
+					class="onlineGallery-backTop"
+					@click="backToTop">
+					<el-icon><i-ep-CaretTop /></el-icon>
+				</div>
+			</transition>
 		</el-scrollbar>
 	</div>
 </template>
@@ -25,9 +36,13 @@
 	const listContainer = ref(); //* 用于接收list容器的dom
 	const listBody = ref(); //* 用于接收list本体的dom
 	const scrollbarRef = ref();
+	const wrapRef = ref();
 
-	const listStore = useListInfoStore();
 	const cardsStore = useCardsStore();
+
+	const toolBar = useToolBarStore();
+
+	const listControl = toolBar.listControl;
 
 	//f 获取list的样式(计算属性)
 	const getStyle = computed(() => {
@@ -37,16 +52,38 @@
 
 		const containerInfo = listContainer.value.getBoundingClientRect();
 		let style = {
-			"--nowColumn": listStore.info.nowColumn,
+			"--nowColumn": listControl.showColumn,
 			"--listHeight":
-				containerInfo.height - 8 * listStore.info.nowColumn - 10 + "px",
+				containerInfo.height - 8 * listControl.showColumn - 10 + "px",
 			"--cardMaxHeight": `calc(var(--listHeight) / var(--nowColumn))`,
 		};
-		if (listStore.info.nowColumn <= 0) {
+		if (listControl.showColumn <= 0) {
 			style["--cardMaxHeight"] = "1000%";
 		}
 		return style;
 	});
+
+	const backTop = ref(); //* 用于接收回到顶部按钮
+	const backTopShow = ref(false);
+
+	interface scrollEvent {
+		scrollLeft: number;
+		scrollTop: number;
+	}
+	//f 处理滚动事件
+	const handleScroll = (scrollEvent: scrollEvent) => {
+		// console.log("list滚动", scrollEvent.scrollTop);
+		if (scrollEvent.scrollTop > 150) {
+			backTopShow.value = true;
+		} else {
+			backTopShow.value = false;
+		}
+	};
+
+	//f 触发事件(回到顶部)
+	const backToTop = () => {
+		scrollbarRef.value.setScrollTop(0);
+	};
 </script>
 
 <style lang="scss" scoped>
@@ -75,13 +112,43 @@
 		-webkit-user-drag: none;
 	}
 
-	.v-enter-active,
-	.v-leave-active {
+	//* 返回顶部按钮样式
+	.onlineGallery-backTop {
+		--el-backtop-bg-color: var(--el-bg-color-overlay);
+		--el-backtop-text-color: var(--el-color-primary);
+		--el-backtop-hover-bg-color: var(--el-border-color-extra-light);
+
+		position: absolute;
+		width: 40px;
+		height: 40px;
+
+		right: 40px;
+		bottom: 40px;
+
+		border-radius: 50%;
+		background-color: var(--el-bg-color-overlay);
+		color: var(--el-color-primary);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 20px;
+		box-shadow: var(--el-box-shadow-lighter);
+		cursor: pointer;
+		z-index: 5;
+		transition: 0.5s;
+
+		&:hover {
+			background-color: var(--el-border-color-extra-light);
+		}
+	}
+
+	.backTop-enter-active,
+	.backTop-leave-active {
 		transition: opacity 0.5s ease;
 	}
 
-	.v-enter-from,
-	.v-leave-to {
+	.backTop-enter-from,
+	.backTop-leave-to {
 		opacity: 0;
 	}
 

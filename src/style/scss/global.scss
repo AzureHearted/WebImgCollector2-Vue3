@@ -5,10 +5,22 @@
 	z-index: 9147483647 !important;
 }
 
+.el-checkbox__inner{
+	z-index: 0 !important;
+}
+
+.el-statistic__content{
+	font-size: large !important;
+}
+
 :root {
 	&[data-show-scrollbar="false"] > ::-webkit-scrollbar {
 		width: 0px !important;
 		height: 0px !important;
 		transition: all 0.5s;
 	}
+}
+
+[class*="el-input"] {
+	border: 0 !important;
 }

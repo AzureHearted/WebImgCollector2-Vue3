@@ -1,16 +1,18 @@
 <template>
 	<div class="onlineGallery-toolBar">
 		<!-- *数量统计 -->
-		<el-statistic class="statistic" :value="cardsStore.data.filterCards.length">
+		<el-statistic
+			class="statistic"
+			:value="cardsStore.filterCards.length"
+			:prefix="cardsStore.selectedCards.length.toString() + ' /'"
+			:suffix="'/ ' + cardsStore.allValidCards.length.toString()">
 			<template #title>
 				<div style="display: flex; justify-content: center">
 					选中 / 可见 / 总数
 				</div>
 			</template>
-			<template #prefix>{{ selectedCards.length }} / </template>
-			<template #suffix>/ {{ cardsStore.data.cardList.length }} </template>
 		</el-statistic>
-		<!-- *过滤器控制条 -->
+		<!-- *过滤器 -->
 		<div class="filter">
 			<!-- *尺寸过滤 -->
 			<div class="size">
@@ -56,17 +58,54 @@
 					multiple></el-select-v2>
 			</div>
 		</div>
-		<!-- *最大显示行数控制条 -->
-		<div class="zoom-slider">
-			<span>最大显示行数</span>
-			<el-slider
-				label="最大显示行数"
-				v-model="listStore.info.nowColumn"
-				:min="1"
-				:max="6"
-				:step="1"
-				placement="right"
-				show-stops />
+		<!-- *列表控制 -->
+		<div class="list-control">
+			<!-- *最大显示行数控制条 -->
+			<div class="zoom-slider">
+				<span class="label">行数</span>
+				<el-input-number
+					class="input-number"
+					:min="1"
+					:max="6"
+					:step="1"
+					step-strictly
+					controls-position="right"
+					@wheel="
+					(e:WheelEvent) => {
+						if (e.deltaY < 0) {
+							if (toolbar.listControl.showColumn < 6) toolbar.listControl.showColumn++;
+						} else {
+							if (toolbar.listControl.showColumn > 1) toolbar.listControl.showColumn--;
+						}
+					}"
+					v-model="toolbar.listControl.showColumn"></el-input-number>
+			</div>
+			<div class="sort-method">
+				<span class="label">排序</span>
+				<el-select-v2
+					class="select"
+					v-model="listControl.sortMethod.value"
+					:options="listControl.sortMethod.options"
+					placeholder="排序方法"></el-select-v2>
+			</div>
+		</div>
+		<!-- *预设规则选择 -->
+		<div class="ruleSelector">
+			<span class="label">预设</span>
+			<el-select-v2
+				class="select"
+				v-model="ruleSelector.value"
+				filterable
+				:options="ruleSelector.option"
+				placeholder="选择当前预设">
+				<template #empty> 11 </template>
+				<template #default="node">
+					<div class="rule-item">
+						<el-image class="rule-icon" :src="node.item.iconUrl"> </el-image>
+						{{ node.item.label }}
+					</div>
+				</template>
+			</el-select-v2>
 		</div>
 		<!-- *按钮组 -->
 		<el-button-group class="button-group">
@@ -82,8 +121,8 @@
 				type="primary"
 				@click="allSelectSwitch"
 				:loading="loading.value"
-				:icon="listStore.info.allSelected ? CheckboxAll : CheckboxNone">
-				{{ listStore.info.allSelected ? "全选" : "取消全选" }}
+				:icon="toolbar.listControl.allSelected ? CheckboxAll : CheckboxNone">
+				{{ toolbar.listControl.allSelected ? "全选" : "取消全选" }}
 			</el-button>
 			<!-- *下载按钮 -->
 			<el-button
@@ -122,52 +161,72 @@
 </template>
 
 <script setup lang="ts">
+	import {ITask} from "../ts/public";
 	import CheckboxNone from "/src/svg/checkbox-blank-line.svg"; //? svg导入
 	import CheckboxAll from "/src/svg/checkbox-fill.svg"; //? svg导入
 
 	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
 	const cardsStore = useCardsStore(); //* 实例化cardsStore数据仓库
-	const Toolbar = useToolBarStore(); //* 实例化Toolbar数据仓库
-	const listStore = useListInfoStore();
+	const toolbar = useToolBarStore(); //* 实例化Toolbar数据仓库
 	const ruleEditor = useRuleEditorStore(); //* 实例化ruleEditor数据仓库
 
 	//* 进度条
 	const loading = appInfo.loading;
 
 	//* 过滤器参数
-	const filter = Toolbar.filter;
+	const filter = toolbar.filter;
+
+	//* list控制项
+	const listControl = toolbar.listControl;
+
+	//* 预设规则选择器
+	const ruleSelector = toolbar.ruleSelector;
 
 	//f 刷新函数
 	const refresh = async () => {
-		await getCards();
+		if (ruleSelector.value === "#") {
+			await cardsStore.getCard(ruleEditor.defaultRule);
+		} else {
+			const ruleIndex = ruleEditor.data.ruleList.findIndex(
+				(rule) => rule.id === ruleSelector.value
+			);
+			const rule = ruleEditor.data.ruleList[ruleIndex];
+			if (rule) {
+				await cardsStore.getCard(rule);
+			} else {
+				ElMessage({
+					message: "请选择预设后再尝试此操作",
+					type: "info",
+					showClose: true,
+					grouping: true,
+					offset: 120,
+				});
+			}
+		}
 	};
-
-	//f  选中的卡片列表
-	const selectedCards = computed(() => {
-		return cardsStore.data.cardList.filter((card) => card.selected);
-	});
 
 	//f 全选切换
 	const allSelectSwitch = async () => {
-		listStore.info.allSelected = !listStore.info.allSelected; //* 全选标识符取反
+		toolbar.listControl.allSelected = !toolbar.listControl.allSelected; //* 全选标识符取反
 		appInfo.loading.value = true;
 		//* 刷新结果
-		cardsStore.data.filterCards.forEach(
-			(card) => (card.selected = listStore.info.allSelected)
+		cardsStore.filterCards.forEach(
+			(card) => (card.selected = toolbar.listControl.allSelected)
 		);
 		appInfo.loading.value = false;
 	};
 
 	//f 下载选中项
 	const downloadSelected = async () => {
-		const downloadCards = selectedCards.value;
+		const downloadCards = cardsStore.selectedCards;
+		// console.log(downloadCards);
 		if (!downloadCards.length) {
 			ElMessage({
 				message: "请选择要下载的数据",
 				type: "info",
 				showClose: true,
 				grouping: true,
-				offset: 80,
+				offset: 120,
 			});
 			return;
 		}
@@ -176,56 +235,63 @@
 		let finallyCount = 0;
 
 		//* 创建任务清单
-		for (const card of downloadCards) {
-			if (card.blob == null) {
-				//* 队列任务定义
-				const task = async () => {
-					const url = card.url;
+		for (let index = 0; index < downloadCards.length; index++) {}
 
-					//* 先尝试通过Fetch方法获取
-					let blob = await getBlobByUrl(url, "Fetch");
-					if (blob.type === "none") {
-						//* Fetch失败后尝试通过GM不指定referer方式获取
-						blob = await getBlobByUrl(url, "GM");
-					}
-					if (blob.type === "none") {
-						//* 再次失败后尝试通过GM指定referer方式获取
-						blob = await getBlobByUrl(url, "GM", location.origin);
-					}
+		const taskList: ITask[] = downloadCards.map((card, index) => {
+			//* 队列任务定义
+			return <ITask>{
+				index: index,
+				//* 主要执行函数
+				main: async () => {
+					if (!card.linkBlob) {
+						const url = card.linkUrl;
 
-					card.blob = blob;
+						card.linkBlob = await getBlobByUrlAuto(url);
 
-					if (card.blob && card.blob["type"] !== "none") {
-						return [card.name, "处理成功!"];
+						if (card.linkBlob && card.linkBlob["type"] !== "none") {
+							return [card.name, "处理成功!"];
+						} else {
+							return [card.name, "处理失败"];
+						}
 					} else {
-						return [card.name, "处理失败"];
+						return [card.name, "处理成功!"];
 					}
-				};
-				taskQueue.addTask(task);
-			}
-		}
+				},
+				//* 单次执行完成后的回调
+				callback: (res, index) => {
+					finallyCount++;
+					loading.percentage = (finallyCount / downloadCards.length) * 100;
+				},
+			};
+		});
 
-		taskQueue.singleCallback = () => {
-			finallyCount++;
-			loading.percentage = (finallyCount / downloadCards.length) * 100;
-		};
+		taskQueue.pushTask(taskList);
 
+		//* 全部执行完成后的回调
 		taskQueue.finallyCallback = async () => {
 			ElMessage({
 				message: "下载成功! (正在生成压缩包)",
 				type: "success",
 				showClose: true,
 				grouping: true,
-				offset: 80,
+				offset: 120,
 			});
 			const zipContainer = new JSZip();
 			//* 生成压缩包
-			for (const card of downloadCards) {
-				// console.log(card);
-				if (card.name != null && card.blob != null) {
-					zipContainer.file(card.name, card.blob);
+			for (let index = 0; index < downloadCards.length; index++) {
+				const card = downloadCards[index];
+				if (card.name && card.linkBlob) {
+					//* 后缀名处理
+					let ext = getExtByBlob(card.linkBlob);
+					let reg = new RegExp(`(\\.${ext})+$`);
+					let fix = strAutofill(index.toString(), 0, 4);
+					zipContainer.file(
+						`${fix} - ${card.name.replace(reg, "")}.${ext}`,
+						card.linkBlob
+					);
 				}
 			}
+
 			// console.log(zipContainer);
 			const zip = await zipContainer.generateAsync({
 				type: "blob",
@@ -244,240 +310,6 @@
 		//* 开始执行
 		taskQueue.run();
 	};
-
-	//f 获取卡片
-	const getCards = async () => {
-		let cardDomList = await getImgOrVideoDom(); //* 先获取dom
-		// console.log(cardDomList);
-		let tempCardList: matchCard[] = [];
-
-		//* 没有匹配到任何dom就停止操作直接返回
-		if (!cardDomList.length) {
-			ElMessage({
-				message: "没有匹配到相应数据",
-				type: "info",
-				showClose: true,
-				grouping: true,
-				offset: 80,
-			});
-			return;
-		}
-
-		const taskQueue = new TaskQueue({showMessage: false, max: 10});
-		//* 进度条初始化
-		loading.init();
-		let finallyCount = 0;
-
-		taskQueue.taskList = cardDomList.map((dom, index) => {
-			// console.log(initCount + index);
-			return async () => {
-				//* 从得到的dom中找出符合条件的dom并生成card对象
-				const card: matchCard = {
-					name: "",
-					url: "",
-					originUrls: [],
-					//* 初始meta信息
-					meta: <metaInterFace>{
-						isOk: false,
-						width: 0,
-						height: 0,
-						aspectRatio: 3 / 4,
-					},
-					match: false, //? 匹配标识符
-					selected: false, //? 选中标识符
-					dom: dom,
-				};
-
-				//* 标签类型判断
-				if (dom.tagName == "META") {
-					// 如果是meta标签上的链接：通过请求进行判断
-					card.originUrls = <string[]>(
-						[getTagInfo(dom, 3, "content")].filter((url) => !isEmpty(url, true))
-					);
-					if (card.originUrls.length > 0) {
-						card.url = card.originUrls[0];
-						const blob = await fetch(card.url)
-							.then((res) => res.blob())
-							.catch(() => {
-								return new Blob(undefined, {type: "none"});
-							});
-						// console.log(`是否是img文件：${/^image/.test(blob.type)}`);
-						if (/^image/.test(blob.type)) {
-							//! 获取meta信息
-							const meta: metaInterFace = await getMetaByBlob(blob);
-							// console.log(meta);
-							if (meta.isOk) {
-								card.name = getNameByUrl(card.url);
-								card.meta.width = meta.width;
-								card.meta.height = meta.height;
-								card.meta.aspectRatio = meta.width / meta.height;
-								card.match = true;
-							}
-						}
-					}
-				} else if (dom.tagName == "IMG" || dom.tagName == "VIDEO") {
-					// 确保每个img/video的尺寸都有效
-					if (dom.naturalWidth > 0 && dom.naturalHeight > 0) {
-						//* naturalWidth和naturalHeight都 有效时：直接使用有效值
-						card.originUrls = <string[]>(
-							[
-								getTagInfo(dom, 2, "srcset"),
-								getTagInfo(dom, 2, "data-src"),
-								getTagInfo(dom, 3, "src"),
-							].filter((url) => !isEmpty(url, true))
-						);
-						if (card.originUrls.length > 0) {
-							card.url = card.originUrls[0];
-							card.name = getNameByUrl(card.url);
-							card.meta.width = dom.naturalWidth;
-							card.meta.height = dom.naturalHeight;
-							card.meta.aspectRatio = dom.naturalWidth / dom.naturalHeight;
-							card.match = true;
-						}
-					} else {
-						//* naturalWidth和naturalHeight 无效时：通过请求进行判断
-						card.originUrls = <any>(
-							[
-								getTagInfo(dom, 2, "srcset"),
-								getTagInfo(dom, 2, "data-src"),
-								getTagInfo(dom, 3, "src"),
-							].filter((url) => !isEmpty(url, true))
-						);
-						if (card.originUrls.length > 0) {
-							card.url = card.originUrls[0];
-							const blob = await fetch(card.url)
-								.then((res) => res.blob())
-								.catch((err) => {
-									return new Blob(undefined, {type: "none"});
-								});
-							if (/^image/.test(blob.type)) {
-								//! 获取meta信息
-								const meta: metaInterFace = await getMetaByBlob(blob);
-								if (meta.isOk) {
-									card.name = getNameByUrl(card.url);
-									card.meta.width = meta.width;
-									card.meta.height = meta.height;
-									card.meta.aspectRatio = meta.width / meta.height;
-									card.match = true;
-								}
-							}
-						}
-					}
-				} else if (dom.tagName == "A") {
-					card.originUrls = <string[]>(
-						[getTagInfo(dom, 3, "href")].filter((url) => !isEmpty(url, true))
-					);
-					if (card.originUrls.length > 0) {
-						card.url = card.originUrls[0];
-						const blob = await fetch(card.url)
-							.then((res) => res.blob())
-							.catch((err) => {
-								return new Blob(undefined, {type: "none"});
-							});
-						if (/^image/.test(blob.type)) {
-							//! 获取meta信息
-							const meta: metaInterFace = await getMetaByBlob(blob);
-							// console.log(meta);
-							if (meta.isOk) {
-								card.name = getNameByUrl(card.url);
-								card.meta.width = meta.width;
-								card.meta.height = meta.height;
-								card.meta.aspectRatio = meta.width / meta.height;
-								card.match = true;
-							}
-						}
-					}
-				}
-
-				//* 从未匹配过的才进行添加
-				if (card.match && !cardsStore.data.urlSet.has(card.url)) {
-					//? 更新过滤器的最大值
-					const max =
-						(filter.size.width.max =
-						filter.size.height.max =
-							Math.max(
-								filter.size.width.max,
-								filter.size.height.max,
-								card.meta.width,
-								card.meta.height
-							));
-					filter.size.width.value[1] = filter.size.height.value[1] = max;
-
-					delete card.match; //*消除临时属性
-					card["id"] = buildUUID(); //* 生成id
-					tempCardList[index] = card;
-					cardsStore.data.urlSet.add(card.url);
-					cardsStore.data.domSet.add(card.dom);
-					return ["符合条件（添加）", card.dom];
-				} else {
-					return ["不符合条件（排除）"];
-				}
-			};
-		});
-
-		//* [额外操作]每个任务成功时的回调
-		taskQueue.singleCallback = () => {
-			finallyCount++;
-			loading.percentage = (finallyCount / cardDomList.length) * 100;
-		};
-
-		//* [额外操作]所有任务成功时的回调
-		taskQueue.finallyCallback = () => {
-			//* 过滤空值
-			cardsStore.data.cardList.push(...tempCardList.filter((card) => card));
-			// console.log("更新成功");
-			ElMessage({
-				message: "数据更新成功!",
-				type: "success",
-				showClose: true,
-				grouping: true,
-				offset: 80,
-			});
-			loading.percentage = 100;
-			loading.reset();
-		};
-		//! 执行队列
-		taskQueue.run();
-	};
-
-	//f 获取匹配的dom
-	const getImgOrVideoDom = async () => {
-		let imgDoms: any[] = [];
-		if (filter.formats.value.length) {
-			//* 格式过滤器不为空
-			const formatList = filter.formats.value;
-			for (const format of formatList) {
-				imgDoms.push(
-					...Array.from(
-						document.querySelectorAll(
-							`meta[property="og:image"][content $= '\.${format}']`
-						)
-					)
-				);
-				imgDoms.push(
-					...Array.from(document.querySelectorAll(`img[src $= '\.${format}']`))
-				);
-				imgDoms.push(
-					...Array.from(document.querySelectorAll(`[href $= '\.${format}']`))
-				);
-			}
-		} else {
-			//* 格式过滤器为空
-			imgDoms.push(
-				...Array.from(
-					document.querySelectorAll(`meta[property="og:image"][content]`)
-				)
-			);
-			imgDoms.push(...Array.from(document.querySelectorAll(`img[src]`)));
-		}
-
-		return imgDoms;
-	};
-
-	//? 向父组件暴露内容(只有父组件onMounted后才能被读取到)
-	defineExpose({
-		getCards,
-	});
 </script>
 
 <style lang="scss" scoped>
@@ -502,7 +334,7 @@
 			align-items: center;
 			// align-items:center;
 
-			gap: 14px;
+			gap: 10px;
 
 			color: black;
 
@@ -511,19 +343,19 @@
 			/* 禁止图文拖拽 */
 			-webkit-user-drag: none;
 			@media (max-width: 500px) {
-				gap: 2px;
+				gap: 4px;
 				margin-top: 4px;
 				margin-bottom: 8px;
-				padding-left: 20px;
-				padding-right: 20px;
+				padding-left: 10px;
+				padding-right: 10px;
 			}
 		}
 
 		// *统计组件样式
 		.statistic {
 			flex-shrink: 0;
-			width: 120px;
-			font-size: 16px !important;
+			width: 140px;
+			font-size: 14px !important;
 			display: flex;
 			flex-flow: column;
 			justify-content: center;
@@ -537,14 +369,13 @@
 		// *过滤器控制条样式
 		.filter {
 			& {
-				// flex-grow: 2;
 				width: fit-content;
+				width: 220px;
 				display: flex;
 				flex-flow: column;
 				justify-content: center;
 				align-items: center;
 				@media (max-width: 500px) {
-					width: 100%;
 					align-items: start;
 					gap: 2px;
 				}
@@ -553,16 +384,19 @@
 			//* 尺寸过滤器
 			.size {
 				& {
-					flex-grow: 2;
-					width: 250px;
+					position: relative;
+					width: 100%;
 					display: flex;
 					flex-flow: column nowrap;
+					justify-content: center;
+					align-items: center;
 					@media (max-width: 500px) {
 						gap: 2px;
 					}
 				}
 				//* 每一行的样式
 				.row {
+					width: 100%;
 					display: flex;
 					flex-flow: row nowrap;
 					gap: 8px;
@@ -570,8 +404,7 @@
 					align-items: center;
 					.slider {
 						flex-grow: 1;
-						// min-width: 150px;
-						// max-width: 190px;
+						padding-right: 10px;
 					}
 					.label {
 						margin: 0;
@@ -584,8 +417,8 @@
 			//* 格式过滤器
 			.format {
 				& {
-					width: 250px;
-					flex-grow: 1;
+					position: relative;
+					width: 100%;
 					display: flex;
 					flex-flow: row;
 					justify-content: center;
@@ -604,12 +437,84 @@
 			}
 		}
 
-		// *缩放控制条样式
-		.zoom-slider {
-			width: 180px;
-			font-size: 16px !important;
-			@media (max-width: 500px) {
-				width: 100%;
+		//* 规则选择器样式
+		.ruleSelector {
+			& {
+				position: relative;
+				width: fit-content;
+				display: flex;
+				flex-flow: row;
+				justify-content: center;
+				align-items: center;
+				gap: 8px;
+			}
+			.select {
+				width: 160px;
+			}
+			.label {
+				margin: 0;
+				text-align: center;
+				white-space: nowrap; //* 防止换行
+				font-size: 16px !important;
+			}
+		}
+
+		// *列表控制区
+		.list-control {
+			& {
+				position: relative;
+				width: fit-content;
+				display: flex;
+				flex-flow: column;
+				justify-content: center;
+				align-items: start;
+				gap: 8px;
+				@media (max-width: 500px) {
+					flex-flow: row;
+				}
+			}
+
+			// *缩放控制条样式
+			.zoom-slider {
+				& {
+					position: relative;
+					width: fit-content;
+					display: flex;
+					flex-flow: row;
+					justify-content: center;
+					align-items: center;
+					gap: 8px;
+				}
+				.input-number {
+					width: 80px;
+				}
+				.label {
+					margin: 0;
+					text-align: center;
+					white-space: nowrap; //* 防止换行
+					font-size: 16px !important;
+				}
+			}
+			// *排序方式选择器
+			.sort-method {
+				& {
+					position: relative;
+					width: fit-content;
+					display: flex;
+					flex-flow: row;
+					justify-content: center;
+					align-items: center;
+					gap: 8px;
+				}
+				.select {
+					width: 120px;
+				}
+				.label {
+					margin: 0;
+					text-align: center;
+					white-space: nowrap; //* 防止换行
+					font-size: 16px !important;
+				}
 			}
 		}
 
@@ -619,5 +524,25 @@
 		}
 	}
 
-	/* *统计组件样式 */
+	//* 规则项样式
+	.rule-item {
+		height: 100% !important;
+		display: flex;
+		justify-content: start;
+		align-items: center;
+		gap: 8px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	//* 规则图标样式
+	.rule-icon {
+		flex-shrink: 0;
+		width: 16px !important;
+		aspect-ratio: 1;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
 </style>

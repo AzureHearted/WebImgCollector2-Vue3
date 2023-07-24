@@ -49,6 +49,9 @@
 							<template #default="{node}">
 								<!-- *规则项 -->
 								<div v-if="node.key != '#'" class="tree-item tree-item-normal">
+									<el-image
+										style="width: 24px; aspect-ratio: 1"
+										:src="node.data.iconUrl"></el-image>
 									<el-tooltip
 										:show-after="500"
 										effect="dark"
@@ -77,12 +80,13 @@
 					</el-aside>
 					<!-- f表单主体 -->
 					<el-main style="padding: 5px">
-						<RuleForm :formData="<MatchRule|undefined>form.realTimeData" />
+						<RuleForm :formData="form.realTimeData" />
 					</el-main>
 				</el-container>
 			</template>
 			<!-- *底部 -->
 			<template #footer>
+				<el-button type="info" @click="copyNowRule">复制当前规则</el-button>
 				<el-button type="primary" @click="allSave">全部保存</el-button>
 				<el-button @click="handleClose">取消</el-button>
 			</template>
@@ -92,9 +96,12 @@
 
 <script setup lang="ts">
 	import {MatchRule} from "../ts/class/MatchRule";
+	const {text, isSupported, copy} = useClipboard(); //* 剪切板
+	
 
 	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
 	const ruleEditor = useRuleEditorStore(); //* 实例化ruleEditor数据仓库
+
 
 	//* 用于接收树形列表的实例对象
 	const treeRef = ref();
@@ -198,20 +205,37 @@
 					type: "success",
 					grouping: true,
 					center: true,
-					duration: 1000,
-					offset: 80,
+					offset: 120,
 					message: `规则 “${ruleName}” 删除成功!`,
 				});
 			})
 			.catch(() => {});
 	};
 
+	/**
+	 * f 复制当前规则
+	 */
+	const copyNowRule = async () => {
+		const content = form.realTimeData?.getJsonData() as string;
+		await copy(content);
+		ElMessage({
+			type: "success",
+			// showClose: true,
+			grouping: true,
+			center: true,
+			duration: 1000,
+			offset: 120,
+			message: h("p", {style: "display:flex;gap:10px"}, [
+				h("i", {style: "color: teal"}, "(规则)" + form.realTimeData?.main.name),
+				h("span", {style: "color: black"}, "复制成功！"),
+			]),
+		});
+	};
+
 	//f 打开时的处理
 	const handleOpen = () => {
 		//* 初始化窗口
 		initDialog();
-		//*	获取用户本地规则信息
-		ruleEditor.getLocationRule();
 		console.log("规则管理器 - Open");
 	};
 
@@ -231,19 +255,7 @@
 	//f 关闭后的处理(任何关闭操作)
 	const handleClosed = async () => {
 		initDialog();
-		cleanTempData();
 		console.log("规则管理器 - Close");
-	};
-
-	/**
-	 * f 清空组件临时数据
-	 */
-	const cleanTempData = async () => {
-		for (let i = 0, len = data.ruleList.length; i < len; i++) {
-			delete data.ruleList[i];
-			MatchRule.count--;
-		}
-		data.ruleList = [];
 	};
 
 	/**
@@ -257,7 +269,7 @@
 	//f 全部保存操作
 	const allSave = async () => {
 		//*	存储修改后的最新数据到脚本的用户存储中
-		ruleEditor.saveRuleToLocation();
+		await ruleEditor.saveRuleToLocation();
 		ruleEditor.container.open = false; //! 关闭窗口
 	};
 </script>
@@ -311,6 +323,8 @@
 					//* 名称样式
 					> .label-ruleName {
 						flex-grow: 1;
+						padding-left: 4px;
+						//! 防止文本换行
 						overflow: hidden;
 						text-overflow: ellipsis;
 						white-space: nowrap;

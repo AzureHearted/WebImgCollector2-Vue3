@@ -4,11 +4,16 @@
 		ref="container"
 		:data-open="appInfo.container.open"
 		:style="{
-			'--width': appInfo.window.width * appInfo.container.widthPercentage * 0.01 + 'px',
+			'--width':
+				appInfo.window.width * appInfo.container.widthPercentage * 0.01 + 'px',
 		}">
-		<Body ref="body"></Body>
+		<Body />
 		<!-- *关闭按钮 -->
-		<el-button class="onlineGallery-button-close" type="danger" circle @click="openSwitch">
+		<el-button
+			class="onlineGallery-button-close"
+			type="danger"
+			circle
+			@click="openSwitch">
 			<template #icon>
 				<el-icon><i-ep-Close /></el-icon>
 			</template>
@@ -28,7 +33,9 @@
 					@click="openSwitch"
 					class="onlineGallery-button-drawerOpen">
 					<template #icon>
-						<el-icon><i-ep-ArrowRightBold style="pointer-events: none" /></el-icon>
+						<el-icon
+							><i-ep-ArrowRightBold style="pointer-events: none"
+						/></el-icon>
 					</template>
 				</el-button>
 			</template>
@@ -38,9 +45,14 @@
 					<template #icon>
 						<el-icon><i-ep-Grid /></el-icon>
 					</template>
-					<el-badge :value="cardsStore.data.cardList.length" :max="999"> 图库 </el-badge>
+					<el-badge :value="cardsStore.data.cardList.length" :max="999">
+						图库
+					</el-badge>
 				</el-button>
-				<el-button type="primary" size="small" @click="ruleEditor.container.open = true">
+				<el-button
+					type="primary"
+					size="small"
+					@click="ruleEditor.container.open = true">
 					<template #icon>
 						<el-icon><i-ep-Management /></el-icon>
 					</template>
@@ -66,14 +78,17 @@
 </template>
 
 <script setup lang="ts">
+	// const {x, y} = useMouse({type: "client"}); //* 用户鼠标
+	// const {element} = useElementByPoint({x, y}); //* 鼠标所指的元素
+
 	//* App - 信息
 	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
 	const cardsStore = useCardsStore(); //* 实例化cardsStore数据仓库
+	const toolBar = useToolBarStore(); //* 实例化cardsStore数据仓库
 	const ruleEditor = useRuleEditorStore(); //* 实例化ruleEditor数据仓库
 
 	//* 组件或html元素的接收器定义
 	const container = ref(); //*接收container dom
-	const body = ref(); //*接收container dom
 
 	//f 开关切换
 	const openSwitch = async () => {
@@ -81,9 +96,6 @@
 		appInfo.container.open = !appInfo.container.open;
 		if (appInfo.container.open) {
 			document.documentElement.dataset.showScrollbar = false.toString(); //* 页面隐藏滚动条
-			if (cardsStore.data.cardList.length < 1) {
-				setTimeout(() => body.value.getCards(), 1000);
-			}
 			container.value.focus();
 		} else {
 			document.documentElement.dataset.showScrollbar = true.toString(); //* 还原页面滚动条
@@ -92,6 +104,8 @@
 
 	//! 挂载完成时执行
 	onMounted(async () => {
+		await ruleEditor.getLocationRule(); //* 获取本地信息
+		toolBar.selectingInitRule(); //* 选出首个匹配的规则
 		ElNotification({
 			title: "提示",
 			message: h("i", {style: "color: teal"}, "onlineGallery 已加载"),
@@ -104,7 +118,6 @@
 		} else {
 			document.documentElement.dataset.showScrollbar = "true"; //* 还原页面滚动条
 		}
-		setTimeout(() => body.value.getCards(), 1000);
 	});
 </script>
 
@@ -115,12 +128,15 @@
 		pointer-events: auto;
 	}
 
+	$z-index: 2147483646;
+	// $z-index:1000;
+
 	/* *主容器样式 */
 	.onlineGallery-container {
 		box-sizing: border-box;
 		position: fixed;
 
-		z-index: 2147483646;
+		z-index: $z-index;
 		padding: 0 30px 20px 30px;
 		margin: 0;
 		left: calc(0px - var(--width));
@@ -232,7 +248,7 @@
 	//* 子窗口容器样式(主要作为弹窗的容器)
 	.onlineGallery-child-window-container {
 		position: fixed;
-		z-index: 2147483646;
+		z-index: $z-index;
 		overflow: visible;
 	}
 </style>

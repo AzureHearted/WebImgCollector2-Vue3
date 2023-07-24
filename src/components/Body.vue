@@ -20,29 +20,11 @@
 
 	let toolbar = ref();
 
-	//* 信息
-	const info = reactive({
-		nowColumn: 4,
-		allSelected: false,
-	});
-
 	//* 数据
 	const data = cardsStore.data;
 
 	//* 进度(条)
 	const loading = appInfo.loading;
-
-	//* 记录子组件方法
-	let getCards = () => {
-		toolbar.value.getCards();
-	};
-
-	defineExpose({
-		data,
-		info,
-		loading,
-		getCards,
-	});
 </script>
 
 <style lang="scss" scoped>

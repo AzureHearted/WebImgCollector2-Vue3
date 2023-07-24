@@ -1,4 +1,4 @@
-import {MatchRule} from "./class/MatchRule";
+import {IORule, MatchRule} from "./class/MatchRule";
 
 /**
  * f 任务队列
@@ -9,31 +9,40 @@ import {MatchRule} from "./class/MatchRule";
 export class TaskQueue {
 	public max: number;
 	public initMax: number;
-	public taskList: any[];
+	public taskList: ITask[];
 	public showMessage: boolean;
-	public singleCallback: any;
-	public finallyCallback: any;
+	public finallyCallback: Function;
 
-	constructor(
-		options = {showMessage: false, max: 10},
-		singleCallback = () => {}, //* 每个项目执行完成后的回调
-		finallyCallback = () => {} //* 所有执行完成后的回调
-	) {
-		this.max = options.max;
-		this.initMax = options.max;
+	constructor(options?: {
+		showMessage?: false;
+		max?: number;
+		finallyCallback?: () => {};
+	}) {
+		this.max = options?.max || 10;
+		this.initMax = options?.max || 10;
 		this.taskList = [];
-		this.showMessage = options.showMessage;
-		this.singleCallback = singleCallback;
-		this.finallyCallback = finallyCallback;
-		// setTimeout(() => this.run());
+		this.showMessage = options?.showMessage || false;
+		this.finallyCallback = options?.finallyCallback || Function();
 	}
 	/**
 	 * * 添加任务到队列
-	 * @param {any} task 任务项
+	 * @param {ITask} task 任务项
 	 */
-	public addTask(task: any): void {
-		this.taskList.push(task);
+	public addTask(task?: ITask): void {
+		if (task) {
+			this.taskList.push(task);
+		}
 	}
+	/**
+	 * * push任务到队列
+	 * @param {ITask[]} taskList 任务项
+	 */
+	public pushTask(taskList: ITask[]): void {
+		if (taskList) {
+			this.taskList.push(...taskList);
+		}
+	}
+	//f 启动任务队列
 	public run(): void {
 		const length = this.taskList.length;
 		// console.log(this.max, this.initMax);
@@ -47,20 +56,37 @@ export class TaskQueue {
 		for (let i = 0; i < min; i++) {
 			const task = this.taskList.shift();
 			this.max--; //* 占用一个空间
-			const p = task()
-				.then((res) => {
-					if (this.showMessage) console.log(res);
-				})
-				.catch((err) => {
-					if (this.showMessage) console.log(err);
-				})
-				.finally(() => {
-					this.max++; //* 还原一个空间
-					this.singleCallback(); //* 单个任务执行完成时的回调
-					this.run();
-				});
+			if (task && task?.main) {
+				task
+					?.main()
+					.then((res) => {
+						if (this.showMessage) console.log(res);
+						if (task.callback) {
+							task.callback(res, task.index); //* 单个任务执行完成时的回调
+						}
+					})
+					.catch((err) => {
+						if (this.showMessage) console.log(err);
+						if (task.callback) {
+							task.callback(err, task.index); //* 单个任务执行完成时的回调
+						}
+					})
+					.finally(() => {
+						this.max++; //* 还原一个空间
+						this.run();
+					});
+			} else {
+				this.max++; //* 还原一个空间
+				this.run();
+			}
 		}
 	}
+}
+//* 任务类型的接口
+export interface ITask {
+	index: number;
+	main(): Promise<any>;
+	callback?: (res: any, index: number) => any;
 }
 
 /**
@@ -73,11 +99,16 @@ export class TaskQueue {
  * @param {null|string} referer 域(名)
  * @returns Promise 对象
  */
-export const getBlobByUrl = (
+export function getBlobByUrl(
 	url: string,
 	mode: "Fetch" | "GM" = "Fetch",
 	referer: string | undefined = undefined
-): Promise<Blob>|Blob => {
+): Promise<Blob> | Blob {
+	if (isEmpty(url)) {
+		return new Promise((resolve, reject) => {
+			resolve(new Blob(undefined, {type: "none"}));
+		});
+	}
 	if (mode === "Fetch") {
 		return new Promise(async (resolve, reject) => {
 			let blob = await fetch(url)
@@ -128,10 +159,37 @@ export const getBlobByUrl = (
 	} else {
 		return new Blob(undefined, {type: "none"});
 	}
-};
+}
+
+/**
+ * f 通过链接获取blob(自动)
+ * - 模式:
+ * 	- JavaScript原生fetch
+ * 	- 油猴GM_xmlhttpRequest的API
+ * @param {string} url 链接
+ * @returns Promise 对象
+ */
+export async function getBlobByUrlAuto(url: string): Promise<Blob> {
+	//* 链接为空直接返回空blob
+	if (isEmpty(url)) {
+		return new Blob(undefined, {type: "none"});
+	}
+	let blob = new Blob(undefined, {type: "none"});
+	//* 先尝试通过Fetch方法获取
+	blob = await getBlobByUrl(url, "Fetch");
+	//* Fetch失败后尝试通过GM不指定referer方式获取
+	if (blob.type === "none") {
+		blob = await getBlobByUrl(url, "GM");
+	}
+	//* 再次失败后尝试通过GM指定referer方式获取
+	if (blob.type === "none") {
+		blob = await getBlobByUrl(url, "GM", location.origin);
+	}
+	return blob;
+}
 
 //f [功能封装]生成uuid
-export const buildUUID = (): string => {
+export function buildUUID(): string {
 	const hexList: string[] = [];
 	for (let i = 0; i <= 15; i++) {
 		hexList[i] = i.toString(16);
@@ -149,48 +207,67 @@ export const buildUUID = (): string => {
 		}
 	}
 	return uuid.replace(/-/g, "");
-};
+}
+
+//f 获取站点Favicon图标
+export async function getFavicon(): Promise<string> {
+	let iconUrl: string;
+	//* [1]通过link标签查找
+	let urls = (
+		[...document.querySelectorAll("link[rel=icon]")] as HTMLLinkElement[]
+	)
+		.map((item: HTMLLinkElement) => item.href)
+		.filter((url) => /\.(png|svg|jpg|jpeg|webp|icon?)$/i.test(url));
+
+	if (urls.length > 0) {
+		iconUrl = urls[0];
+	} else {
+		//* [2]若没找到直接使用域名拼接
+		iconUrl = `${location.origin}/favicon.ico`;
+	}
+	return iconUrl;
+}
 
 /**
  * f 获取链接中的域名
  * @param {string} url 链接
  * @returns {string} 链接对应的域名
  */
-export const getOriginByUrl = (url: string): string => {
+export function getOriginByUrl(url: string): string {
 	let list = url.match(/(https?:\/\/[^\/]+(?=\/))/g) || [];
 	if (list.length > 0) {
 		return list[0] || url;
 	} else {
 		return url;
 	}
-};
+}
 
 /**
  * f [功能封装] 通过url获取名称
  * @param {string} url 链接
  * @returns {string} 链接的名称部分
  */
-export const getNameByUrl = (url: string): string => {
+export function getNameByUrl(url: string): string {
 	let list = url.match(/(?<=\/)([^\/\r\n$]+)$/g) || [];
 	if (list.length > 0) {
 		return list[0] || url;
 	} else {
 		return url;
 	}
-};
+}
 
 //f [功能封装]判断字符串是否为空
-export const isEmpty = (
+export function isEmpty(
 	str: string | null | undefined = "",
 	includeSpace = false
-) => {
+) {
 	return includeSpace
 		? str == null || str == undefined || str == "" || /^ +?$/.test(str)
 		: str == null || str == undefined || str == "";
-};
+}
 
-//f [功能封装]通过blob获取meta
-export const getMetaByBlob = async (blob: Blob) => {
+//f [功能封装]通过blob获取图片meta
+export async function getImgMetaByBlob(blob: Blob) {
 	const meta: metaInterFace = await new Promise((resolve, reject) => {
 		let reader = new FileReader();
 		reader.readAsDataURL(blob);
@@ -215,11 +292,728 @@ export const getMetaByBlob = async (blob: Blob) => {
 		};
 	});
 	return meta;
-};
+}
+
+//f [功能封装]通过Image对象获取图片meta
+export async function getImgMetaByImage(url: string): Promise<metaInterFace> {
+	if (isEmpty(url)) {
+		const errMeta: metaInterFace = {
+			isOk: false,
+			width: 0,
+			height: 0,
+			aspectRatio: 3 / 4,
+		};
+		return errMeta;
+	}
+	return await new Promise((resolve, reject) => {
+		const img = new Image();
+		img.src = url;
+		if (img.complete) {
+			resolve(<metaInterFace>{
+				isOk: true,
+				width: img.width,
+				height: img.height,
+				aspectRatio: img.width / img.height,
+			});
+		} else {
+			img.onload = () => {
+				resolve(<metaInterFace>{
+					isOk: true,
+					width: img.width,
+					height: img.height,
+					aspectRatio: img.width / img.height,
+				});
+			};
+			img.onerror = () => {
+				resolve(<metaInterFace>{
+					isOk: false,
+					width: 0,
+					height: 0,
+					aspectRatio: 3 / 4,
+				});
+			};
+		}
+	});
+}
 
 /**
- * f [功能封装]获取dom标签的相关内容
- * @param domTag 要提取的dom元素
+ * f 通过匹配规则获取cards
+ * - 异步操作需要使用 await
+ * @param rule 匹配规则
+ */
+export async function getCardsByRule(
+	rule: IORule,
+	nowCount: number,
+	singleCallback?: Function, //* 每处理成功一个卡片执行的回调
+	finallyCallback?: Function, //* 处理完所有卡片时执行的回调
+	option?: {
+		excludeDomSet?: Set<HTMLElement>; //* 要排除的dom集合
+		excludeUrlSet?: Set<string>; //* 要排除的url集合
+	}
+): Promise<void> {
+	let rowCardList: rowCard[] = [];
+	console.log("开始匹配", rule); //* 规则信息打印
+	//* 获取卡片基本信息
+	if (rule.domItem.enable) {
+		//! 启用了dom匹配
+		//? 对每个规则系列进行单独的匹配
+		for (let i = 0, len = rule.domItem.selector.length; i < len; i++) {
+			// 获取所有符合条件的dom对象
+			let domList = (await getDom(
+				document.body,
+				rule.domItem.method,
+				rule.domItem.selector[i],
+				0
+			)) as HTMLElement[];
+
+			//! 对每个dom进行结果匹配
+			for (let index = 0; index < domList.length; index++) {
+				let card: rowCard = {
+					id: buildUUID(), //* 生成uuid
+					linkUrlType: "none",
+					picUrlType: "none",
+					metaOrigin: "",
+					dom: domList[index],
+				}; // 用于接收匹配到的card对象
+				rowCardList.push(card as matchCard);
+
+				//* 参数名称简化
+				let linkUrl_Selector = rule.linkUrl.selector[i],
+					picUrl_Selector = rule.picUrl.selector[i],
+					name_Selector = rule.name.selector[i],
+					meta_Selector = rule.meta.selector[i];
+
+				//! [匹配LinkUrl]
+				card.linkUrlDom = card.dom; // 匹配LinkUrl的标签(默认为dom)
+				//如果表达式不为空则表示使用表达式来匹配urlTag
+				if (!isEmpty(linkUrl_Selector, true)) {
+					card.linkUrlDom = (await getDom(
+						card.dom as HTMLElement | null,
+						rule.linkUrl.method,
+						linkUrl_Selector,
+						1
+					)) as HTMLElement;
+				}
+				//! 获取对应结果(链接)
+				if (card.linkUrlDom) {
+					card.linkUrl = await getTagInfo(
+						card.linkUrlDom,
+						rule.linkUrl.infoType,
+						rule.linkUrl.attribute[i]
+					);
+				} else {
+					card.linkUrl = "";
+				}
+
+				//! [匹配PicUrl]
+				if (rule.picUrl.enable == true) {
+					card.picUrlDom = card.dom; // 匹配PicUrl的标签(默认为dom)
+					//* [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
+					if (!isEmpty(picUrl_Selector, true)) {
+						if (picUrl_Selector == linkUrl_Selector) {
+							card.picUrlDom = card.linkUrlDom;
+						} else {
+							card.picUrlDom = (await getDom(
+								card.dom as HTMLElement | null,
+								rule.picUrl.method,
+								picUrl_Selector,
+								1
+							)) as HTMLElement;
+						}
+					}
+					// [匹配结果]
+					if (card.picUrlDom != null) {
+						card.picUrl = await getTagInfo(
+							card.picUrlDom,
+							rule.picUrl.infoType,
+							rule.picUrl.attribute[i]
+						);
+						if (card.picUrl == null) {
+							card.picUrl = card.linkUrl;
+						}
+					} else {
+						card.picUrl = card.linkUrl;
+					}
+				} else {
+					card.picUrl = card.linkUrl;
+					card.picUrlDom = card.linkUrlDom;
+				}
+
+				//! [匹配name]
+				if (rule.name.enable == true) {
+					card.nameDom = card.dom; // 匹配Content的标签(默认为dom)
+					//* [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
+					if (!isEmpty(name_Selector, true)) {
+						if (name_Selector == linkUrl_Selector) {
+							card.nameDom = card.linkUrlDom;
+						} else if (name_Selector == picUrl_Selector) {
+							card.nameDom = card.picUrlDom;
+						} else {
+							card.nameDom = (await getDom(
+								card.dom,
+								rule.name.method,
+								name_Selector,
+								1
+							)) as HTMLElement;
+						}
+					}
+					//* [匹配结果]
+					if (card.nameDom) {
+						card.name = await getTagInfo(
+							card.nameDom,
+							rule.name.infoType,
+							rule.name.attribute[i]
+						);
+						if (card.name == null) {
+							card.name = card.linkUrl;
+						}
+					} else {
+						card.name = card.linkUrl;
+					}
+				} else {
+					card.name = card.linkUrl;
+					card.nameDom = card.linkUrlDom;
+				}
+
+				//! [匹配meta]
+				if (rule.meta.enable == true && rule.meta.origin == 0) {
+					card.metaDom = card.dom; // 匹配LinkUrl的标签(默认为dom)
+					//* [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
+					if (!isEmpty(meta_Selector, true)) {
+						if (meta_Selector == linkUrl_Selector) {
+							card.metaDom = card.linkUrlDom;
+						} else if (meta_Selector == picUrl_Selector) {
+							card.metaDom = card.picUrlDom;
+						} else if (meta_Selector == name_Selector) {
+							card.metaDom = card.nameDom;
+						} else {
+							card.metaDom = (await getDom(
+								card.dom,
+								rule.meta.method,
+								meta_Selector,
+								1
+							)) as HTMLElement;
+						}
+					}
+					//* [匹配结果]
+					if (card.metaDom) {
+						card.metaOrigin = await getTagInfo(
+							card.metaDom,
+							rule.meta.infoType,
+							rule.meta.attribute[i]
+						);
+						if (card.metaOrigin == undefined) {
+							card.metaOrigin = card.linkUrl;
+						}
+					} else {
+						card.metaOrigin = card.linkUrl;
+					}
+				} else {
+					if (rule.meta.origin == 1) {
+						card.metaDom = card.linkUrlDom;
+						card.metaOrigin = card.linkUrl;
+					} else if (rule.meta.origin == 2) {
+						card.metaDom = card.picUrlDom;
+						card.metaOrigin = card.picUrl;
+					} else if (rule.meta.origin == 3) {
+						card.metaDom = card.nameDom;
+						card.metaOrigin = card.name;
+					}
+				}
+			}
+		}
+	} else {
+		//! 未启用dom匹配
+		//? 对每个规则系列进行单独的匹配
+		for (let i = 0, len = rule.linkUrl.selector.length; i < len; i++) {
+			// 分别获取各个匹配项目
+			let linkUrlList_temp: string[] = [];
+			let picUrlList_temp: string[] = [];
+			let nameList_temp: string[] = [];
+			let metaTextList_temp: string[] = [];
+
+			//! 获取linkUrls
+			let linkUrlDomList: HTMLElement[] = [];
+			linkUrlDomList.push(
+				...((await getDom(
+					document.body,
+					rule.linkUrl.method,
+					rule.linkUrl.selector[i],
+					0
+				)) as HTMLElement[])
+			);
+			for (const linkUrlDom of linkUrlDomList) {
+				if (linkUrlDom) {
+					linkUrlList_temp.push(
+						await getTagInfo(
+							linkUrlDom,
+							rule.linkUrl.infoType,
+							rule.linkUrl.attribute[i]
+						)
+					);
+				} else {
+					linkUrlList_temp.push("");
+				}
+			}
+
+			console.log(linkUrlList_temp);
+
+			//! 获取picUrls
+			let picUrlDomList: HTMLElement[] = [];
+			if (rule.picUrl.enable && !isEmpty(rule.picUrl.selector[i], true)) {
+				picUrlDomList.push(
+					...((await getDom(
+						document.body,
+						rule.picUrl.method,
+						rule.picUrl.selector[i],
+						0
+					)) as HTMLElement[])
+				);
+				for (const picUrlDom of picUrlDomList) {
+					if (picUrlDom) {
+						picUrlList_temp.push(
+							await getTagInfo(
+								picUrlDom,
+								rule.picUrl.infoType,
+								rule.picUrl.attribute[i]
+							)
+						);
+					} else {
+						picUrlList_temp.push("");
+					}
+				}
+				//* 长度填充
+				picUrlList_temp = fillArrayToTargetLength(
+					picUrlList_temp,
+					linkUrlList_temp.length,
+					""
+				);
+			} else {
+				picUrlList_temp = Array.from(linkUrlList_temp);
+				picUrlDomList = linkUrlDomList;
+			}
+
+			//! 获取名称
+			let nameDomList: HTMLElement[] = [];
+			if (rule.name.enable && !isEmpty(rule.name.selector[i], true)) {
+				nameDomList.push(
+					...((await getDom(
+						document.body,
+						rule.name.method,
+						rule.name.selector[i],
+						0
+					)) as HTMLElement[])
+				);
+				for (const nameDom of nameDomList) {
+					if (nameDom != null) {
+						nameList_temp.push(
+							await getTagInfo(
+								nameDom,
+								rule.name.infoType,
+								rule.name.attribute[i]
+							)
+						);
+					} else {
+						nameList_temp.push("");
+					}
+				}
+				//* 长度填充
+				nameList_temp = fillArrayToTargetLength(
+					nameList_temp,
+					linkUrlList_temp.length,
+					""
+				);
+			} else {
+				nameList_temp = Array.from(linkUrlList_temp);
+				nameDomList = linkUrlDomList;
+			}
+
+			//! 获取meta
+			let metaDomList: HTMLElement[] = [];
+			if (
+				rule.meta.enable &&
+				rule.meta.origin == 0 &&
+				!isEmpty(rule.meta.selector[i], true)
+			) {
+				metaDomList.push(
+					...((await getDom(
+						document.body,
+						rule.meta.method,
+						rule.meta.selector[i],
+						0
+					)) as HTMLElement[])
+				);
+				for (const metaDom of metaDomList) {
+					if (metaDom != null) {
+						metaTextList_temp.push(
+							await getTagInfo(
+								metaDom,
+								rule.meta.infoType,
+								rule.meta.attribute[i]
+							)
+						);
+					} else {
+						metaTextList_temp.push("");
+					}
+				}
+				//* 长度填充
+				metaTextList_temp = fillArrayToTargetLength(
+					metaTextList_temp,
+					linkUrlList_temp.length,
+					""
+				);
+			} else {
+				if (rule.meta.origin == 1) {
+					metaTextList_temp = Array.from(linkUrlList_temp);
+					metaDomList = linkUrlDomList;
+				} else if (rule.meta.origin == 2) {
+					metaTextList_temp = Array.from(picUrlList_temp);
+					metaDomList = picUrlDomList;
+				} else if (rule.meta.origin == 3) {
+					metaTextList_temp = Array.from(nameList_temp);
+					metaDomList = nameDomList;
+				}
+			}
+
+			//! 合成一批cards
+			for (let index = 0; index < linkUrlList_temp.length; index++) {
+				const link = linkUrlList_temp[index];
+				let card: rowCard = {
+					id: buildUUID(), //* 生成uuid
+					linkUrlType: "none",
+					picUrlType: "none",
+					metaOrigin: "",
+				};
+				//* 匹配结果
+				card.linkUrl = link;
+				card.picUrl = picUrlList_temp[index];
+				card.name = nameList_temp[index];
+				card.metaOrigin = metaTextList_temp[index];
+
+				//* dom
+				card.dom = linkUrlDomList[index];
+				card.linkUrlDom = linkUrlDomList[index];
+				card.picUrlDom = picUrlDomList[index];
+				card.nameDom = nameDomList[index];
+				card.metaDom = metaDomList[index];
+
+				rowCardList.push(card as matchCard);
+			}
+		}
+	}
+
+	//* 过滤无效卡片
+	rowCardList = rowCardList.filter(
+		(rowCard) => rowCard.dom && !isEmpty(rowCard.picUrl)
+	);
+
+	//* 处理卡片信息
+	let processedCount = 0;
+	const taskQueue = new TaskQueue({showMessage: false, max: 10});
+	let cardList: matchCard[] = [];
+	for (let index = 0; index < rowCardList.length; index++) {
+		const rowCard = rowCardList[index];
+		// console.log(!option?.excludeDomSet?.has(rowCard.dom as HTMLElement));
+		//* dom集合中没有过的才进行处理和回调
+		if (
+			!option?.excludeDomSet?.has(rowCard.dom as HTMLElement) &&
+			!option?.excludeUrlSet?.has(rowCard.picUrl as string)
+		) {
+			const task: ITask = {
+				index: index,
+				main: async () => {
+					const card = await singleCardProcessing(rowCard, rule);
+					return card;
+				},
+				callback: (card, realIndex) => {
+					processedCount++;
+					if (singleCallback)
+						singleCallback(
+							card,
+							nowCount + realIndex,
+							processedCount,
+							rowCardList.length
+						);
+					cardList.push(card);
+				},
+			};
+			taskQueue.addTask(task);
+		}
+	}
+	taskQueue.finallyCallback = () => {
+		if (finallyCallback) finallyCallback(cardList, rowCardList);
+	};
+	taskQueue.run();
+}
+
+//f 卡片(单个)信息处理
+async function singleCardProcessing(
+	rowCard: rowCard,
+	rule: IORule
+): Promise<matchCard> {
+	let card: matchCard = {
+		id: rowCard.id,
+		name: rowCard.name || "",
+		linkUrl: rowCard.linkUrl || "",
+		picUrl: rowCard.picUrl || "",
+		originUrls: rowCard.linkUrl ? [rowCard.linkUrl] : [],
+		match: false,
+		selected: false,
+		metaOrigin: rowCard.metaOrigin,
+		meta: {
+			isOk: false,
+			width: 0,
+			height: 0,
+			aspectRatio: 3 / 4,
+		},
+		dom: rowCard.dom,
+		linkUrlDom: rowCard.linkUrlDom,
+		picUrlDom: rowCard.picUrlDom,
+		nameDom: rowCard.nameDom,
+		metaDom: rowCard.metaDom,
+	};
+
+	//! 链接处理
+	if (isUrl(card.linkUrl)) {
+		//? 不全链接补全
+		card.linkUrl = urlCompletion(card.linkUrl);
+	}
+	//* 结果修正部分
+	if (!isEmpty(card.linkUrl)) {
+	} else {
+		card.linkUrl = "";
+	}
+	//! 图链处理
+	if (rule.picUrl.enable) {
+		if (isUrl(card.picUrl)) {
+			//? 不全链接补全
+			card.picUrl = urlCompletion(card.picUrl);
+		}
+		//* 结果修正部分
+		if (!isEmpty(card.picUrl)) {
+		} else {
+			card.picUrl = card.linkUrl;
+		}
+	} else {
+		card.picUrl = card.linkUrl;
+	}
+	//! 名称处理
+	if (rule.name.enable) {
+		//* 结果修正部分
+		if (!isEmpty(card.name)) {
+		} else {
+			card.name = card.linkUrl;
+		}
+	} else {
+		card.name = card.linkUrl;
+	}
+	if (isPath(card.name)) {
+		card.name = getNameByUrl(card.name);
+	}
+
+	//! 元信息获取
+	if (rule.meta.enable) {
+		if (rule.meta.origin == 0) {
+			//? 指定“其他”dom
+			if (card.metaDom) {
+			}
+		} else if (rule.meta.origin == 1) {
+			//? 使用“链接”dom
+			if (card.linkUrlDom) {
+				await getMeta(
+					card.linkUrlDom,
+					card.linkUrl,
+					card,
+					rule.meta.getMethod,
+					"linkBlob"
+				);
+			}
+		} else if (rule.meta.origin == 2) {
+			//? 使用“图链”dom
+			if (card.picUrlDom) {
+				await getMeta(
+					card.picUrlDom,
+					card.picUrl,
+					card,
+					rule.meta.getMethod,
+					"picBlob"
+				);
+			}
+		} else if (rule.meta.origin == 3) {
+			//? 使用“名称”dom
+			if (card.nameDom) {
+				await getMeta(
+					card.nameDom,
+					card.name,
+					card,
+					rule.meta.getMethod,
+					"nameBlob"
+				);
+			}
+		}
+	}
+
+	//f 获取Meta
+	async function getMeta(
+		dom: HTMLElement | null | undefined,
+		url: string,
+		card: matchCard,
+		getMetaMethod: 0 | 1 | 2 | 3,
+		blobType: "linkBlob" | "picBlob" | "nameBlob"
+	) {
+		if (!dom) return;
+		if (getMetaMethod === 0) {
+			//* 自动方式
+			if (dom.tagName === "IMG") {
+				//? "通过natural宽高"获取
+				const {naturalWidth, naturalHeight} = dom as HTMLImageElement;
+				if (naturalWidth > 0 && naturalHeight > 0) {
+					card.meta.width = naturalWidth;
+					card.meta.height = naturalHeight;
+					card.meta.isOk = true;
+				} else {
+					//? 如果标签不匹配则"通过Image对象"获取
+					card.meta = await getImgMetaByImage(url);
+				}
+			} else {
+				//? 最后尝试使用blob获取
+				card[blobType] = await getBlobByUrlAuto(url);
+				if (/^image/.test((card[blobType] as Blob).type)) {
+					card.meta = await getImgMetaByBlob(card[blobType] as Blob);
+				}
+			}
+		} else if (getMetaMethod === 1) {
+			const {naturalWidth, naturalHeight} = dom as HTMLImageElement;
+			//* 通过natural宽高
+			if (naturalWidth > 0 && naturalHeight > 0) {
+				card.meta.width = naturalWidth;
+				card.meta.height = naturalHeight;
+				card.meta.isOk = true;
+			}
+		} else if (getMetaMethod === 2) {
+			//* 通过Image对象
+			card.meta = await getImgMetaByImage(url);
+		} else if (getMetaMethod === 3) {
+			//* 直接通过blob获取
+			card[blobType] = await getBlobByUrlAuto(url);
+			if (/^image/.test((card[blobType] as Blob).type)) {
+				card.meta = await getImgMetaByBlob(card[blobType] as Blob);
+			}
+		}
+	}
+
+	if (card.meta.isOk) {
+		card.match = card.meta.isOk;
+		card.meta.aspectRatio = card.meta.width / card.meta.height;
+	}
+
+	//* 最后判断是获取了blob(如果获取了就进一步获取后缀名信息)
+	if (card.linkBlob) {
+		if (!card.picBlob) card.picBlob = card.linkBlob;
+		if (!card.nameBlob) card.nameBlob = card.linkBlob;
+	} else if (card.picBlob) {
+		if (!card.linkBlob) card.linkBlob = card.picBlob;
+		if (!card.nameBlob) card.nameBlob = card.picBlob;
+	} else if (card.nameBlob) {
+		if (!card.linkBlob) card.linkBlob = card.nameBlob;
+		if (!card.picBlob) card.picBlob = card.nameBlob;
+	}
+
+	if (card.linkBlob) card.linkUrlExt = getExtByBlob(card.linkBlob);
+	if (card.picBlob) card.picUrlExt = getExtByBlob(card.picBlob);
+
+	return card;
+}
+
+/**
+ * f 获取dom
+ * @param startDom 起始dom
+ * @param method 方法
+ * - 0:css选择器
+ * - 1:xpath方法
+ * @param selector 选择器
+ * @param mode 模式
+ * - 0:所有符合条件的
+ * - 1:首个符合条件的
+ * @returns 匹配到的dom
+ */
+export async function getDom(
+	startDom: HTMLElement | null | undefined,
+	method: 0 | 1,
+	selector: string,
+	mode: 0 | 1 = 0
+) {
+	let selectorList: string[] = [];
+	if (/\|/.test(selector)) {
+		selectorList = selector.split("|");
+	} else {
+		selectorList = [selector];
+	}
+
+	startDom = startDom || document.body;
+	let resultDomList: HTMLElement[] = [];
+	if (method == 0) {
+		for (const selectorItem of selectorList) {
+			if (isEmpty(selectorItem)) {
+				continue;
+			}
+			let tempDomList: HTMLElement[] = [];
+			try {
+				tempDomList = [
+					...startDom.querySelectorAll(selectorItem),
+				] as HTMLElement[];
+			} catch (err) {
+				console.log("方法getDom出错!(css选择器模式)");
+			}
+			resultDomList.push(...tempDomList);
+		}
+	} else if (method == 1) {
+		for (const selectorItem of selectorList) {
+			if (isEmpty(selectorItem)) {
+				continue;
+			}
+			let tempDomList: HTMLElement[] = [];
+			try {
+				tempDomList = getDomByXpath(startDom as HTMLElement, selectorItem);
+			} catch (err) {
+				console.log("方法getDom出错!(xpath模式)");
+			}
+			resultDomList.push(...tempDomList);
+		}
+	}
+	resultDomList = resultDomList.filter((dom) => dom); //* 过滤空dom
+	if (mode == 0) {
+		//* 所有符合条件的
+		return resultDomList;
+	} else {
+		//* 首个符合条件的
+		if (resultDomList.length > 0) {
+			return resultDomList[0];
+		} else {
+			return null;
+		}
+	}
+}
+
+/**
+ * f 通过xpath获取dom
+ * @param startDom 起始dom
+ * @param xpath xpath路径
+ * @returns 获取到的dom元素
+ */
+function getDomByXpath(startDom: HTMLElement, xpath: string): HTMLElement[] {
+	const result: HTMLElement[] = [];
+	const xpathResult = document.evaluate(xpath, startDom, null, 5, null);
+	let resultItem: Node | null;
+	while ((resultItem = xpathResult.iterateNext())) {
+		result.push(resultItem as HTMLElement);
+	}
+	return result;
+}
+
+/**
+ * f 获取dom标签的相关内容
+ * @param dom 要提取的dom元素
  * @param type 提取类型:
  * 	* 1 - 值
  * 	* 2 - Attribute属性
@@ -229,33 +1023,41 @@ export const getMetaByBlob = async (blob: Blob) => {
  * 	* 6 - outerHTML
  * @param attr 属性名
  */
-export const getTagInfo = (domTag: any, type: number, attr: string) => {
+export async function getTagInfo(
+	dom: HTMLElement | null,
+	type: 0 | 1 | 2 | 3 | 4 | 5 | 6,
+	attr: string
+) {
+	if (type === 0) {
+		return "";
+	}
 	let attrList: string[] = [];
 	if (/\|/.test(attr)) {
 		attrList = attr.split("|");
 	} else {
 		attrList = [attr];
 	}
-	if (domTag == null) {
-		return null;
+	let result: string = "";
+
+	if (dom == null) {
+		return result;
 	}
-	let result;
+
 	if (type == 1) {
 		//* 提取 值(value)
-		result = domTag.value;
+		result = dom["value"] || "";
 	} else if (type == 2) {
 		//* 提取 Attribute属性
-		result = "";
 		for (let i = 0; i < attrList.length; i++) {
 			const attr = attrList[i];
-			let temp = domTag.getAttribute(attr);
+			let temp = dom.getAttribute(attr);
 			//* 判空操作
 			if (!isEmpty(temp)) {
 				if (attr == "srcset") {
 					//* srcset属性信息的处理方式
-					temp = getSrcsetMaximumValue(temp);
+					temp = getSrcsetMaximumValue(<string>temp);
 				}
-				result = temp;
+				result = temp || "";
 				break;
 			}
 		}
@@ -264,7 +1066,7 @@ export const getTagInfo = (domTag: any, type: number, attr: string) => {
 		result = "";
 		for (let i = 0; i < attrList.length; i++) {
 			const attr = attrList[i];
-			let temp = domTag[attr];
+			let temp = dom[attr];
 			//* 判空操作
 			if (!isEmpty(temp)) {
 				if (attr == "srcset") {
@@ -277,28 +1079,34 @@ export const getTagInfo = (domTag: any, type: number, attr: string) => {
 		}
 	} else if (type == 4) {
 		//* 提取 innerText内部文本
-		result = domTag.innerText;
+		let a = document.createElement("div");
+
+		result = dom.innerText;
 	} else if (type == 5) {
 		//* 提取 innerHTML
-		result = domTag.innerHTML;
+		result = dom.innerHTML;
 	} else if (type == 6) {
 		//* 提取 outerHTML
-		result = domTag.outerHTML;
+		result = dom.outerHTML;
 	}
 	if (isUrl(result)) {
 		result = urlCompletion(result);
 	}
-	return String(result);
-};
+	return result;
+}
 
 //f [功能封装]判断字符串是否是一个路径
-export const isUrl = (str: string) => {
+export function isUrl(str: string) {
 	var v = /^(\/|(.\/)).+?$/i;
 	return v.test(str);
-};
+}
+
+export function isPath(str: string) {
+	return /\//i.test(str);
+}
 
 //f [功能封装] 获取srcset内容最大值
-export const getSrcsetMaximumValue = (srcsetString: string) => {
+export function getSrcsetMaximumValue(srcsetString: string) {
 	let result = srcsetString;
 	if (/\d+w/.test(srcsetString)) {
 		let dataList = srcsetString
@@ -328,10 +1136,10 @@ export const getSrcsetMaximumValue = (srcsetString: string) => {
 		result = maxItem.url;
 	}
 	return result;
-};
+}
 
 //f [功能封装]url路径补全
-export const urlCompletion = (url: string) => {
+export function urlCompletion(url: string): string {
 	const v1 = /^\/[^\/].*$/i;
 	const v2 = /^\/\/.*$/i;
 	if (v1.test(url)) {
@@ -340,6 +1148,64 @@ export const urlCompletion = (url: string) => {
 	if (v2.test(url)) {
 		return window.document.location.protocol + url;
 	}
-};
+	return url;
+}
 
-export const getDomByRule = (rule: MatchRule) => {};
+//f [功能封装]用指定内容填充数组到指定长度(已有数据保持不变)
+function fillArrayToTargetLength(
+	input_array: any[] = [],
+	length: number,
+	content: any
+) {
+	const output_array = Array.from(input_array);
+	for (let i = 0; i < length; i++) {
+		if (output_array[i] == null) {
+			output_array.push(content);
+		}
+	}
+	return output_array;
+}
+
+//f 字符串混合排序
+export function mixSort(_a: string, _b: string) {
+	const reg = /[a-zA-Z0-9]/;
+	// 比对仅针对字符串，数字参与对比会导致对比的字符串转为number类型，变成NaN
+	const a = _a.toString();
+	const b = _b.toString();
+	// 比对0号位的原因是字符串中有可能出现中英文混合的情况，这种仅按首位排序即可
+	if (reg.test(a[0]) || reg.test(b[0])) {
+		if (a > b) {
+			return 1;
+		} else if (a < b) {
+			return -1;
+		} else {
+			return 0;
+		}
+	} else {
+		return a.localeCompare(b);
+	}
+}
+
+//f 通过blob获取文件的ext扩展名
+export function getExtByBlob(blob: Blob) {
+	let match = /(?<=\/).+$/.exec(blob.type);
+	let ext = match?.at(0) || "";
+	if (!isEmpty(ext)) {
+		ext = ext === "jpeg" ? "jpg" : ext;
+	}
+	return ext;
+}
+
+//f 文本填充
+export function strAutofill(
+	str: string,
+	fillContent: string | number,
+	fill_length: number,
+	direction: "prefix" | "suffix" = "prefix"
+): string {
+	if (direction === "prefix") {
+		return str.padStart(fill_length, fillContent.toString());
+	} else {
+		return str.padEnd(fill_length, fillContent.toString());
+	}
+}

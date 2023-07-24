@@ -1,37 +1,71 @@
 <template>
-	<div class="card" @contextmenu.prevent.self @click="clickHandle">
+	<div
+		ref="cardDom"
+		class="card"
+		:id="`id_${card.id}`"
+		data-fancybox-trigger="onlineGallery"
+		:data-fancybox-index="index"
+		@contextmenu.prevent.self>
 		<!-- *图片 -->
-		<Img class="content" :src="card.url"></Img>
+		<Img
+			class="content"
+			data-fancybox="onlineGallery"
+			:src="card.picUrl"
+			@click="clickHandle" />
+		<!-- <img class="content" :src="card.picUrl" data-fancybox="onlineGallery" /> -->
+
 		<div class="tag-group">
+			<!-- *大小标签 -->
+			<el-tooltip
+				v-if="card.linkBlob"
+				effect="dark"
+				:content="(card.linkBlob.size / 1024 / 1024).toFixed(2) + 'Mb'"
+				placement="top">
+				<el-tag
+					class="el-tag"
+					round
+					size="small"
+					@click.right="
+						copyTagContent((card.linkBlob.size / 1024 / 1024).toFixed(2) + 'Mb')
+					">
+					{{ (card.linkBlob.size / 1024 / 1024).toFixed(2) + "Mb" }}
+				</el-tag>
+			</el-tooltip>
 			<!-- *尺寸标签 -->
-			<el-tag
-				class="tag-width-and-height"
-				round
-				size="small"
-				type="info"
-				@click.right.prevent="
-					copyTagContent(`${card.meta.width}x${card.meta.height}`)
-				"
-				>{{ card.meta.width }}x{{ card.meta.height }}
-			</el-tag>
+			<el-tooltip
+				effect="dark"
+				:content="`${card.meta.width}x${card.meta.height}`"
+				placement="top">
+				<el-tag
+					class="el-tag"
+					size="small"
+					type="info"
+					@click.right="
+						copyTagContent(card.meta.width + 'x' + card.meta.height)
+					"
+					round>
+					{{ card.meta.width }}x{{ card.meta.height }}
+				</el-tag>
+			</el-tooltip>
 			<!-- *名称标签 -->
-			<el-tag
-				class="tag-width-and-height"
-				round
-				size="small"
-				@click.right.prevent="copyTagContent(card.name)">
-				{{ card.name }}
-			</el-tag>
+			<el-tooltip effect="dark" :content="card.name" placement="top">
+				<el-tag
+					class="el-tag"
+					round
+					size="small"
+					@click.right="copyTagContent(card.name)">
+					{{ card.name }}
+				</el-tag>
+			</el-tooltip>
 		</div>
 		<!-- *勾选框 -->
-		<el-checkbox v-model="card.selected" class="checkbox" size="default" />
+		<el-checkbox v-model="card.selected" class="checkbox" />
 		<!-- *按钮组 -->
 		<div class="button-group">
 			<!-- *下载按钮 -->
 			<el-button
 				class="button download"
 				type="primary"
-				size="small"
 				circle
 				@click.stop="download"
 				:loading="downloading">
@@ -44,7 +78,6 @@
 			<el-button
 				class="button toPosition"
 				type="primary"
-				size="small"
 				circle
 				@click.stop="toPosition"
 				:loading="downloading">
@@ -58,26 +91,36 @@
 
 <script setup lang="ts">
 	const {text, isSupported, copy} = useClipboard(); //* 剪切板
-	
+
+	const cardsStore = useCardsStore();
+
 	interface Props {
 		card: matchCard;
+		index: number;
 	}
 	const props = withDefaults(defineProps<Props>(), {
 		card: () => {
 			return {
 				name: "",
-				url: "",
+				linkUrl: "",
+				picUrl: "",
 				originUrls: [],
+				metaOrigin: "",
 				meta: <metaInterFace>{
 					width: 0,
 					height: 0,
 					aspectRatio: 3 / 4,
 				},
+				picBlob: new Blob([], {type: "none"}),
+				linkBlob: new Blob([], {type: "none"}),
+				nameBlob: new Blob([], {type: "none"}),
 				selected: false, //? 选中标识符
 				dom: null,
 			};
 		},
 	});
+
+	const cardDom = ref();
 
 	const appInfo = useAppInfoStore();
 	const downloading = ref(false); //* 用于标记下载过程
@@ -86,7 +129,7 @@
 	 * f 复制内容到剪切板
 	 * @param {string} content 文本内容
 	 */
-	const copyTagContent = async (content) => {
+	const copyTagContent = async (content: string) => {
 		await copy(content);
 		ElMessage({
 			type: "success",
@@ -94,7 +137,7 @@
 			grouping: true,
 			center: true,
 			duration: 1000,
-			offset: 80,
+			offset: 120,
 			message: h("p", {style: "display:flex;gap:10px"}, [
 				h("i", {style: "color: teal"}, content),
 				h("span", {style: "color: black"}, "复制成功！"),
@@ -103,34 +146,28 @@
 	};
 
 	//f 卡片点击事件
-	const clickHandle = async (e) => {
-		return;
+	const clickHandle = async (e: MouseEvent) => {
+		cardsStore.openFancyBox(props.index);
 	};
 
 	//f 下载图片
 	const download = async () => {
+		const card = props.card;
 		downloading.value = true;
-		if (props.card.blob != null) {
-			await saveAs(props.card.blob, props.card.name);
+		if (card.linkBlob) {
+			//* 后缀名处理
+			let ext = getExtByBlob(card.linkBlob);
+			let reg = new RegExp(`(\\.${ext})+$`);
+			await saveAs(card.linkBlob, `${card.name.replace(reg, "")}.${ext}`);
 			downloading.value = false;
 		} else {
 			//* 先获取文件的blob对象
-			const url = props.card.url;
-
-			//* 先尝试通过Fetch方法获取
-			let blob = await getBlobByUrl(url, "Fetch");
-			if (blob.type==='none') {
-				//* Fetch失败后尝试通过GM不指定referer方式获取
-				blob = await getBlobByUrl(url, "GM");
-			}
-			if (blob.type==='none') {
-				//* 再次失败后尝试通过GM指定referer方式获取
-				blob = await getBlobByUrl(url, "GM", location.origin);
-			}
-
-			console.log(blob);
-			if (blob&&blob['type']!=='none') {
-				await saveAs(blob, props.card.name);
+			const url = card.linkUrl;
+			let tempBlob: Blob = await getBlobByUrlAuto(url);
+			console.log(tempBlob);
+			if (tempBlob && tempBlob.type !== "none") {
+				card.linkBlob = tempBlob;
+				await saveAs(card.linkBlob, card.name);
 				downloading.value = false;
 			} else {
 				downloading.value = false;
@@ -150,6 +187,10 @@
 			});
 		}
 	};
+
+	defineExpose({
+		cardDom,
+	});
 </script>
 
 <style scoped lang="scss">
@@ -158,9 +199,9 @@
 		margin: 0;
 		box-sizing: border-box;
 		/* 禁止选中文字 */
-		user-select: none;
+		// user-select: none;
 		/* 禁止图文拖拽 */
-		-webkit-user-drag: none;
+		// -webkit-user-drag: none;
 	}
 
 	//* 卡片样式
@@ -212,39 +253,42 @@
 
 		//* 按钮组样式
 		.button-group {
-			transition: 0.5s;
 			& {
 				position: absolute;
 				$padding: 4px;
-				top: $padding;
-				right: $padding;
-				margin: 0;
+				$margin: 4px;
+				// padding: $padding;
+				margin: $margin;
+				top: 0;
+				right: 0;
 				width: 24px;
-				aspect-ratio: 1;
-				max-width: 30px;
-				max-height: 30px;
+				height: 24px;
+				// background-color: aquamarine;
+				border-radius: 12px;
+				// aspect-ratio: 1;
+				transition: 0.15s;
 			}
 
 			//* 通用按钮样式
 			.button {
 				position: absolute;
 				margin: auto;
+				padding: 0;
 				left: 0;
 				top: 0;
 				right: 0;
-				bottom: 0;
-				font-size: small;
+				width: 100% !important;
+				height: auto !important;
+				aspect-ratio: 1 !important;
+				font-size: medium;
 				box-shadow: var(--el-box-shadow-light);
-
-				&.download {
-					z-index: 0;
-				}
-				&.toPosition {
-					z-index: 1;
-				}
+				transition: 0.15s;
 			}
 			//* 鼠标悬浮按钮组时候的样式
 			&:hover {
+				& {
+					height: 24px + 26px;
+				}
 				//* 定位按钮样式
 				.button.download {
 					transform: translateY(26px);
@@ -265,16 +309,21 @@
 		.tag-group {
 			position: absolute;
 
-			width: 100%;
-			bottom: 4px;
-			left: 4px;
+			width: 100% !important;
+			bottom: 0px;
+			left: 0px;
+			padding: 4px;
 
 			display: flex;
 			flex-flow: row wrap;
 			gap: 2px;
 
-			* {
-				box-shadow: var(--el-box-shadow-light);
+			.el-tag {
+				max-width: 100%;
+				justify-content: start;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
 			}
 		}
 	}
