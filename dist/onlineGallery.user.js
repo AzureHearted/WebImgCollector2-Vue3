@@ -5,7 +5,6 @@
 // @author     Lxs
 // @license    MIT
 // @icon       https://vitejs.dev/logo.svg
-// @match      *://www.pixiv.net/*
 // @match      http*://*
 // @match      http*://*/*
 // @exclude    *://element-plus.org/*
