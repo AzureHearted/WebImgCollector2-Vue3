@@ -5,9 +5,9 @@
 // @author     Lxs
 // @license    MIT
 // @icon       https://vitejs.dev/logo.svg
-// @match      *://www.pixiv.net/*
 // @match      http*://*
 // @match      http*://*/*
+// @match      *://www.pixiv.net/*
 // @exclude    *://element-plus.org/*
 // @require    https://cdn.bootcdn.net/ajax/libs/jszip/3.7.1/jszip.min.js
 // @connect    *
