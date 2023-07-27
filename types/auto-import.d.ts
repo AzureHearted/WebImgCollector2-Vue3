@@ -39,6 +39,7 @@ declare global {
   const TaskQueue: typeof import('../src/ts/public')['TaskQueue']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
+  const browserRedirect: typeof import('../src/ts/public')['browserRedirect']
   const buildUUID: typeof import('../src/ts/public')['buildUUID']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
@@ -66,6 +67,7 @@ declare global {
   const extendRef: typeof import('@vueuse/core')['extendRef']
   const getBlobByUrl: typeof import('../src/ts/public')['getBlobByUrl']
   const getBlobByUrlAuto: typeof import('../src/ts/public')['getBlobByUrlAuto']
+  const getBlobType: typeof import('../src/ts/public')['getBlobType']
   const getCardsByRule: typeof import('../src/ts/public')['getCardsByRule']
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
@@ -80,12 +82,14 @@ declare global {
   const getOriginByUrl: typeof import('../src/ts/public')['getOriginByUrl']
   const getSrcsetMaximumValue: typeof import('../src/ts/public')['getSrcsetMaximumValue']
   const getTagInfo: typeof import('../src/ts/public')['getTagInfo']
+  const getUrlType: typeof import('../src/ts/public')['getUrlType']
   const globalStyle: typeof import('../src/js/globalStyle.js')['globalStyle']
   const h: typeof import('vue')['h']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
   const isDefined: typeof import('@vueuse/core')['isDefined']
   const isEmpty: typeof import('../src/ts/public')['isEmpty']
+  const isMobile: typeof import('../src/ts/public')['isMobile']
   const isPath: typeof import('../src/ts/public')['isPath']
   const isProxy: typeof import('vue')['isProxy']
   const isReactive: typeof import('vue')['isReactive']
@@ -414,6 +418,7 @@ declare module 'vue' {
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
     readonly getBlobByUrl: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrl']>
     readonly getBlobByUrlAuto: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrlAuto']>
+    readonly getBlobType: UnwrapRef<typeof import('../src/ts/public')['getBlobType']>
     readonly getCardsByRule: UnwrapRef<typeof import('../src/ts/public')['getCardsByRule']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
@@ -426,11 +431,13 @@ declare module 'vue' {
     readonly getOriginByUrl: UnwrapRef<typeof import('../src/ts/public')['getOriginByUrl']>
     readonly getSrcsetMaximumValue: UnwrapRef<typeof import('../src/ts/public')['getSrcsetMaximumValue']>
     readonly getTagInfo: UnwrapRef<typeof import('../src/ts/public')['getTagInfo']>
+    readonly getUrlType: UnwrapRef<typeof import('../src/ts/public')['getUrlType']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
     readonly isEmpty: UnwrapRef<typeof import('../src/ts/public')['isEmpty']>
+    readonly isMobile: UnwrapRef<typeof import('../src/ts/public')['isMobile']>
     readonly isPath: UnwrapRef<typeof import('../src/ts/public')['isPath']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>
@@ -752,6 +759,7 @@ declare module '@vue/runtime-core' {
     readonly extendRef: UnwrapRef<typeof import('@vueuse/core')['extendRef']>
     readonly getBlobByUrl: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrl']>
     readonly getBlobByUrlAuto: UnwrapRef<typeof import('../src/ts/public')['getBlobByUrlAuto']>
+    readonly getBlobType: UnwrapRef<typeof import('../src/ts/public')['getBlobType']>
     readonly getCardsByRule: UnwrapRef<typeof import('../src/ts/public')['getCardsByRule']>
     readonly getCurrentInstance: UnwrapRef<typeof import('vue')['getCurrentInstance']>
     readonly getCurrentScope: UnwrapRef<typeof import('vue')['getCurrentScope']>
@@ -764,11 +772,13 @@ declare module '@vue/runtime-core' {
     readonly getOriginByUrl: UnwrapRef<typeof import('../src/ts/public')['getOriginByUrl']>
     readonly getSrcsetMaximumValue: UnwrapRef<typeof import('../src/ts/public')['getSrcsetMaximumValue']>
     readonly getTagInfo: UnwrapRef<typeof import('../src/ts/public')['getTagInfo']>
+    readonly getUrlType: UnwrapRef<typeof import('../src/ts/public')['getUrlType']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
     readonly isDefined: UnwrapRef<typeof import('@vueuse/core')['isDefined']>
     readonly isEmpty: UnwrapRef<typeof import('../src/ts/public')['isEmpty']>
+    readonly isMobile: UnwrapRef<typeof import('../src/ts/public')['isMobile']>
     readonly isPath: UnwrapRef<typeof import('../src/ts/public')['isPath']>
     readonly isProxy: UnwrapRef<typeof import('vue')['isProxy']>
     readonly isReactive: UnwrapRef<typeof import('vue')['isReactive']>

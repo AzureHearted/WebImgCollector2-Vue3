@@ -1,4 +1,5 @@
 <template>
+	<!-- *主容器 -->
 	<div
 		class="onlineGallery-container"
 		ref="container"
@@ -13,71 +14,87 @@
 			class="onlineGallery-button-close"
 			type="danger"
 			circle
-			@click="openSwitch">
+			@click="appInfo.container.open = false">
 			<template #icon>
 				<el-icon><i-ep-Close /></el-icon>
 			</template>
 		</el-button>
-		<!-- *切换按钮 -->
-		<el-popover
-			placement="top-start"
-			title="快捷菜单"
-			:width="'auto'"
-			trigger="hover"
-			:disabled="appInfo.container.open">
-			<!-- *触发 Popover 显示的 HTML 元素(按钮) -->
-			<template #reference>
-				<el-button
-					type="primary"
-					size="default"
-					@click="openSwitch"
-					class="onlineGallery-button-drawerOpen">
-					<template #icon>
-						<el-icon
-							><i-ep-ArrowRightBold style="pointer-events: none"
-						/></el-icon>
-					</template>
-				</el-button>
-			</template>
-			<!-- *Popover内容 -->
-			<template #default>
-				<el-button type="success" size="small" @click="openSwitch">
-					<template #icon>
-						<el-icon><i-ep-Grid /></el-icon>
-					</template>
-					<el-badge :value="cardsStore.data.cardList.length" :max="999">
-						图库
-					</el-badge>
-				</el-button>
-				<el-button
-					type="primary"
-					size="small"
-					@click="ruleEditor.container.open = true">
-					<template #icon>
-						<el-icon><i-ep-Management /></el-icon>
-					</template>
-					规则管理</el-button
-				>
-				<el-button type="primary" size="small" @click="">
-					<template #icon>
-						<el-icon><i-ep-Tools /></el-icon>
-					</template>
-					设置
-				</el-button>
-				<!-- <el-icon><i-ep-CameraFilled /></el-icon> -->
-			</template>
-		</el-popover>
 	</div>
+
 	<!-- *子窗口容器 -->
 	<div class="onlineGallery-child-window-container">
 		<!-- *规则管理器窗口 -->
 		<RuleEditor />
+		<TestBoard
+			v-if="testBoardOpen"
+			@toClose="() => (testBoardOpen = false)" />
 		<!-- *设置窗口 -->
 		<!-- <AppSettingMenu /> -->
 	</div>
+
+	<!-- *悬浮按钮 -->
+	<var-fab
+		type="primary"
+		bottom="30vh"
+		right="30px"
+		direction="top"
+		:drag="true"
+		:trigger="isMobile() ? 'click' : 'hover'"
+		:elevation="24"
+		teleport=".onlineGallery-child-window-container">
+		<template #trigger>
+			<var-badge
+				style="z-index: 1"
+				type="danger"
+				:value="cardsStore.data.cardList.length"
+				:hidden="!cardsStore.data.cardList.length"
+				:max-value="999">
+				<!-- *图库显示切换按钮 -->
+				<var-button
+					color="rgb(64,158,255,1)"
+					@dblclick="appInfo.container.open = !appInfo.container.open"
+					class="onlineGallery-float-button">
+					<IconGirdRound />
+				</var-button>
+			</var-badge>
+		</template>
+		<template #default>
+			<!-- *图库 -->
+			<var-badge
+				style="z-index: 1"
+				type="danger"
+				:value="cardsStore.data.cardList.length"
+				:hidden="!cardsStore.data.cardList.length"
+				:max-value="999">
+				<var-button type="success" @click="appInfo.container.open = true" round>
+					<IconDashboard />
+				</var-button>
+			</var-badge>
+			<!-- *规则管理 -->
+			<var-button type="info" @click="ruleEditor.container.open = true" round>
+				<IconBxsBookBookmark />
+			</var-button>
+			<!-- *设置 -->
+			<var-button color="rgb(217, 121, 252)" @click="" round>
+				<IconToolsFill />
+			</var-button>
+			<!-- ?测试窗口 -->
+			<var-button
+				color="rgb(117, 121, 252)"
+				@click="testBoardOpen = true"
+				round>
+				<IconTestTube />
+			</var-button>
+		</template>
+	</var-fab>
 </template>
 
 <script setup lang="ts">
+	import IconGirdRound from "@/icon/grid_round.svg";
+	import IconDashboard from "@/icon/dashboard.svg";
+	import IconBxsBookBookmark from "@/icon/bxs-book-bookmark.svg";
+	import IconToolsFill from "@/icon/tools-fill.svg";
+	import IconTestTube from "@/icon/bx-test-tube.svg";
 	// const {x, y} = useMouse({type: "client"}); //* 用户鼠标
 	// const {element} = useElementByPoint({x, y}); //* 鼠标所指的元素
 
@@ -90,17 +107,31 @@
 	//* 组件或html元素的接收器定义
 	const container = ref(); //*接收container dom
 
-	//f 开关切换
-	const openSwitch = async () => {
-		// 开关切换
-		appInfo.container.open = !appInfo.container.open;
-		if (appInfo.container.open) {
-			document.documentElement.dataset.showScrollbar = false.toString(); //* 页面隐藏滚动条
-			container.value.focus();
-		} else {
-			document.documentElement.dataset.showScrollbar = true.toString(); //* 还原页面滚动条
+	//* 悬浮功能按钮
+	const floatButtonRef = ref();
+	const {x, y, style} = useDraggable(floatButtonRef, {
+		initialValue: {x: 0, y: appInfo.window.height / 2},
+		preventDefault: true,
+		stopPropagation: true,
+		pointerTypes: ["touch", "mouse", "pen"],
+	});
+
+	const testBoardOpen = ref(false);
+
+	watch(
+		//f 监听 - 主容器container.open变化
+		() => appInfo.container.open,
+		(newVal, oldVal) => {
+			if (newVal) {
+				console.log("onlineGallery - 打开");
+				document.documentElement.dataset.showScrollbar = false.toString(); //* 页面隐藏滚动条
+				container.value.focus();
+			} else {
+				console.log("onlineGallery - 收起");
+				document.documentElement.dataset.showScrollbar = true.toString(); //* 还原页面滚动条
+			}
 		}
-	};
+	);
 
 	//! 挂载完成时执行
 	onMounted(async () => {
@@ -131,7 +162,7 @@
 	$z-index: 2147483646;
 	// $z-index:1000;
 
-	/* *主容器样式 */
+	//! 主容器样式
 	.onlineGallery-container {
 		box-sizing: border-box;
 		position: fixed;
@@ -170,69 +201,6 @@
 		}
 	}
 
-	/* *抽屉按钮 */
-	.onlineGallery-button-drawerOpen {
-		position: absolute;
-
-		z-index: 1;
-		margin: auto 0;
-
-		$size: 30px;
-
-		width: $size - 0px;
-		height: $size * 2;
-
-		border-radius: 0 $size $size 0;
-
-		right: 0;
-		top: 0;
-		bottom: 0;
-
-		cursor: pointer;
-
-		display: flex;
-		justify-content: center;
-		align-items: center;
-
-		font-size: xx-large;
-
-		:root:has(.onlineGallery-container[data-open="false"]) & {
-			border-radius: 0 $size $size 0 !important;
-			box-shadow: var(--el-box-shadow-light);
-			right: -$size;
-			transition: 0.25s 0.25s ease;
-		}
-
-		:root:has(.onlineGallery-container[data-open="true"]) & {
-			border-radius: $size 0 0 $size !important;
-			background-color: transparent;
-			box-shadow: none;
-			transition: 0.25s 0.25s ease;
-		}
-
-		/* *抽屉按钮图标样式 */
-		& i {
-			transition: 0.25s 0.25s ease;
-			:root:has(.onlineGallery-container[data-open="false"]) & {
-				transform: rotateY(0deg);
-				color: auto;
-			}
-			:root:has(.onlineGallery-container[data-open="true"]) & {
-				transform: rotateY(180deg);
-				color: #409eff;
-			}
-		}
-
-		@media (max-width: 500px) {
-			& {
-				right: -$size !important;
-				i {
-					transform: rotateY(0deg) !important;
-				}
-			}
-		}
-	}
-
 	/* *右上角关闭按钮样式 */
 	.onlineGallery-button-close {
 		position: absolute;
@@ -245,10 +213,29 @@
 		box-shadow: var(--el-box-shadow-light);
 	}
 
-	//* 子窗口容器样式(主要作为弹窗的容器)
+	//! 子窗口容器样式(主要作为弹窗的容器)
 	.onlineGallery-child-window-container {
 		position: fixed;
 		z-index: $z-index;
-		overflow: visible;
+		// left: 0;
+		// right: 0;
+		// top: 0;
+		// bottom: 0;
+	}
+
+	//* 悬浮按钮样式
+	.onlineGallery-float-button {
+		position: relative;
+		width: 46px;
+		height: 46px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		font-size: xx-large !important;
+		svg {
+			scale: 1.3;
+		}
 	}
 </style>

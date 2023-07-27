@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-	import {MatchRule} from "../ts/class/MatchRule";
+	import {MatchRule} from "@/ts/class/MatchRule";
 	const {text, isSupported, copy} = useClipboard(); //* 剪切板
 	
 
@@ -318,7 +318,7 @@
 
 				//* 普通tree-item
 				&.tree-item-normal {
-					position: relative;
+					position: relative !important;
 					flex-grow: 1;
 					//* 名称样式
 					> .label-ruleName {
@@ -331,8 +331,10 @@
 					}
 					//* 规则删除 - 图标按钮
 					> .icon-button-deleteRule {
-						// position: relative;
+						position: relative;
 						right: 2px;
+						width: 24px;
+						height: auto;
 						display: flex;
 						justify-content: center;
 						align-items: center;

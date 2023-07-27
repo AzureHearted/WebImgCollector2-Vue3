@@ -1,8 +1,5 @@
 <template>
-	<el-tabs
-		v-model="info.activeName"
-		@tab-click=""
-		v-if="formData != undefined">
+	<el-tabs v-model="info.activeName" @tab-click="" v-if="formData != undefined">
 		<!-- !首选项 -->
 		<el-tab-pane label="首选项" name="main">
 			<el-form :model="formData.main" label-width="100px">
@@ -62,10 +59,17 @@
 					</span>
 				</el-form-item>
 				<!-- f站点图标 -->
-				<el-form-item label="站点图标Url">
+				<el-form-item label="站点图标url">
 					<!-- *输入框-->
 					<span style="flex-grow: 1">
-						<el-input v-model="formData.main.iconUrl" type="text" />
+						<el-input v-model="formData.main.iconUrl" type="text">
+							<template #suffix>
+								<!-- *站点图标展示 -->
+								<el-image
+									style="aspect-ratio: 1; height: 24px"
+									:src="formData.main.iconUrl"></el-image>
+							</template>
+						</el-input>
 					</span>
 				</el-form-item>
 			</el-form>
@@ -483,7 +487,7 @@
 </template>
 
 <script setup lang="ts">
-import {MatchRule} from "../ts/class/MatchRule";
+	import {MatchRule} from "@/ts/class/MatchRule";
 
 	interface Props {
 		formData?: MatchRule;

@@ -1,33 +1,11 @@
 <template>
-	<img :parentSelector="parentSelector" v-lazy="src" data-fancybox="gallery" />
+	<!-- <img :parentSelector="parentSelector" :src="src" v-lazy="src" /> -->
+	<img :parentSelector="parentSelector" :src="src"  />
 
 	<!-- <el-image ref="img" :src="src" loading="lazy"></el-image> -->
 </template>
 
 <script setup>
-	import {Fancybox} from "@fancyapps/ui";
-	onMounted(() => {
-		//* 绑定图像
-		Fancybox.bind('[data-fancybox="onlineGallery"]', {
-			Thumbs: {type: "modern"},
-			Toolbar: {
-				display: {
-					left: ["infobar"],
-					middle: [
-						"zoomIn",
-						"zoomOut",
-						"toggle1to1",
-						"rotateCCW",
-						"rotateCW",
-						"flipX",
-						"flipY",
-					],
-					right: ["slideshow", "thumbs", "close"],
-				},
-			},
-		});
-	});
-
 	defineProps({
 		src: String,
 		parentSelector: {
@@ -96,13 +74,13 @@
 	[data-show="true"] {
 		opacity: 1;
 		filter: blur(0px);
-		transition: 1s;
+		transition: .2s;
 	}
 
 	/* 不显示时的样式 */
 	[data-show="false"] {
 		opacity: 0;
 		filter: blur(10px);
-		transition: 1s;
+		transition: .2s;
 	}
 </style>

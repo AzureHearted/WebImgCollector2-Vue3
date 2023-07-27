@@ -244,6 +244,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@popperjs/core@^2.11.6":
+  version "2.11.8"
+  resolved "https://registry.npmmirror.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
+  integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
+
 "@popperjs/core@npm:@sxzz/popperjs-es@^2.11.7":
   version "2.11.7"
   resolved "https://registry.npmmirror.com/@sxzz/popperjs-es/-/popperjs-es-2.11.7.tgz#a7f69e3665d3da9b115f9e71671dae1b97e13671"
@@ -302,6 +307,40 @@
   version "0.0.17"
   resolved "https://registry.npmmirror.com/@types/web-bluetooth/-/web-bluetooth-0.0.17.tgz#5c9f3c617f64a9735d7b72a7cc671e166d900c40"
   integrity sha512-4p9vcSmxAayx72yn70joFoL44c9MO/0+iVEBIQXe3v2h2SiAsEIo/G5v6ObFWvNKRFjbrVadNf9LqEEZeQPzdA==
+
+"@varlet/icons@2.13.4":
+  version "2.13.4"
+  resolved "https://registry.npmmirror.com/@varlet/icons/-/icons-2.13.4.tgz#509b2446ee4b0bdc700b45c6363e73e952d849cc"
+  integrity sha512-WgLQKA+1KzIpJPneONqpFinXEoyiDt+Zre3zk0zvVm4q27BwKLY93Vzr2a5MsUeKnrLj4r1/rU4B7248ZSqWDQ==
+
+"@varlet/shared@2.13.4":
+  version "2.13.4"
+  resolved "https://registry.npmmirror.com/@varlet/shared/-/shared-2.13.4.tgz#fed9de278871a713aa9844aa25a831f21a1e3fa2"
+  integrity sha512-81mNbzV19Towr4087NXerCMf+yWSFKiWQ0tuPQb1gY8Nw1EMoDUZiAbfpAaPxoOnse5UihvD0SjyOnIhlS8gtg==
+
+"@varlet/touch-emulator@^2.13.4":
+  version "2.13.4"
+  resolved "https://registry.npmmirror.com/@varlet/touch-emulator/-/touch-emulator-2.13.4.tgz#78edb06de363b21c3b9986648b3a957f05c81d50"
+  integrity sha512-ila9i9BCGOUqTNZBywuNelfeI+sXMDYi5RwvAmT8cxU0yBvVw/v7POIuRqX/OhWnLer+9DAgzlp87zNDoDj2sA==
+
+"@varlet/ui@^2.13.4":
+  version "2.13.4"
+  resolved "https://registry.npmmirror.com/@varlet/ui/-/ui-2.13.4.tgz#b30f2f9553ddbd2a71b033af5748b6cabe2544c4"
+  integrity sha512-lSB/ZUsOTZVeJAtzxW+yOwnXpjQdOmLSWUsbTPoOuMsQKB8Ex65Ybg7uwJQacpmHmXGAu87mCjB0xrSD6nPjNQ==
+  dependencies:
+    "@popperjs/core" "^2.11.6"
+    "@varlet/icons" "2.13.4"
+    "@varlet/shared" "2.13.4"
+    "@varlet/use" "2.13.4"
+    dayjs "^1.10.4"
+    decimal.js "^10.2.1"
+
+"@varlet/use@2.13.4":
+  version "2.13.4"
+  resolved "https://registry.npmmirror.com/@varlet/use/-/use-2.13.4.tgz#3f98a7b28791e55f3673c28c6d41e453b022643c"
+  integrity sha512-+dkpodUBuEJd/tByKLehBTss0HNIHpwiB2nB/oDn7xZi9RKFgYR8qboVpB0R6HulXwd+vgxWckGOPAA1+p3EHw==
+  dependencies:
+    "@varlet/shared" "2.13.4"
 
 "@vitejs/plugin-vue@^4.2.3":
   version "4.2.3"
@@ -714,7 +753,7 @@ csstype@^3.1.1:
   resolved "https://registry.npmmirror.com/csstype/-/csstype-3.1.2.tgz#1d4bf9d572f11c14031f0436e1c10bc1f571f50b"
   integrity sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==
 
-dayjs@^1.10.5, dayjs@^1.11.3:
+dayjs@^1.10.4, dayjs@^1.10.5, dayjs@^1.11.3:
   version "1.11.9"
   resolved "https://registry.npmmirror.com/dayjs/-/dayjs-1.11.9.tgz#9ca491933fadd0a60a2c19f6c237c03517d71d1a"
   integrity sha512-QvzAURSbQ0pKdIye2txOzNaHmxtUBXerpY0FJsFXUMKbIZeFm5ht1LS/jFsrncjnmtv8HsG0W2g6c0zUjZWmpA==
@@ -730,6 +769,11 @@ debug@4, debug@^4.3.3, debug@^4.3.4:
   integrity sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==
   dependencies:
     ms "2.1.2"
+
+decimal.js@^10.2.1:
+  version "10.4.3"
+  resolved "https://registry.npmmirror.com/decimal.js/-/decimal.js-10.4.3.tgz#1044092884d245d1b7f65725fa4ad4c6f781cc23"
+  integrity sha512-VBBaLc1MgL5XpzgIP7ny5Z6Nx3UrRkIViUkPUdtl9aya5amy3De1gsUUSB1g3+3sExYNjCAsAznmukyxCb1GRA==
 
 default-browser-id@^3.0.0:
   version "3.0.0"

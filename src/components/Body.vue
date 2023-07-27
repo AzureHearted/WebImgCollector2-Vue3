@@ -9,7 +9,7 @@
 			striped
 			striped-flow />
 		<!-- *工具栏 -->
-		<Toolbar ref="toolbar" class="toolBar" />
+		<Toolbar ref="toolbar" class="onlineGallery-toolBar" />
 		<List ref="list" class="listContainer" />
 	</div>
 </template>
@@ -47,7 +47,7 @@
 		--header-height: 80px;
 
 		/* *工具栏样式 */
-		.toolBar {
+		.onlineGallery-toolBar {
 			flex-shrink: 0;
 			position: relative;
 

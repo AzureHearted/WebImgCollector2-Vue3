@@ -1,16 +1,16 @@
 <template>
-	<span class="container" @mouseenter="isHover = true" @mouseleave="isHover = false">
-		<transition>
+	<span class="hover-button-container" @mouseenter="isHover = true" @mouseleave="isHover = false">
+		<transition name="hover-button-container">
 			<!-- *默认样式 -->
-			<span class="default" v-if="!isHover">
+			<span class="hover-button-default" v-if="!isHover">
 				<slot>
 					<el-icon><i-ep-Delete /></el-icon>
 				</slot>
 			</span>
 		</transition>
-		<transition>
+		<transition name="hover-button-container">
 			<!-- *悬浮样式 -->
-			<span class="hover" v-if="isHover">
+			<span class="hover-button-hover" v-if="isHover">
 				<slot name="hover">
 					<el-icon><i-ep-DeleteFilled /></el-icon>
 				</slot>
@@ -24,8 +24,8 @@
 </script>
 
 <style lang="scss" scoped>
-	.container {
-		position: relative;
+	.hover-button-container {
+		position: relative !important;
 		width: 24px;
 		aspect-ratio: 1;
 		display: flex;
@@ -41,13 +41,13 @@
 		}
 	}
 
-	.v-enter-active,
-	.v-leave-active {
+	.hover-button-container-enter-active,
+	.hover-button-container-leave-active {
 		transition: opacity 0.5s ease;
 	}
 
-	.v-enter-from,
-	.v-leave-to {
+	.hover-button-container-enter-from,
+	.hover-button-container-leave-to {
 		opacity: 0;
 	}
 </style>

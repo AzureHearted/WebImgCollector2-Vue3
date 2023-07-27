@@ -1,5 +1,5 @@
 <template>
-	<div ref="listContainer">
+	<div id="onlineGallery-container" ref="listContainerRef">
 		<el-scrollbar ref="scrollbarRef" @scroll="handleScroll">
 			<transition-group
 				id="onlineGallery-listBody"
@@ -33,30 +33,198 @@
 </template>
 
 <script setup lang="ts">
-	const listContainer = ref(); //* 用于接收list容器的dom
+	import {Fancybox} from "@fancyapps/ui";
+
+	const listContainerRef = ref(); //* 用于接收list容器的dom
+	const listContainerSize = useElementBounding(listContainerRef);
 	const listBody = ref(); //* 用于接收list本体的dom
 	const scrollbarRef = ref();
 	const wrapRef = ref();
 
+	const appInfo = useAppInfoStore();
 	const cardsStore = useCardsStore();
 
 	const toolBar = useToolBarStore();
 
 	const listControl = toolBar.listControl;
 
+	onMounted(() => {
+		//! FancyBox实例挂载
+		Fancybox.bind(
+			listBody.value.$el,
+			'[data-onlineGallery-fancybox="onlineGallery"]',
+			{
+				contentClick: "toggleZoom",
+				contentDblClick: false,
+				defaultDisplay: "block",
+				dragToClose: true,
+				animated: true,
+				wheel: "zoom",
+				backdropClick: "close",
+				groupAttr: "data-onlineGallery-fancybox",
+				hideScrollbar: true,
+				on: {
+					done: (fancybox, slide) => {
+						console.log(slide);
+
+						if (
+							slide.contentEl.style.width == "0px" ||
+							slide.contentEl.style.height == "0px"
+						) {
+							let aspectRatio = Number(slide.width) / Number(slide.height);
+							slide.contentEl.style.width =
+								(slide.el as HTMLElement).clientHeight * 0.9 * aspectRatio +
+								"px";
+							slide.contentEl.style.height =
+								(slide.el as HTMLElement).clientHeight * 0.9 + "px";
+						}
+					},
+				},
+				parentEl: document.querySelector(
+					".onlineGallery-child-window-container"
+				) as HTMLElement,
+				groupAll: true,
+				Thumbs: {type: "classic"},
+				Images: {
+					Panzoom: {
+						maxScale: 5,
+					},
+				},
+				Toolbar: {
+					display: {
+						left: ["infobar"],
+						middle: [
+							"zoomIn",
+							"zoomOut",
+							"toggle1to1",
+							"rotateCCW",
+							"rotateCW",
+							"flipX",
+							"flipY",
+						],
+						right: ["open", "slideshow", "download", "thumbs", "close"],
+					},
+					items: {
+						open: {
+							tpl: /*html*/ `
+							<button class="f-button"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"></path></svg></button>
+							`,
+							click: (fancybox, slide) => {
+								const index = Number(
+									(
+										fancybox.instance.container.querySelector(
+											".is-nav-selected"
+										) as HTMLElement
+									).dataset.index
+								);
+								const url = fancybox.instance.userSlides[index].src;
+								window.open(url, "_blank");
+							},
+						},
+					},
+				},
+			}
+		);
+	});
+
+	onUpdated(() => {
+		Fancybox.unbind(listBody.value.$el);
+		Fancybox.close();
+
+		Fancybox.bind(
+			listBody.value.$el,
+			'[data-onlineGallery-fancybox="onlineGallery"]',
+			{
+				contentClick: "toggleZoom",
+				contentDblClick: false,
+				defaultDisplay: "block",
+				dragToClose: true,
+				animated: true,
+				wheel: "zoom",
+				backdropClick: "close",
+				groupAttr: "data-onlineGallery-fancybox",
+				hideScrollbar: true,
+				on: {
+					done: (fancybox, slide) => {
+						if (
+							slide.contentEl.style.width == "0px" ||
+							slide.contentEl.style.height == "0px"
+						) {
+							let aspectRatio = Number(slide.width) / Number(slide.height);
+							slide.contentEl.style.width =
+								(slide.el as HTMLElement).clientHeight * 0.9 * aspectRatio +
+								"px";
+							slide.contentEl.style.height =
+								(slide.el as HTMLElement).clientHeight * 0.9 + "px";
+						}
+					},
+				},
+				parentEl: document.querySelector(
+					".onlineGallery-child-window-container"
+				) as HTMLElement,
+				groupAll: true,
+				Thumbs: {type: "classic"},
+				Images: {
+					Panzoom: {
+						maxScale: 5,
+					},
+				},
+				Toolbar: {
+					display: {
+						left: ["infobar"],
+						middle: [
+							"zoomIn",
+							"zoomOut",
+							"toggle1to1",
+							"rotateCCW",
+							"rotateCW",
+							"flipX",
+							"flipY",
+						],
+						right: ["open", "slideshow", "download", "thumbs", "close"],
+					},
+					items: {
+						open: {
+							tpl: /*html*/ `
+							<button class="f-button"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"></path></svg></button>
+							`,
+							click: (fancybox, slide) => {
+								const index = Number(
+									(
+										fancybox.instance.container.querySelector(
+											".is-nav-selected"
+										) as HTMLElement
+									).dataset.index
+								);
+								const url = fancybox.instance.userSlides[index].src;
+								window.open(url, "_blank");
+							},
+						},
+					},
+				},
+			}
+		);
+	});
+
 	//f 获取list的样式(计算属性)
 	const getStyle = computed(() => {
-		if (listContainer.value == null) {
-			return;
+		interface IStyle {
+			"--nowColumn": number;
+			"--listHeight": string;
+			"--cardMaxHeight": string;
 		}
-
-		const containerInfo = listContainer.value.getBoundingClientRect();
-		let style = {
+		let style: IStyle = {
 			"--nowColumn": listControl.showColumn,
 			"--listHeight":
-				containerInfo.height - 8 * listControl.showColumn - 10 + "px",
+				appInfo.window.height - 8 * listControl.showColumn - 10 + "px",
 			"--cardMaxHeight": `calc(var(--listHeight) / var(--nowColumn))`,
 		};
+		if (listContainerSize.height.value > 0) {
+			style["--listHeight"] =
+				listContainerSize.height.value - 8 * listControl.showColumn - 10 + "px";
+		}
 		if (listControl.showColumn <= 0) {
 			style["--cardMaxHeight"] = "1000%";
 		}

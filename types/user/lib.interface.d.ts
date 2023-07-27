@@ -5,11 +5,11 @@ interface matchCard {
 	linkUrl: string;
 	picUrl: string;
 	originUrls: string[];
-	picUrlExt?:string;
-	linkUrlExt?:string;
+	picUrlExt?: string;
+	linkUrlExt?: string;
 	meta: metaInterFace;
 	metaOrigin: string; //* meta的链接来源
-	match?: boolean; //? 匹配标识符
+	match: boolean; //? 匹配标识符
 	selected: boolean; //? 选中标识符
 	linkBlob?: Blob; //* 链接对应的blob
 	picBlob?: Blob; //* 图片对应的blob
@@ -19,8 +19,10 @@ interface matchCard {
 	picUrlDom?: HTMLElement | null; //* 匹配到的picUrl的dom元素
 	nameDom?: HTMLElement | null; //* 匹配到的nameUrl的dom元素
 	metaDom?: HTMLElement | null; //* 匹配到的metaUrl的dom元素
-	linkUrlType?: string;
-	picUrlType?: string;
+	linkUrlType?: "image" | "video" | "audio" | "html";
+	picUrlType?: "image" | "video" | "audio" | "html";
+	fancyBoxType: "image" | "iframe" | "video" | "inline" | "html";
+	visible: boolean;
 }
 
 //f 临时card的接口
@@ -31,8 +33,8 @@ interface rowCard {
 	linkUrl?: string;
 	picUrl?: string;
 	originUrls?: string[];
-	picUrlExt?:string;
-	linkUrlExt?:string;
+	picUrlExt?: string;
+	linkUrlExt?: string;
 	meta?: metaInterFace;
 	metaOrigin: string; //* meta的链接来源
 	match?: boolean; //? 匹配标识符
@@ -47,6 +49,7 @@ interface rowCard {
 	metaDom?: HTMLElement | null; //* 匹配到的metaUrl的dom元素
 	linkUrlType?: string;
 	picUrlType?: string;
+	visible?: boolean;
 }
 
 //? 媒体信息类型

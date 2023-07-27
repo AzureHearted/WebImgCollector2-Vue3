@@ -5,6 +5,7 @@ import AutoImport from "unplugin-auto-import/vite"; //* 依赖自动导入插件
 import Components from "unplugin-vue-components/vite"; //* 组件自动导入插件
 import {
 	ElementPlusResolver,
+	VarletUIResolver,
 	AntDesignVueResolver,
 } from "unplugin-vue-components/resolvers";
 import Icons from "unplugin-icons/vite";
@@ -40,6 +41,8 @@ export default defineConfig({
 			resolvers: [
 				//f 自动导入 Element Plus 相关函数，如：ElMessage, ElMessageBox... (带样式)
 				ElementPlusResolver(),
+				//f 自动导入 VarletUI 相关api
+				VarletUIResolver(),
 				//f 自动导入图标组件
 				IconsResolver({
 					prefix: "Icon",
@@ -69,6 +72,8 @@ export default defineConfig({
 			resolvers: [
 				//f 自动导入 Element Plus 组件
 				ElementPlusResolver(),
+				//f 自动导入 VarletUI 组件
+				VarletUIResolver({autoImport: true}),
 				//f 自动注册图标组件
 				IconsResolver({
 					enabledCollections: ["ep"],
@@ -93,12 +98,12 @@ export default defineConfig({
 				icon: "https://vitejs.dev/logo.svg",
 				namespace: "npm/vite-plugin-monkey",
 				// match: ["*://*/*"],
-				match: ["*://www.pixiv.net/*", "http*://*", "http*://*/*"],
+				match: ["http*://*", "http*://*/*", "*://www.pixiv.net/*"],
 				exclude: ["*://element-plus.org/*"],
 				connect: ["*"],
 				noframes: true,
 				require: [],
-				"run-at": "document-start",
+				// "run-at": "document-start",
 			},
 			server: {
 				open: false,
@@ -115,5 +120,13 @@ export default defineConfig({
 		preprocessorOptions: {
 			scss: {},
 		},
+	},
+	server: {
+		// host: 'localhost',
+		port: 8888,
+		open: false,
+	},
+	build: {
+		target: ["es2015", "edge88", "firefox78", "chrome87", "safari14"],
 	},
 });

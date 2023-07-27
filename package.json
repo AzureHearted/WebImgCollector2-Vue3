@@ -12,6 +12,8 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.1.0",
     "@fancyapps/ui": "^5.0.20",
+    "@varlet/touch-emulator": "^2.13.4",
+    "@varlet/ui": "^2.13.4",
     "@vueuse/core": "^10.2.1",
     "ant-design-vue": "^4.0.0",
     "element-plus": "^2.3.8",

@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
-import {IORule, MatchRule} from "../ts/class/MatchRule";
 import {Fancybox} from "@fancyapps/ui";
+import {IORule, MatchRule} from "@/ts/class/MatchRule";
 
 /**
  *! appInfo 信息共享
@@ -79,7 +79,7 @@ export const useCardsStore = defineStore("Cards", () => {
 		const filter = toolBar.filter;
 		const listControl = toolBar.listControl;
 		let regex = filter.formats.value.length
-			? new RegExp(`\\.(${filter.formats.value.join("|")})$`)
+			? new RegExp(`(${filter.formats.value.join("|")})`)
 			: new RegExp("");
 		//* 过滤
 		let cardList = allValidCards.value.filter(
@@ -125,7 +125,7 @@ export const useCardsStore = defineStore("Cards", () => {
 		) => {
 			appInfo.loading.percentage = (processedCount / allCount) * 100;
 			if (card.match && !data.urlSet.has(card.picUrl)) {
-				console.log("匹配成功!", card, filter);
+				// console.log("匹配成功!", card, filter);
 				data.cardList[realIndex] = card;
 				// data.cardList.push(card);
 				data.urlSet.add(card.picUrl); //* 记录匹配过的链接
@@ -141,10 +141,10 @@ export const useCardsStore = defineStore("Cards", () => {
 							card.meta.width,
 							card.meta.height
 						));
-				console.log(max);
+				// console.log(max);
 
-				filter.size.width.value[1] = max;
-				filter.size.height.value[1] = max;
+				filter.size.width.value = [filter.size.width.value[0], max];
+				filter.size.height.value = [filter.size.height.value[0], max];
 			}
 		};
 		//* 全部处理完成后的回到
@@ -183,47 +183,12 @@ export const useCardsStore = defineStore("Cards", () => {
 		);
 	};
 
-	//f 打开FancyBox预览器
-	const openFancyBox = async (startIndex: number = 0) => {
-		const nodeList = filterCards.value.map((card) => card.linkUrlDom);
-		Fancybox.fromNodes(nodeList as HTMLElement[], {
-			hideScrollbar: true,
-			startIndex: startIndex,
-			parentEl: document.querySelector(
-				".onlineGallery-child-window-container"
-			) as HTMLElement,
-			groupAll: true,
-			Thumbs: {type: "modern"},
-			Images: {
-				Panzoom: {
-					maxScale: 5,
-				},
-			},
-			Toolbar: {
-				display: {
-					left: ["infobar"],
-					middle: [
-						"zoomIn",
-						"zoomOut",
-						"toggle1to1",
-						"rotateCCW",
-						"rotateCW",
-						"flipX",
-						"flipY",
-					],
-					right: ["slideshow", "download", "thumbs", "close"],
-				},
-			},
-		});
-	};
-
 	return {
 		data,
 		allValidCards,
 		filterCards,
 		selectedCards,
 		getCard,
-		openFancyBox,
 	};
 });
 
@@ -306,21 +271,34 @@ export const useToolBarStore = defineStore("ToolBar", () => {
 
 	//f 选出首个匹配的规则
 	const selectingInitRule = () => {
-		let matchedRule: IORule[] = ruleEditor.data.ruleList
-			.filter((rule) => {
-				//* 先过滤域名
-				return new RegExp(`${rule.main.domainName}`).test(location.origin);
-			})
-			.filter((rule) => {
-				const pattern = rule.main.pathFilter.pattern;
-				const flags = rule.main.pathFilter.flags.join("");
-				//* 再过滤路径
-				return new RegExp(pattern, flags).test(
-					location.pathname + location.search
-				);
-			});
+		let targetRule: IORule | null = null;
+
+		let matchedRule: IORule[] = ruleEditor.data.ruleList.filter((rule) => {
+			//* 先过滤域名
+			return new RegExp(`${rule.main.domainName}`).test(location.origin);
+		});
+
 		if (matchedRule.length) {
-			ruleSelector.value = matchedRule[0].id;
+			//* 有限使用有路径过滤且匹配的
+			for (let index = 0; index < matchedRule.length; index++) {
+				const rule = matchedRule[index];
+				if (!isEmpty(rule.main.pathFilter.pattern)) {
+					const pattern = rule.main.pathFilter.pattern;
+					const flags = rule.main.pathFilter.flags.join("");
+					const regex = new RegExp(pattern, flags);
+
+					const isMatch = regex.test(location.pathname + location.search);
+					if (isMatch) {
+						targetRule = rule;
+						break;
+					}
+				}
+			}
+			targetRule = targetRule || matchedRule[0];
+		}
+
+		if (targetRule) {
+			ruleSelector.value = targetRule.id;
 		} else {
 			//* 没有匹配到则使用默认规则
 			ruleSelector.value = "#";

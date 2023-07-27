@@ -1,4 +1,4 @@
-import {IORule, MatchRule} from "./class/MatchRule";
+import {IORule, MatchRule} from "@/ts/class/MatchRule";
 
 /**
  * f 任务队列
@@ -771,6 +771,8 @@ async function singleCardProcessing(
 		picUrlDom: rowCard.picUrlDom,
 		nameDom: rowCard.nameDom,
 		metaDom: rowCard.metaDom,
+		visible: false,
+		fancyBoxType: "iframe",
 	};
 
 	//! 链接处理
@@ -783,6 +785,7 @@ async function singleCardProcessing(
 	} else {
 		card.linkUrl = "";
 	}
+
 	//! 图链处理
 	if (rule.picUrl.enable) {
 		if (isUrl(card.picUrl)) {
@@ -797,6 +800,12 @@ async function singleCardProcessing(
 	} else {
 		card.picUrl = card.linkUrl;
 	}
+
+	//* 防止链接为空的操作
+	if (isEmpty(card.linkUrl, true) && !isEmpty(card.picUrl, true)) {
+		card.linkUrl = card.picUrl;
+	}
+
 	//! 名称处理
 	if (rule.name.enable) {
 		//* 结果修正部分
@@ -810,6 +819,8 @@ async function singleCardProcessing(
 	if (isPath(card.name)) {
 		card.name = getNameByUrl(card.name);
 	}
+	//? 去除尾部斜杠“/”
+	card.name = card.name.replace(/(\/)$/, "");
 
 	//! 元信息获取
 	if (rule.meta.enable) {
@@ -820,35 +831,17 @@ async function singleCardProcessing(
 		} else if (rule.meta.origin == 1) {
 			//? 使用“链接”dom
 			if (card.linkUrlDom) {
-				await getMeta(
-					card.linkUrlDom,
-					card.linkUrl,
-					card,
-					rule.meta.getMethod,
-					"linkBlob"
-				);
+				await getMeta(card.linkUrlDom, card.linkUrl, card, 3, "linkBlob");
 			}
 		} else if (rule.meta.origin == 2) {
 			//? 使用“图链”dom
 			if (card.picUrlDom) {
-				await getMeta(
-					card.picUrlDom,
-					card.picUrl,
-					card,
-					rule.meta.getMethod,
-					"picBlob"
-				);
+				await getMeta(card.picUrlDom, card.picUrl, card, 3, "picBlob");
 			}
 		} else if (rule.meta.origin == 3) {
 			//? 使用“名称”dom
 			if (card.nameDom) {
-				await getMeta(
-					card.nameDom,
-					card.name,
-					card,
-					rule.meta.getMethod,
-					"nameBlob"
-				);
+				await getMeta(card.nameDom, card.name, card, 3, "nameBlob");
 			}
 		}
 	}
@@ -902,25 +895,54 @@ async function singleCardProcessing(
 		}
 	}
 
-	if (card.meta.isOk) {
+	//* blob补全
+	if (!card.linkBlob) {
+		card.linkBlob = await getBlobByUrlAuto(card.linkUrl);
+		// if (!card.picBlob) card.picBlob = card.linkBlob;
+		// if (!card.nameBlob) card.nameBlob = card.linkBlob;
+	}
+	if (!card.picBlob) {
+		if (card.linkUrl === card.picUrl) {
+			card.picBlob = card.linkBlob;
+		} else {
+			card.picBlob = await getBlobByUrlAuto(card.picUrl);
+		}
+		// if (!card.linkBlob) card.linkBlob = card.picBlob;
+		// if (!card.nameBlob) card.nameBlob = card.picBlob;
+	}
+	// if (!card.nameBlob) {
+	// 	// if (!card.linkBlob) card.linkBlob = card.nameBlob;
+	// 	// if (!card.picBlob) card.picBlob = card.nameBlob;
+	// }
+
+	//* 类型判断
+	if (card.linkBlob) {
+		card.linkUrlType = getBlobType(card.linkBlob);
+	} else {
+		card.linkUrlType = getUrlType(card.linkUrl);
+	}
+
+	if (card.picBlob) {
+		card.picUrlType = getBlobType(card.picBlob);
+	} else {
+		card.picUrlType = getUrlType(card.picUrl);
+	}
+
+	if (card.linkUrlType == "html" || card.linkUrlType == "audio") {
+		card.fancyBoxType = "iframe";
+	} else {
+		card.fancyBoxType = card.linkUrlType;
+	}
+
+	//* 后缀名获取 
+	if (card.linkBlob) card.linkUrlExt = getExtByBlob(card.linkBlob);
+	if (card.picBlob) card.picUrlExt = getExtByBlob(card.picBlob);
+
+	//! 匹配判断
+	if (card.meta.isOk && (!isEmpty(card.linkUrl) || !isEmpty(card.picUrl))) {
 		card.match = card.meta.isOk;
 		card.meta.aspectRatio = card.meta.width / card.meta.height;
 	}
-
-	//* 最后判断是获取了blob(如果获取了就进一步获取后缀名信息)
-	if (card.linkBlob) {
-		if (!card.picBlob) card.picBlob = card.linkBlob;
-		if (!card.nameBlob) card.nameBlob = card.linkBlob;
-	} else if (card.picBlob) {
-		if (!card.linkBlob) card.linkBlob = card.picBlob;
-		if (!card.nameBlob) card.nameBlob = card.picBlob;
-	} else if (card.nameBlob) {
-		if (!card.linkBlob) card.linkBlob = card.nameBlob;
-		if (!card.picBlob) card.picBlob = card.nameBlob;
-	}
-
-	if (card.linkBlob) card.linkUrlExt = getExtByBlob(card.linkBlob);
-	if (card.picBlob) card.picUrlExt = getExtByBlob(card.picBlob);
 
 	return card;
 }
@@ -1108,7 +1130,7 @@ export function isPath(str: string) {
 //f [功能封装] 获取srcset内容最大值
 export function getSrcsetMaximumValue(srcsetString: string) {
 	let result = srcsetString;
-	if (/\d+w/.test(srcsetString)) {
+	if (/\d+(w|x)/.test(srcsetString)) {
 		let dataList = srcsetString
 			.split(/\, */)
 			.filter((item) => !isEmpty(item, true))
@@ -1208,4 +1230,44 @@ export function strAutofill(
 	} else {
 		return str.padEnd(fill_length, fillContent.toString());
 	}
+}
+
+//f 判断是否是移动端设备
+export function isMobile(): boolean {
+	let sUserAgent = navigator.userAgent.toLowerCase();
+	let regex =
+		/ipad|iphone os|midp|rv:1.2.3.4|ucweb|android|windows ce|windows mobile/i;
+	return regex.test(sUserAgent);
+}
+
+//f 链接类型判断
+export function getUrlType(url: string): "image" | "video" | "html" {
+	let urlType: "image" | "video" | "html" = "html";
+	const isImg = /\.(jpg|jpeg|png|gif|webp|bmp|icon|svg)$/i;
+	const isVideo =
+		/\.(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)$/i;
+
+	if (isImg.test(url)) {
+		urlType = "image";
+	} else if (isVideo.test(url)) {
+		urlType = "video";
+	}
+
+	return urlType;
+}
+
+//f blob类型判断
+export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
+	let blobType: "image" | "video" | "html" | "audio" = "html";
+	if (/^image/.test(blob.type)) {
+		blobType = "image";
+	} else if (/^video/.test(blob.type)) {
+		blobType = "video";
+	} else if (/^audio/.test(blob.type)) {
+		blobType = "audio";
+	} else {
+		blobType = "html";
+	}
+
+	return blobType;
 }

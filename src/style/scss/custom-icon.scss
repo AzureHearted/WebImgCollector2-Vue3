@@ -1,0 +1,18 @@
+//! varlet ui 的自定义图标库
+
+/* 设置字体 */
+@font-face {
+  font-family: "my-icons";
+  src: url("https://xxx.my-icons.ttf") format("truetype");
+}
+
+/* 设置命名空间 */
+.my-icon {
+  font-family: "my-icons";
+}
+/* 设置命名空间结束 */
+
+/* 字体名称映射码点 */
+.my-icon-hot::before {
+  content: "\F1947";
+}

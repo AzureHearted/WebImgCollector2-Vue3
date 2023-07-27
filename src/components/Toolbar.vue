@@ -2,7 +2,7 @@
 	<div class="onlineGallery-toolBar">
 		<!-- *数量统计 -->
 		<el-statistic
-			class="statistic"
+			class="statistic-container"
 			:value="cardsStore.filterCards.length"
 			:prefix="cardsStore.selectedCards.length.toString() + ' /'"
 			:suffix="'/ ' + cardsStore.allValidCards.length.toString()">
@@ -13,14 +13,14 @@
 			</template>
 		</el-statistic>
 		<!-- *过滤器 -->
-		<div class="filter">
+		<div class="filter-container">
 			<!-- *尺寸过滤 -->
-			<div class="size">
-				<div class="width row">
-					<span class="label">宽度</span>
+			<div class="filter-size">
+				<div class="width filter-size-row">
+					<span class="filter-size-label">宽度</span>
 					<el-slider
 						:debounce="500"
-						class="slider"
+						class="filter-size-slider"
 						label="宽度"
 						v-model="filter.size.width.value"
 						range
@@ -28,11 +28,11 @@
 						:max="filter.size.width.max"
 						placement="right" />
 				</div>
-				<div class="height row">
-					<span class="label">高度</span>
+				<div class="height filter-size-row">
+					<span class="filter-size-label">高度</span>
 					<el-slider
 						:debounce="500"
-						class="slider"
+						class="filter-size-slider"
 						label="高度"
 						v-model="filter.size.height.value"
 						range
@@ -42,10 +42,10 @@
 				</div>
 			</div>
 			<!-- *格式过滤 -->
-			<div class="format">
-				<span class="label">格式</span>
+			<div class="filter-format">
+				<span class="format-label">格式</span>
 				<el-select-v2
-					class="select"
+					class="format-select"
 					v-model="filter.formats.value"
 					filterable
 					clearable
@@ -59,12 +59,12 @@
 			</div>
 		</div>
 		<!-- *列表控制 -->
-		<div class="list-control">
+		<div class="list-control-container">
 			<!-- *最大显示行数控制条 -->
-			<div class="zoom-slider">
-				<span class="label">行数</span>
+			<div class="list-control-column">
+				<span class="list-control-column-label">行数</span>
 				<el-input-number
-					class="input-number"
+					class="list-control-column-input-number"
 					:min="1"
 					:max="6"
 					:step="1"
@@ -80,20 +80,20 @@
 					}"
 					v-model="toolbar.listControl.showColumn"></el-input-number>
 			</div>
-			<div class="sort-method">
-				<span class="label">排序</span>
+			<div class="list-control-sort-method">
+				<span class="list-control-sort-method-label">排序</span>
 				<el-select-v2
-					class="select"
+					class="list-control-sort-method-select"
 					v-model="listControl.sortMethod.value"
 					:options="listControl.sortMethod.options"
 					placeholder="排序方法"></el-select-v2>
 			</div>
 		</div>
 		<!-- *预设规则选择 -->
-		<div class="ruleSelector">
-			<span class="label">预设</span>
+		<div class="rule-selector-container">
+			<span class="rule-selector-label">预设</span>
 			<el-select-v2
-				class="select"
+				class="rule-selector-select"
 				v-model="ruleSelector.value"
 				filterable
 				:options="ruleSelector.option"
@@ -108,7 +108,7 @@
 			</el-select-v2>
 		</div>
 		<!-- *按钮组 -->
-		<el-button-group class="button-group">
+		<el-button-group class="button-group-container">
 			<!-- *刷新按钮 -->
 			<el-button type="primary" @click="refresh" :loading="loading.value">
 				刷新
@@ -122,7 +122,7 @@
 				@click="allSelectSwitch"
 				:loading="loading.value"
 				:icon="toolbar.listControl.allSelected ? CheckboxAll : CheckboxNone">
-				{{ toolbar.listControl.allSelected ? "全选" : "取消全选" }}
+				{{ toolbar.listControl.allSelected ? "取消全选" : "全部选中" }}
 			</el-button>
 			<!-- *下载按钮 -->
 			<el-button
@@ -161,9 +161,9 @@
 </template>
 
 <script setup lang="ts">
-	import {ITask} from "../ts/public";
-	import CheckboxNone from "/src/svg/checkbox-blank-line.svg"; //? svg导入
-	import CheckboxAll from "/src/svg/checkbox-fill.svg"; //? svg导入
+	import {ITask} from "@/ts/public";
+	import CheckboxNone from "@/icon/checkbox-blank-line.svg"; //? svg导入
+	import CheckboxAll from "@/icon/checkbox-fill.svg"; //? svg导入
 
 	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
 	const cardsStore = useCardsStore(); //* 实例化cardsStore数据仓库
@@ -352,7 +352,7 @@
 		}
 
 		// *统计组件样式
-		.statistic {
+		.statistic-container {
 			flex-shrink: 0;
 			width: 140px;
 			font-size: 14px !important;
@@ -367,7 +367,7 @@
 		}
 
 		// *过滤器控制条样式
-		.filter {
+		.filter-container {
 			& {
 				width: fit-content;
 				width: 220px;
@@ -382,7 +382,7 @@
 			}
 
 			//* 尺寸过滤器
-			.size {
+			.filter-size {
 				& {
 					position: relative;
 					width: 100%;
@@ -395,27 +395,28 @@
 					}
 				}
 				//* 每一行的样式
-				.row {
+				.filter-size-row {
 					width: 100%;
 					display: flex;
 					flex-flow: row nowrap;
 					gap: 8px;
 					justify-content: start;
 					align-items: center;
-					.slider {
+					.filter-size-slider {
 						flex-grow: 1;
 						padding-right: 10px;
 					}
-					.label {
+					.filter-size-label {
 						margin: 0;
 						white-space: nowrap; //* 防止换行
 						font-size: 16px !important;
+						color: black !important;
 					}
 				}
 			}
 
 			//* 格式过滤器
-			.format {
+			.filter-format {
 				& {
 					position: relative;
 					width: 100%;
@@ -425,10 +426,10 @@
 					align-items: center;
 					gap: 8px;
 				}
-				.select {
+				.format-select {
 					flex-grow: 1;
 				}
-				.label {
+				.format-label {
 					margin: 0;
 					text-align: center;
 					white-space: nowrap; //* 防止换行
@@ -437,30 +438,8 @@
 			}
 		}
 
-		//* 规则选择器样式
-		.ruleSelector {
-			& {
-				position: relative;
-				width: fit-content;
-				display: flex;
-				flex-flow: row;
-				justify-content: center;
-				align-items: center;
-				gap: 8px;
-			}
-			.select {
-				width: 160px;
-			}
-			.label {
-				margin: 0;
-				text-align: center;
-				white-space: nowrap; //* 防止换行
-				font-size: 16px !important;
-			}
-		}
-
 		// *列表控制区
-		.list-control {
+		.list-control-container {
 			& {
 				position: relative;
 				width: fit-content;
@@ -475,7 +454,7 @@
 			}
 
 			// *缩放控制条样式
-			.zoom-slider {
+			.list-control-column {
 				& {
 					position: relative;
 					width: fit-content;
@@ -485,18 +464,19 @@
 					align-items: center;
 					gap: 8px;
 				}
-				.input-number {
+				.list-control-column-input-number {
 					width: 80px;
 				}
-				.label {
+				.list-control-column-label {
 					margin: 0;
 					text-align: center;
 					white-space: nowrap; //* 防止换行
 					font-size: 16px !important;
+					
 				}
 			}
 			// *排序方式选择器
-			.sort-method {
+			.list-control-sort-method {
 				& {
 					position: relative;
 					width: fit-content;
@@ -506,10 +486,10 @@
 					align-items: center;
 					gap: 8px;
 				}
-				.select {
+				.list-control-sort-method-select {
 					width: 120px;
 				}
-				.label {
+				.list-control-sort-method-label {
 					margin: 0;
 					text-align: center;
 					white-space: nowrap; //* 防止换行
@@ -519,8 +499,30 @@
 		}
 
 		//* 按钮组样式
-		.button-group {
+		.button-group-container {
 			width: fit-content;
+		}
+
+		//* 规则选择器样式
+		.rule-selector-container {
+			& {
+				position: relative;
+				width: fit-content;
+				display: flex;
+				flex-flow: row;
+				justify-content: center;
+				align-items: center;
+				gap: 8px;
+			}
+			.rule-selector-select {
+				width: 160px;
+			}
+			.rule-selector-label {
+				margin: 0;
+				text-align: center;
+				white-space: nowrap; //* 防止换行
+				font-size: 16px !important;
+			}
 		}
 	}
 

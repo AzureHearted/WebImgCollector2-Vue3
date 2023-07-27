@@ -5,6 +5,10 @@
 		"module": "ESNext",
 		"lib": ["ES2020", "DOM", "DOM.Iterable"],
 		"skipLibCheck": true, // 所有的声明文件（*.d.ts）的类型检查, 解决：打包不报错
+		//f 路径别名配置
+		"paths": {
+      "@/*": ["./src/*"]
+    },
 
 		/* Bundler mode */
 		"moduleResolution": "node",
