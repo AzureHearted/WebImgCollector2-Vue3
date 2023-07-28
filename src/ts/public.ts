@@ -248,6 +248,7 @@ export function getOriginByUrl(url: string): string {
  * @returns {string} 链接的名称部分
  */
 export function getNameByUrl(url: string): string {
+	url = url.replace(/(\/)$/, "")
 	let list = url.match(/(?<=\/)([^\/\r\n$]+)$/g) || [];
 	if (list.length > 0) {
 		return list[0] || url;
@@ -352,7 +353,7 @@ export async function getCardsByRule(
 	}
 ): Promise<void> {
 	let rowCardList: rowCard[] = [];
-	console.log("开始匹配", rule); //* 规则信息打印
+	console.log("开始匹配 - 规则信息 -> ", rule); //* 规则信息打印
 	//* 获取卡片基本信息
 	if (rule.domItem.enable) {
 		//! 启用了dom匹配
@@ -821,6 +822,8 @@ async function singleCardProcessing(
 	}
 	//? 去除尾部斜杠“/”
 	card.name = card.name.replace(/(\/)$/, "");
+	//* 名称修正
+	card.name = getNameByUrl(card.name);
 
 	//! 元信息获取
 	if (rule.meta.enable) {
@@ -934,7 +937,7 @@ async function singleCardProcessing(
 		card.fancyBoxType = card.linkUrlType;
 	}
 
-	//* 后缀名获取 
+	//* 后缀名获取
 	if (card.linkBlob) card.linkUrlExt = getExtByBlob(card.linkBlob);
 	if (card.picBlob) card.picUrlExt = getExtByBlob(card.picBlob);
 

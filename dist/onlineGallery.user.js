@@ -83,7 +83,7 @@
     });
   };
   var require_main_001 = __commonJS({
-    "main-71b1b5a0.js"(exports, module) {
+    "main-5d1cab1d.js"(exports, module) {
       function makeMap(str, expectsLowerCase) {
         const map = /* @__PURE__ */ Object.create(null);
         const list = str.split(",");
@@ -10562,6 +10562,7 @@
         });
       }
       function getNameByUrl(url) {
+        url = url.replace(/(\/)$/, "");
         let list = url.match(new RegExp("(?<=\\/)([^\\/\\r\\n$]+)$", "g")) || [];
         if (list.length > 0) {
           return list[0] || url;
@@ -11059,6 +11060,7 @@
             card.name = getNameByUrl(card.name);
           }
           card.name = card.name.replace(/(\/)$/, "");
+          card.name = getNameByUrl(card.name);
           //! 元信息获取
           if (rule.meta.enable) {
             if (rule.meta.origin == 0) {

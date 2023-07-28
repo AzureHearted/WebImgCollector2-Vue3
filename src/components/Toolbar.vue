@@ -19,25 +19,28 @@
 				<div class="width filter-size-row">
 					<span class="filter-size-label">宽度</span>
 					<el-slider
-						:debounce="500"
+						:debounce="1000"
 						class="filter-size-slider"
 						label="宽度"
 						v-model="filter.size.width.value"
 						range
+						range-start-label="0"
 						:min="0"
-						:max="filter.size.width.max"
+						:max="filter.size.max"
+						:marks="filter.size.marks"
 						placement="right" />
 				</div>
 				<div class="height filter-size-row">
 					<span class="filter-size-label">高度</span>
 					<el-slider
-						:debounce="500"
+						:debounce="1000"
 						class="filter-size-slider"
 						label="高度"
 						v-model="filter.size.height.value"
 						range
 						:min="0"
-						:max="filter.size.height.max"
+						:max="filter.size.max"
+						:marks="filter.size.marks"
 						placement="right" />
 				</div>
 			</div>
@@ -295,8 +298,8 @@
 			// console.log(zipContainer);
 			const zip = await zipContainer.generateAsync({
 				type: "blob",
-				compression: "DEFLATE",
-				level: 9,
+				// compression: "DEFLATE",
+				// level: 9,
 			});
 			// console.log(zip);
 			//* 下载压缩包

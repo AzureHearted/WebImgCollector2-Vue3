@@ -1,7 +1,7 @@
 <template>
 	<!-- *主容器 -->
 	<div
-		class="onlineGallery-container"
+		id="onlineGallery-container"
 		ref="container"
 		:data-open="appInfo.container.open"
 		:style="{
@@ -163,7 +163,7 @@
 	// $z-index:1000;
 
 	//! 主容器样式
-	.onlineGallery-container {
+	#onlineGallery-container {
 		box-sizing: border-box;
 		position: fixed;
 

@@ -1,9 +1,9 @@
 <template>
-	<div id="onlineGallery-container" ref="listContainerRef">
+	<div id="onlineGallery-list-container" ref="listContainerRef">
 		<el-scrollbar ref="scrollbarRef" @scroll="handleScroll">
+			<!-- *列表 -->
 			<transition-group
 				id="onlineGallery-listBody"
-				class="onlineGallery-listBody"
 				ref="listBody"
 				:style="getStyle"
 				name="list"
@@ -19,6 +19,7 @@
 					}">
 				</Card>
 			</transition-group>
+			<!-- *回到顶部按钮 -->
 			<transition name="backTop">
 				<div
 					v-show="backTopShow"
@@ -65,7 +66,7 @@
 				hideScrollbar: true,
 				on: {
 					done: (fancybox, slide) => {
-						console.log(slide);
+						// console.log(slide);
 
 						if (
 							slide.contentEl.style.width == "0px" ||
@@ -214,12 +215,14 @@
 			"--nowColumn": number;
 			"--listHeight": string;
 			"--cardMaxHeight": string;
+			"scroll-behavior"?: "smooth !important";
 		}
 		let style: IStyle = {
 			"--nowColumn": listControl.showColumn,
 			"--listHeight":
-				appInfo.window.height - 8 * listControl.showColumn - 10 + "px",
+				listContainerSize.height.value - 8 * listControl.showColumn - 10 + "px",
 			"--cardMaxHeight": `calc(var(--listHeight) / var(--nowColumn))`,
+			"scroll-behavior": "smooth !important",
 		};
 		if (listContainerSize.height.value > 0) {
 			style["--listHeight"] =
@@ -250,7 +253,12 @@
 
 	//f 触发事件(回到顶部)
 	const backToTop = () => {
+		const warpDom = scrollbarRef.value.wrapRef as HTMLElement;
+		//* 移动前加上scroll-behavior = smooth !important
+		warpDom.style.scrollBehavior = "smooth";
 		scrollbarRef.value.setScrollTop(0);
+		//* 动画结束后移除scroll-behavior = smooth !important
+		setTimeout((warpDom.style.scrollBehavior = ""));
 	};
 </script>
 
@@ -261,7 +269,7 @@
 		box-sizing: border-box;
 	}
 
-	.onlineGallery-listBody {
+	#onlineGallery-listBody {
 		width: 100%;
 		padding: 10px;
 		display: flex;
@@ -324,7 +332,7 @@
 	.list-move,
 	.list-enter-active,
 	.list-leave-active {
-		transition: all 0.5s ease;
+		transition: opacity 0.5s ease, transform 0.25s ease;
 	}
 
 	.list-enter-from,

@@ -5,7 +5,7 @@
 	<!-- <el-image ref="img" :src="src" loading="lazy"></el-image> -->
 </template>
 
-<script setup>
+<script lang="ts" setup>
 	defineProps({
 		src: String,
 		parentSelector: {

@@ -133,11 +133,11 @@ export const useCardsStore = defineStore("Cards", () => {
 				//* 更新尺寸过滤器最大值
 
 				const max =
-					(filter.size.width.max =
-					filter.size.height.max =
+					(filter.size.max =
+					filter.size.max =
 						Math.max(
-							filter.size.width.max,
-							filter.size.height.max,
+							filter.size.max,
+							filter.size.max,
 							card.meta.width,
 							card.meta.height
 						));
@@ -199,17 +199,70 @@ export const useToolBarStore = defineStore("ToolBar", () => {
 	const cardsStore = useCardsStore();
 	const ruleEditor = useRuleEditorStore();
 
+	const markStyle = reactive({
+		"font-size": "10px !important",
+		"margin-top": "0 !important",
+		bottom: "10px",
+	});
+
 	//* 过滤器参数
 	const filter = reactive({
 		size: {
 			width: {
 				value: [350, 500],
-				max: 500,
 			},
 			height: {
 				value: [350, 500],
-				max: 500,
 			},
+			max: 500,
+			marks: computed(() => {
+				let tempMarks = {
+					360: {
+						label: "360",
+						style: markStyle,
+					},
+					720: {
+						label: "720",
+						style: {
+							...markStyle,
+							display: filter.size.max / 720 < 3 ? "" : "none",
+						},
+					},
+					1080: {
+						label: "1080",
+						style: {
+							...markStyle,
+							display: filter.size.max / 1080 < 3 ? "" : "none",
+						},
+					},
+					1920: {
+						label: "1920",
+						style: {
+							...markStyle,
+							display: filter.size.max / 1920 < 3 ? "" : "none",
+						},
+					},
+					2560: {
+						label: "2560",
+						style: {
+							...markStyle,
+							display: filter.size.max / 2560 < 3 ? "" : "none",
+						},
+					},
+					3840: {
+						label: "3840",
+						style: markStyle,
+					},
+					[`${filter.size.max}`]: {
+						label: `${filter.size.max}`,
+						style: {
+							...markStyle,
+							display: filter.size.max > 1.8 * 3840 ? "" : "none",
+						},
+					},
+				};
+				return tempMarks;
+			}),
 		},
 		formats: {
 			options: [
