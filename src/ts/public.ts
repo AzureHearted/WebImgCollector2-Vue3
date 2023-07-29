@@ -9,6 +9,7 @@ import {IORule, MatchRule} from "@/ts/class/MatchRule";
 export class TaskQueue {
 	public max: number;
 	public initMax: number;
+	public delay: number;
 	public taskList: ITask[];
 	public showMessage: boolean;
 	public finallyCallback: Function;
@@ -16,10 +17,12 @@ export class TaskQueue {
 	constructor(options?: {
 		showMessage?: false;
 		max?: number;
+		delay?: number;
 		finallyCallback?: () => {};
 	}) {
-		this.max = options?.max || 10;
-		this.initMax = options?.max || 10;
+		this.max = options?.max || 4;
+		this.initMax = options?.max || 4;
+		this.delay = options?.delay || 300;
 		this.taskList = [];
 		this.showMessage = options?.showMessage || false;
 		this.finallyCallback = options?.finallyCallback || Function();
@@ -42,51 +45,95 @@ export class TaskQueue {
 			this.taskList.push(...taskList);
 		}
 	}
-	//f 启动任务队列
-	public run(): void {
-		const length = this.taskList.length;
-		// console.log(this.max, this.initMax);
-		if (!length) {
-			if (this.max === this.initMax) {
-				this.finallyCallback();
+	//f 启动任务队列(必须使用异步否则节流函数无效)
+	public async run() {
+		//* 外部 - 节流实现
+		throttle(async () => {
+			// console.log("每次请求->", this.max, "执行间隔->", this.delay);
+			const length = this.taskList.length;
+			// console.log(this.max, this.initMax);
+			if (!length) {
+				if (this.max === this.initMax) {
+					this.finallyCallback();
+				}
+				return;
 			}
-			return;
-		}
-		const min = Math.min(length, this.max);
-		for (let i = 0; i < min; i++) {
-			const task = this.taskList.shift();
-			this.max--; //* 占用一个空间
-			if (task && task?.main) {
-				task
-					?.main()
-					.then((res) => {
-						if (this.showMessage) console.log(res);
-						if (task.callback) {
-							task.callback(res, task.index); //* 单个任务执行完成时的回调
-						}
-					})
-					.catch((err) => {
-						if (this.showMessage) console.log(err);
-						if (task.callback) {
-							task.callback(err, task.index); //* 单个任务执行完成时的回调
-						}
-					})
-					.finally(() => {
-						this.max++; //* 还原一个空间
-						this.run();
-					});
-			} else {
-				this.max++; //* 还原一个空间
-				this.run();
+			const min = Math.min(length, this.max);
+			for (let i = 0; i < min; i++) {
+				const task = this.taskList.shift();
+				this.max--; //* 占用一个空间
+				// console.log("当前剩余空间", this.max);
+				if (task && task?.main) {
+					task
+						?.main()
+						.then((res) => {
+							if (this.showMessage) console.log(res);
+							if (task.callback) {
+								task.callback(res, task.index); //* 单个任务执行完成时的回调
+							}
+						})
+						.catch((err) => {
+							if (this.showMessage) console.log(err);
+							if (task.callback) {
+								task.callback(err, task.index); //* 单个任务执行完成时的回调
+							}
+						})
+						.finally(() => {
+							this.max++; //* 还原一个空间
+							//* 执行过后任务置空防止重复执行
+							task.main = null;
+							if (this.max === this.initMax) {
+								this.run();
+							}
+						});
+				}
 			}
-		}
+		}, this.delay)();
 	}
 }
 //* 任务类型的接口
 export interface ITask {
 	index: number;
-	main(): Promise<any>;
+	main: FnReturnPromise;
 	callback?: (res: any, index: number) => any;
+}
+type FnReturnPromise = (() => Promise<any>) | null;
+
+/**
+ * f 节流函数(内容多次触发 -> 一段时间执行一次)
+ * @param fn 传入的自定义执行函数
+ * @param delay 执行时长间隔
+ * @returns
+ */
+export function throttle(fn: Function, delay: number = 1000) {
+	let t: boolean = true;
+	return function (this: any) {
+		if (t) {
+			setTimeout(() => {
+				fn.call(this);
+				t = true;
+			}, delay);
+		}
+		t = false;
+	};
+}
+
+/**
+ * f 防抖函数(一段时间内容多次触发 -> 只有最后一次生效)
+ * @param fn 传入的自定义执行函数
+ * @param delay 触发的最小时长
+ * @returns
+ */
+export function debounce(fn: Function, delay: number = 1000) {
+	let t: NodeJS.Timeout | null = null;
+	return function (this: any) {
+		if (t !== null) {
+			clearTimeout(t);
+		}
+		t = setTimeout(() => {
+			fn.call(this);
+		}, delay);
+	};
 }
 
 /**
@@ -103,10 +150,10 @@ export function getBlobByUrl(
 	url: string,
 	mode: "Fetch" | "GM" = "Fetch",
 	referer: string | undefined = undefined
-): Promise<Blob> | Blob {
+): Promise<Blob | null> | Blob | null {
 	if (isEmpty(url)) {
 		return new Promise((resolve, reject) => {
-			resolve(new Blob(undefined, {type: "none"}));
+			resolve(null);
 		});
 	}
 	if (mode === "Fetch") {
@@ -115,11 +162,11 @@ export function getBlobByUrl(
 				.then((res) => res.blob())
 				.catch((err) => null);
 			if (blob != null) {
-				console.log("Fetch成功", blob);
+				// console.log("Fetch成功", blob);
 				resolve(blob);
 			} else {
-				console.log("Fetch失败", blob);
-				resolve(new Blob(undefined, {type: "none"}));
+				// console.log("Fetch失败", blob);
+				resolve(null);
 			}
 		});
 	} else if (mode === "GM") {
@@ -138,26 +185,26 @@ export function getBlobByUrl(
 				onload: (res: any) => {
 					// console.log(res, res.response, res.status);
 					if (res.status == 200) {
-						console.log(`GM成功(referer:${referer})`, res.response, res.status);
+						// console.log(`GM成功(referer:${referer})`, res.response, res.status);
 						resolve(res.response);
 					} else {
-						console.log(`GM失败(referer:${referer})`, res.response, res.status);
-						resolve(new Blob(undefined, {type: "none"}));
+						// console.log(`GM失败(referer:${referer})`, res.response, res.status);
+						resolve(null);
 					}
 				},
 				onerror: (err: any) => {
-					resolve(new Blob(undefined, {type: "none"}));
+					resolve(null);
 				},
 				ontimeout: () => {
-					resolve(new Blob(undefined, {type: "none"}));
+					resolve(null);
 				},
 				onabort: () => {
-					resolve(new Blob(undefined, {type: "none"}));
+					resolve(null);
 				},
 			});
 		});
 	} else {
-		return new Blob(undefined, {type: "none"});
+		return null;
 	}
 }
 
@@ -169,20 +216,20 @@ export function getBlobByUrl(
  * @param {string} url 链接
  * @returns Promise 对象
  */
-export async function getBlobByUrlAuto(url: string): Promise<Blob> {
+export async function getBlobByUrlAuto(url: string): Promise<Blob | null> {
 	//* 链接为空直接返回空blob
 	if (isEmpty(url)) {
-		return new Blob(undefined, {type: "none"});
+		return null;
 	}
-	let blob = new Blob(undefined, {type: "none"});
+	let blob: Blob | null = null;
 	//* 先尝试通过Fetch方法获取
 	blob = await getBlobByUrl(url, "Fetch");
 	//* Fetch失败后尝试通过GM不指定referer方式获取
-	if (blob.type === "none") {
+	if (!blob) {
 		blob = await getBlobByUrl(url, "GM");
 	}
 	//* 再次失败后尝试通过GM指定referer方式获取
-	if (blob.type === "none") {
+	if (!blob) {
 		blob = await getBlobByUrl(url, "GM", location.origin);
 	}
 	return blob;
@@ -248,7 +295,7 @@ export function getOriginByUrl(url: string): string {
  * @returns {string} 链接的名称部分
  */
 export function getNameByUrl(url: string): string {
-	url = url.replace(/(\/)$/, "")
+	url = url.replace(/(\/)$/, "");
 	let list = url.match(/(?<=\/)([^\/\r\n$]+)$/g) || [];
 	if (list.length > 0) {
 		return list[0] || url;
@@ -268,30 +315,48 @@ export function isEmpty(
 }
 
 //f [功能封装]通过blob获取图片meta
-export async function getImgMetaByBlob(blob: Blob) {
+export async function getImgMetaByBlob(blob: Blob | null) {
 	const meta: metaInterFace = await new Promise((resolve, reject) => {
 		let reader = new FileReader();
-		reader.readAsDataURL(blob);
-		reader.onload = (theFile: any) => {
-			let image = new Image();
-			image.src = theFile.target.result;
-			image.onload = () => {
-				resolve(<metaInterFace>{
-					isOk: true,
-					width: image.width,
-					height: image.height,
-					aspectRatio: image.width / image.height,
-				});
+		if (blob) {
+			reader.readAsDataURL(blob);
+			reader.onload = (theFile) => {
+				let image = new Image();
+				image.src = (reader.result as string) || "";
+				image.onload = () => {
+					const meta: metaInterFace = {
+						isOk: true,
+						width: image.width,
+						height: image.height,
+						aspectRatio: image.width / image.height,
+					};
+					//* 释放内存
+					URL.revokeObjectURL((reader.result as string) || "");
+					resolve(meta);
+				};
+				image.onerror = () => {
+					const meta: metaInterFace = {
+						isOk: false,
+						width: 0,
+						height: 0,
+					};
+					//* 释放内存
+					URL.revokeObjectURL((reader.result as string) || "");
+					reject(meta);
+				};
 			};
-			image.onerror = () => {
-				reject(<metaInterFace>{
-					isOk: false,
-					width: 0,
-					height: 0,
-				});
+		} else {
+			const meta: metaInterFace = {
+				isOk: false,
+				width: 0,
+				height: 0,
 			};
-		};
+			//* 释放内存
+			URL.revokeObjectURL((reader.result as string) || "");
+			reject(meta);
+		}
 	});
+	blob = null;
 	return meta;
 }
 
@@ -348,6 +413,8 @@ export async function getCardsByRule(
 	singleCallback?: Function, //* 每处理成功一个卡片执行的回调
 	finallyCallback?: Function, //* 处理完所有卡片时执行的回调
 	option?: {
+		maxLimit?: 10; //* 最大并数
+		delay?: number; //* 并发间隔时长
 		excludeDomSet?: Set<HTMLElement>; //* 要排除的dom集合
 		excludeUrlSet?: Set<string>; //* 要排除的url集合
 	}
@@ -361,7 +428,7 @@ export async function getCardsByRule(
 		for (let i = 0, len = rule.domItem.selector.length; i < len; i++) {
 			// 获取所有符合条件的dom对象
 			let domList = (await getDom(
-				document.body,
+				document,
 				rule.domItem.method,
 				rule.domItem.selector[i],
 				0
@@ -371,8 +438,6 @@ export async function getCardsByRule(
 			for (let index = 0; index < domList.length; index++) {
 				let card: rowCard = {
 					id: buildUUID(), //* 生成uuid
-					linkUrlType: "none",
-					picUrlType: "none",
 					metaOrigin: "",
 					dom: domList[index],
 				}; // 用于接收匹配到的card对象
@@ -537,7 +602,7 @@ export async function getCardsByRule(
 			let linkUrlDomList: HTMLElement[] = [];
 			linkUrlDomList.push(
 				...((await getDom(
-					document.body,
+					document,
 					rule.linkUrl.method,
 					rule.linkUrl.selector[i],
 					0
@@ -557,14 +622,14 @@ export async function getCardsByRule(
 				}
 			}
 
-			console.log(linkUrlList_temp);
+			// console.log(linkUrlList_temp);
 
 			//! 获取picUrls
 			let picUrlDomList: HTMLElement[] = [];
 			if (rule.picUrl.enable && !isEmpty(rule.picUrl.selector[i], true)) {
 				picUrlDomList.push(
 					...((await getDom(
-						document.body,
+						document,
 						rule.picUrl.method,
 						rule.picUrl.selector[i],
 						0
@@ -599,7 +664,7 @@ export async function getCardsByRule(
 			if (rule.name.enable && !isEmpty(rule.name.selector[i], true)) {
 				nameDomList.push(
 					...((await getDom(
-						document.body,
+						document,
 						rule.name.method,
 						rule.name.selector[i],
 						0
@@ -638,7 +703,7 @@ export async function getCardsByRule(
 			) {
 				metaDomList.push(
 					...((await getDom(
-						document.body,
+						document,
 						rule.meta.method,
 						rule.meta.selector[i],
 						0
@@ -681,8 +746,6 @@ export async function getCardsByRule(
 				const link = linkUrlList_temp[index];
 				let card: rowCard = {
 					id: buildUUID(), //* 生成uuid
-					linkUrlType: "none",
-					picUrlType: "none",
 					metaOrigin: "",
 				};
 				//* 匹配结果
@@ -710,7 +773,11 @@ export async function getCardsByRule(
 
 	//* 处理卡片信息
 	let processedCount = 0;
-	const taskQueue = new TaskQueue({showMessage: false, max: 10});
+	const taskQueue = new TaskQueue({
+		showMessage: false,
+		max: option?.maxLimit,
+		delay: option?.delay,
+	});
 	let cardList: matchCard[] = [];
 	for (let index = 0; index < rowCardList.length; index++) {
 		const rowCard = rowCardList[index];
@@ -720,16 +787,17 @@ export async function getCardsByRule(
 			!option?.excludeDomSet?.has(rowCard.dom as HTMLElement) &&
 			!option?.excludeUrlSet?.has(rowCard.picUrl as string)
 		) {
+			//* 定义任务队列
 			const task: ITask = {
 				index: index,
 				main: async () => {
 					const card = await singleCardProcessing(rowCard, rule);
 					return card;
 				},
-				callback: (card, realIndex) => {
+				callback: async (card, realIndex) => {
 					processedCount++;
 					if (singleCallback)
-						singleCallback(
+						await singleCallback(
 							card,
 							nowCount + realIndex,
 							processedCount,
@@ -773,7 +841,6 @@ async function singleCardProcessing(
 		nameDom: rowCard.nameDom,
 		metaDom: rowCard.metaDom,
 		visible: false,
-		fancyBoxType: "iframe",
 	};
 
 	//! 链接处理
@@ -834,112 +901,38 @@ async function singleCardProcessing(
 		} else if (rule.meta.origin == 1) {
 			//? 使用“链接”dom
 			if (card.linkUrlDom) {
-				await getMeta(card.linkUrlDom, card.linkUrl, card, 3, "linkBlob");
+				await getMeta(
+					card.linkUrlDom,
+					card.linkUrl,
+					card,
+					rule.meta.getMethod,
+					"linkBlob"
+				);
 			}
 		} else if (rule.meta.origin == 2) {
 			//? 使用“图链”dom
 			if (card.picUrlDom) {
-				await getMeta(card.picUrlDom, card.picUrl, card, 3, "picBlob");
+				await getMeta(
+					card.picUrlDom,
+					card.picUrl,
+					card,
+					rule.meta.getMethod,
+					"picBlob"
+				);
 			}
 		} else if (rule.meta.origin == 3) {
 			//? 使用“名称”dom
 			if (card.nameDom) {
-				await getMeta(card.nameDom, card.name, card, 3, "nameBlob");
+				await getMeta(
+					card.nameDom,
+					card.name,
+					card,
+					rule.meta.getMethod,
+					"nameBlob"
+				);
 			}
 		}
 	}
-
-	//f 获取Meta
-	async function getMeta(
-		dom: HTMLElement | null | undefined,
-		url: string,
-		card: matchCard,
-		getMetaMethod: 0 | 1 | 2 | 3,
-		blobType: "linkBlob" | "picBlob" | "nameBlob"
-	) {
-		if (!dom) return;
-		if (getMetaMethod === 0) {
-			//* 自动方式
-			if (dom.tagName === "IMG") {
-				//? "通过natural宽高"获取
-				const {naturalWidth, naturalHeight} = dom as HTMLImageElement;
-				if (naturalWidth > 0 && naturalHeight > 0) {
-					card.meta.width = naturalWidth;
-					card.meta.height = naturalHeight;
-					card.meta.isOk = true;
-				} else {
-					//? 如果标签不匹配则"通过Image对象"获取
-					card.meta = await getImgMetaByImage(url);
-				}
-			} else {
-				//? 最后尝试使用blob获取
-				card[blobType] = await getBlobByUrlAuto(url);
-				if (/^image/.test((card[blobType] as Blob).type)) {
-					card.meta = await getImgMetaByBlob(card[blobType] as Blob);
-				}
-			}
-		} else if (getMetaMethod === 1) {
-			const {naturalWidth, naturalHeight} = dom as HTMLImageElement;
-			//* 通过natural宽高
-			if (naturalWidth > 0 && naturalHeight > 0) {
-				card.meta.width = naturalWidth;
-				card.meta.height = naturalHeight;
-				card.meta.isOk = true;
-			}
-		} else if (getMetaMethod === 2) {
-			//* 通过Image对象
-			card.meta = await getImgMetaByImage(url);
-		} else if (getMetaMethod === 3) {
-			//* 直接通过blob获取
-			card[blobType] = await getBlobByUrlAuto(url);
-			if (/^image/.test((card[blobType] as Blob).type)) {
-				card.meta = await getImgMetaByBlob(card[blobType] as Blob);
-			}
-		}
-	}
-
-	//* blob补全
-	if (!card.linkBlob) {
-		card.linkBlob = await getBlobByUrlAuto(card.linkUrl);
-		// if (!card.picBlob) card.picBlob = card.linkBlob;
-		// if (!card.nameBlob) card.nameBlob = card.linkBlob;
-	}
-	if (!card.picBlob) {
-		if (card.linkUrl === card.picUrl) {
-			card.picBlob = card.linkBlob;
-		} else {
-			card.picBlob = await getBlobByUrlAuto(card.picUrl);
-		}
-		// if (!card.linkBlob) card.linkBlob = card.picBlob;
-		// if (!card.nameBlob) card.nameBlob = card.picBlob;
-	}
-	// if (!card.nameBlob) {
-	// 	// if (!card.linkBlob) card.linkBlob = card.nameBlob;
-	// 	// if (!card.picBlob) card.picBlob = card.nameBlob;
-	// }
-
-	//* 类型判断
-	if (card.linkBlob) {
-		card.linkUrlType = getBlobType(card.linkBlob);
-	} else {
-		card.linkUrlType = getUrlType(card.linkUrl);
-	}
-
-	if (card.picBlob) {
-		card.picUrlType = getBlobType(card.picBlob);
-	} else {
-		card.picUrlType = getUrlType(card.picUrl);
-	}
-
-	if (card.linkUrlType == "html" || card.linkUrlType == "audio") {
-		card.fancyBoxType = "iframe";
-	} else {
-		card.fancyBoxType = card.linkUrlType;
-	}
-
-	//* 后缀名获取
-	if (card.linkBlob) card.linkUrlExt = getExtByBlob(card.linkBlob);
-	if (card.picBlob) card.picUrlExt = getExtByBlob(card.picBlob);
 
 	//! 匹配判断
 	if (card.meta.isOk && (!isEmpty(card.linkUrl) || !isEmpty(card.picUrl))) {
@@ -948,6 +941,55 @@ async function singleCardProcessing(
 	}
 
 	return card;
+}
+
+//f 获取Meta
+async function getMeta(
+	dom: HTMLElement | null | undefined,
+	url: string,
+	card: matchCard,
+	getMetaMethod: 0 | 1 | 2 | 3,
+	blobType: "linkBlob" | "picBlob" | "nameBlob"
+) {
+	if (!dom) return;
+	if (getMetaMethod === 0) {
+		//* 自动方式
+		if (dom.tagName === "IMG") {
+			//? "通过natural宽高"获取
+			const {naturalWidth, naturalHeight} = dom as HTMLImageElement;
+			if (naturalWidth > 0 && naturalHeight > 0) {
+				card.meta.width = naturalWidth;
+				card.meta.height = naturalHeight;
+				card.meta.isOk = true;
+			} else {
+				//? 如果标签不匹配则"通过Image对象"获取
+				card.meta = await getImgMetaByImage(url);
+			}
+		} else {
+			//? 最后尝试使用blob获取
+			card[blobType] = await getBlobByUrlAuto(url);
+			if (/^image/.test((card[blobType] as Blob).type)) {
+				card.meta = await getImgMetaByBlob(card[blobType] as Blob);
+			}
+		}
+	} else if (getMetaMethod === 1) {
+		const {naturalWidth, naturalHeight} = dom as HTMLImageElement;
+		//* 通过natural宽高
+		if (naturalWidth > 0 && naturalHeight > 0) {
+			card.meta.width = naturalWidth;
+			card.meta.height = naturalHeight;
+			card.meta.isOk = true;
+		}
+	} else if (getMetaMethod === 2) {
+		//* 通过Image对象
+		card.meta = await getImgMetaByImage(url);
+	} else if (getMetaMethod === 3) {
+		//* 直接通过blob获取
+		card[blobType] = await getBlobByUrlAuto(url);
+		if (/^image/.test((card[blobType] as Blob).type)) {
+			card.meta = await getImgMetaByBlob(card[blobType] as Blob);
+		}
+	}
 }
 
 /**
@@ -963,7 +1005,7 @@ async function singleCardProcessing(
  * @returns 匹配到的dom
  */
 export async function getDom(
-	startDom: HTMLElement | null | undefined,
+	startDom: Document | HTMLElement | null | undefined,
 	method: 0 | 1,
 	selector: string,
 	mode: 0 | 1 = 0
@@ -975,10 +1017,18 @@ export async function getDom(
 		selectorList = [selector];
 	}
 
-	startDom = startDom || document.body;
+	// console.log(selectorList);
+
+	startDom = startDom || document;
 	let resultDomList: HTMLElement[] = [];
 	if (method == 0) {
 		for (const selectorItem of selectorList) {
+			// console.log(
+			// 	selectorItem,
+			// 	startDom,
+			// 	`是否为空? -> ${isEmpty(selectorItem)}`,
+			// 	startDom.querySelectorAll(selectorItem)
+			// );
 			if (isEmpty(selectorItem)) {
 				continue;
 			}
@@ -991,6 +1041,7 @@ export async function getDom(
 				console.log("方法getDom出错!(css选择器模式)");
 			}
 			resultDomList.push(...tempDomList);
+			// console.log(resultDomList);
 		}
 	} else if (method == 1) {
 		for (const selectorItem of selectorList) {
@@ -1007,6 +1058,8 @@ export async function getDom(
 		}
 	}
 	resultDomList = resultDomList.filter((dom) => dom); //* 过滤空dom
+	// console.log(resultDomList);
+
 	if (mode == 0) {
 		//* 所有符合条件的
 		return resultDomList;
@@ -1026,7 +1079,10 @@ export async function getDom(
  * @param xpath xpath路径
  * @returns 获取到的dom元素
  */
-function getDomByXpath(startDom: HTMLElement, xpath: string): HTMLElement[] {
+function getDomByXpath(
+	startDom: Document | HTMLElement,
+	xpath: string
+): HTMLElement[] {
 	const result: HTMLElement[] = [];
 	const xpathResult = document.evaluate(xpath, startDom, null, 5, null);
 	let resultItem: Node | null;
@@ -1212,12 +1268,16 @@ export function mixSort(_a: string, _b: string) {
 }
 
 //f 通过blob获取文件的ext扩展名
-export function getExtByBlob(blob: Blob) {
-	let match = /(?<=\/).+$/.exec(blob.type);
-	let ext = match?.at(0) || "";
-	if (!isEmpty(ext)) {
-		ext = ext === "jpeg" ? "jpg" : ext;
+export function getExtByBlob(blob: Blob | null) {
+	let ext = "";
+	if (blob) {
+		let match = /(?<=\/).+$/.exec(blob.type);
+		ext = match?.at(0) || "";
+		if (!isEmpty(ext)) {
+			ext = ext === "jpeg" ? "jpg" : ext;
+		}
 	}
+	blob = null;
 	return ext;
 }
 
@@ -1260,7 +1320,12 @@ export function getUrlType(url: string): "image" | "video" | "html" {
 }
 
 //f blob类型判断
-export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
+export function getBlobType(
+	blob: Blob | null
+): "image" | "video" | "html" | "audio" {
+	if (!blob) {
+		return "html";
+	}
 	let blobType: "image" | "video" | "html" | "audio" = "html";
 	if (/^image/.test(blob.type)) {
 		blobType = "image";
@@ -1273,4 +1338,18 @@ export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
 	}
 
 	return blobType;
+}
+
+//f 通过链接"推测"链接类型
+export function guessUrlType(url: string): "image" | "video" | "html" {
+	let urlType: "image" | "video" | "html" = "html";
+	const isImg = /(jpg|jpeg|png|gif|webp|bmp|icon|svg)/i;
+	const isVideo =
+		/(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)/i;
+	if (isImg.test(url)) {
+		urlType = "image";
+	} else if (isVideo.test(url)) {
+		urlType = "video";
+	}
+	return urlType;
 }

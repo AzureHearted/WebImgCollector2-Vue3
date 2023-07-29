@@ -90,11 +90,11 @@
 </template>
 
 <script setup lang="ts">
-	import IconGirdRound from "@/icon/grid_round.svg";
-	import IconDashboard from "@/icon/dashboard.svg";
-	import IconBxsBookBookmark from "@/icon/bxs-book-bookmark.svg";
-	import IconToolsFill from "@/icon/tools-fill.svg";
-	import IconTestTube from "@/icon/bx-test-tube.svg";
+	import IconGirdRound from "@/icon/grid_round.svg?component";
+	import IconDashboard from "@/icon/dashboard.svg?component";
+	import IconBxsBookBookmark from "@/icon/bxs-book-bookmark.svg?component";
+	import IconToolsFill from "@/icon/tools-fill.svg?component";
+	import IconTestTube from "@/icon/bx-test-tube.svg?component";
 	// const {x, y} = useMouse({type: "client"}); //* 用户鼠标
 	// const {element} = useElementByPoint({x, y}); //* 鼠标所指的元素
 

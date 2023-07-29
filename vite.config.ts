@@ -55,11 +55,10 @@ export default defineConfig({
 				"src/ts/class/**",
 				"src/stores/**",
 				"src/components/**",
+				"src/icon/**",
 				"src/**/*.ts",
 				"src/**/*.d.ts",
 				"src/**/*.vue",
-				"src/stores/**.ts",
-				"src/ts/*.ts",
 				"file-saver",
 				"jszip",
 			],
@@ -125,6 +124,9 @@ export default defineConfig({
 		// host: 'localhost',
 		port: 8888,
 		open: false,
+		fs:{
+			strict:false
+		}
 	},
 	build: {
 		target: ["es2015", "edge88", "firefox78", "chrome87", "safari14"],

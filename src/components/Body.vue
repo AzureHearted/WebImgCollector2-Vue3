@@ -5,7 +5,7 @@
 			class="loadingBar"
 			v-show="loading.show"
 			:percentage="Math.round(loading.percentage)"
-			:status="loading.state"
+			:status="(loading.state as any)"
 			striped
 			striped-flow />
 		<!-- *工具栏 -->

@@ -8,6 +8,19 @@
 		<div class="test-container" ref="containerRef">
 			<div class="test-body">
 				<h3>测试窗口</h3>
+				<div>当前使用内存使用情况:</div>
+				<div
+					v-if="isSupported && memory"
+					class="inline-grid grid-cols-2 gap-x-4 gap-y-2">
+					<template v-if="memory">
+						<div opacity="50">使用中:</div>
+						<div>{{ size(memory.usedJSHeapSize) }}</div>
+						<div opacity="50">已分配:</div>
+						<div>{{ size(memory.totalJSHeapSize) }}</div>
+						<div opacity="50">最大可用:</div>
+						<div>{{ size(memory.jsHeapSizeLimit) }}</div>
+					</template>
+				</div>
 			</div>
 			<div class="test-footer">
 				<var-button type="primary" @click="handleClose"> 确认 </var-button>
@@ -18,17 +31,17 @@
 </template>
 
 <script setup lang="ts">
-	interface IProps {
-		outerDialogVisible: boolean;
-	}
-	const props = withDefaults(defineProps<IProps>(), {
-		outerDialogVisible: false,
-	});
 	const emits = defineEmits(["toClose"]);
 
 	const appInfo = useAppInfoStore();
 
 	const containerRef = ref<HTMLElement | null>();
+
+	const {isSupported, memory} = useMemory();
+	function size(v: number) {
+		const kb = v / 1024 / 1024;
+		return `${kb.toFixed(2)} MB`;
+	}
 
 	const init = reactive({
 		left: 0,
@@ -57,8 +70,8 @@
 <style lang="scss" scoped>
 	.test-container {
 		// position: relative;
-		width: 80vw;
-		height: 70vh;
+		width: 50vw;
+		height: 50vh;
 		padding: 20px;
 
 		background-color: rgba(245, 222, 179, 0.9);

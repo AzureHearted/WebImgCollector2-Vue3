@@ -12,11 +12,7 @@
 					v-for="(card, index) in cardsStore.filterCards"
 					:card="card"
 					:key="card.id"
-					:index="index"
-					:data-index="index"
-					:style="{
-						'--aspect-ratio': card.meta.aspectRatio,
-					}">
+					:index="index">
 				</Card>
 			</transition-group>
 			<!-- *回到顶部按钮 -->
@@ -332,7 +328,7 @@
 	.list-move,
 	.list-enter-active,
 	.list-leave-active {
-		transition: opacity 0.5s ease, transform 0.25s ease;
+		transition: all 0.5s ease;
 	}
 
 	.list-enter-from,

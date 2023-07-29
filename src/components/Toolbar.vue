@@ -69,18 +69,11 @@
 				<el-input-number
 					class="list-control-column-input-number"
 					:min="1"
-					:max="6"
+					:max="4"
 					:step="1"
 					step-strictly
 					controls-position="right"
-					@wheel="
-					(e:WheelEvent) => {
-						if (e.deltaY < 0) {
-							if (toolbar.listControl.showColumn < 6) toolbar.listControl.showColumn++;
-						} else {
-							if (toolbar.listControl.showColumn > 1) toolbar.listControl.showColumn--;
-						}
-					}"
+					@wheel.passive="showColum_Wheel"
 					v-model="toolbar.listControl.showColumn"></el-input-number>
 			</div>
 			<div class="list-control-sort-method">
@@ -165,8 +158,8 @@
 
 <script setup lang="ts">
 	import {ITask} from "@/ts/public";
-	import CheckboxNone from "@/icon/checkbox-blank-line.svg"; //? svg导入
-	import CheckboxAll from "@/icon/checkbox-fill.svg"; //? svg导入
+	import CheckboxNone from "/src/icon/checkbox-blank-line.svg?component"; //? svg导入
+	import CheckboxAll from "/src/icon/checkbox-fill.svg?component"; //? svg导入
 
 	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
 	const cardsStore = useCardsStore(); //* 实例化cardsStore数据仓库
@@ -185,8 +178,17 @@
 	//* 预设规则选择器
 	const ruleSelector = toolbar.ruleSelector;
 
+	//f listControl - 显示行数 - 滚轮事件
+	async function showColum_Wheel(e: WheelEvent) {
+		if (e.deltaY < 0) {
+			if (toolbar.listControl.showColumn < 4) toolbar.listControl.showColumn++;
+		} else {
+			if (toolbar.listControl.showColumn > 1) toolbar.listControl.showColumn--;
+		}
+	}
+
 	//f 刷新函数
-	const refresh = async () => {
+	async function refresh() {
 		if (ruleSelector.value === "#") {
 			await cardsStore.getCard(ruleEditor.defaultRule);
 		} else {
@@ -206,10 +208,10 @@
 				});
 			}
 		}
-	};
+	}
 
 	//f 全选切换
-	const allSelectSwitch = async () => {
+	async function allSelectSwitch() {
 		toolbar.listControl.allSelected = !toolbar.listControl.allSelected; //* 全选标识符取反
 		appInfo.loading.value = true;
 		//* 刷新结果
@@ -217,10 +219,10 @@
 			(card) => (card.selected = toolbar.listControl.allSelected)
 		);
 		appInfo.loading.value = false;
-	};
+	}
 
 	//f 下载选中项
-	const downloadSelected = async () => {
+	async function downloadSelected() {
 		const downloadCards = cardsStore.selectedCards;
 		// console.log(downloadCards);
 		if (!downloadCards.length) {
@@ -233,43 +235,51 @@
 			});
 			return;
 		}
-		const taskQueue = new TaskQueue({showMessage: false, max: 5});
+		//* 初始化进度条
 		loading.init();
+		//* 创建队列对象
+		const taskQueue = new TaskQueue({showMessage: false, max: 5, delay: 100});
+		//* 创建zip容器
+		let zipContainer: JSZipType | null = new JSZip();
 		let finallyCount = 0;
-
 		//* 创建任务清单
-		for (let index = 0; index < downloadCards.length; index++) {}
-
 		const taskList: ITask[] = downloadCards.map((card, index) => {
 			//* 队列任务定义
 			return <ITask>{
 				index: index,
-				//* 主要执行函数
+				//* 主要执行函数(定义)
 				main: async () => {
-					if (!card.linkBlob) {
-						const url = card.linkUrl;
-
-						card.linkBlob = await getBlobByUrlAuto(url);
-
-						if (card.linkBlob && card.linkBlob["type"] !== "none") {
-							return [card.name, "处理成功!"];
-						} else {
-							return [card.name, "处理失败"];
+					//* [1]获取blob
+					const url = card.linkUrl;
+					let blob: Blob | null = await getBlobByUrlAuto(url);
+					//* [2]判断是否获取成功 - 成功-> [3.1] , 失败-> [3.0]
+					if (blob) {
+						//* [3.1]后缀名处理
+						let ext = "";
+						if (!isEmpty(card.linkUrlExt)) {
+							ext = "." + card.linkUrlExt;
 						}
-					} else {
+						let fix = strAutofill(index.toString(), 0, 4);
+						//* [3.2]存入zip容器
+						(<JSZipType>zipContainer).file(`${fix} - ${card.name}${ext}`, blob);
 						return [card.name, "处理成功!"];
+					} else {
+						//* [3.0]失败
+						return [card.name, "处理失败"];
 					}
+					//* [4]处理结束blob释放
+					blob = null;
 				},
-				//* 单次执行完成后的回调
-				callback: (res, index) => {
+				//* 单次执行完成后的回调(定义)
+				callback: async (res, index) => {
+					await nextTick();
 					finallyCount++;
 					loading.percentage = (finallyCount / downloadCards.length) * 100;
 				},
 			};
 		});
-
+		//* 将任务清单push进队列
 		taskQueue.pushTask(taskList);
-
 		//* 全部执行完成后的回调
 		taskQueue.finallyCallback = async () => {
 			ElMessage({
@@ -279,24 +289,8 @@
 				grouping: true,
 				offset: 120,
 			});
-			const zipContainer = new JSZip();
 			//* 生成压缩包
-			for (let index = 0; index < downloadCards.length; index++) {
-				const card = downloadCards[index];
-				if (card.name && card.linkBlob) {
-					//* 后缀名处理
-					let ext = getExtByBlob(card.linkBlob);
-					let reg = new RegExp(`(\\.${ext})+$`);
-					let fix = strAutofill(index.toString(), 0, 4);
-					zipContainer.file(
-						`${fix} - ${card.name.replace(reg, "")}.${ext}`,
-						card.linkBlob
-					);
-				}
-			}
-
-			// console.log(zipContainer);
-			const zip = await zipContainer.generateAsync({
+			let zip: Blob | null = await (<JSZipType>zipContainer).generateAsync({
 				type: "blob",
 				// compression: "DEFLATE",
 				// level: 9,
@@ -304,15 +298,18 @@
 			// console.log(zip);
 			//* 下载压缩包
 			let zipName: string = document.querySelector<any>("title").innerText;
-			saveAs(zip, `${zipName}.zip`);
-
+			await saveAs(zip, `${zipName}.zip`);
+			await nextTick();
+			//* 清除压缩包
+			zip = null;
+			zipContainer = null;
+			//* 重置进度条
 			loading.percentage = 100;
 			loading.reset();
 		};
-
 		//* 开始执行
 		taskQueue.run();
-	};
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -339,7 +336,7 @@
 
 			gap: 10px;
 
-			color: black;
+			// color: black;
 
 			/* 禁止选中文字 */
 			user-select: none;
@@ -475,7 +472,6 @@
 					text-align: center;
 					white-space: nowrap; //* 防止换行
 					font-size: 16px !important;
-					
 				}
 			}
 			// *排序方式选择器

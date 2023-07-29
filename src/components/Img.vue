@@ -1,26 +1,28 @@
 <template>
-	<!-- <img :parentSelector="parentSelector" :src="src" v-lazy="src" /> -->
-	<img :parentSelector="parentSelector" :src="src"  />
-
-	<!-- <el-image ref="img" :src="src" loading="lazy"></el-image> -->
+	<img :parentSelector="parentSelector" v-lazy.src="src" v-if="lazy" />
+	<img :src="src" v-else />
 </template>
 
 <script lang="ts" setup>
-	defineProps({
-		src: String,
-		parentSelector: {
-			type: String,
-			default: "null",
-		},
-		margin: {
-			type: String,
-			default: "0%",
+	interface IProps {
+		parentSelector?: string;
+		src: string;
+		lazy: boolean;
+		lazyMargin?: string;
+	}
+
+	const props = withDefaults(defineProps<IProps>(), {
+		src: "",
+		parentSelector: "body",
+		lazy: false,
+		lazyMargin(props) {
+			return "0%";
 		},
 	});
 
 	const vLazy = {
 		mounted(el, binding, vNode) {
-			// console.log(vNode.props.parentSelector);
+			// console.log('懒加载',props.parentSelector);
 			el.dataset.show = false; //先设置为不显示(配合css)
 			let url = binding.value; //保存src
 			// 回调函数定义
@@ -52,8 +54,8 @@
 					});
 				},
 				{
-					root: document.querySelector(vNode.props.parentSelector),
-					rootMargin: vNode.props.margin,
+					root: document.querySelector(props.parentSelector),
+					rootMargin: props.lazyMargin,
 				}
 			); // 设置阈值
 			// 监听调用
@@ -74,13 +76,13 @@
 	[data-show="true"] {
 		opacity: 1;
 		filter: blur(0px);
-		transition: .2s;
+		transition: 0.2s;
 	}
 
 	/* 不显示时的样式 */
 	[data-show="false"] {
 		opacity: 0;
 		filter: blur(10px);
-		transition: .2s;
+		transition: 0.2s;
 	}
 </style>

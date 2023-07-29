@@ -1,132 +1,164 @@
 <template>
-	<div ref="cardRef" class="onlineGallery-card" @contextmenu.prevent.self>
-		<!-- *FancyBox锚点 -->
+	<div
+		ref="cardRef"
+		class="onlineGallery-card"
+		:data-index="index"
+		:style="cardStyle"
+		:data-show="show"
+		:data-loading="loading"
+		@contextmenu.prevent.self>
+		<!-- !FancyBox锚点 -->
 		<a
+			target="_blank"
 			class="card-FancyBox-anchor"
 			data-onlineGallery-fancybox="onlineGallery"
-			:data-type="card.fancyBoxType"
+			:data-type="fancyBoxType"
 			:href="card.linkUrl"
 			:data-thumb="card.picUrl"
-			:data-width="
-				card.fancyBoxType == 'image' || card.fancyBoxType == 'video'
-					? card.meta.width
-					: null
-			"
-			:data-height="
-				card.fancyBoxType == 'image' || card.fancyBoxType == 'video'
-					? card.meta.height
-					: null
-			"></a>
-		<transition name="content" appear>
-			<div
-				class="onlineGallery-card-body"
-				v-if="props.card.visible || visibility">
-				<!-- *图片 -->
-				<Img
-					class="content"
-					:src="card.picUrl"
-					:width="card.meta.width"
-					:height="card.meta.height">
-				</Img>
-			</div>
-		</transition>
-		<transition appear>
-			<div
-				class="onlineGallery-card-other"
-				v-if="props.card.visible || visibility">
-				<transition name="bottom-to-top" appear>
-					<!-- *标签组 -->
-					<div class="tag-group" v-if="props.card.visible || visibility">
-						<!-- *大小标签 -->
-						<el-tooltip
-							v-if="card.linkBlob"
-							effect="dark"
-							:content="blobSize_tag"
-							placement="top">
-							<el-tag
-								class="el-tag"
-								round
-								size="small"
-								type="info"
-								@click.right="copyTagContent(blobSize_tag)">
-								{{ blobSize_tag }}
-							</el-tag>
-						</el-tooltip>
-						<!-- *尺寸标签 -->
-						<el-tooltip effect="dark" :content="size_tag" placement="top">
-							<el-tag
-								class="el-tag"
-								size="small"
-								type="info"
-								@click.right="copyTagContent(size_tag)"
-								round>
-								{{ size_tag }}
-							</el-tag>
-						</el-tooltip>
-						<!-- *名称标签 -->
-						<el-tooltip effect="dark" :content="card.name" placement="top">
-							<el-tag
-								class="el-tag"
-								round
-								size="small"
-								@click.right="copyTagContent(card.name)">
-								{{ card.name }}
-							</el-tag>
-						</el-tooltip>
-						<!-- *后缀名标签 -->
-						<el-tooltip
-							effect="dark"
-							:content="card.linkUrlExt"
-							placement="top"
-							v-if="card.linkUrlExt">
-							<el-tag
-								class="el-tag"
-								round
-								size="small"
-								type="danger"
-								@click.right="copyTagContent(card.linkUrlExt)">
-								{{ card.linkUrlExt }}
-							</el-tag>
-						</el-tooltip>
+			:data-width="fancyBoxWidth"
+			:data-height="fancyBoxHeight">
+		</a>
+		<!-- !内容区 -->
+		<el-skeleton
+			style="width: 100%; height: 100%; z-index: 0 !important"
+			:loading="loading || !show"
+			:throttle="500"
+			:animated="true"
+			:count="1">
+			<template #template>
+				<!-- !骨架内容 -->
+				<el-skeleton-item variant="image" style="width: 100%; height: 100%" />
+			</template>
+			<template #default>
+				<!-- !真实内容 -->
+				<div class="really-content">
+					<!-- !主要内容区 -->
+					<div class="onlineGallery-card-body" v-if="show">
+						<!-- *图片 -->
+						<Img
+							class="content"
+							:src="card.picUrl"
+							:width="card.meta.width"
+							:height="card.meta.height"
+							:parentSelector="'#onlineGallery-list-container'"
+							:lazy="false">
+						</Img>
 					</div>
-				</transition>
-				<transition name="top-to-bottom" appear>
-					<!-- *勾选框 -->
-					<el-checkbox
-						v-model="card.selected"
-						class="checkbox"
-						v-if="props.card.visible || visibility" />
-				</transition>
-				<transition name="top-to-bottom" appear>
-					<!-- *按钮组 -->
-					<div class="button-group" v-if="props.card.visible || visibility">
-						<!-- *下载按钮 -->
-						<el-button
-							class="button download"
-							type="primary"
-							circle
-							@click.stop="download"
-							:loading="downloading">
-							<template #icon>
-								<el-icon><i-ep-Download /></el-icon>
-							</template>
-						</el-button>
+					<!-- !其他内容区 -->
+					<div class="onlineGallery-card-other" v-if="show">
+						<transition name="bottom-top" appear>
+							<!-- !标签组 -->
+							<div class="tag-group" v-if="show">
+								<!-- *后缀名标签 -->
+								<el-tooltip
+									effect="dark"
+									:show-after="1000"
+									:enterable="false"
+									:content="card.linkUrlExt"
+									placement="top"
+									v-if="card.linkUrlExt">
+									<el-tag
+										class="el-tag"
+										hit
+										round
+										size="small"
+										type="danger"
+										@click.right="copyTagContent(card.linkUrlExt)">
+										{{ card.linkUrlExt }}
+									</el-tag>
+								</el-tooltip>
+								<!-- *大小标签 -->
+								<el-tooltip
+									v-if="card.linkSize"
+									effect="dark"
+									:show-after="1000"
+									:enterable="false"
+									:content="linkSize_tag"
+									placement="top">
+									<el-tag
+										class="el-tag"
+										round
+										hit
+										size="small"
+										type="info"
+										@click.right="copyTagContent(linkSize_tag)">
+										{{ linkSize_tag }}
+									</el-tag>
+								</el-tooltip>
+								<!-- *尺寸标签 -->
+								<el-tooltip
+									effect="dark"
+									:show-after="1000"
+									:enterable="false"
+									:content="size_tag"
+									placement="top">
+									<el-tag
+										class="el-tag"
+										size="small"
+										type="info"
+										hit
+										@click.right="copyTagContent(size_tag)"
+										round>
+										{{ size_tag }}
+									</el-tag>
+								</el-tooltip>
+								<!-- *名称标签 -->
+								<el-tooltip
+									effect="dark"
+									:show-after="1000"
+									:enterable="false"
+									:content="card.name"
+									placement="top">
+									<el-tag
+										class="el-tag"
+										hit
+										round
+										size="small"
+										@click.right="copyTagContent(card.name)">
+										{{ card.name }}
+									</el-tag>
+								</el-tooltip>
+							</div>
+						</transition>
+						<transition name="top-bottom" appear>
+							<!-- *勾选框 -->
+							<el-checkbox
+								v-model="card.selected"
+								class="checkbox"
+								v-if="show" />
+						</transition>
+						<transition name="top-bottom" appear>
+							<!-- *按钮组 -->
+							<div class="button-group" v-if="show">
+								<!-- *下载按钮 -->
+								<el-button
+									class="button download"
+									type="primary"
+									circle
+									@click.stop="download"
+									:loading="downloading">
+									<template #icon>
+										<el-icon><i-ep-Download /></el-icon>
+									</template>
+								</el-button>
 
-						<!-- *定位按钮 -->
-						<el-button
-							class="button toPosition"
-							type="primary"
-							circle
-							@click.stop="toPosition"
-							:loading="downloading">
-							<template #icon>
-								<el-icon><i-ep-LocationFilled /></el-icon>
-							</template>
-						</el-button>
+								<!-- *定位按钮 -->
+								<el-button
+									class="button toPosition"
+									type="primary"
+									circle
+									@click.stop="toPosition"
+									:loading="downloading">
+									<template #icon>
+										<el-icon><i-ep-LocationFilled /></el-icon>
+									</template>
+								</el-button>
+							</div>
+						</transition>
 					</div>
-				</transition>
-			</div>
-		</transition>
+				</div>
+			</template>
+		</el-skeleton>
 	</div>
 </template>
 
@@ -150,30 +182,84 @@
 					height: 0,
 					aspectRatio: 3 / 4,
 				},
-				picBlob: new Blob([], {type: "none"}),
-				linkBlob: new Blob([], {type: "none"}),
-				nameBlob: new Blob([], {type: "none"}),
 				selected: false, //? 选中标识符
 				dom: null,
 				visible: false,
 				match: false,
-				fancyBoxType: "image",
 			};
 		},
 	});
 
-	const appInfo = useAppInfoStore();
+	const card = props.card;
+
+	const appInfo = useAppInfoStore(); //* 导入状态仓库
+	const loading = ref(true); //* 加载状态标记符
 	const downloading = ref(false); //* 用于标记下载过程
 
-	//* 尺寸计算属性
-	const size_tag = computed(() => {
-		return `${props.card.meta.width}x${props.card.meta.height}`;
+	//j 展示状态
+	const show = computed((): boolean => {
+		return card.visible || visibility.value;
 	});
 
-	//* blob大小计算属性
-	const blobSize_tag = computed(() => {
-		if (props.card.linkBlob) {
-			return byteSizeAutoUnit(props.card.linkBlob.size);
+	//j card样式
+	const cardStyle = computed(() => {
+		return {
+			"--aspect-ratio": card.meta.aspectRatio,
+		};
+	});
+
+	//* fancyBox可展示类型定义
+	type fancyBoxShowType = "image" | "iframe" | "video" | "inline" | "html";
+	//j fancyBoxType的类型
+	const fancyBoxType = computed((): fancyBoxShowType => {
+		// console.log(card);
+		let type: fancyBoxShowType = "iframe";
+		let linkUrlType = `${card.linkUrlType}`;
+		//* 如果没有类型则先通过链接进行类型推断
+		if (card.linkUrlType !== "image" && card.linkUrlType !== "video") {
+			linkUrlType = guessUrlType(card.linkUrl);
+		}
+		if (linkUrlType === "image" || linkUrlType === "video") {
+			type = linkUrlType;
+		} else {
+			type = "iframe";
+		}
+		return type;
+	});
+
+	//j fancyBox 尺寸(宽度)
+	const fancyBoxWidth = computed((): number | null => {
+		if (
+			(fancyBoxType.value === "image" || fancyBoxType.value === "video") &&
+			card.meta.width > 0
+		) {
+			return card.meta.width;
+		} else {
+			return null;
+		}
+	});
+
+	//j fancyBox 尺寸(高度)
+	const fancyBoxHeight = computed((): number | null => {
+		if (
+			(fancyBoxType.value === "image" || fancyBoxType.value === "video") &&
+			card.meta.height > 0
+		) {
+			return card.meta.height;
+		} else {
+			return null;
+		}
+	});
+
+	//j 尺寸计算属性
+	const size_tag = computed(() => {
+		return `${card.meta.width}x${card.meta.height}`;
+	});
+
+	//j link大小计算属性
+	const linkSize_tag = computed(() => {
+		if (card.linkSize) {
+			return byteSizeAutoUnit(card.linkSize);
 		} else {
 			return (0).toFixed(2) + "KB";
 		}
@@ -253,36 +339,21 @@
 	const download = async () => {
 		const card = props.card;
 		downloading.value = true;
-		if (card.linkBlob) {
-			//* 后缀名处理
-			let ext = getExtByBlob(card.linkBlob);
-			// console.log(ext);
-			let reg = new RegExp(`(\\.${ext})+$`);
-			await saveAs(card.linkBlob, `${card.name.replace(reg, "")}.${ext}`);
-			downloading.value = false;
-		} else {
-			//* 先获取文件的blob对象
-			const url = card.linkUrl;
-			let tempBlob: Blob = await getBlobByUrlAuto(url);
-			console.log(tempBlob);
-			if (tempBlob && tempBlob.type !== "none") {
-				card.linkBlob = tempBlob;
-				//* 后缀名处理
-				let ext = getExtByBlob(card.linkBlob);
-				// console.log(ext);
-				let reg = new RegExp(`(\\.${ext})+$`);
-				await saveAs(card.linkBlob, `${card.name.replace(reg, "")}.${ext}`);
-
-				downloading.value = false;
-			} else {
-				downloading.value = false;
+		let blob: Blob | null = (await getBlobByUrlAuto(card.linkUrl)) as Blob;
+		if (blob) {
+			let ext = "";
+			if (!isEmpty(card.linkUrlExt)) {
+				ext = "." + card.linkUrlExt;
 			}
+			await saveAs(blob, `${card.name}${ext}`);
+			blob = null;
+			downloading.value = false;
 		}
 	};
 
 	//f  在网页中定位
 	const toPosition = async () => {
-		const dom = props.card.dom;
+		const dom = card.dom;
 		if (dom != null) {
 			appInfo.container.open = !appInfo.container.open;
 			dom.scrollIntoView({
@@ -292,6 +363,76 @@
 			});
 		}
 	};
+
+	//f 更新link信息
+	async function reNewLinkInfo() {
+		//* 获取blob用于判断link用于获取link尺寸和类型
+		let linkBlob: Blob | null = null;
+
+		linkBlob = await getBlobByUrlAuto(card.linkUrl);
+
+		//* - 大小获取
+		card.linkSize = linkBlob?.size || 0;
+
+		//* - 类型判断
+		if (linkBlob) {
+			card.linkUrlType = getBlobType(linkBlob);
+		} else {
+			card.linkUrlType = getUrlType(card.linkUrl);
+		}
+
+		//* 后缀名获取
+		if (linkBlob) card.linkUrlExt = getExtByBlob(linkBlob);
+
+		//* 获取完成后销毁临时blob(防止占用堆区内存)
+		linkBlob = null;
+	}
+
+	//f 更新Pic信息
+	async function reNewPicInfo() {
+		let picBlob: Blob | null = null;
+
+		picBlob = await getBlobByUrlAuto(card.picUrl);
+
+		//* - 大小获取
+		card.picSize = picBlob?.size || 0;
+
+		//* - 类型判断
+
+		if (picBlob) {
+			card.picUrlType = getBlobType(picBlob);
+		} else {
+			card.picUrlType = getUrlType(card.picUrl);
+		}
+
+		//* 后缀名获取
+		if (picBlob) card.picUrlExt = getExtByBlob(picBlob);
+
+		//* 获取完成后销毁临时blob(防止占用堆区内存)
+		picBlob = null;
+	}
+
+	//w 监听 card.visible变化
+	// watch(
+	// 	() => card.visible,
+	// 	async (visible, oldVal) => {
+	// 		console.log("可见状态变化");
+	// 		//* 可见状态才进入执行
+	// 		if (visible) {
+	// 			//* 需要展示的信息缺失时才执行
+	// 			if (!card.linkUrlType) {
+	// 				console.log("信息获取");
+	// 				loading.value = true;
+	// 				await reNewLinkInfo();
+	// 				loading.value = false;
+	// 			} else {
+	// 				loading.value = false;
+	// 			}
+	// 		} else {
+	// 			loading.value = true;
+	// 		}
+	// 	}
+	// );
 
 	//! 卡片可见性判断
 	const cardRef = ref<HTMLElement | null>();
@@ -308,19 +449,46 @@
 		stopFn();
 		const {stop} = useIntersectionObserver(
 			cardRef,
-			([{isIntersecting}], observerElement) => {
+			async ([{isIntersecting}], observerElement) => {
 				// console.log("可见状态", isIntersecting, observerElement);
-				props.card.visible = isIntersecting;
+				card.visible = isIntersecting;
 			},
 			{
 				immediate: true,
 				root: document.querySelector("#onlineGallery-container") as HTMLElement,
-				rootMargin: "100px 0px 100px 0px",
-				threshold: [0, 0.1, 0.25, 0.5, 0.75, 0.8, 0.9, 1],
+				rootMargin: "100px 100px 100px 100px",
+				// threshold: [0, 0.1, 0.25, 0.5, 0.75, 0.8, 0.9, 1],
 			}
 		);
 		stopFn = stop;
 	});
+
+	onMounted(() => {
+		// console.log('card挂载');
+		reNewLoadingStatus();
+	});
+
+	onUpdated(() => {
+		// console.log('card更新');
+		reNewLoadingStatus();
+	});
+
+	//f 更新loading状态
+	async function reNewLoadingStatus() {
+		if (card.visible) {
+			//* 需要展示的信息缺失时才执行
+			if (!card.linkUrlType) {
+				console.log("信息获取");
+				loading.value = true;
+				await reNewLinkInfo();
+				loading.value = false;
+			} else {
+				loading.value = false;
+			}
+		} else {
+			loading.value = true;
+		}
+	}
 </script>
 
 <style scoped lang="scss">
@@ -358,7 +526,7 @@
 
 		cursor: pointer;
 
-		transition: box-shadow 0.5s ease;
+		transition: 0.5s ease;
 
 		//* 卡片悬停触发
 		&:hover {
@@ -488,39 +656,46 @@
 		}
 	}
 
-	//* transition效果
-	.content-enter-active,
-	.content-leave-active {
-		transition: opacity 0.25s ease, transform 0.15s ease;
+	//? transition效果
+	//*	默认淡出淡入
+	.v-enter-active,
+	.v-leave-active {
+		transition: 0.5s ease !important;
+	}
+	.v-enter-from,
+	.v-leave-to {
+		opacity: 0;
 	}
 
-	.content-enter-from,
-	.content-leave-to {
-		opacity: 0;
-		transform: translateY(100%);
+	//* 从上往下
+	.top-bottom-enter-active,
+	.top-bottom-leave-active {
+		transition: 0.5s ease !important;
+	}
+
+	.top-bottom-enter-from,
+	.top-bottom-leave-to {
+		transform: translateY(-100%);
 	}
 
 	//* 从下往上进入
-	.bottom-to-top-enter-active,
-	.bottom-to-top-leave-active {
-		transition: opacity 0.5s ease, transform 0.25s ease;
+	.bottom-top-enter-active,
+	.bottom-top-leave-active {
+		transition: 0.5s ease !important;
 	}
 
-	.bottom-to-top-enter-from,
-	.bottom-to-top-leave-to {
-		opacity: 0;
+	.bottom-top-enter-from,
+	.bottom-top-leave-to {
 		transform: translateY(100%);
 	}
 
-	//* 从上往下进入
-	.top-to-bottom-enter-active,
-	.top-to-bottom-leave-active {
-		transition: opacity 0.5s ease, transform 0.25s ease;
+	//* content进出样式
+	.v-enter-active,
+	.v-leave-active {
+		transition: 0.5s ease !important;
 	}
-
-	.top-to-bottom-enter-from,
-	.top-to-bottom-leave-to {
+	.v-enter-from,
+	.v-leave-to {
 		opacity: 0;
-		transform: translateY(-100%);
 	}
 </style>

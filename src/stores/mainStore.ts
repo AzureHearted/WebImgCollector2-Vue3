@@ -32,11 +32,12 @@ export const useAppInfoStore = defineStore("appInfo", () => {
 		},
 		//f 进度条重置函数
 		reset: () => {
-			setTimeout(() => {
+			setTimeout(async () => {
+				await nextTick();
 				loading.value = false;
 				loading.state = "success";
-
-				setTimeout(() => {
+				setTimeout(async () => {
+					await nextTick();
 					loading.show = false;
 					loading.percentage = 0;
 					loading.state = "";
@@ -56,18 +57,13 @@ export const useCardsStore = defineStore("Cards", () => {
 	const toolBar = useToolBarStore();
 	const ruleEditor = useRuleEditorStore();
 
-	interface cardData {
-		cardList: matchCard[];
-		urlSet: Set<string>;
-		domSet: Set<any>;
-	}
 	//* 数据
-	const data: cardData = reactive({
+	const data = reactive({
 		cardList: <matchCard[]>[], //* 卡片列表
 		//f 所有匹配到的链接集合
-		urlSet: new Set(),
+		urlSet: <Set<string>>new Set(),
 		//f 所有匹配到的dom集合
-		domSet: new Set(),
+		domSet: <Set<any>>new Set(),
 	});
 
 	const allValidCards = computed((): matchCard[] => {
@@ -113,25 +109,27 @@ export const useCardsStore = defineStore("Cards", () => {
 	});
 
 	//f 获取卡片
-	const getCard = async (rule: IORule) => {
+	async function getCard(rule: IORule) {
 		const filter = toolBar.filter;
 		appInfo.loading.init();
 		//* 每次处理完成一张时的回调
-		const singleCallBack = (
+		const singleCallBack = async (
 			card: matchCard,
 			realIndex: number,
 			processedCount: number,
 			allCount: number
 		) => {
+			await nextTick();
 			appInfo.loading.percentage = (processedCount / allCount) * 100;
-			if (card.match && !data.urlSet.has(card.picUrl)) {
+			//* 防止重复
+			if (card.match && !data.urlSet.has(card.linkUrl)) {
 				// console.log("匹配成功!", card, filter);
 				data.cardList[realIndex] = card;
 				// data.cardList.push(card);
-				data.urlSet.add(card.picUrl); //* 记录匹配过的链接
+				data.urlSet.add(card.linkUrl); //* 记录匹配过的链接
 				data.domSet.add(card.dom); //* 记录匹配过的dom
-				//* 更新尺寸过滤器最大值
 
+				//* 更新尺寸过滤器最大值
 				const max =
 					(filter.size.max =
 					filter.size.max =
@@ -142,16 +140,16 @@ export const useCardsStore = defineStore("Cards", () => {
 							card.meta.height
 						));
 				// console.log(max);
-
 				filter.size.width.value = [filter.size.width.value[0], max];
 				filter.size.height.value = [filter.size.height.value[0], max];
 			}
 		};
-		//* 全部处理完成后的回到
-		const finallyCallback = (
+		//* 全部处理完成后的回调
+		const finallyCallback = async (
 			cardList_output: matchCard[],
 			rowCardList: rowCard[]
 		) => {
+			await nextTick();
 			appInfo.loading.percentage = 100;
 			appInfo.loading.reset();
 			if (!cardList_output.length) {
@@ -164,7 +162,7 @@ export const useCardsStore = defineStore("Cards", () => {
 				});
 			} else {
 				// console.log(rowCardList);
-				// console.log("匹配完成", data, filterCards);
+				// console.log("匹配完成", data.domSet);
 			}
 
 			//* 所有操作都结束后对原先cardList中无效的项目进行过滤
@@ -177,11 +175,13 @@ export const useCardsStore = defineStore("Cards", () => {
 			singleCallBack,
 			finallyCallback,
 			{
+				maxLimit: 10,
+				delay: 300,
 				excludeDomSet: data.domSet,
 				excludeUrlSet: data.urlSet,
 			}
 		);
-	};
+	}
 
 	return {
 		data,
@@ -274,7 +274,7 @@ export const useToolBarStore = defineStore("ToolBar", () => {
 				{value: "webp", label: "webp"},
 				{value: "svg", label: "svg"},
 			],
-			value: ["png", "jpg", "jpeg", "gif", "webp", "bmp"],
+			value: [],
 		},
 	});
 
@@ -362,21 +362,20 @@ export const useToolBarStore = defineStore("ToolBar", () => {
 });
 
 /**
+ * ? node接口定义
+ */
+interface node {
+	id: string;
+	label: string;
+	iconUrl?: string;
+	children: node[];
+	disabled: boolean;
+	isNew?: boolean;
+}
+/**
  *! 规则管理器 共享信息
  */
 export const useRuleEditorStore = defineStore("ruleEditor", () => {
-	/**
-	 * ? node接口定义
-	 */
-	interface node {
-		id: string;
-		label: string;
-		iconUrl?: string;
-		children: node[];
-		disabled: boolean;
-		isNew?: boolean;
-	}
-
 	//* 容器
 	const container = reactive({
 		open: false,
@@ -421,33 +420,9 @@ export const useRuleEditorStore = defineStore("ruleEditor", () => {
 		},
 	});
 
-	//* 树形列表数据
-	const treeData = computed((): node[] => {
-		let result = data.ruleList.map((rule) => {
-			return <node>{
-				id: rule.id,
-				label: rule.main.name || "未命名规则",
-				iconUrl: rule.main.iconUrl,
-				children: [],
-				disabled: false,
-				isNew: rule.status.isNewCreated,
-			};
-		});
-		result.push(<node>{
-			id: "#",
-			label: "创建规则",
-			children: [],
-			disabled: false,
-		});
-		return result;
-	});
-
-	interface IData {
-		ruleList: Array<MatchRule>;
-	}
 	//* 数据
-	const data: IData = reactive({
-		ruleList: [], //* 规则列表
+	const data = reactive({
+		ruleList: <MatchRule[]>[], //* 规则列表
 	});
 
 	//f 获取用户本地规则信息

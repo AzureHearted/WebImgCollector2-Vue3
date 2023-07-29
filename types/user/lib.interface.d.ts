@@ -11,9 +11,10 @@ interface matchCard {
 	metaOrigin: string; //* meta的链接来源
 	match: boolean; //? 匹配标识符
 	selected: boolean; //? 选中标识符
-	linkBlob?: Blob; //* 链接对应的blob
-	picBlob?: Blob; //* 图片对应的blob
-	nameBlob?: Blob; //* 名称对应的blob(通常不会遇到一般就是link或者pic的Blob)
+	linkBlob?: Blob | null; //* 链接对应的blob
+	linkSize?: number; //* 链接对应的内容大小(字节)
+	picBlob?: Blob | null; //* 图片对应的blob
+	picSize?: number; //* 图链对应的内容大小(字节)
 	dom?: HTMLElement | null; //* 限定匹配的dom元素
 	linkUrlDom?: HTMLElement | null; //* 匹配到的linkUrl的dom元素
 	picUrlDom?: HTMLElement | null; //* 匹配到的picUrl的dom元素
@@ -21,7 +22,6 @@ interface matchCard {
 	metaDom?: HTMLElement | null; //* 匹配到的metaUrl的dom元素
 	linkUrlType?: "image" | "video" | "audio" | "html";
 	picUrlType?: "image" | "video" | "audio" | "html";
-	fancyBoxType: "image" | "iframe" | "video" | "inline" | "html";
 	visible: boolean;
 }
 
@@ -39,9 +39,8 @@ interface rowCard {
 	metaOrigin: string; //* meta的链接来源
 	match?: boolean; //? 匹配标识符
 	selected?: boolean; //? 选中标识符
-	linkBlob?: Blob; //* 链接对应的blob
-	picBlob?: Blob; //* 图片对应的blob
-	nameBlob?: Blob; //* 名称对应的blob(通常不会遇到)
+	linkBlob?: Blob | null; //* 链接对应的blob
+	picBlob?: Blob | null; //* 图片对应的blob
 	dom?: HTMLElement | null; //* 限定匹配的dom元素
 	linkUrlDom?: HTMLElement | null; //* 匹配到的linkUrl的dom元素
 	picUrlDom?: HTMLElement | null; //* 匹配到的picUrl的dom元素
@@ -58,4 +57,9 @@ interface metaInterFace {
 	width: number;
 	height: number;
 	aspectRatio?: number;
+}
+
+interface IBlob{
+	size:number
+	type:string
 }

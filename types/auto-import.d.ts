@@ -34,12 +34,10 @@ declare global {
   const GM_unregisterMenuCommand: typeof import('vite-plugin-monkey/dist/client')['GM_unregisterMenuCommand']
   const GM_webRequest: typeof import('vite-plugin-monkey/dist/client')['GM_webRequest']
   const GM_xmlhttpRequest: typeof import('vite-plugin-monkey/dist/client')['GM_xmlhttpRequest']
-  const JSZip: typeof import("jszip")["JSZip"]
   const MatchRule: typeof import('../src/ts/class/MatchRule')['MatchRule']
   const TaskQueue: typeof import('../src/ts/public')['TaskQueue']
   const asyncComputed: typeof import('@vueuse/core')['asyncComputed']
   const autoResetRef: typeof import('@vueuse/core')['autoResetRef']
-  const browserRedirect: typeof import('../src/ts/public')['browserRedirect']
   const buildUUID: typeof import('../src/ts/public')['buildUUID']
   const computed: typeof import('vue')['computed']
   const computedAsync: typeof import('@vueuse/core')['computedAsync']
@@ -58,6 +56,7 @@ declare global {
   const createTemplatePromise: typeof import('@vueuse/core')['createTemplatePromise']
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
   const customRef: typeof import('vue')['customRef']
+  const debounce: typeof import('../src/ts/public')['debounce']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']
   const defineAsyncComponent: typeof import('vue')['defineAsyncComponent']
@@ -72,18 +71,16 @@ declare global {
   const getCurrentInstance: typeof import('vue')['getCurrentInstance']
   const getCurrentScope: typeof import('vue')['getCurrentScope']
   const getDom: typeof import('../src/ts/public')['getDom']
-  const getDomByRule: typeof import('../src/ts/public')['getDomByRule']
   const getExtByBlob: typeof import('../src/ts/public')['getExtByBlob']
   const getFavicon: typeof import('../src/ts/public')['getFavicon']
   const getImgMetaByBlob: typeof import('../src/ts/public')['getImgMetaByBlob']
   const getImgMetaByImage: typeof import('../src/ts/public')['getImgMetaByImage']
-  const getMetaByBlob: typeof import('../src/ts/public')['getMetaByBlob']
   const getNameByUrl: typeof import('../src/ts/public')['getNameByUrl']
   const getOriginByUrl: typeof import('../src/ts/public')['getOriginByUrl']
   const getSrcsetMaximumValue: typeof import('../src/ts/public')['getSrcsetMaximumValue']
   const getTagInfo: typeof import('../src/ts/public')['getTagInfo']
   const getUrlType: typeof import('../src/ts/public')['getUrlType']
-  const globalStyle: typeof import('../src/js/globalStyle.js')['globalStyle']
+  const guessUrlType: typeof import('../src/ts/public')['guessUrlType']
   const h: typeof import('vue')['h']
   const ignorableWatch: typeof import('@vueuse/core')['ignorableWatch']
   const inject: typeof import('vue')['inject']
@@ -138,7 +135,6 @@ declare global {
   const resolveComponent: typeof import('vue')['resolveComponent']
   const resolveRef: typeof import('@vueuse/core')['resolveRef']
   const resolveUnref: typeof import('@vueuse/core')['resolveUnref']
-  const saveAs: typeof import("file-saver")["saveAs"]
   const shallowReactive: typeof import('vue')['shallowReactive']
   const shallowReadonly: typeof import('vue')['shallowReadonly']
   const shallowRef: typeof import('vue')['shallowRef']
@@ -146,6 +142,7 @@ declare global {
   const syncRef: typeof import('@vueuse/core')['syncRef']
   const syncRefs: typeof import('@vueuse/core')['syncRefs']
   const templateRef: typeof import('@vueuse/core')['templateRef']
+  const throttle: typeof import('../src/ts/public')['throttle']
   const throttledRef: typeof import('@vueuse/core')['throttledRef']
   const throttledWatch: typeof import('@vueuse/core')['throttledWatch']
   const toRaw: typeof import('vue')['toRaw']
@@ -409,6 +406,7 @@ declare module 'vue' {
     readonly createTemplatePromise: UnwrapRef<typeof import('@vueuse/core')['createTemplatePromise']>
     readonly createUnrefFn: UnwrapRef<typeof import('@vueuse/core')['createUnrefFn']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
+    readonly debounce: UnwrapRef<typeof import('../src/ts/public')['debounce']>
     readonly debouncedRef: UnwrapRef<typeof import('@vueuse/core')['debouncedRef']>
     readonly debouncedWatch: UnwrapRef<typeof import('@vueuse/core')['debouncedWatch']>
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
@@ -432,6 +430,7 @@ declare module 'vue' {
     readonly getSrcsetMaximumValue: UnwrapRef<typeof import('../src/ts/public')['getSrcsetMaximumValue']>
     readonly getTagInfo: UnwrapRef<typeof import('../src/ts/public')['getTagInfo']>
     readonly getUrlType: UnwrapRef<typeof import('../src/ts/public')['getUrlType']>
+    readonly guessUrlType: UnwrapRef<typeof import('../src/ts/public')['guessUrlType']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
@@ -493,6 +492,7 @@ declare module 'vue' {
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>
     readonly templateRef: UnwrapRef<typeof import('@vueuse/core')['templateRef']>
+    readonly throttle: UnwrapRef<typeof import('../src/ts/public')['throttle']>
     readonly throttledRef: UnwrapRef<typeof import('@vueuse/core')['throttledRef']>
     readonly throttledWatch: UnwrapRef<typeof import('@vueuse/core')['throttledWatch']>
     readonly toRaw: UnwrapRef<typeof import('vue')['toRaw']>
@@ -750,6 +750,7 @@ declare module '@vue/runtime-core' {
     readonly createTemplatePromise: UnwrapRef<typeof import('@vueuse/core')['createTemplatePromise']>
     readonly createUnrefFn: UnwrapRef<typeof import('@vueuse/core')['createUnrefFn']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
+    readonly debounce: UnwrapRef<typeof import('../src/ts/public')['debounce']>
     readonly debouncedRef: UnwrapRef<typeof import('@vueuse/core')['debouncedRef']>
     readonly debouncedWatch: UnwrapRef<typeof import('@vueuse/core')['debouncedWatch']>
     readonly defineAsyncComponent: UnwrapRef<typeof import('vue')['defineAsyncComponent']>
@@ -773,6 +774,7 @@ declare module '@vue/runtime-core' {
     readonly getSrcsetMaximumValue: UnwrapRef<typeof import('../src/ts/public')['getSrcsetMaximumValue']>
     readonly getTagInfo: UnwrapRef<typeof import('../src/ts/public')['getTagInfo']>
     readonly getUrlType: UnwrapRef<typeof import('../src/ts/public')['getUrlType']>
+    readonly guessUrlType: UnwrapRef<typeof import('../src/ts/public')['guessUrlType']>
     readonly h: UnwrapRef<typeof import('vue')['h']>
     readonly ignorableWatch: UnwrapRef<typeof import('@vueuse/core')['ignorableWatch']>
     readonly inject: UnwrapRef<typeof import('vue')['inject']>
@@ -834,6 +836,7 @@ declare module '@vue/runtime-core' {
     readonly syncRef: UnwrapRef<typeof import('@vueuse/core')['syncRef']>
     readonly syncRefs: UnwrapRef<typeof import('@vueuse/core')['syncRefs']>
     readonly templateRef: UnwrapRef<typeof import('@vueuse/core')['templateRef']>
+    readonly throttle: UnwrapRef<typeof import('../src/ts/public')['throttle']>
     readonly throttledRef: UnwrapRef<typeof import('@vueuse/core')['throttledRef']>
     readonly throttledWatch: UnwrapRef<typeof import('@vueuse/core')['throttledWatch']>
     readonly toRaw: UnwrapRef<typeof import('vue')['toRaw']>

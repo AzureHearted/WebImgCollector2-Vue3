@@ -5,10 +5,11 @@
 		"module": "ESNext",
 		"lib": ["ES2020", "DOM", "DOM.Iterable"],
 		"skipLibCheck": true, // 所有的声明文件（*.d.ts）的类型检查, 解决：打包不报错
+		"declaration": true, // 生成相应的 '.d.ts' 文件
 		//f 路径别名配置
 		"paths": {
-      "@/*": ["./src/*"]
-    },
+			"@/*": ["./src/*"]
+		},
 
 		/* Bundler mode */
 		"moduleResolution": "node",
@@ -25,8 +26,8 @@
 		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitAny": false, // 不允许隐式的 any 类型
-		"removeComments": true // 删除注释
-		// "types":["element-plus/global"]
+		"removeComments": true, // 删除注释
+		"types": ["element-plus/global", "vite-svg-loader", "jszip/index"]
 	},
 	"include": [
 		"src/**/*.ts",
@@ -34,9 +35,10 @@
 		"src/**/*.vue",
 		"src/stores/**.ts",
 		"src/ts/*.ts",
-		"src/ts/class/MatchRule.ts",
-		"types/**/**.ts",
-		"types/**/**.d.ts",
+		"types/*.ts",
+		"types/*.d.ts",
+		"types/**/*.ts",
+		"types/**/*.d.ts",
 		"types/user/lib.interface.d.ts",
 		"src/main.ts"
 	]
