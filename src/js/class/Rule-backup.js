@@ -2,14 +2,14 @@
 export class Rule {
 	constructor(
 		rule = {
-			id: undefined, //* 规则id
+			id: undefined, //s 规则id
 			main: {
-				name: undefined, //* 规则名称
-				domainName: undefined, //* 作用域
-				pathFilter: undefined, //* 路径过滤(正则)
+				name: undefined, //s 规则名称
+				domainName: undefined, //s 作用域
+				pathFilter: undefined, //s 路径过滤(正则)
 			},
 			domItem: {
-				//* 时候启用dom限定(开启后将以该项指定的dom作为起点查找查询其他项目)
+				//s 时候启用dom限定(开启后将以该项指定的dom作为起点查找查询其他项目)
 				enable: undefined,
 				selector: undefined,
 			},
@@ -20,7 +20,7 @@ export class Rule {
 			},
 			picUrl: {
 				enable: undefined,
-				//* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+				//s 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
 				origin: undefined,
 				selector: undefined,
 				infoType: undefined,
@@ -28,14 +28,14 @@ export class Rule {
 			},
 			name: {
 				enable: undefined,
-				origin: undefined, //* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+				origin: undefined, //s 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
 				selector: undefined,
 				infoType: undefined,
 				attribute: undefined,
 			},
 			meta: {
 				enable: undefined,
-				origin: undefined, //* 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
+				origin: undefined, //s 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
 				selector: undefined,
 				infoType: undefined,
 				attribute: undefined,
@@ -49,7 +49,7 @@ export class Rule {
 		Rule.count++;
 		// console.log(rule);
 		//! 主要参数
-		//* 修正结果
+		//s 修正结果
 		rule = rule || {};
 		rule.main = rule.main || {};
 		rule.domItem = rule.domItem || {};
@@ -96,23 +96,23 @@ export class Rule {
 		};
 
 		//? 其他
-		//* 修正结果
+		//s 修正结果
 		status = status || {};
 		this.status = {
-			editing: status.editing || false, //* 编辑状态标记
-			isNewCreated: status.isNewCreated || false, //* 标记是否为新创建的规则
-		}; //* 状态对象
+			editing: status.editing || false, //s 编辑状态标记
+			isNewCreated: status.isNewCreated || false, //s 标记是否为新创建的规则
+		}; //s 状态对象
 
-		this.backup = null; //* 备份(默认为空)
+		this.backup = null; //s 备份(默认为空)
 	}
 
 	//? 静态成员
-	static count = 0; //* 计数器
+	static count = 0; //s 计数器
 
-	//* 数据枚举
+	//s 数据枚举
 	#enumKey = ["main", "domItem", "linkUrl", "picUrl", "name", "meta"];
 
-	//* 创建备份
+	//s 创建备份
 	createBackup = () => {
 		this.backup = {};
 		for (const key of this.#enumKey) {
@@ -120,23 +120,23 @@ export class Rule {
 		}
 	};
 
-	//* 删除备份
+	//s 删除备份
 	removeBackup = () => {
 		this.backup = null;
 	};
 
-	//* 通过备份还原
+	//s 通过备份还原
 	restoreByBackup = () => {
-		//* 判断是否有备份
+		//s 判断是否有备份
 		if (this.backup != null) {
-			//* 备份不为空才进行还原
+			//s 备份不为空才进行还原
 			this.#enumKey.forEach((key) => {
 				this[key] = this.backup[key];
 			});
 		}
 	};
 
-	//* 生成JSON数据(用于存储)
+	//s 生成JSON数据(用于存储)
 	getJsonData = () => {
 		const jsonObj = {
 			main: this.main,
@@ -149,7 +149,7 @@ export class Rule {
 		return JSON.stringify(jsonObj);
 	};
 
-	//* 生成uuid
+	//s 生成uuid
 	#buildUUID = () => {
 		const hexList = [];
 		for (let i = 0; i <= 15; i++) {

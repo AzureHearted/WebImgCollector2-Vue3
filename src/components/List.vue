@@ -1,7 +1,7 @@
 <template>
 	<div id="onlineGallery-list-container" ref="listContainerRef">
 		<el-scrollbar ref="scrollbarRef" @scroll="handleScroll">
-			<!-- *列表 -->
+			<!-- s列表 -->
 			<transition-group
 				id="onlineGallery-listBody"
 				ref="listBody"
@@ -15,7 +15,7 @@
 					:index="index">
 				</Card>
 			</transition-group>
-			<!-- *回到顶部按钮 -->
+			<!-- s回到顶部按钮 -->
 			<transition name="backTop">
 				<div
 					v-show="backTopShow"
@@ -32,9 +32,9 @@
 <script setup lang="ts">
 	import {Fancybox} from "@fancyapps/ui";
 
-	const listContainerRef = ref(); //* 用于接收list容器的dom
+	const listContainerRef = ref(); //s 用于接收list容器的dom
 	const listContainerSize = useElementBounding(listContainerRef);
-	const listBody = ref(); //* 用于接收list本体的dom
+	const listBody = ref(); //s 用于接收list本体的dom
 	const scrollbarRef = ref();
 	const wrapRef = ref();
 
@@ -230,7 +230,7 @@
 		return style;
 	});
 
-	const backTop = ref(); //* 用于接收回到顶部按钮
+	const backTop = ref(); //s 用于接收回到顶部按钮
 	const backTopShow = ref(false);
 
 	interface scrollEvent {
@@ -250,10 +250,10 @@
 	//f 触发事件(回到顶部)
 	const backToTop = () => {
 		const warpDom = scrollbarRef.value.wrapRef as HTMLElement;
-		//* 移动前加上scroll-behavior = smooth !important
+		//s 移动前加上scroll-behavior = smooth !important
 		warpDom.style.scrollBehavior = "smooth";
 		scrollbarRef.value.setScrollTop(0);
-		//* 动画结束后移除scroll-behavior = smooth !important
+		//s 动画结束后移除scroll-behavior = smooth !important
 		setTimeout((warpDom.style.scrollBehavior = ""));
 	};
 </script>
@@ -284,7 +284,7 @@
 		-webkit-user-drag: none;
 	}
 
-	//* 返回顶部按钮样式
+	//s 返回顶部按钮样式
 	.onlineGallery-backTop {
 		--el-backtop-bg-color: var(--el-bg-color-overlay);
 		--el-backtop-text-color: var(--el-color-primary);
@@ -324,7 +324,7 @@
 		opacity: 0;
 	}
 
-	//* 对移动中的元素应用的过渡
+	//s 对移动中的元素应用的过渡
 	.list-move,
 	.list-enter-active,
 	.list-leave-active {
@@ -337,7 +337,7 @@
 		transform: translateX(30px);
 	}
 
-	//* 确保将离开的元素从布局流中删除以便能够正确地计算移动的动画。
+	//s 确保将离开的元素从布局流中删除以便能够正确地计算移动的动画。
 	.list-leave-active {
 		position: absolute;
 	}

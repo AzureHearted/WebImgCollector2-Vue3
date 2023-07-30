@@ -1,7 +1,7 @@
 <template>
 	<span class="hover-button-container" @mouseenter="isHover = true" @mouseleave="isHover = false">
 		<transition name="hover-button-container">
-			<!-- *默认样式 -->
+			<!-- s默认样式 -->
 			<span class="hover-button-default" v-if="!isHover">
 				<slot>
 					<el-icon><i-ep-Delete /></el-icon>
@@ -9,7 +9,7 @@
 			</span>
 		</transition>
 		<transition name="hover-button-container">
-			<!-- *悬浮样式 -->
+			<!-- s悬浮样式 -->
 			<span class="hover-button-hover" v-if="isHover">
 				<slot name="hover">
 					<el-icon><i-ep-DeleteFilled /></el-icon>

@@ -1,29 +1,39 @@
 <template>
-	<div class="onlineGallery-body" ref="body">
-		<!-- *进度条 -->
+	<div
+		class="onlineGallery-body"
+		ref="body"
+	>
+		<!-- s进度条 -->
 		<el-progress
 			class="loadingBar"
 			v-show="loading.show"
 			:percentage="Math.round(loading.percentage)"
 			:status="(loading.state as any)"
 			striped
-			striped-flow />
-		<!-- *工具栏 -->
-		<Toolbar ref="toolbar" class="onlineGallery-toolBar" />
-		<List ref="list" class="listContainer" />
+			striped-flow
+		/>
+		<!-- s工具栏 -->
+		<Toolbar
+			ref="toolbar"
+			class="onlineGallery-toolBar"
+		/>
+		<List
+			ref="list"
+			class="listContainer"
+		/>
 	</div>
 </template>
 
 <script setup lang="ts">
-	const appInfo = useAppInfoStore(); //* 实例化appInfo数据仓库
-	const cardsStore = useCardsStore(); //* 实例化cardsStore数据仓库
+	const appInfo = useAppInfoStore(); //s 实例化appInfo数据仓库
+	const cardsStore = useCardsStore(); //s 实例化cardsStore数据仓库
 
 	let toolbar = ref();
 
-	//* 数据
+	//s 数据
 	const data = cardsStore.data;
 
-	//* 进度(条)
+	//s 进度(条)
 	const loading = appInfo.loading;
 </script>
 

@@ -39,7 +39,7 @@
 			transition: width, height 0.5s;
 		}
 
-		//* 菜单显示时的样式
+		//s 菜单显示时的样式
 		&[data-show="true"] {
 			display: flex;
 			width: max-content;
@@ -49,7 +49,7 @@
 			transition: width, height 0.5s;
 		}
 
-		//* 菜单项通用样式
+		//s 菜单项通用样式
 		.option {
 			position: relative;
 			width: 100%;
