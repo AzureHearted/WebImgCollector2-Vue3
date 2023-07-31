@@ -294,6 +294,7 @@ export function getOriginByUrl(url: string): string {
  * @returns {string} 链接的名称部分
  */
 export function getNameByUrl(url: string): string {
+  url = decodeURI(url)
   url = url.replace(/(\/)$/, "");
   let list = url.match(/(?<=\/)([^\/\r\n$]+)$/g) || [];
   if (list.length > 0) {

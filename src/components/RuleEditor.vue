@@ -291,7 +291,7 @@
         offset: 120,
         message: `剪切板中没有合适的规则!`,
       });
-    }else{
+    } else {
       ElMessage({
         type: "success",
         grouping: true,
@@ -365,6 +365,9 @@
 
     //s 对话框主体框架样式
     .el-dialog__body {
+      &:focus {
+        z-index: 1;
+      }
       padding: 10px;
       //s body内容容器样式
       .el-container {

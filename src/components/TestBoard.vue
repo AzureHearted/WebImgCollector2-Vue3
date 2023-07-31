@@ -1,17 +1,18 @@
 <template>
   <var-drag
-    :style="{
-      left: init.left + 'px',
-      top: init.top + 'px',
-    }"
+    :style="style"
     teleport=".onlineGallery-child-window-container"
   >
     <div
       class="test-container"
       ref="containerRef"
     >
-      <div class="test-body">
+      <!-- !头部 -->
+      <div class="test-header">
         <h3>测试窗口</h3>
+      </div>
+      <!-- !主体 -->
+      <div class="test-body">
         <div>当前使用内存使用情况:</div>
         <div
           v-if="isSupported && memory"
@@ -29,6 +30,8 @@
           <div>剪切板内容：{{ clipboard_text }}</div>
         </div>
       </div>
+
+      <!-- !底部 -->
       <div class="test-footer">
         <var-button
           type="primary"
@@ -65,9 +68,7 @@
 
   const eagle = eagleStore.eagle;
 
-  onMounted(()=>{
-    
-  })
+  onMounted(() => {});
 
   const containerRef = ref<HTMLElement | null>();
 
@@ -77,9 +78,18 @@
     return `${kb.toFixed(2)} MB`;
   }
 
+  //s 初始位置信息
   const init = reactive({
     left: 0,
     top: 0,
+  });
+
+  //j 对话框样式
+  const style = computed(() => {
+    return {
+      left: init.left + "px",
+      top: init.top + "px",
+    };
   });
 
   onMounted(() => {
@@ -101,6 +111,7 @@
 </script>
 
 <style lang="scss" scoped>
+  //s 容器
   .test-container {
     // position: relative;
     width: 400px;
@@ -116,14 +127,20 @@
 
     box-shadow: var(--el-box-shadow-dark);
   }
-  .test-body {
-    position: relative;
-    flex-grow: 1;
-    width: 100%;
+  //s 头部
+  .test-header {
+    background-color: burlywood;
     h3 {
       margin: 0;
       padding: 0;
     }
+  }
+  //s 主体
+  .test-body {
+    background-color: white;
+    position: relative;
+    flex-grow: 1;
+    width: 100%;
     //! 虚拟列表容器
     .listContainer {
       & {
@@ -141,7 +158,11 @@
       }
     }
   }
+  //s 底部
+
   .test-footer {
+    background-color: aquamarine;
+
     width: 100%;
     height: fit-content;
     display: flex;

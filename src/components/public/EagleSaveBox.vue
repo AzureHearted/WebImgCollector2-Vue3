@@ -1,7 +1,8 @@
 <template>
-  <div class="onlineGallery-RuleEditor-modal">
+  <div class="onlineGallery-modal">
     <!-- s规则管理器 -->
     <el-dialog
+      class="onlineGallery-dialog"
       style="pointer-events: auto !important; padding: 0px"
       v-model="eagleStore.saveBoxContainer.open"
       :width="appInfo.window.width > 800 ? '800px' : '100%'"
@@ -13,6 +14,9 @@
       :before-close="handleClose"
       @open="handleOpen"
       @closed="handleClosed"
+      :z-index="0"
+      @open-auto-focus="handleFocused"
+      @close-auto-focus="handleCloseFocused"
     >
       <!-- s标题部分 -->
       <template #header>
@@ -59,7 +63,7 @@
                     :content="node.label"
                     placement="top"
                   >
-                    <span class="label-ruleName">{{ node.label }}</span>
+                    <span class="tree-node-label">{{ node.label }}</span>
                   </el-tooltip>
                   <!-- <span class="icon-button-deleteRule">
                     <HoverButton></HoverButton>
@@ -108,12 +112,7 @@
     },
   });
 
-  //s 树形列表数据
-  const tree = reactive({
-    query: "", //s 查询(过滤)文本
-  });
-
-  const treeQuery = ref("");
+  const treeQuery = ref(""); //s 查询(过滤)文本
 
   //s 树形列表配置信息对象
   const treeProps = ref({
@@ -135,6 +134,7 @@
     await getEagleLibraryInfo();
   }
 
+  //om 挂载时就执行
   onMounted(async () => {
     await nextTick();
     await getEagleLibraryInfo();
@@ -202,6 +202,24 @@
   function handleClosed() {
     console.log("已关闭");
   }
+
+  //f 获取焦点时的回调
+  function handleFocused() {}
+  //f 失去焦点时的回调
+  function handleCloseFocused() {}
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .onlineGallery-modal {
+    //s 遮罩层样式
+    & {
+      pointer-events: none !important;
+    }
+
+    .onlineGallery-dialog {
+      &:focus {
+        z-index: 1;
+      }
+    }
+  }
+</style>

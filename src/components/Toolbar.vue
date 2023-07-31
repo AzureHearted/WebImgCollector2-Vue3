@@ -139,7 +139,9 @@
       </el-button>
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item @click="eagleStore.saveBoxContainer.open = true">下载到Eagle</el-dropdown-item>
+          <el-dropdown-item @click="eagleStore.saveBoxContainer.open = true"
+            >下载到Eagle</el-dropdown-item
+          >
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -174,6 +176,7 @@
   import CheckboxNone from "@/icon/checkbox-blank-line.svg?component"; //? svg导入
   import CheckboxAll from "@/icon/checkbox-fill.svg?component"; //? svg导入
   import BxCaretDown from "@/icon/bx-caret-down.svg?component"; //? svg导入
+  import {title} from "process";
 
   const appInfo = useAppInfoStore(); //s 实例化appInfo数据仓库
   const cardsStore = useCardsStore(); //s 实例化cardsStore数据仓库
@@ -253,7 +256,7 @@
     //s 创建队列对象
     const taskQueue = new TaskQueue({showMessage: false, max: 5, delay: 100});
     //s 创建zip容器
-    let zipContainer: JSZipType | null = new JSZip();
+    let zipContainer: JSZipType = new JSZip();
     let finallyCount = 0;
     //s 创建任务清单
     const taskList: ITask[] = downloadCards.map((card, index) => {
@@ -274,7 +277,7 @@
             }
             let fix = strAutofill(index.toString(), 0, 4);
             //s [3.2]存入zip容器
-            (<JSZipType>zipContainer).file(`${fix} - ${card.name}${ext}`, blob);
+            zipContainer.file(`${fix} - ${card.name}${ext}`, blob);
             return [card.name, "处理成功!"];
           } else {
             //s [3.0]失败
@@ -301,19 +304,41 @@
         grouping: true,
         offset: 120,
       });
+      loading.init();
       //s 生成压缩包
-      let zip: Blob | null = await (<JSZipType>zipContainer).generateAsync({
-        type: "blob",
-        // compression: "DEFLATE",
-        // level: 9,
-      });
+      console.log("准备生成压缩包", zipContainer);
+      let zip: Blob | null = await zipContainer.generateAsync(
+        {
+          type: "blob",
+          compression: "DEFLATE",
+        },
+        (metadata) => {
+          // console.log(metadata.percent);
+          loading.percentage = metadata.percent;
+        }
+      );
+      console.log("压缩包生成成功", zip);
+
       // console.log(zip);
       //s 下载压缩包
-      let zipName: string = document.querySelector<any>("title").innerText;
+      //! 获取标题
+      let zipName: string;
+      let titles = [
+        document.title,
+        ...[...document.querySelectorAll("h1")].map((dom) => dom.innerText),
+        ...[...document.querySelectorAll("title")].map((dom) => dom.innerText),
+      ]
+        .filter((title) => !isEmpty(title))
+        .map((title) => title.replace("\\", "-").replace(",", "_"));
+      if (titles.length) {
+        zipName = titles[0];
+      } else {
+        zipName = getNameByUrl(decodeURI(location.href));
+      }
+      console.log("压缩包名称:", zipName);
       await saveAs(zip, `${zipName}.zip`);
       //s 清除压缩包
       zip = null;
-      zipContainer = null;
       //s 重置进度条
       loading.percentage = 100;
       loading.reset();

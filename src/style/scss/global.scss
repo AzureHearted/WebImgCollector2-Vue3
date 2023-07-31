@@ -2,39 +2,48 @@
 .el-message,
 .el-notification,
 .is-message-box {
-	z-index: 9147483647 !important;
+  z-index: 9147483647 !important;
 }
 
 .el-checkbox__inner {
-	z-index: 0 !important;
+  z-index: 0 !important;
 }
 
 .el-statistic__content {
-	font-size: large !important;
+  font-size: large !important;
 }
 
 :root {
-	&[data-show-scrollbar="false"] {
-		overflow: hidden;
-		> ::-webkit-scrollbar {
-			width: 0px !important;
-			height: 0px !important;
-			transition: all 0.5s;
-		}
-	}
+  &[data-show-scrollbar="false"] {
+    overflow: hidden;
+    > ::-webkit-scrollbar {
+      width: 0px !important;
+      height: 0px !important;
+      transition: all 0.5s;
+    }
+  }
 }
 
 [class*="el-input"] {
-	border: 0 !important;
+  border: 0 !important;
 }
 
 .onlineGallery-container svg,
 .onlineGallery-child-window-container svg {
-	width: auto !important;
-	height: auto !important;
+  width: auto !important;
+  height: auto !important;
 }
 
-.var-menu__menu{
-	z-index: 9147483647 !important;
+.var-menu__menu {
+  z-index: 9147483647 !important;
 }
 
+//s 聚焦样式
+[tabindex="-1"]:focus,
+input:read-write:focus,
+select:focus,
+textarea:focus {
+  outline: 0;
+  box-shadow: 0 0 3px 0 #2f5aae;
+  --formFieldBorderColor: #2f5aae;
+}
