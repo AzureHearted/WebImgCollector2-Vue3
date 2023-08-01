@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Body: typeof import('./src/components/Body.vue')['default']
     Card: typeof import('./src/components/Card.vue')['default']
+    DragModal: typeof import('./src/components/DragModal.vue')['default']
     EagleSaveBox: typeof import('./src/components/public/EagleSaveBox.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
@@ -67,7 +68,6 @@ declare module 'vue' {
     Toolbar: typeof import('./src/components/Toolbar.vue')['default']
     VarBadge: typeof import('@varlet/ui')['Badge']
     VarButton: typeof import('@varlet/ui')['Button']
-    VarDrag: typeof import('@varlet/ui')['Drag']
     VarFab: typeof import('@varlet/ui')['Fab']
   }
 }

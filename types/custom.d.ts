@@ -29,6 +29,7 @@ declare module "@vue/runtime-core" {
     Toolbar: typeof import("@/components/Toolbar.vue")["default"];
     HoverButton: typeof import("@/components/HoverButton.vue")["default"];
     InputNumberRange: typeof import("@/components/public/InputNumberRange.vue")["default"];
-    SelectorFormat: typeof import('@/components/public/SelectorFormat.vue')['default']
+    SelectorFormat: typeof import("@/components/public/SelectorFormat.vue")["default"];
+    DragModal: typeof import("@/components/DragModal.vue")["default"];
   }
 }

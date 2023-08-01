@@ -27,10 +27,7 @@
     <!-- s规则管理器窗口 -->
     <RuleEditor />
     <EagleSaveBox />
-    <TestBoard
-      v-if="testBoardOpen"
-      @toClose="() => (testBoardOpen = false)"
-    />
+    <TestBoard v-model="testBoardOpen" />
     <!-- s设置窗口 -->
     <!-- <AppSettingMenu /> -->
   </div>
