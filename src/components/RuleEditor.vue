@@ -1,125 +1,142 @@
 <template>
-  <div class="onlineGallery-RuleEditor-modal">
-    <!-- s规则管理器 -->
-    <el-dialog
-      style="pointer-events: auto !important; padding: 0px"
-      v-model="ruleEditor.container.open"
-      :width="appInfo.window.width > 800 ? '800px' : '100%'"
-      :before-close="handleClose"
-      :modal="false"
-      :close-on-click-modal="false"
-      :lock-scroll="false"
-      destroy-on-close
-      draggable
-      @open="handleOpen"
-      @closed="handleClosed"
-    >
-      <!-- s标题部分 -->
-      <template #header>
-        <span style="color: black; font-size: large">规则管理器</span>
-        <span style="color: black; font-size: large">
-          (共{{ ruleEditor.data.ruleList.length }}条规则)
-        </span>
-      </template>
-      <!-- s内容主体 -->
-      <template #default>
-        <el-container style="user-select: none">
-          <!-- f左侧树形列表 -->
-          <el-aside
-            width="200px"
-            show-checkbox
+  <!-- s规则管理器 -->
+  <xs-drag-modal
+    v-model="ruleEditor.container.open"
+    :modal-init-width="800"
+    :modal-init-height="550"
+    modal-resize="v"
+    modal-class="onlineGallery-RuleEditor-modal"
+    teleport=".onlineGallery-child-window-container"
+    @open="handleOpen"
+    @closed="handleClosed"
+  >
+    <!-- s标题部分 -->
+    <template #title>
+      <h4 style="color: black; font-size: large">
+        规则管理器 (共{{ ruleEditor.data.ruleList.length }}条规则)
+      </h4>
+    </template>
+    <!-- s内容主体 -->
+    <template #default>
+      <el-container style="user-select: none">
+        <!-- f左侧树形列表 -->
+        <el-aside
+          width="200px"
+          show-checkbox
+          highlight-current
+        >
+          <!-- s过滤框 -->
+          <el-input
+            clearable
+            v-model="tree.query"
+            placeholder="输入关键词"
+            @input="onQueryChanged"
+          />
+          <!-- s树形列表本体 -->
+          <el-tree-v2
+            ref="treeRef"
+            :data="tree.treeData"
+            :props="tree.treeProps"
+            :height="400"
             highlight-current
-            style="padding: 5px"
+            :current-node-key="info.showRuleId"
+            :filter-method="treeFilterMethod"
+            @node-click="treeNodeClick"
+            :item-size="32"
           >
-            <!-- s过滤框 -->
-            <el-input
-              clearable
-              v-model="tree.query"
-              placeholder="输入关键词"
-              @input="onQueryChanged"
-            />
-            <!-- s树形列表本体 -->
-            <el-tree-v2
-              ref="treeRef"
-              :data="tree.treeData"
-              :props="tree.treeProps"
-              :height="400"
-              highlight-current
-              :current-node-key="info.showRuleId"
-              :filter-method="treeFilterMethod"
-              @node-click="treeNodeClick"
-              :item-size="32"
-            >
-              <template #default="{node}">
-                <!-- s规则项 -->
-                <div
-                  v-if="node.key != '#'"
-                  class="tree-item tree-item-normal"
+            <!-- *节点样式 -->
+            <template #default="{node}">
+              <!-- s规则项 -->
+              <div
+                v-if="node.key != '#'"
+                class="tree-item tree-item-normal"
+              >
+                <el-image
+                  style="width: 24px; aspect-ratio: 1"
+                  :src="node.data.iconUrl"
+                ></el-image>
+                <el-tooltip
+                  :show-after="500"
+                  effect="dark"
+                  :content="node.label"
+                  placement="top"
                 >
-                  <el-image
-                    style="width: 24px; aspect-ratio: 1"
-                    :src="node.data.iconUrl"
-                  ></el-image>
-                  <el-tooltip
-                    :show-after="500"
-                    effect="dark"
-                    :content="node.label"
-                    placement="top"
-                  >
-                    <span class="label-ruleName">{{ node.label }}</span>
-                  </el-tooltip>
-                  <span class="icon-button-deleteRule">
-                    <HoverButton @click.stop="deleteRule(node.key, node)"></HoverButton>
-                  </span>
-                </div>
-                <!-- s规则创建按钮 -->
-                <div
-                  v-if="node.key == '#'"
-                  class="tree-item tree-item-add-button"
+                  <span class="label-ruleName">{{ node.label }}</span>
+                </el-tooltip>
+                <span class="icon-button-deleteRule">
+                  <HoverButton @click.stop="deleteRule(node.key, node)"></HoverButton>
+                </span>
+              </div>
+              <!-- s规则创建按钮 -->
+              <div
+                v-if="node.key == '#'"
+                class="tree-item tree-item-add-button"
+              >
+                <var-button
+                  type="primary"
+                  size="small"
+                  @click="createRule"
                 >
-                  <el-button
-                    type="primary"
-                    @click="createRule"
+                  <var-space
+                    :size="[0, 2]"
+                    style="align-items: center"
                   >
-                    <template #icon>
-                      <el-icon><i-ep-CirclePlusFilled /></el-icon>
-                    </template>
+                    <span style="display: flex">
+                      <i-ep-CirclePlusFilled />
+                    </span>
                     <span> {{ node.label }} </span>
-                  </el-button>
-                </div>
-              </template>
-            </el-tree-v2>
-          </el-aside>
-          <!-- f表单主体 -->
-          <el-main style="padding: 5px">
-            <RuleForm :formData="(form.realTimeData as MatchRule)" />
-          </el-main>
-        </el-container>
-      </template>
-      <!-- s底部 -->
-      <template #footer>
-        <el-button
-          type="success"
+                  </var-space>
+                </var-button>
+                <!-- <el-button
+                  type="primary"
+                  @click="createRule"
+                >
+                  <template #icon>
+                    <el-icon><i-ep-CirclePlusFilled /></el-icon>
+                  </template>
+                  <span> {{ node.label }} </span>
+                </el-button> -->
+              </div>
+            </template>
+          </el-tree-v2>
+        </el-aside>
+        <!-- f表单主体 -->
+        <el-main style="padding: 5px">
+          <RuleForm :formData="(form.realTimeData as MatchRule)" />
+        </el-main>
+      </el-container>
+    </template>
+    <!-- s底部 -->
+    <template #footer>
+      <var-space :size="[0, 4]">
+        <var-button
+          type="warning"
           @click="pasteRule"
         >
           粘贴规则
-        </el-button>
-        <el-button
-          type=""
+        </var-button>
+        <var-button
+          type="info"
           @click="copyNowRule"
         >
           复制当前规则
-        </el-button>
-        <el-button
-          type="primary"
+        </var-button>
+        <var-button
+          native-type="submit"
+          type="success"
           @click="allSave"
         >
           全部保存
-        </el-button>
-        <el-button @click="handleClose">取消</el-button>
-      </template>
-    </el-dialog>
-  </div>
+        </var-button>
+        <var-button
+          type="danger"
+          @click="handleClose"
+        >
+          取消
+        </var-button>
+      </var-space>
+    </template>
+  </xs-drag-modal>
 </template>
 
 <script setup lang="ts">
@@ -344,90 +361,50 @@
   }
 </script>
 
-<style lang="scss">
-  .onlineGallery-RuleEditor-modal {
-    //s 遮罩层样式
+<style lang="scss" scoped>
+  //s tree-item通用样式
+  .tree-item {
     & {
-      pointer-events: none !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      overflow: hidden !important;
     }
 
-    //s 对话框头部框架样式
-    .el-dialog__header {
-      padding: 15px 10px 5px 20px;
-      //s 关闭按钮样式
-      .el-dialog__headerbtn {
-        top: 0;
-        right: 0;
-        width: 50px;
-        height: 50px;
+    //s 普通tree-item
+    &.tree-item-normal {
+      // position: relative !important;
+      flex-grow: 1;
+      //s 名称样式
+      > .label-ruleName {
+        flex-grow: 1;
+        padding-left: 4px;
+        //! 防止文本换行
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
-    }
-
-    //s 对话框主体框架样式
-    .el-dialog__body {
-      &:focus {
-        z-index: 1;
-      }
-      padding: 10px;
-      //s body内容容器样式
-      .el-container {
+      //s 规则删除 - 图标按钮
+      > .icon-button-deleteRule {
         position: relative;
-        height: max-content;
-        min-height: 300px;
-        //s body标签页样式
-        .el-tabs {
-          height: 90%;
-        }
-      }
-      //s tree-item通用样式
-      .tree-item {
-        & {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          // padding-right: 10px;
-          overflow: hidden;
-        }
-
-        //s 普通tree-item
-        &.tree-item-normal {
-          position: relative !important;
-          flex-grow: 1;
-          //s 名称样式
-          > .label-ruleName {
-            flex-grow: 1;
-            padding-left: 4px;
-            //! 防止文本换行
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          //s 规则删除 - 图标按钮
-          > .icon-button-deleteRule {
-            position: relative;
-            right: 2px;
-            width: 24px;
-            height: auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: red;
-            font-size: medium;
-          }
-        }
-
-        //s 增加按钮的tree-item
-        &.tree-item-add-button {
-          > button {
-            width: 100%;
-          }
-        }
+        right: 2px;
+        width: 24px;
+        height: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: red;
+        font-size: medium;
       }
     }
 
-    //s 对话框底部框架样式
-    .el-dialog__footer {
-      padding: 10px;
+    //s 增加按钮的tree-item
+    &.tree-item-add-button {
+      > button {
+        width: 100%;
+      }
     }
   }
 </style>
+
+<style lang="scss"></style>

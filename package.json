@@ -14,6 +14,7 @@
     "@fancyapps/ui": "^5.0.20",
     "@varlet/touch-emulator": "^2.13.4",
     "@varlet/ui": "^2.13.4",
+    "@vueuse/components": "^10.3.0",
     "@vueuse/core": "^10.2.1",
     "ant-design-vue": "^4.0.0",
     "element-plus": "^2.3.8",

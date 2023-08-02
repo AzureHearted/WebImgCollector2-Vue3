@@ -4,13 +4,18 @@
       :to="teleport"
       v-if="modalEnable"
     >
-      <transition @after-leave="handleClosed">
+      <transition
+        @after-leave="handleClosed"
+        @after-appear="handelOpened"
+      >
+        <!-- f modal容器 -->
         <div
           v-show="modalShow"
           ref="modalDom"
           class="drag-modal-container"
           :style="[modalSizeStyle, modalDragStyle, modalStyle]"
           :class="[modalClass]"
+          tabindex="0"
         >
           <!-- !标题栏(可拖动块) -->
           <div
@@ -20,47 +25,23 @@
             :class="[titleClass]"
           >
             <!-- s title插槽 -->
-            <slot name="title"> 可拖拽modal </slot>
+            <slot name="title">
+              <h4 style="color: black; padding: 2px 0 2px 0">可拖拽modal</h4>
+            </slot>
           </div>
           <!-- !内容区 -->
-          <div
-            class="drag-modal-body"
-            :style="[bodySizeStyle, bodyStyle]"
-            :class="[bodyClass]"
-          >
-            <!-- f 测试区域 -->
+          <div class="drag-modal-view">
+            <!-- *视口 -->
             <div
-              class="test-zone"
-              v-if="false"
+              class="drag-modal-body"
+              :style="[bodySizeStyle, bodyStyle]"
+              :class="[bodyClass]"
             >
-              <h4>信息</h4>
-              <div style="overflow: hidden; text-overflow: ellipsis">
-                111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
-              </div>
-              <div>
-                dragZone位置: x: {{ dragZoneBounding.x.value.toFixed(4) }} y:
-                {{ dragZoneBounding.y.value.toFixed(4) }}
-              </div>
-              <div>
-                dragZone尺寸: {{ dragZoneBounding.width.value.toFixed(4) }} x
-                {{ dragZoneBounding.height.value.toFixed(4) }}
-              </div>
-              <div>
-                modal相对坐标: x: {{ modalPosition.x.toFixed(4) }} y:
-                {{ modalPosition.y.toFixed(4) }}
-              </div>
-              <div>
-                modal相对坐标: x: {{ modalBounding.left.value.toFixed(4) }} y:
-                {{ modalBounding.top.value.toFixed(4) }}
-              </div>
-              <div>
-                modal尺寸: {{ modalBounding.width.value.toFixed(4) }} x
-                {{ modalBounding.height.value.toFixed(4) }}
-              </div>
+              <!-- s 内容区域插槽(默认插槽) -->
+              <slot></slot>
             </div>
-            <!-- s 内容区域插槽(默认插槽) -->
-            <slot></slot>
           </div>
+
           <!-- !底部 -->
           <div class="drag-modal-footer">
             <!-- s 内容区域插槽 -->
@@ -86,26 +67,39 @@
           </div>
           <!-- ?四个可拖拽边框和四个控制角 -->
           <div class="drag-modal-size-control">
-            <!-- w 左边框 -->
+            <!-- s 水平方向边框 -->
             <div
-              class="drag-modal-border drag-modal-border-left"
-              @mousedown="dragLeftBorder"
-            ></div>
-            <!-- w 上边框 -->
+              class="drag-modal-border-horizon"
+              v-if="modalResize === 'b' || modalResize === 'h'"
+            >
+              <!-- w 左边框 -->
+              <div
+                class="drag-modal-border drag-modal-border-left"
+                @mousedown="dragLeftBorder"
+              ></div>
+              <!-- w 右边框 -->
+              <div
+                class="drag-modal-border drag-modal-border-right"
+                @mousedown="dragRightBorder"
+              ></div>
+            </div>
+            <!-- s 垂直方向边框 -->
             <div
-              class="drag-modal-border drag-modal-border-top"
-              @mousedown="dragTopBorder"
-            ></div>
-            <!-- w 右边框 -->
-            <div
-              class="drag-modal-border drag-modal-border-right"
-              @mousedown="dragRightBorder"
-            ></div>
-            <!-- w 下边框 -->
-            <div
-              class="drag-modal-border drag-modal-border-bottom"
-              @mousedown="dragBottomBorder"
-            ></div>
+              class="drag-modal-border-vertical"
+              v-if="modalResize === 'b' || modalResize === 'v'"
+            >
+              <!-- w 上边框 -->
+              <div
+                class="drag-modal-border drag-modal-border-top"
+                @mousedown="dragTopBorder"
+              ></div>
+              <!-- w 下边框 -->
+              <div
+                class="drag-modal-border drag-modal-border-bottom"
+                @mousedown="dragBottomBorder"
+              ></div>
+            </div>
+
             <!-- j 左上角控制点 -->
             <div
               class="drag-modal-corner drag-modal-corner-lt"
@@ -149,9 +143,11 @@
     teleport?: string; //s 指定传送的容器的css选择器
     defaultDragZoneMargin?: Property.Margin; //s 默认可拖拽区域的
     modalInitWidth?: number; //s modal 初始宽度
+    modalResize?: "none" | "b" | "h" | "v"; //s 控制modal可改变大小的方向
     modalInitHeight?: number; //s modal 初始高度
     modalMinWidth?: number; //s modal 最小宽度
     modalMinHeight?: number; //s modal 最小高度
+    modalZIndex?: Property.ZIndex; //s modal z-index
     modalStyle?: StyleValue; //s modal 的用户自定义样式
     modalClass?: string; //s modal 的用户自定义class
     modalAspectRatio?: Property.AspectRatio; //s modal 的aspect-ratio
@@ -168,7 +164,6 @@
     bodyClass?: string; //s body 的用户自定义class
     bodyOverflow?: Property.Overflow; //s body 的overflow
   }
-
   const props = withDefaults(defineProps<IProps>(), {
     modelValue: false,
     teleport: "body",
@@ -177,18 +172,18 @@
     modalInitHeight: 250,
     modalMinWidth: 200,
     modalMinHeight: 200,
-    modalPadding: "4px",
+    modalZIndex: 0,
+    modalPadding: "2px 4px 4px 4px",
     modalAspectRatio: "none",
-    modalOverflow: "auto",
-    bodyOverflow: "auto",
+    // modalOverflow: "hidden",
+    bodyOverflow: "overlay",
     modalStyle: "",
     titleStyle: "",
-    titleHeight: "30px",
+    titleHeight: "fit-content",
     titleTextAlign: "center",
-    titleMargin: "2px",
     bodyStyle: "",
   });
-  const emits = defineEmits(["update:modelValue"]);
+  const emits = defineEmits(["update:modelValue", "open", "closed"]);
 
   //s 元素的引用
   const dragZoneDom = ref<HTMLElement>();
@@ -204,12 +199,17 @@
   //s 控制是否显示modal
   const modalShow = ref(false);
 
+  //f modal开启后的回调
+  function handelOpened() {
+    emits("open");
+  }
+
   //w 监听props的modelValue -> 控制modal框架以及本体的显示
   watch(
     () => props.modelValue,
     (newVal) => {
       if (newVal) {
-        console.log("打开");
+        // console.log("打开");
 
         //s 即时修改modalEnable
         modalEnable.value = newVal;
@@ -218,7 +218,7 @@
           modalShow.value = newVal;
         });
       } else {
-        console.log("关闭");
+        // console.log("关闭");
 
         //s 即时更改modalShow
         modalShow.value = newVal;
@@ -229,11 +229,12 @@
   //f modal关闭后的回调
   function handleClosed() {
     modalEnable.value = false;
+    emits("closed");
   }
 
   //* 修复重新挂载后该显示不显示的bug
   onMounted(() => {
-    console.log("挂载", props.modelValue);
+    // console.log("挂载", props.modelValue);
     if (props.modelValue) {
       emits("update:modelValue", false);
       setTimeout(() => {
@@ -257,7 +258,7 @@
   //* modal的可拖拽设置
   const {style: modalDragStyle, position: modalPosition} = useDraggable(modalDom, {
     handle: titleDom,
-    preventDefault: true,
+    // preventDefault: true,
     stopPropagation: true,
     pointerTypes: ["mouse", "touch", "pen"],
     initialValue: initPosition,
@@ -282,9 +283,9 @@
         }
       } else {
         //s [2]当modal宽度>可拖拽区域的宽度时
-        if (position.x < dragZoneBounding.left.value) {
-          position.x = dragZoneBounding.left.value;
-        }
+        // if (position.x < dragZoneBounding.left.value) {
+        //   position.x = dragZoneBounding.left.value;
+        // }
       }
 
       //s 向修正垂直平方向
@@ -298,9 +299,9 @@
         }
       } else {
         //s [2]当modal高度>可拖拽区域的高度时
-        if (position.y < dragZoneBounding.top.value) {
-          position.y = dragZoneBounding.top.value;
-        }
+        // if (position.y < dragZoneBounding.top.value) {
+        //   position.y = dragZoneBounding.top.value;
+        // }
       }
 
       // console.log("移动中", position, event.pointerType);
@@ -334,8 +335,13 @@
 
   //j 模态框的尺寸相关Style
   const modalSizeStyle = computed((): StyleValue => {
-    const {modalPadding, modalAspectRatio, modalOverflow} = props;
-    return {};
+    const {modalPadding, modalAspectRatio, modalOverflow, modalZIndex} = props;
+    return {
+      padding: modalPadding,
+      aspectRatio: modalAspectRatio,
+      overflow: modalOverflow,
+      zIndex: modalZIndex,
+    };
   });
 
   //j title区域尺寸相关Style
@@ -361,6 +367,10 @@
   //! 边框拖拽逻辑
   //f 左边框拖拽
   function dragLeftBorder(e: MouseEvent) {
+    //s 判断是否可以修改"水平"方向尺寸
+    if (props.modalResize !== "b" && props.modalResize !== "h") {
+      return;
+    }
     dragZoneBounding.update();
     modalBounding.update();
     //s modal起始宽度和left
@@ -391,6 +401,10 @@
   }
   //f 上边框拖拽
   function dragTopBorder(e: MouseEvent) {
+    //s 判断是否可以修改"垂直"方向尺寸
+    if (props.modalResize !== "b" && props.modalResize !== "v") {
+      return;
+    }
     dragZoneBounding.update();
     modalBounding.update();
     //s modal起始高度和top
@@ -421,6 +435,10 @@
   }
   //f 右边框拖拽
   function dragRightBorder(e: MouseEvent) {
+    //s 判断是否可以修改"水平"方向尺寸
+    if (props.modalResize !== "b" && props.modalResize !== "h") {
+      return;
+    }
     dragZoneBounding.update();
     modalBounding.update();
     //s modal起始宽度和right
@@ -450,6 +468,10 @@
   }
   //f 下边框拖拽
   function dragBottomBorder(e: MouseEvent) {
+    //s 判断是否可以修改"垂直"方向尺寸
+    if (props.modalResize !== "b" && props.modalResize !== "v") {
+      return;
+    }
     dragZoneBounding.update();
     modalBounding.update();
     //s modal起始高度和bottom
@@ -498,7 +520,8 @@
       //s 判断水平方向
       if (
         startModalLeft + deltaX >= dragZoneBounding.left.value &&
-        startModalWidth - deltaX > props.modalMinWidth
+        startModalWidth - deltaX > props.modalMinWidth &&
+        (props.modalResize === "b" || props.modalResize === "h")
       ) {
         modalPosition.value.x = startModalLeft + deltaX;
         modalSize.value.width = startModalWidth - deltaX;
@@ -506,7 +529,8 @@
       //s 判断垂直方向
       if (
         startModalTop + deltaY >= dragZoneBounding.top.value &&
-        startModalHeight - deltaY > props.modalMinHeight
+        startModalHeight - deltaY > props.modalMinHeight &&
+        (props.modalResize === "b" || props.modalResize === "v")
       ) {
         modalPosition.value.y = startModalTop + deltaY;
         modalSize.value.height = startModalHeight - deltaY;
@@ -539,14 +563,16 @@
       //s 判断水平方向
       if (
         startModalRight + deltaX <= dragZoneBounding.right.value &&
-        startModalWidth + deltaX > props.modalMinWidth
+        startModalWidth + deltaX > props.modalMinWidth &&
+        (props.modalResize === "b" || props.modalResize === "h")
       ) {
         modalSize.value.width = startModalWidth + deltaX;
       }
       //s 判断垂直方向
       if (
         startModalTop + deltaY >= dragZoneBounding.top.value &&
-        startModalHeight - deltaY > props.modalMinHeight
+        startModalHeight - deltaY > props.modalMinHeight &&
+        (props.modalResize === "b" || props.modalResize === "v")
       ) {
         modalPosition.value.y = startModalTop + deltaY;
         modalSize.value.height = startModalHeight - deltaY;
@@ -579,14 +605,16 @@
       //s 判断水平方向
       if (
         startModalRight + deltaX <= dragZoneBounding.right.value &&
-        startModalWidth + deltaX > props.modalMinWidth
+        startModalWidth + deltaX > props.modalMinWidth &&
+        (props.modalResize === "b" || props.modalResize === "h")
       ) {
         modalSize.value.width = startModalWidth + deltaX;
       }
       //s 判断垂直方向
       if (
         startModalBottom + deltaY <= dragZoneBounding.bottom.value &&
-        startModalHeight + deltaY > props.modalMinHeight
+        startModalHeight + deltaY > props.modalMinHeight &&
+        (props.modalResize === "b" || props.modalResize === "v")
       ) {
         modalSize.value.height = startModalHeight + deltaY;
       }
@@ -618,7 +646,8 @@
       //s 判断水平方向
       if (
         startModalLeft + deltaX >= dragZoneBounding.left.value &&
-        startModalWidth - deltaX > props.modalMinWidth
+        startModalWidth - deltaX > props.modalMinWidth &&
+        (props.modalResize === "b" || props.modalResize === "h")
       ) {
         modalPosition.value.x = startModalLeft + deltaX;
         modalSize.value.width = startModalWidth - deltaX;
@@ -626,7 +655,8 @@
       //s 判断垂直方向
       if (
         startModalBottom + deltaY <= dragZoneBounding.bottom.value &&
-        startModalHeight + deltaY > props.modalMinHeight
+        startModalHeight + deltaY > props.modalMinHeight &&
+        (props.modalResize === "b" || props.modalResize === "v")
       ) {
         modalSize.value.height = startModalHeight + deltaY;
       }
@@ -654,12 +684,11 @@
 
     width: v-bind("modalSize.width+'px'");
     height: v-bind("modalSize.height+'px'");
-    padding: v-bind("modalPadding");
-    aspect-ratio: v-bind("modalAspectRatio");
-    overflow: v-bind("modalOverflow");
 
     border-radius: 6px;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    backdrop-filter: blur(20px);
+
     box-shadow: 0 0 5px 0 black;
 
     display: flex;
@@ -668,8 +697,14 @@
     justify-content: stretch;
     pointer-events: all;
 
+    overflow: hidden;
+
     //s 标题栏(拖动栏)
     .drag-modal-title {
+      $titleHeight: v-bind("titleHeight");
+      position: relative;
+      width: 100%;
+      height: $titleHeight;
       touch-action: none; //! 必须设为none否则useDraggable不能正常使用
       // background-color: aquamarine;
       text-align: center;
@@ -678,23 +713,62 @@
       user-select: none;
       /* 禁止图文拖拽 */
       -webkit-user-drag: none;
+      padding-bottom: 2px;
+
+      // background-color: rgb(191, 136, 246);
     }
 
-    //s 内容区
-    .drag-modal-body {
-      flex: 1;
-      height: calc(100% - v-bind("titleHeight")) !important;
-
-      /* 禁止选中文字 */
-      // user-select: none;
-      /* 禁止图文拖拽 */
-      // -webkit-user-drag: none;
-
-      //s 默认样式
+    //s 内容视口区
+    .drag-modal-view {
       position: relative;
-      box-shadow: inset 0 0 10px 0 black;
-      padding: 10px;
+      flex: 1;
+      width: 100%;
+      height: calc(100% - v-bind("titleHeight")) !important;
+      overflow: hidden;
+
+      //? 默认样式
+      margin: 2px 0 2px 0;
       border-radius: 4px;
+
+      //* 视口边框
+      &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        box-shadow: inset 0 0 4px 0 black;
+        pointer-events: none;
+      }
+
+      //s 内容区
+      .drag-modal-body {
+        position: relative;
+
+        /* 禁止选中文字 */
+        // user-select: none;
+        /* 禁止图文拖拽 */
+        // -webkit-user-drag: none;
+
+        //? 默认样式
+        width: 100%;
+        height: 100%;
+        padding: 10px;
+      }
+    }
+
+    //s 底部
+    .drag-modal-footer {
+      position: relative;
+      flex-shrink: 0;
+      width: 100%;
+      height: fit-content;
+      margin-top: 2px;
+
+      //? 默认样式
+      display: flex;
+      justify-content: flex-end;
     }
 
     //! modal控制边框和角
@@ -714,6 +788,7 @@
         margin: auto !important;
         // background-color: green !important;
         // background-color: transparent !important;
+        //w 左边框
         &.drag-modal-border-left {
           position: relative;
           left: 0 !important;
@@ -723,6 +798,7 @@
           height: $length !important;
           cursor: ew-resize !important;
         }
+        //w 右边框
         &.drag-modal-border-right {
           right: 0 !important;
           top: 0 !important;
@@ -731,6 +807,7 @@
           height: $length !important;
           cursor: ew-resize !important;
         }
+        //w 上边框
         &.drag-modal-border-top {
           top: 0 !important;
           left: 0 !important;
@@ -740,6 +817,7 @@
           cursor: ns-resize !important;
         }
 
+        //w 下边框
         &.drag-modal-border-bottom {
           bottom: 0 !important;
           left: 0 !important;

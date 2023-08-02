@@ -294,7 +294,7 @@ export function getOriginByUrl(url: string): string {
  * @returns {string} 链接的名称部分
  */
 export function getNameByUrl(url: string): string {
-  url = decodeURI(url)
+  url = decodeURI(url);
   url = url.replace(/(\/)$/, "");
   let list = url.match(/(?<=\/)([^\/\r\n$]+)$/g) || [];
   if (list.length > 0) {
@@ -423,13 +423,14 @@ export async function getCardsByRule(
     //! 启用了dom匹配
     //? 对每个规则系列进行单独的匹配
     for (let i = 0, len = rule.domItem.selector.length; i < len; i++) {
-      // 获取所有符合条件的dom对象
+      //s 获取所有符合条件的dom对象
       let domList = (await getDom(
         document,
         rule.domItem.method,
         rule.domItem.selector[i],
         0
       )) as HTMLElement[];
+      // console.log(domList);
 
       //! 对每个dom进行结果匹配
       for (let index = 0; index < domList.length; index++) {
@@ -447,17 +448,21 @@ export async function getCardsByRule(
           meta_Selector = rule.meta.selector[i];
 
         //! [匹配LinkUrl]
-        card.linkUrlDom = card.dom; // 匹配LinkUrl的标签(默认为dom)
-        //如果表达式不为空则表示使用表达式来匹配urlTag
+
         if (!isEmpty(linkUrl_Selector, true)) {
+          //s如果表达式不为空则表示使用表达式来匹配urlTag
           card.linkUrlDom = (await getDom(
             card.dom as HTMLElement | null,
             rule.linkUrl.method,
             linkUrl_Selector,
             1
           )) as HTMLElement;
+        } else {
+          //s如果表达式为空则表示直接使用card.dom
+          card.linkUrlDom = card.dom;
         }
-        //! 获取对应结果(链接)
+
+        //j 获取对应结果(链接)
         if (card.linkUrlDom) {
           card.linkUrl = await getTagInfo(
             card.linkUrlDom,
@@ -468,11 +473,12 @@ export async function getCardsByRule(
           card.linkUrl = "";
         }
 
+        // console.log(card.linkUrl);
+
         //! [匹配PicUrl]
-        if (rule.picUrl.enable == true) {
-          card.picUrlDom = card.dom; // 匹配PicUrl的标签(默认为dom)
-          //s [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
+        if (rule.picUrl.enable) {
           if (!isEmpty(picUrl_Selector, true)) {
+            //s [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
             if (picUrl_Selector == linkUrl_Selector) {
               card.picUrlDom = card.linkUrlDom;
             } else {
@@ -483,15 +489,19 @@ export async function getCardsByRule(
                 1
               )) as HTMLElement;
             }
+          } else {
+            //s如果表达式为空则表示直接使用card.dom
+            card.picUrlDom = card.dom;
           }
-          // [匹配结果]
-          if (card.picUrlDom != null) {
+          // console.log("图链dom", card.picUrlDom);
+          //j 获取对应结果(图链)
+          if (card.picUrlDom) {
             card.picUrl = await getTagInfo(
               card.picUrlDom,
               rule.picUrl.infoType,
               rule.picUrl.attribute[i]
             );
-            if (card.picUrl == null) {
+            if (isEmpty(card.picUrl)) {
               card.picUrl = card.linkUrl;
             }
           } else {
@@ -502,11 +512,12 @@ export async function getCardsByRule(
           card.picUrlDom = card.linkUrlDom;
         }
 
+        console.log(card.picUrl);
+
         //! [匹配name]
-        if (rule.name.enable == true) {
-          card.nameDom = card.dom; // 匹配Content的标签(默认为dom)
-          //s [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
+        if (rule.name.enable) {
           if (!isEmpty(name_Selector, true)) {
+            //s [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
             if (name_Selector == linkUrl_Selector) {
               card.nameDom = card.linkUrlDom;
             } else if (name_Selector == picUrl_Selector) {
@@ -519,8 +530,11 @@ export async function getCardsByRule(
                 1
               )) as HTMLElement;
             }
+          } else {
+            //s如果表达式为空则表示直接使用card.dom
+            card.nameDom = card.dom;
           }
-          //s [匹配结果]
+          //j 获取对应结果(名称)
           if (card.nameDom) {
             card.name = await getTagInfo(card.nameDom, rule.name.infoType, rule.name.attribute[i]);
             if (card.name == null) {
@@ -535,7 +549,7 @@ export async function getCardsByRule(
         }
 
         //! [匹配meta]
-        if (rule.meta.enable == true && rule.meta.origin == 0) {
+        if (rule.meta.enable && rule.meta.origin == 0) {
           card.metaDom = card.dom; // 匹配LinkUrl的标签(默认为dom)
           //s [获取dom]如果表达式不为空则表示使用表达式来匹配picUrlTag
           if (!isEmpty(meta_Selector, true)) {

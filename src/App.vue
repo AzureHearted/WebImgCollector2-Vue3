@@ -192,10 +192,11 @@
     bottom: 0;
     width: var(--width);
     max-width: 100vw !important;
-    background-color: rgba(255, 255, 255, 0.8);
+
     box-shadow: var(--el-box-shadow-dark);
 
-    backdrop-filter: blur(2px);
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(4px);
 
     display: flex;
     flex-flow: column;
@@ -256,5 +257,67 @@
     svg {
       scale: 1.3;
     }
+  }
+</style>
+
+//f el全局样式修改
+<style lang="scss" scoped>
+  $white_0_3: rgba(255, 255, 255, 0.3);
+  $white_0_5: rgba(255, 255, 255, 0.5);
+  $blur_10: blur(10px);
+
+  //j 全局弹窗样式
+  :global(.el-popper),
+  :global(.el-message),
+  :global(.el-notification),
+  :global(.is-message-box) {
+    z-index: 4147483647 !important;
+  }
+  //j popper样式
+  :global(.el-popper:not(.is-dark)) {
+    background-color: $white_0_5 !important;
+    backdrop-filter: $blur_10;
+  }
+  //j 错误图片样式
+  :global(.el-image__error) {
+    font-size: xx-small;
+    background-color: $white_0_3 !important;
+  }
+  //j input输入框样式
+  :deep(.el-input__wrapper) {
+    background-color: $white_0_3 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  //j 表单input输入框样式
+  :deep(.el-input-group__append) {
+    background-color: $white_0_3 !important;
+  }
+  //j 表单selector输入框样式
+  :deep(.el-select-v2__wrapper) {
+    background-color: $white_0_3 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+
+    //s 内部input样式
+    input {
+      margin: 0 !important;
+    }
+
+    //s placeholder文字样式
+    .el-select-v2__placeholder {
+      color: rgb(98, 98, 98);
+    }
+  }
+  //j 虚拟列表容器样式
+  :deep(.el-tree) {
+    background-color: $white_0_3 !important;
+  }
+  //j 统计组件内容字体
+  :deep(.el-statistic__content) {
+    font-size: large !important;
+  }
+  :deep(.is-active) {
+    border: 0 !important;
   }
 </style>

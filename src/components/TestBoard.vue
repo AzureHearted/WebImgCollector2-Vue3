@@ -1,5 +1,5 @@
 <template>
-  <DragModal
+  <xs-drag-modal
     v-model="openModal"
     :modal-init-width="400"
     :modal-init-height="400"
@@ -7,7 +7,9 @@
     teleport=".onlineGallery-child-window-container"
   >
     <!-- !头部 -->
-    <template #title> 测试窗口 </template>
+    <template #title>
+      <h4 style="color: black">测试窗口</h4>
+    </template>
     <!-- !主体 -->
     <template #default>
       <div>当前使用内存使用情况:</div>
@@ -29,7 +31,7 @@
     </template>
     <!-- !底部 -->
     <template #footer>
-      <div class="test-footer">
+      <var-space :size="[0, 4]">
         <var-button
           type="primary"
           @click="handleClose"
@@ -43,9 +45,9 @@
           获取剪切板文本
         </var-button>
         <var-button @click="handleClose">取 消</var-button>
-      </div>
+      </var-space>
     </template>
-  </DragModal>
+  </xs-drag-modal>
 </template>
 
 <script setup lang="ts">
@@ -114,19 +116,4 @@
   });
 </script>
 
-<style lang="scss" scoped>
-  .modal {
-    background-color: transparent;
-  }
-  //s 底部
-  .test-footer {
-    // background-color: aquamarine;
-    padding-top: 4px;
-    width: 100%;
-    height: fit-content;
-    display: flex;
-    flex-flow: row nowrap;
-    justify-content: end;
-    gap: 4px;
-  }
-</style>
+<style lang="scss" scoped></style>

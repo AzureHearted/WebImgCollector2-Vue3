@@ -1,33 +1,23 @@
 <template>
   <div class="onlineGallery-modal">
-    <!-- s规则管理器 -->
-    <el-dialog
-      class="onlineGallery-dialog"
-      style="pointer-events: auto !important; padding: 0px"
+    <xs-drag-modal
       v-model="eagleStore.saveBoxContainer.open"
-      :width="appInfo.window.width > 800 ? '800px' : '100%'"
-      :modal="false"
-      :close-on-click-modal="false"
-      :lock-scroll="false"
-      destroy-on-close
-      draggable
-      :before-close="handleClose"
+      teleport=".onlineGallery-child-window-container"
+      :modal-init-width="appInfo.window.width > 500 ? 500 : 370"
+      :modal-init-height="510"
       @open="handleOpen"
       @closed="handleClosed"
-      :z-index="0"
-      @open-auto-focus="handleFocused"
-      @close-auto-focus="handleCloseFocused"
     >
       <!-- s标题部分 -->
-      <template #header>
-        <span style="color: black; font-size: large">选择保存位置</span>
+      <template #title>
+        <h4 style="color: black; font-size: large">选择保存位置</h4>
       </template>
       <!-- s内容主体 -->
       <template #default>
         <el-container style="user-select: none">
           <!-- f左侧树形列表 -->
           <el-aside
-            width="400px"
+            width="300px"
             show-checkbox
             highlight-current
             style="padding: 5px"
@@ -44,8 +34,8 @@
               ref="treeRef"
               :data="treeData"
               :props="treeProps"
-              :height="400"
               highlight-current
+              :height="350"
               :filter-method="treeFilterMethod"
               @node-click="treeNodeClick"
               :item-size="32"
@@ -78,15 +68,22 @@
       </template>
       <!-- s底部 -->
       <template #footer>
-        <el-button
-          type="primary"
-          @click="submit"
-        >
-          提交
-        </el-button>
-        <el-button @click="eagleStore.saveBoxContainer.open = false">取消</el-button>
+        <var-space :size="[0, 2]">
+          <var-button
+            type="primary"
+            @click="submit"
+          >
+            提交
+          </var-button>
+          <var-button
+            type="danger"
+            @click="eagleStore.saveBoxContainer.open = false"
+          >
+            取消
+          </var-button>
+        </var-space>
       </template>
-    </el-dialog>
+    </xs-drag-modal>
   </div>
 </template>
 
@@ -134,7 +131,7 @@
     await getEagleLibraryInfo();
   }
 
-  //om 挂载时就执行
+  //* 挂载时就执行
   onMounted(async () => {
     await nextTick();
     await getEagleLibraryInfo();
@@ -202,11 +199,6 @@
   function handleClosed() {
     console.log("已关闭");
   }
-
-  //f 获取焦点时的回调
-  function handleFocused() {}
-  //f 失去焦点时的回调
-  function handleCloseFocused() {}
 </script>
 
 <style lang="scss" scoped>

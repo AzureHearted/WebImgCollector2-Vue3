@@ -9,14 +9,12 @@ declare module 'vue' {
   export interface GlobalComponents {
     Body: typeof import('./src/components/Body.vue')['default']
     Card: typeof import('./src/components/Card.vue')['default']
-    DragModal: typeof import('./src/components/DragModal.vue')['default']
     EagleSaveBox: typeof import('./src/components/public/EagleSaveBox.vue')['default']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
     ElContainer: typeof import('element-plus/es')['ElContainer']
-    ElDialog: typeof import('element-plus/es')['ElDialog']
     ElDropdown: typeof import('element-plus/es')['ElDropdown']
     ElDropdownItem: typeof import('element-plus/es')['ElDropdownItem']
     ElDropdownMenu: typeof import('element-plus/es')['ElDropdownMenu']
@@ -69,5 +67,7 @@ declare module 'vue' {
     VarBadge: typeof import('@varlet/ui')['Badge']
     VarButton: typeof import('@varlet/ui')['Button']
     VarFab: typeof import('@varlet/ui')['Fab']
+    VarSpace: typeof import('@varlet/ui')['Space']
+    XsDragModal: typeof import('./src/components/custom/XsDragModal.vue')['default']
   }
 }

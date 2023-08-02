@@ -1,17 +1,13 @@
-.el-popper,
-.el-message,
-.el-notification,
-.is-message-box {
-  z-index: 9147483647 !important;
-}
+// .el-popper,
+// .el-message,
+// .el-notification,
+// .is-message-box {
+//   z-index: 9147483647 !important;
+// }
 
-.el-checkbox__inner {
-  z-index: 0 !important;
-}
-
-.el-statistic__content {
-  font-size: large !important;
-}
+// .el-checkbox__inner {
+//   z-index: 0 !important;
+// }
 
 :root {
   &[data-show-scrollbar="false"] {
