@@ -18,9 +18,12 @@ export class MatchRule {
   public filter: IORule_filter;
 
   public status: IOMatchRule_status;
-  public backup: IRule;
+  public backup: Partial<IORule>;
 
-  constructor(rule?: IRule, options?: {newCreate: boolean; status?: IMatchRule_status}) {
+  constructor(
+    rule?: Partial<IORule>,
+    options?: {newCreate: boolean; status?: Partial<IOMatchRule_status>}
+  ) {
     MatchRule.count++;
 
     if (options?.newCreate) {
@@ -66,7 +69,9 @@ export class MatchRule {
       selector: rule?.name?.selector || [""],
       infoType: rule?.name?.infoType || 4,
       attribute: rule?.name?.attribute || [""],
+      // fix: rule?.name?.fix || [],
     };
+
     this.meta = {
       enable: rule?.meta?.enable || true,
       origin: rule?.meta?.origin || 2,
@@ -168,100 +173,7 @@ export class MatchRule {
   };
 }
 
-//! Rule类的仅输入接口
-export interface IMatchRule extends IRule {
-  status?: IMatchRule_status;
-}
-
-//s rule的仅输入接口
-export interface IRule {
-  id?: string;
-  main?: IRule_main;
-  domItem?: IRule_domItem;
-  linkUrl?: IRule_linkUrl;
-  picUrl?: IRule_picUrl;
-  name?: IRule_name;
-  meta?: IRule_meta;
-  filter?: IRule_filter;
-}
-
-//s rule-main仅输入接口
-interface IRule_main {
-  name?: string; //s 规则名称
-  domainName?: string; //s 作用域
-  pathFilter?: {
-    pattern?: string; //s 正则表达式
-    flags?: string[]; //s 正则修饰符
-  };
-  titleSelector?: string; //s 标题选择器
-  iconUrl?: string; //s 站点图标链接
-}
-
-//s rule-domItem仅输入接口
-interface IRule_domItem {
-  //s 时候启用dom限定(开启后将以该项指定的dom作为起点查找查询其他项目)
-  enable?: boolean;
-  method?: 0 | 1;
-  selector?: string[];
-}
-
-//s rule-linkUrl仅输入接口
-interface IRule_linkUrl {
-  method?: 0 | 1;
-  selector?: string[];
-  infoType?: 1 | 2 | 3 | 4 | 5 | 6;
-  attribute?: string[];
-}
-
-//s rule-picUrl仅输入接口
-interface IRule_picUrl {
-  enable?: boolean;
-  //s 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
-  origin?: number;
-  method?: 0 | 1;
-  selector?: string[];
-  infoType?: 1 | 2 | 3 | 4 | 5 | 6;
-  attribute?: string[];
-}
-
-//s rule-name仅输入接口
-interface IRule_name {
-  enable?: boolean;
-  //s 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
-  origin?: number;
-  method?: 0 | 1;
-  selector?: string[];
-  infoType?: 1 | 2 | 3 | 4 | 5 | 6;
-  attribute?: string[];
-}
-
-//s rule-meta仅输入接口
-interface IRule_meta {
-  enable?: boolean;
-  //s 获取来源（0:使用dom或者linkUrl-dom; 1:通过css选择器重新指定）
-  origin?: 0 | 1 | 2 | 3;
-  method?: 0 | 1;
-  selector?: string[];
-  infoType?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-  attribute?: string[];
-  getMethod?: 0 | 1 | 2 | 3; //s 元信息获取方式
-}
-
-//s rule-filter仅输入接口
-interface IRule_filter {
-  formats?: string[];
-  width?: [number, number];
-  height?: [number, number];
-}
-
-//? rule-status仅输入接口
-interface IMatchRule_status {
-  editing?: boolean;
-  isNewCreated?: boolean;
-}
-
-//! 输入输出接口
-//s rule的输入输出接口
+//! rule的输入输出接口
 export interface IORule {
   id: string;
   main: IORule_main;
@@ -321,6 +233,23 @@ interface IORule_name {
   selector: string[];
   infoType: 1 | 2 | 3 | 4 | 5 | 6;
   attribute: string[];
+  // fix: IOFix;
+}
+
+//s 修正配置接口
+type IOFix = [IORegExtract | IORegReplace] | [];
+
+//s 正则提取修正类型的接口
+interface IORegExtract {
+  pattern: string; //s 正则表达式
+  flags: string[]; //s 正则修饰符
+}
+
+//s 正则替换类型的接口
+interface IORegReplace {
+  pattern: string; //s 正则表达式
+  result: string; //s 替换结果
+  flags: string[]; //s 正则修饰符
 }
 
 //s rule-meta输入输出接口

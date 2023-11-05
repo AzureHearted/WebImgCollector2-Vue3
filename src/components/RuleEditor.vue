@@ -12,13 +12,13 @@
   >
     <!-- s标题部分 -->
     <template #title>
-      <h4 style="color: black; font-size: large">
+      <h2 style="color: black; font-size: large">
         规则管理器 (共{{ ruleEditor.data.ruleList.length }}条规则)
-      </h4>
+      </h2>
     </template>
     <!-- s内容主体 -->
     <template #default>
-      <el-container style="user-select: none">
+      <el-container style="user-select: none;height:100% !important">
         <!-- f左侧树形列表 -->
         <el-aside
           width="200px"
@@ -37,7 +37,7 @@
             ref="treeRef"
             :data="tree.treeData"
             :props="tree.treeProps"
-            :height="400"
+            v-bind:height="400"
             highlight-current
             :current-node-key="info.showRuleId"
             :filter-method="treeFilterMethod"
@@ -369,6 +369,7 @@
       align-items: center !important;
       justify-content: space-between !important;
       overflow: hidden !important;
+      color: black !important;
     }
 
     //s 普通tree-item

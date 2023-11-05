@@ -377,7 +377,6 @@ declare module 'vue' {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly ElMessage: UnwrapRef<typeof import('element-plus/es')['ElMessage']>
     readonly ElMessageBox: UnwrapRef<typeof import('element-plus/es')['ElMessageBox']>
-    readonly ElNotification: UnwrapRef<typeof import('element-plus/es')['ElNotification']>
     readonly GM: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['GM']>
     readonly GM_addElement: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['GM_addElement']>
     readonly GM_addStyle: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['GM_addStyle']>
@@ -739,7 +738,6 @@ declare module '@vue/runtime-core' {
     readonly EffectScope: UnwrapRef<typeof import('vue')['EffectScope']>
     readonly ElMessage: UnwrapRef<typeof import('element-plus/es')['ElMessage']>
     readonly ElMessageBox: UnwrapRef<typeof import('element-plus/es')['ElMessageBox']>
-    readonly ElNotification: UnwrapRef<typeof import('element-plus/es')['ElNotification']>
     readonly GM: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['GM']>
     readonly GM_addElement: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['GM_addElement']>
     readonly GM_addStyle: UnwrapRef<typeof import('vite-plugin-monkey/dist/client')['GM_addStyle']>

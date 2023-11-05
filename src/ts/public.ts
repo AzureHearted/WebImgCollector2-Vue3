@@ -843,7 +843,7 @@ async function singleCardProcessing(rowCard: rowCard, rule: IORule): Promise<mat
     card.name = getNameByUrl(card.name);
   }
   //? 去除尾部斜杠“/”
-  card.name = card.name.replace(/(\/)$/, "");
+  card.name = card.name.replace(/(\/)$/, " - ");
   //s 名称修正
   card.name = getNameByUrl(card.name);
 

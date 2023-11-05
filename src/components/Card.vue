@@ -24,7 +24,6 @@
     <el-skeleton
       style="width: 100%; height: 100%; z-index: 0 !important"
       :loading="loading"
-      :throttle="500"
       :animated="true"
       :count="1"
     >

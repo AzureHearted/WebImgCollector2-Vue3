@@ -4,23 +4,23 @@
       v-model="eagleStore.saveBoxContainer.open"
       teleport=".onlineGallery-child-window-container"
       :modal-init-width="appInfo.window.width > 500 ? 500 : 370"
-      :modal-init-height="510"
+      :modal-init-height="550"
       @open="handleOpen"
       @closed="handleClosed"
     >
       <!-- s标题部分 -->
       <template #title>
-        <h4 style="color: black; font-size: large">选择保存位置</h4>
+        <h2 style="color: black; font-size: large">选择保存位置</h2>
       </template>
       <!-- s内容主体 -->
       <template #default>
-        <el-container style="user-select: none">
+        <el-container style="user-select: none;height:100% !important">
           <!-- f左侧树形列表 -->
           <el-aside
             width="300px"
             show-checkbox
             highlight-current
-            style="padding: 5px"
+            style="padding: 5px;height:90% !important"
           >
             <!-- s过滤框 -->
             <el-input
@@ -34,8 +34,8 @@
               ref="treeRef"
               :data="treeData"
               :props="treeProps"
+              :height="330"
               highlight-current
-              :height="350"
               :filter-method="treeFilterMethod"
               @node-click="treeNodeClick"
               :item-size="32"

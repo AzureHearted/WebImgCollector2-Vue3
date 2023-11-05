@@ -1,4 +1,4 @@
-import {IORule, IRule, MatchRule} from "@/ts/class/MatchRule";
+import {IORule, MatchRule} from "@/ts/class/MatchRule";
 
 /**
  *! appInfo 信息共享
@@ -477,7 +477,7 @@ export const useRuleEditorStore = defineStore("ruleEditor", () => {
   }
 
   //f 创建规则
-  async function createRule(ruleObj?: IRule): Promise<MatchRule | null> {
+  async function createRule(ruleObj?: Partial<IORule>): Promise<MatchRule | null> {
     let rule: MatchRule | null = null;
     //s 如果传入的对象不为空 -> 则尝试通过对象的方式创建 MatchRule
     if (ruleObj?.id && ruleObj?.main) {
@@ -491,7 +491,10 @@ export const useRuleEditorStore = defineStore("ruleEditor", () => {
       rule = new MatchRule(
         {
           main: {
+            name:"新规则",//s 规则名称
             domainName: location.origin, //s 记录域名
+            pathFilter:{pattern:"",flags:[]},
+            titleSelector:"",
             iconUrl: await getFavicon(), //s 获取图标链接
           },
         },
@@ -546,6 +549,7 @@ export const useRuleEditorStore = defineStore("ruleEditor", () => {
       selector: ["", "", "", ""],
       infoType: 4,
       attribute: ["", "", "", ""],
+      fix:{},
     },
     meta: {
       enable: true,

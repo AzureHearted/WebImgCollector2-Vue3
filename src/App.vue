@@ -154,12 +154,12 @@
   onMounted(async () => {
     await ruleEditor.getLocationRule(); //s 获取本地信息
     toolBar.selectingInitRule(); //s 选出首个匹配的规则
-    ElNotification({
-      title: "提示",
-      message: h("i", {style: "color: teal"}, "onlineGallery 已加载"),
-      // type: "success",
-      duration: 3000,
-    });
+    // ElNotification({
+    //   title: "提示",
+    //   message: h("i", {style: "color: teal"}, "onlineGallery 已加载"),
+    //   // type: "success",
+    //   duration: 3000,
+    // });
     if (appInfo.container.open) {
       document.documentElement.dataset.showScrollbar = "false"; //s 页面隐藏滚动条
       container.value.focus();

@@ -569,6 +569,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: black !important;
   }
 
   //s 规则图标样式
