@@ -12,7 +12,7 @@
 // @grant      GM_getValue
 // @grant      GM_setValue
 // @grant      GM_xmlhttpRequest
-// @run-at     document-start
+// @run-at     document-body
 // @noframes
 // ==/UserScript==
 

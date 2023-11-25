@@ -107,7 +107,7 @@ export default defineConfig({
         connect: ["*"],
         noframes: true,
         require: [],
-        "run-at": "document-start",
+        "run-at": "document-body",
       },
       server: {
         open: false,
