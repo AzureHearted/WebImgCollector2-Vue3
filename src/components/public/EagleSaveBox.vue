@@ -92,6 +92,7 @@
 
   import {IEagleLibraryData, IEagleFolder} from "@/ts/class/EagleAPI";
   const appInfo = useAppInfoStore();
+  const cardsStore = useCardsStore();
   const eagleStore = useEagleStore();
   const eagle = eagleStore.eagle;
 

@@ -129,7 +129,7 @@
     <el-dropdown type="primary">
       <el-button
         type="primary"
-        @click="downloadSelected"
+        @dblclick="downloadSelected"
         :loading="loading.value"
       >
         下载选中
@@ -142,6 +142,15 @@
           <el-dropdown-item @click="eagleStore.saveBoxContainer.open = true"
             >下载到Eagle</el-dropdown-item
           >
+        </el-dropdown-menu>
+        <el-dropdown-menu>
+          <el-dropdown-item @click="getJsonSelected">获取选中项的Json信息</el-dropdown-item>
+        </el-dropdown-menu>
+        <el-dropdown-menu>
+          <el-dropdown-item @click="getUrlSelected">获取选中项的链接</el-dropdown-item>
+        </el-dropdown-menu>
+        <el-dropdown-menu>
+          <el-dropdown-item @click="getImgUrlSelected">获取选中项的图链</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -177,6 +186,8 @@
   import CheckboxAll from "@/icon/checkbox-fill.svg?component"; //? svg导入
   import BxCaretDown from "@/icon/bx-caret-down.svg?component"; //? svg导入
   import {title} from "process";
+  import console from "console";
+  import {json} from "stream/consumers";
 
   const appInfo = useAppInfoStore(); //s 实例化appInfo数据仓库
   const cardsStore = useCardsStore(); //s 实例化cardsStore数据仓库
@@ -345,6 +356,72 @@
     };
     //s 开始执行
     taskQueue.run();
+  }
+  //f 获取选中项链接
+  async function getUrlSelected() {
+    const selectedCards = cardsStore.selectedCards;
+    // console.log(downloadCards);
+    if (!selectedCards.length) {
+      ElMessage({
+        message: "请选择要获取的项目",
+        type: "info",
+        showClose: true,
+        grouping: true,
+        offset: 120,
+      });
+      return;
+    }
+    const urls: string[] = selectedCards.map((card) => card.linkUrl);
+
+    navigator.clipboard.writeText(urls.join("\n"));
+  }
+  //f 获取选中项图链
+  async function getImgUrlSelected() {
+    const selectedCards = cardsStore.selectedCards;
+    // console.log(downloadCards);
+    if (!selectedCards.length) {
+      ElMessage({
+        message: "请选择要获取的项目",
+        type: "info",
+        showClose: true,
+        grouping: true,
+        offset: 120,
+      });
+      return;
+    }
+    const urls: string[] = selectedCards.map((card) => card.picUrl);
+    // console.log(urls);
+    navigator.clipboard.writeText(urls.join("\n"));
+  }
+  //f 获取选中项的Json信息
+  async function getJsonSelected() {
+    const selectedCards = cardsStore.selectedCards;
+    // console.log(downloadCards);
+    if (!selectedCards.length) {
+      ElMessage({
+        message: "请选择要获取的项目",
+        type: "info",
+        showClose: true,
+        grouping: true,
+        offset: 120,
+      });
+      return;
+    }
+    let originalUrl = window.location.href
+    const jArray = selectedCards.map((card, index) => {
+      return {
+        url: card.linkUrl,
+        name: card.name,
+        website: originalUrl,
+        tags: [],
+        annotation:getNameByUrl(originalUrl),
+        headers: {
+          referer: getOriginByUrl(originalUrl),
+        },
+      };
+    });
+    // console.log(urls);
+    navigator.clipboard.writeText(JSON.stringify(jArray));
   }
 </script>
 
