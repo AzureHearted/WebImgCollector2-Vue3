@@ -19,7 +19,7 @@ export default defineConfig({
   resolve: {
     alias: {
       //s 路径别名
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(__dirname, "src"),
     },
   },
   //s 插件配置项

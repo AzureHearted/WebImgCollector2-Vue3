@@ -184,10 +184,6 @@
   import {ITask} from "@/ts/public";
   import CheckboxNone from "@/icon/checkbox-blank-line.svg?component"; //? svg导入
   import CheckboxAll from "@/icon/checkbox-fill.svg?component"; //? svg导入
-  import BxCaretDown from "@/icon/bx-caret-down.svg?component"; //? svg导入
-  import {title} from "process";
-  import console from "console";
-  import {json} from "stream/consumers";
 
   const appInfo = useAppInfoStore(); //s 实例化appInfo数据仓库
   const cardsStore = useCardsStore(); //s 实例化cardsStore数据仓库
@@ -251,7 +247,6 @@
   //f 下载选中项
   async function downloadSelected() {
     const downloadCards = cardsStore.selectedCards;
-    // console.log(downloadCards);
     if (!downloadCards.length) {
       ElMessage({
         message: "请选择要下载的数据",
@@ -289,6 +284,8 @@
             let fix = strAutofill(index.toString(), 0, 4);
             //s [3.2]存入zip容器
             zipContainer.file(`${fix} - ${card.name}${ext}`, blob);
+            // zipContainer.file(`${card.name}`, blob);
+
             return [card.name, "处理成功!"];
           } else {
             //s [3.0]失败
@@ -407,14 +404,14 @@
       });
       return;
     }
-    let originalUrl = window.location.href
+    let originalUrl = window.location.href;
     const jArray = selectedCards.map((card, index) => {
       return {
         url: card.linkUrl,
         name: card.name,
         website: originalUrl,
         tags: [],
-        annotation:getNameByUrl(originalUrl),
+        annotation: getNameByUrl(originalUrl),
         headers: {
           referer: getOriginByUrl(originalUrl),
         },
