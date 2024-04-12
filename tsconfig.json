@@ -1,0 +1,20 @@
+{
+	"outDir": "./dist", // 设置编译后的 JavaScript 文件的输出目录
+	"files": [],
+	"references": [
+		{
+			"path": "./tsconfig.node.json"
+		},
+		{
+			"path": "./tsconfig.app.json"
+		}
+	],
+	"include": ["auto-imports.d.ts", "components.d.ts"],
+	"compilerOptions": {
+		//f 路径别名配置
+		"paths": {
+			"@/*": ["./src/*"]
+		},
+		"noEmit": false
+	}
+}
