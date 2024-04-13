@@ -12,6 +12,9 @@ import vuetify from "@/plugin/vuetify";
 // Varlet组件库
 import Varlet from "@/plugin/varlet";
 
+// 创建 Vue 容器
+const appContainer = document.createElement("div");
+// 创建 Vue 应用
 const app = createApp(App);
 
 app.use(createPinia());
@@ -19,15 +22,7 @@ app.use(router);
 app.use(vuetify);
 app.use(Varlet);
 
-// 传统挂载方式
-// app.mount("#app");
-
-// 先在页面创建容器再挂载
-const appContainer = document.createElement("div");
-// 根据时间随机生成ID
-const id = `onlineGallery-${Math.floor(Math.random() * Date.now() * 10000)}`;
-appContainer.id = id; // 设置容器元素id
-document.documentElement.append(appContainer); //将元素添加到页面
-setTimeout(() => {
-	app.mount(`#${id}`); // 挂载app
-});
+console.log("准备挂载");
+document.documentElement.appendChild(appContainer);
+app.mount(appContainer); // 挂载app
+console.log("挂载成功");

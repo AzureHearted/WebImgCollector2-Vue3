@@ -15,7 +15,6 @@ import { VarletImportResolver } from "@varlet/import-resolver";
 //s 用于在vue项目中使用svg文件
 import svgLoader from "vite-svg-loader";
 
-
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [
@@ -54,14 +53,22 @@ export default defineConfig({
 				math: "always",
 			},
 		},
+		postcss: {
+			plugins: [],
+		},
 	},
 	resolve: {
 		// 路径别名设置
 		alias: {
 			"@": fileURLToPath(new URL("./src", import.meta.url)),
+			"@svg": fileURLToPath(new URL("./src/assets/svg", import.meta.url)),
 		},
 	},
 	server: {
 		open: false, // 项目运行时不自动打开浏览器
+	},
+	build: {
+		// 使用terser进行压缩混淆
+		minify: "terser",
 	},
 });

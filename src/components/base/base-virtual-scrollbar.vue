@@ -196,7 +196,7 @@
 	};
 </script>
 
-<style scoped lang="less">
+<style lang="less" scoped >
 	// 视口容器
 	.base-virtual-scrollbar-viewport {
 		position: relative;

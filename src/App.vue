@@ -1,18 +1,25 @@
 <template>
 	<!-- 脚本应用容器 -->
-	<div ref="container" class="online-gallery-container">
+	<div ref="appContainer" class="online-gallery-container">
 		<!-- 路由出口 -->
 		<RouterView />
 		<!-- 悬浮按钮 -->
-		<HoverButton teleport-to=".online-gallery-top-container" />
+		<HoverButton :teleport-to="windowContainer!" />
 		<!-- 顶层元素的承载容器 -->
-		<div class="online-gallery-top-container"></div>
+		<div ref="windowContainer" class="online-gallery-top-container"></div>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { defineAsyncComponent } from "vue";
+	import { ref, defineAsyncComponent, onMounted } from "vue";
 	import { RouterView } from "vue-router";
+	import { useGlobalStore } from "@/stores";
+
+	const globalStore = useGlobalStore();
+	globalStore.visibleScrollbar(false);
+
+	const appContainer = ref<HTMLElement | null>(null);
+	const windowContainer = ref<HTMLElement | null>(null);
 
 	// 异步导入HoverButton组件
 	const HoverButton = defineAsyncComponent(
@@ -24,7 +31,6 @@
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
 	.online-gallery-container {
 		box-sizing: border-box;
-
 		position: fixed;
 		overflow: hidden;
 		inset: 0;
@@ -51,8 +57,19 @@
 		pointer-events: none;
 
 		// 子元素默认还能响应
-		::v-deep * {
+		:deep(*) {
 			pointer-events: auto;
 		}
+	}
+	:deep(*) {
+		margin: unset;
+		padding: unset;
+		border-radius: unset;
+		border: unset;
+		font-size: unset;
+		color: unset;
+	}
+	:deep(.v-slider) input {
+		display: unset;
 	}
 </style>

@@ -79,7 +79,6 @@
 			// 响应式瀑布流的映射配置
 			sizeMap: () => {
 				return {
-					1440: { columns: 6 },
 					1280: { columns: 5 },
 					1100: { columns: 4 },
 					720: { columns: 3 },
@@ -396,17 +395,37 @@
 
 	/* 定义过渡效果 */
 	.list-complete-item {
-		transition: 0.5s;
+		transition: 0.3s;
 	}
 
 	/* 确保将离开的元素从布局流中删除
 	 以便能够正确地计算移动的动画。 */
+	// .list-complete-leave-active {
+	// 	position: absolute;
+	// }
+
+	// 进场过渡
+	// .list-complete-enter-from {
+	// 	opacity: 0;
+	// 	transform: translateY(200px);
+	// }
+	// 退场过渡
+	// .list-complete-leave-to {
+	// 	opacity: 0;
+	// 	transform: scale(0.1);
+	// }
+
+	/* 对移动中的元素应用的过渡 */
+	.list-complete-move,
+	.list-complete-enter-active,
 	.list-complete-leave-active {
-		position: absolute;
+		transition: all 0.3s;
+		transition-delay: 0 !important;
 	}
 
 	// 进场过渡
 	.list-complete-enter-from {
+		position: absolute;
 		opacity: 0;
 		transform: translateY(200px);
 	}
@@ -416,12 +435,18 @@
 		transform: scale(0.1);
 	}
 
-	/* 对移动中的元素应用的过渡 */
-	.list-complete-move,
-	.list-complete-enter-active,
+	// 进入动画的结束状态,离开动画的起始状态
+	.list-complete-enter-to,
+	.list-complete-leave-from {
+		// position: absolute;
+	}
+	// 进入的过程中
+	.list-complete-enter-active {
+		transition: all 0.5s;
+	}
+	// 离开的过程中
 	.list-complete-leave-active {
-		transition: all 0.5s ease;
-		transition-delay: 0 !important;
+		transition: all 0.3s;
 	}
 
 	.bottom {

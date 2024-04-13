@@ -181,6 +181,7 @@
 			img.addEventListener(
 				"error",
 				() => {
+					console.log("图片加载错误", src);
 					state.isError = true;
 					state.loaded = true;
 					// 触发error事件
@@ -321,9 +322,9 @@
 		object-fit: cover;
 		background: transparent;
 		/* 禁止选中文字 */
-		// user-select: none;
+		user-select: none;
 		/* 禁止图文拖拽 */
-		// -webkit-user-drag: none;
+		-webkit-user-drag: none;
 		transition: 0.5s ease-in-out; // 添加过渡效果
 	}
 	// 加载错误的样式

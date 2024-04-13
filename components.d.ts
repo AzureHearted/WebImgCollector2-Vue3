@@ -17,11 +17,10 @@ declare module 'vue' {
     VarBadge: typeof import('@varlet/ui')['_BadgeComponent']
     VarButton: typeof import('@varlet/ui')['_ButtonComponent']
     VarButtonGroup: typeof import('@varlet/ui')['_ButtonGroupComponent']
+    VarCell: typeof import('@varlet/ui')['_CellComponent']
     VarChip: typeof import('@varlet/ui')['_ChipComponent']
     VarFab: typeof import('@varlet/ui')['_FabComponent']
-    VarIcon: typeof import('@varlet/ui')['_IconComponent']
-    VarSpace: typeof import('@varlet/ui')['_SpaceComponent']
-    VarTooltip: typeof import('@varlet/ui')['_TooltipComponent']
+    VarMenu: typeof import('@varlet/ui')['_MenuComponent']
     WaterfallList: typeof import('./src/components/base/waterfall-list.vue')['default']
   }
   export interface ComponentCustomProperties {

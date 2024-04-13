@@ -4,14 +4,16 @@
 	"exclude": ["src/**/__tests__/*"],
 	"compilerOptions": {
 		"declaration": true,
-		"declarationDir": "./types",
+		"declarationDir": "./types", // ts类型文件的输出目录
 		"composite": true,
 		"noEmit": false,
+		"outDir": "./temp", // TS的编译结果js文件的输出路径
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
 		"baseUrl": ".",
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@svg/*": ["./src/assets/svg/*"]
 		}
 	}
 }

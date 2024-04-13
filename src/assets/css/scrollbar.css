@@ -1,7 +1,7 @@
 /* 滚动条样式(控制滚动条显示与隐藏) */
 :root {
 	&[data-show-scrollbar="false"] {
-		overflow: hidden;
+		overflow: overlay;
 		> ::-webkit-scrollbar {
 			width: 0px !important;
 			height: 0px !important;

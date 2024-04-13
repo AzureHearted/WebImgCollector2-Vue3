@@ -13,8 +13,9 @@
 	"compilerOptions": {
 		//f 路径别名配置
 		"paths": {
-			"@/*": ["./src/*"]
-		},
-		"noEmit": false
+			"@/*": ["./src/*"],
+			"@svg/*": ["./src/assets/svg/*"]
+		}
+		// "noEmit": true
 	}
 }

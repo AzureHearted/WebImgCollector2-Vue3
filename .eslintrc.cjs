@@ -14,4 +14,8 @@ module.exports = {
 	rules: {
 		"no-mixed-spaces-and-tabs": "off",
 	},
+	// env: {
+	// 	browser: true,
+	// 	node: true,
+	// },
 };

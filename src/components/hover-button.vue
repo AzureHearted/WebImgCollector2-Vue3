@@ -4,7 +4,7 @@
 		v-model:active="active"
 		type="primary"
 		bottom="20vh"
-		right="100px"
+		right="10vh"
 		direction="top"
 		:trigger="isMobile() ? 'click' : 'hover'"
 		drag
@@ -27,17 +27,23 @@
 					<IconGridRound style="width: 36px" />
 				</var-button>
 				<!-- 底部悬浮按钮 -->
-				<div class="bottom-fab" :data-active="active || scrolling">
-					<!-- 页面滚动按钮 -->
-					<var-tooltip content="滚动到底部" :teleport="teleportTo">
-						<var-button
-							class="scroll-button"
-							round
-							:loading="scrolling"
-							@click="scrollToBottom()">
-							<var-icon name="chevron-down" />
-						</var-button>
-					</var-tooltip>
+				<div class="bottom-fab" :data-active="active || state.scrolling">
+					<!-- 页面下滚按钮 -->
+					<var-button
+						class="scroll-button"
+						round
+						:loading="state.scrollingToDown"
+						@click="scrollTo('down')">
+						<IconArrowheadDown style="width: 20px" />
+					</var-button>
+					<!-- 页面上滚按钮 -->
+					<var-button
+						class="scroll-up"
+						round
+						:loading="state.scrollingToUp"
+						@click="scrollTo('up')">
+						<IconArrowheadUp style="width: 20px" />
+					</var-button>
 				</div>
 			</var-badge>
 		</template>
@@ -69,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-	import { defineProps, ref } from "vue";
+	import { defineProps, ref, reactive } from "vue";
 	// 引入公共方法
 	import { isMobile } from "@/utils/common";
 	// 引入图标
@@ -78,6 +84,8 @@
 	import IconBxsBookBookmark from "@/assets/svg/bxs-book-bookmark.svg";
 	import IconToolsFill from "@/assets/svg/tools-fill.svg";
 	import IconTestTube from "@/assets/svg/bx-test-tube.svg";
+	import IconArrowheadDown from "@svg/arrowhead-down.svg";
+	import IconArrowheadUp from "@svg/arrowhead-up.svg";
 
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
@@ -96,7 +104,13 @@
 		}
 	);
 
-	const scrolling = ref(false); // 控制滚动按钮的显示状态
+	const state = reactive({
+		scrolling: false,
+		scrollingToDown: false,
+		scrollingToUp: false,
+	});
+	// const scrollingToDown = ref(false); // 控制滚动按钮的显示状态
+	// const scrollingToUp = ref(false); // 控制滚动按钮的显示状态
 
 	// 切换窗口显示
 	function toggleWindow() {
@@ -104,44 +118,77 @@
 	}
 
 	// 滚动容器到底部
-	function scrollToBottom(
+	function scrollTo(
+		direction: "up" | "down" = "down", // 滚动方向，默认向下滚动
 		container: HTMLElement = document.documentElement, // 滚动元素
 		interval: number = 1000 // 滚动间隔
 	): void {
 		let scrollInterval: number | null = null;
+
+		// 执行一次滚动操作
 		function scrollOnce(): void {
-			container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+			if (
+				(container.scrollTop === 0 && direction === "up") ||
+				(Number(container.scrollTop.toFixed(0)) + container.clientHeight ===
+					container.scrollHeight &&
+					direction === "down")
+			) {
+				state.scrollingToUp = false; // 取消显示滚动按钮的加载状态
+				state.scrollingToDown = false; // 取消显示滚动按钮的加载状态
+			}
+
+			container.scrollTo({
+				top: direction === "up" ? 0 : container.scrollHeight,
+				behavior: "smooth",
+			});
 		}
 
+		// 开始执行滚动操作的定时器
 		function startScrollInterval(): void {
 			if (!scrollInterval) {
-				// console.log("滚动开始");
-				scrolling.value = true; // 显示滚动按钮的加载状态
 				scrollInterval = setInterval(() => {
-					// console.log("滚动……");
+					// console.log(`滚动中:${direction}`);
+					if (direction === "up") {
+						state.scrollingToUp = true; // 取消显示滚动按钮的加载状态
+					} else {
+						state.scrollingToDown = true; // 取消显示滚动按钮的加载状态
+					}
 					requestAnimationFrame(scrollOnce);
 				}, interval);
 			}
 		}
 
+		// 停止执行滚动操作的定时器
 		function stopScrollInterval(): void {
 			if (scrollInterval) {
 				// console.log("滚动停止");
+				state.scrolling = false; // 取消显示滚动按钮的加载状态
 				clearInterval(scrollInterval);
 				scrollInterval = null;
-				scrolling.value = false; // 取消显示滚动按钮的加载状态
+				if (container.scrollTop === 0 && direction === "up") {
+					state.scrollingToUp = false; // 取消显示滚动按钮的加载状态
+				} else {
+					state.scrollingToDown = false; // 取消显示滚动按钮的加载状态
+				}
 			}
 		}
 
+		state.scrolling = true; // 显示滚动按钮的加载状态
+		if (direction === "up") {
+			state.scrollingToUp = true; // 取消显示滚动按钮的加载状态
+		} else {
+			state.scrollingToDown = true; // 取消显示滚动按钮的加载状态
+		}
+
+		// 开始执行滚动操作的定时器
 		startScrollInterval();
 
 		// 一经触发立即执行
 		scrollOnce();
 
-		container.addEventListener("scroll", stopScrollInterval);
-		container.addEventListener("wheel", stopScrollInterval);
-		container.addEventListener("click", stopScrollInterval);
-		container.addEventListener("touchstart", stopScrollInterval);
+		window.addEventListener("wheel", stopScrollInterval);
+		window.addEventListener("click", stopScrollInterval);
+		window.addEventListener("touchstart", stopScrollInterval);
 	}
 </script>
 
@@ -159,11 +206,29 @@
 		flex-flow: column nowrap;
 		flex-direction: column-reverse;
 		align-items: center;
+		gap: 5px;
 
 		transition: 0.3s;
 
 		&[data-active="true"] {
-			height: 200%;
+			height: 250%;
+		}
+	}
+	.bottom-fab :deep(.var-button--round) {
+		width: 30px;
+		height: 30px;
+		opacity: 1;
+		padding: unset;
+		margin: unset;
+		transition: 0.5s;
+	}
+	.bottom-fab[data-active="false"] {
+		:deep(.var-button--round) {
+			width: 0;
+			height: 0;
+			opacity: 0;
+			padding: unset;
+			margin: unset;
 		}
 	}
 </style>

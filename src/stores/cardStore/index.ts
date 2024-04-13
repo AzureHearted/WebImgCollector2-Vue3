@@ -141,6 +141,11 @@ export default defineStore("cardStore", () => {
 		return;
 	}
 
+	// 下载卡片
+	function downloadCards(ids: string[]) {
+		console.log("下载", ids);
+	}
+
 	return {
 		data,
 		info,
@@ -149,5 +154,6 @@ export default defineStore("cardStore", () => {
 		getPageCard,
 		clearCardList,
 		removeCard,
+		downloadCards,
 	};
 });

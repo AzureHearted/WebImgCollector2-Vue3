@@ -13,7 +13,7 @@ export default defineStore("global", () => {
 			visibleScrollbar(false);
 		} else {
 			// 窗口关闭后显示页面滚动条
-			visibleScrollbar(true);
+			visibleScrollbar(false);
 		}
 	});
 

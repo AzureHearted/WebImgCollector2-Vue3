@@ -441,12 +441,12 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 			width: 0,
 			height: 0,
 		};
-		return Promise.reject(errMeta);
+		return Promise.resolve(errMeta);
 	}
 	let meta: BaseMeta;
 	const img = new Image();
 	img.src = url;
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve) => {
 		if (img.complete) {
 			// console.log("图片信息获取-->成功!");
 			meta = {
@@ -480,7 +480,7 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 						width: 0,
 						height: 0,
 					};
-					reject(meta);
+					resolve(meta);
 				},
 				{ once: true }
 			);
@@ -491,7 +491,7 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 //f [功能封装]通过blob获取图片meta
 export function getImgMetaByBlob(blob: Blob): Promise<BaseMeta> {
 	let meta: BaseMeta;
-	return new Promise((resolve, reject) => {
+	return new Promise((resolve) => {
 		const reader = new FileReader();
 		reader.readAsDataURL(blob);
 		reader.addEventListener(
@@ -520,7 +520,7 @@ export function getImgMetaByBlob(blob: Blob): Promise<BaseMeta> {
 						};
 						//s 释放内存
 						URL.revokeObjectURL((reader.result as string) || "");
-						reject(meta);
+						resolve(meta);
 					},
 					{ once: true }
 				);
@@ -533,7 +533,7 @@ export function getImgMetaByBlob(blob: Blob): Promise<BaseMeta> {
 				width: 0,
 				height: 0,
 			};
-			reject(meta);
+			resolve(meta);
 		});
 	});
 }
