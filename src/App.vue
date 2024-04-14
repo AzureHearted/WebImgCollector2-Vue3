@@ -33,6 +33,8 @@
 		box-sizing: border-box;
 		position: fixed;
 		overflow: hidden;
+		width: unset;
+		height: unset;
 		inset: 0;
 		background-color: transparent;
 		// backdrop-filter: blur(4px);
@@ -43,7 +45,7 @@
 		pointer-events: none;
 
 		// 子元素默认还能响应
-		::v-deep * {
+		:deep(*) {
 			pointer-events: auto;
 		}
 	}
@@ -68,6 +70,8 @@
 		border: unset;
 		font-size: unset;
 		color: unset;
+		min-height: unset;
+		min-width: unset;
 	}
 	:deep(.v-slider) input {
 		display: unset;

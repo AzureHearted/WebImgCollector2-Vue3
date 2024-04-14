@@ -33,6 +33,11 @@ export default defineStore("cardStore", () => {
 		},
 	});
 
+	// 有效的卡片
+	const validCardList = computed(() => {
+		return data.cardList.filter((x) => !!x);
+	});
+
 	// 计算属性定义
 	// j 过滤后的卡片
 	const filteredCardList = computed(() => {
@@ -51,7 +56,6 @@ export default defineStore("cardStore", () => {
 
 	// 获取页面资源
 	async function getPageCard() {
-		const oldLength = data.cardList.length;
 		// 记录开始前的cardList长度
 		await getCard(
 			{
@@ -89,27 +93,22 @@ export default defineStore("cardStore", () => {
 				return doms;
 			},
 			async (card, index, dom, addCard) => {
-				const oldLength = data.cardList.length;
 				// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
-
-				if (!data.urlSet.has(card.source.url)) {
-					// console.log(
-					// 	`第${oldLength + 1}张卡片获取成功!`,
-					// 	card
-					// );
+				if (card.source.meta.valid && !data.urlSet.has(card.source.url)) {
+					// console.log(`第${oldLength + index}张卡片获取成功!`, card);
 					if (dom) {
 						data.domSet.add(dom); // 记录dom用于排序
 					}
 					data.urlSet.add(card.source.url); // 添加到链接集合中
-					data.cardList.push(card); // 添加到卡片列表中。
-					updateMaxSize(card.source.meta?.width, card.source.meta?.height); // 更新最大宽高。
+					// data.cardList.push(card); // 添加到卡片列表中。
+					data.cardList[index] = card; // 添加到卡片列表中。
+					updateMaxSize(card.source.meta.width, card.source.meta.height); // 更新最大宽高。
 					await addCard(); //执行回调函数
 				}
 			}
 		);
-		// data.cardList.push(...res); // 更新卡片列表。
 		// 最后过滤空值
-		data.cardList = data.cardList.filter((x) => x); // 更新卡片列表。
+		// data.cardList = data.cardList.filter((x) => x); // 更新卡片列表。
 	}
 
 	// 更新最大宽高
@@ -150,6 +149,7 @@ export default defineStore("cardStore", () => {
 		data,
 		info,
 		filters,
+		validCardList,
 		filteredCardList,
 		getPageCard,
 		clearCardList,

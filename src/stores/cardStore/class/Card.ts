@@ -15,10 +15,12 @@ export default class Card implements ICard {
 	public source: CardSource = {
 		url: "", // 卡片来源url，可能为空，因为可能从本地创建的卡片，没有url
 		dom: null,
+		meta: { valid: false, width: 0, height: 0 },
 	};
 	public preview: CardPreview = {
 		url: "", // 预览图url,
 		dom: null,
+		meta: { valid: false, width: 0, height: 0 },
 	};
 	public description: CardDescription = {
 		title: "", // 卡片标题，可能为空，因为可能从本地创建的卡片，没有标题

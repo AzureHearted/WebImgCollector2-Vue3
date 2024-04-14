@@ -39,14 +39,16 @@
 						<!-- 卡片主体(图片) -->
 						<template #default>
 							<BaseImg
-								:src="item.url"
-								:href="item.url"
-								:thumb="item.thumb"
-								:init-width="item.width"
-								:init-height="item.height"
+								:src="item.source.url"
+								use-thumb
+								:data-id="item.id"
+								:href="item.source.url"
+								:thumb="item.preview.url"
+								:init-width="item.source.meta?.width"
+								:init-height="item.source.meta?.height"
 								data-fancybox="online-gallery"
-								:data-thumb="item.thumb"
-								:data-download-src="item.url"
+								:data-thumb="item.preview.url"
+								:data-download-src="item.source.url"
 								@loaded="handleCardLoaded(item, $event)"
 								:draggable="false"></BaseImg>
 						</template>
@@ -69,13 +71,15 @@
 	import { ref, reactive, computed, watch } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
-	import type { returnInfo } from "@/components/base/base-img.vue";
 
+	
 	import WaterFallList from "@/components/base/waterfall-list.vue"; // 瀑布流组件
 	import BaseImgCard from "@/components/base/base-img-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
+	import type { returnInfo } from "@/components/base/base-img.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
 	import BaseVirtualScrollbar from "@/components/base/base-virtual-scrollbar.vue";
+
 	import IconDownload from "@svg/download-2.svg";
 	import IconMapMarker from "@svg/map-marker-outline.svg";
 	import IconTrashCan from "@svg/trash-can.svg";
@@ -133,11 +137,21 @@
 
 	// 处理卡片加载完成的事件
 	function handleCardLoaded(item: Pick<BaseCard, "id">, info: returnInfo) {
+		console.log(info);
 		// 仓库找到对应的数据
-		const index = cardStore.data.cardList.findIndex((x) => x.id === item.id);
+		const index = cardStore.data.cardList.findIndex((x) => x?.id === item.id);
+		if (index < 0) return;
+
 		const card = cardStore.data.cardList[index];
 		// 刷新仓库对应卡片的preview.meta信息
 		card.preview.meta = { ...card.preview.meta, ...info.meta };
+		if (
+			card.preview.meta.width > card.source.meta.width &&
+			card.preview.meta.height > card.source.meta.height
+		) {
+			card.source.meta.width = card.preview.meta.width;
+			card.source.meta.height = card.preview.meta.height;
+		}
 	}
 
 	// 页面定位元素

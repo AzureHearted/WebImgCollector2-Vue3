@@ -36,14 +36,14 @@ export interface BaseLink {
 export interface CardSource extends BaseLink {
 	originUrls?: string[];
 	dom: HTMLElement | null;
-	meta?: BaseMeta;
+	meta: BaseMeta;
 	blob?: Blob;
 	[key: string]: any;
 }
 // 预览接口
 export interface CardPreview extends BaseLink {
 	dom: HTMLElement | null;
-	meta?: BaseMeta;
+	meta: BaseMeta;
 	blob?: Blob;
 	[key: string]: any;
 }

@@ -34,7 +34,7 @@
 						round
 						:loading="state.scrollingToDown"
 						@click="scrollTo('down')">
-						<IconArrowheadDown style="width: 20px" />
+						<IconArrowheadDown style="width: 24px" />
 					</var-button>
 					<!-- 页面上滚按钮 -->
 					<var-button
@@ -42,7 +42,7 @@
 						round
 						:loading="state.scrollingToUp"
 						@click="scrollTo('up')">
-						<IconArrowheadUp style="width: 20px" />
+						<IconArrowheadUp style="width: 24px" />
 					</var-button>
 				</div>
 			</var-badge>
@@ -206,17 +206,17 @@
 		flex-flow: column nowrap;
 		flex-direction: column-reverse;
 		align-items: center;
-		gap: 5px;
+		gap: 10px;
 
 		transition: 0.3s;
 
 		&[data-active="true"] {
-			height: 250%;
+			height: 310%;
 		}
 	}
 	.bottom-fab :deep(.var-button--round) {
-		width: 30px;
-		height: 30px;
+		width: 40px;
+		height: 40px;
 		opacity: 1;
 		padding: unset;
 		margin: unset;

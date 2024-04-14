@@ -28,6 +28,7 @@
 	} from "vue";
 	// 导入加载错误时的图片
 	import errorImg from "@/assets/svg/error-img.svg";
+	import { nextTick } from "vue";
 
 	// 定义props
 	const props = withDefaults(
@@ -71,7 +72,9 @@
 
 	// 定义宽高比
 	const aspectRatio = computed(() => {
-		return state.width && state.height ? state.width / state.height : 1;
+		return state.width && state.height && !state.isError
+			? state.width / state.height
+			: 1;
 	});
 
 	// 定义img标签的ref
@@ -101,8 +104,12 @@
 		const img = new Image();
 		// 图片加载函数
 		const handleLoad = () => {
+			// console.log(imgDom.value);
 			if (imgDom.value) {
 				imgDom.value.src = src;
+				nextTick(() => {
+					imgDom.value!.style.display = "block";
+				});
 			}
 			state.loaded = true;
 			state.show = true;
@@ -133,7 +140,6 @@
 				return;
 			}
 
-			// info.dom = dom;
 			info.load = handleLoad;
 			emit("loaded", info);
 		} else {
@@ -197,7 +203,7 @@
 		source: File | string,
 		maxWidth: number,
 		maxHeight: number
-	): Promise<string> {
+	): Promise<string | null> {
 		return new Promise((resolve, reject) => {
 			const img = new Image();
 			img.onload = function () {
@@ -233,18 +239,18 @@
 				reader.onload = function (event) {
 					// 防止event.target为null
 					if (!event.target || !event.target.result) {
-						reject(new Error("Failed to read file"));
+						resolve(null);
 						return;
 					}
 					// 如果 source 是文件对象，则先读取文件再设置图片的 src
 					img.src = event.target.result as string;
 				};
-				reader.onerror = function (error) {
-					reject(error);
+				reader.onerror = function () {
+					resolve(null);
 				};
 				reader.readAsDataURL(source);
 			} else {
-				reject(new Error("Invalid input source"));
+				resolve(null);
 			}
 		});
 	}
@@ -254,7 +260,6 @@
 		mounted(el: HTMLImageElement) {
 			// console.log("图片挂载", el.src, el);
 			let src: string = props.src; // 默认使用原图
-			el.src = "";
 
 			const handleIntersection = async (
 				entries: IntersectionObserverEntry[]
@@ -281,11 +286,14 @@
 							src = props.thumb;
 						} else {
 							// 如果没有缩略图,就使用原图生成
-							src = await generateThumbnail(
+							const res = await generateThumbnail(
 								props.src,
 								props.thumbMaxSize,
 								props.thumbMaxSize
 							);
+							if (res) {
+								src = res;
+							}
 						}
 					}
 					// 执行加载函数

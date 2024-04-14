@@ -328,3 +328,4 @@ export function throttle(func: Function, wait = 500) {
 		}
 	};
 }
+

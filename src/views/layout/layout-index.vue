@@ -9,19 +9,12 @@
 				<!-- 应用栏 -->
 				<v-app-bar
 					:elevation="2"
-					density="default"
+					density="compact"
 					height="50"
 					:collapse="appBarIsCollapse">
-					<!-- <template v-slot:prepend>
-						<v-app-bar-nav-icon
-							density="compact"
-							v-ripple
-							@click="appBarIsCollapse = !appBarIsCollapse">
-							<var-icon name="menu" />
-						</v-app-bar-nav-icon>
-					</template> -->
 					<template v-slot:prepend>
 						<v-app-bar-nav-icon
+							density="compact"
 							v-ripple
 							@click="appBarIsCollapse = !appBarIsCollapse">
 							<IconMenu style="width: 24px" />
@@ -29,7 +22,7 @@
 					</template>
 					<v-app-bar-title>图片收集器</v-app-bar-title>
 					<template v-slot:append>
-						<v-btn icon :ripple="false" v-ripple>
+						<v-btn density="compact" icon :ripple="false" v-ripple>
 							<IconMoreVertical style="width: 24px" />
 						</v-btn>
 					</template>
@@ -56,7 +49,7 @@
 
 	let layoutContainer = ref<HTMLElement | null>(null);
 
-	let appBarIsCollapse = ref(false); // 应用栏是否折叠的标志位
+	let appBarIsCollapse = ref(true); // 应用栏是否折叠的标志位
 
 	// 导入Fancybox和相关配置
 	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";

@@ -198,6 +198,7 @@ export default async function getCard(
 						rule.preview.name
 					),
 					dom: previewDOM,
+					meta: { valid: false, width: 0, height: 0 }, // 初始化meta未一个无效值
 				};
 				// 获取preview.meta
 				// 先使用dom进行判断

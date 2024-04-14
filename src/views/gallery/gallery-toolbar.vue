@@ -7,12 +7,37 @@
 				:elevation="0"
 				width="fit-content">
 				<!-- 控制按钮组 -->
-				<var-button-group class="control-button-group" size="normal">
-					<var-button type="primary" @click="getCards" :loading="state.loading">
-						加载
-					</var-button>
-					<var-button type="danger" @click="clear">清空</var-button>
-				</var-button-group>
+				<div>
+					<var-menu
+						placement="bottom"
+						:default-style="false"
+						same-width
+						:trigger="isMobile() ? 'click' : 'hover'"
+						teleport=".online-gallery-top-container">
+						<var-button-group type="primary">
+							<var-button
+								@click="getCards"
+								:loading="state.loading"
+								block
+								icon-container>
+								加载
+							</var-button>
+							<var-button style="padding: 0 4px">
+								<IconArrowDown style="width: 24px; fill: white" />
+							</var-button>
+						</var-button-group>
+						<template #menu>
+							<var-button-group vertical>
+								<var-button type="danger" icon-container block @click="clear">
+									<IconCloseCircleMultiple
+										class="gallery-toolbar-icon"
+										style="margin: 0 12px 0 0; fill: white" />
+									清空
+								</var-button>
+							</var-button-group>
+						</template>
+					</var-menu>
+				</div>
 			</v-sheet>
 			<!-- 选择器 -->
 			<v-sheet
@@ -40,29 +65,28 @@
 					:value="checkedCardList.length">
 					<var-menu
 						placement="bottom"
-						same-width
+						:default-style="false"
 						:trigger="isMobile() ? 'click' : 'hover'"
 						teleport=".online-gallery-top-container">
 						<var-button-group type="primary">
-							<var-button type="primary" @click="downloadSelected">
-								选中下载
-							</var-button>
+							<var-button @click="downloadSelected"> 选中下载 </var-button>
 							<var-button style="padding: 0 4px">
 								<IconArrowDown style="width: 24px; fill: white" />
 							</var-button>
 						</var-button-group>
 						<template #menu>
-							<var-cell
-								class="gallery-toolbar-menu-cell"
-								ripple
-								title="全部下载"
-								@click="downloadAll">
-								<template #icon>
+							<var-button-group vertical>
+								<var-button
+									icon-container
+									block
+									@click="downloadAll"
+									:elevation="false">
 									<IconDownload
 										class="gallery-toolbar-icon"
-										style="margin: 0 4px 0 0" />
-								</template>
-							</var-cell>
+										style="margin: 0 12px 0 0" />
+									全部下载
+								</var-button>
+							</var-button-group>
 						</template>
 					</var-menu>
 				</var-badge>
@@ -150,12 +174,13 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, computed } from "vue";
+	import { ref, reactive, computed, watch } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 
 	import IconDownload from "@svg/download.svg";
 	import IconArrowDown from "@svg/arrow-down.svg";
+	import IconCloseCircleMultiple from "@svg/close-circle-multiple.svg";
 
 	import { useCardStore } from "@/stores";
 	import { isMobile } from "@/utils/common";
@@ -182,7 +207,7 @@
 
 	// 被选中的卡片
 	const checkedCardList: ComputedRef<BaseCard[]> = computed(() => {
-		return cardStore.data.cardList.filter((x) => x.isSelected);
+		return cardStore.validCardList.filter((x) => x.isSelected);
 	});
 
 	// 获取卡片
@@ -200,17 +225,17 @@
 
 	// 全选
 	function checkAll() {
-		cardStore.data.cardList.forEach((c) => (c.isSelected = true));
+		cardStore.filteredCardList.forEach((c) => (c.isSelected = true));
 	}
 
 	// 反选
 	function inverseAll() {
-		cardStore.data.cardList.forEach((c) => (c.isSelected = !c.isSelected));
+		cardStore.filteredCardList.forEach((c) => (c.isSelected = !c.isSelected));
 	}
 
 	// 取消
 	function cancel() {
-		cardStore.data.cardList.forEach((c) => (c.isSelected = false));
+		cardStore.validCardList.forEach((c) => (c.isSelected = false));
 	}
 
 	// 清空
@@ -223,7 +248,7 @@
 
 	// 下载选中项
 	function downloadSelected() {
-		const ids = cardStore.data.cardList
+		const ids = cardStore.validCardList
 			.filter((x) => x.isSelected)
 			.map((x) => x.id);
 		cardStore.downloadCards(ids);
@@ -231,7 +256,7 @@
 
 	// 下载全部
 	function downloadAll() {
-		const ids = cardStore.data.cardList.map((x) => x.id);
+		const ids = cardStore.validCardList.map((x) => x.id);
 		cardStore.downloadCards(ids);
 	}
 </script>
@@ -277,8 +302,8 @@
 
 		.filter-input-slider {
 			flex: 1;
-			min-width: 350px;
-			max-width: 500px;
+			min-width: 350px !important;
+			max-width: 500px !important;
 			font-size: 12px;
 		}
 		// 标签样式
@@ -292,13 +317,17 @@
 			width: 60px;
 			border: 0;
 		}
-		::v-deep .v-field,
-		::v-deep .v-field__field,
-		::v-deep .v-field__input {
-			height: 30px !important;
+
+		:deep(.v-field),
+		:deep(.v-text-field),
+		:deep(.v-field__field),
+		:deep(.v-field__input) {
+			height: 30px;
+			padding: unset;
+			margin: unset;
 			min-height: unset;
 		}
-		::v-deep input {
+		:deep(input) {
 			padding: 0 4px;
 		}
 	}
