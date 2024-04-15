@@ -40,13 +40,13 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
     backgroundColor: string;
     layout: "default" | "absolute";
 }, {}>, {
+    header?(_: {
+        data: any;
+    }): any;
     default?(_: {
         data: any;
         src: string;
         thumb: string;
-    }): any;
-    header?(_: {
-        data: any;
     }): any;
     footer?(_: {
         data: any;

@@ -1,6 +1,7 @@
 // 卡片接口
 export interface BaseCard extends BaseState {
 	id?: string;
+	name?: string;
 	description: CardDescription;
 	preview: CardPreview;
 	source: CardSource;

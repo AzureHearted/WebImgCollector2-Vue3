@@ -8,6 +8,8 @@ import type {
 } from "../interface";
 import Card from "../class/Card";
 
+import { getBlobByUrlAuto } from "@/utils/http";
+
 // 获取卡片
 export default async function getCard(
 	rule: MatchRule,
@@ -51,11 +53,24 @@ export default async function getCard(
 					if (!meta.valid) {
 						meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 					}
+					// 推断如果是链接就 获取blob
+					let blob: Blob | undefined;
+					if (isUrl(value)) {
+						const res = await getBlobByUrlAuto(value);
+						if (res) {
+							blob = res;
+							// 推断blob类型
+							const { mainType, subType } = inferBlobType(blob);
+							meta.type = mainType;
+							meta.ext = subType;
+						}
+					}
 					return {
 						url: value,
 						// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 						dom,
 						meta,
+						blob,
 					};
 				}
 			);
@@ -76,10 +91,23 @@ export default async function getCard(
 						if (!meta.valid) {
 							meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 						}
+						// 推断如果是链接就 获取blob
+						let blob: Blob | undefined;
+						if (isUrl(value)) {
+							const res = await getBlobByUrlAuto(value);
+							if (res) {
+								blob = res;
+								// 推断blob类型
+								const { mainType, subType } = inferBlobType(blob);
+								meta.type = mainType;
+								meta.ext = subType;
+							}
+						}
 						return {
 							url: value,
 							dom,
 							meta,
+							blob,
 						};
 					}
 				);
@@ -185,6 +213,17 @@ export default async function getCard(
 				// 如果无效在使用匹配到的内容判断
 				source.meta = await getMeta(source.url);
 			}
+			// 推断如果是链接就 获取source.blob
+			if (isUrl(source.url)) {
+				const blob = await getBlobByUrlAuto(source.url);
+				if (blob) {
+					source.blob = blob;
+					// 推断blob类型
+					const { mainType, subType } = inferBlobType(source.blob);
+					source.meta.type = mainType;
+					source.meta.ext = subType;
+				}
+			}
 
 			// s 获取preview信息
 			let preview: CardPreview;
@@ -207,6 +246,18 @@ export default async function getCard(
 					// 如果无效在使用匹配到的内容判断
 					preview.meta = await getMeta(preview.url);
 				}
+
+				// 推断如果是链接就 获取preview.blob
+				if (isUrl(preview.url)) {
+					const blob = await getBlobByUrlAuto(preview.url);
+					if (blob) {
+						preview.blob = blob;
+						// 推断blob类型
+						const { mainType, subType } = inferBlobType(preview.blob);
+						preview.meta.type = mainType;
+						preview.meta.ext = subType;
+					}
+				}
 			} else {
 				preview = {
 					url: source.url,
@@ -214,6 +265,7 @@ export default async function getCard(
 					meta: {
 						...source.meta,
 					},
+					blob: source.blob,
 				};
 			}
 

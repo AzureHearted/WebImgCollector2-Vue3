@@ -1,18 +1,18 @@
 declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_TypePropsToOption<{
-    teleportTo?: string | HTMLElement | undefined;
+    teleportTo?: string | false | HTMLElement | undefined;
     loading?: boolean | undefined;
 }>, {
     teleportTo: () => "body";
     loading: boolean;
 }>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<{
-    teleportTo?: string | HTMLElement | undefined;
+    teleportTo?: string | false | HTMLElement | undefined;
     loading?: boolean | undefined;
 }>, {
     teleportTo: () => "body";
     loading: boolean;
 }>>>, {
-    teleportTo: string | HTMLElement;
     loading: boolean;
+    teleportTo: string | HTMLElement | false;
 }, {}>;
 export default _default;
 type __VLS_WithDefaults<P, D> = {

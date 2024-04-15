@@ -7,7 +7,7 @@ import type {
 } from "../interface";
 import { buildUUID } from "@/utils/common";
 
-type ICard = Partial<BaseCard> & BaseState;
+export type ICard = Partial<BaseCard> & BaseState;
 
 // 卡片对象
 export default class Card implements ICard {
@@ -48,6 +48,16 @@ export default class Card implements ICard {
 			...this.description,
 			...description,
 		};
+	}
+
+	// 设置Preview blob
+	public setPreviewBlob(blob: Blob): void {
+		this.preview.blob = blob;
+	}
+
+	// 设置Source blob
+	public setSourceBlob(blob: Blob): void {
+		this.source.blob = blob;
 	}
 
 	// 设置卡片描述

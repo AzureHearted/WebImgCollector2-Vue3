@@ -2,8 +2,7 @@ import { ref, watch } from "vue";
 import { defineStore } from "pinia";
 
 export default defineStore("global", () => {
-	const openWindow = ref(false);
-
+	const openWindow = ref(false); // 窗口打开状态
 	//给滚动条注入样式
 	visibleScrollbar(true);
 
@@ -13,7 +12,7 @@ export default defineStore("global", () => {
 			visibleScrollbar(false);
 		} else {
 			// 窗口关闭后显示页面滚动条
-			visibleScrollbar(false);
+			visibleScrollbar(true);
 		}
 	});
 

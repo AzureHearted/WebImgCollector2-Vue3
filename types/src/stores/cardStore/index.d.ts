@@ -6,16 +6,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
                 [x: string]: any;
                 originUrls?: string[] | undefined;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;
@@ -30,16 +30,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             preview: {
                 [x: string]: any;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;
@@ -62,6 +62,8 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             isMatch: boolean;
             isLoaded: boolean;
             isSelected: boolean;
+            setPreviewBlob: (blob: Blob) => void;
+            setSourceBlob: (blob: Blob) => void;
             setDescription: (description: import("./interface").CardDescription) => void;
             setPreview: (preview: import("./interface").CardPreview) => void;
             setSource: (source: import("./interface").CardSource & {
@@ -84,22 +86,22 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             height: [number, number];
         };
     };
-    filteredCardList: import("vue").ComputedRef<{
+    validCardList: import("vue").ComputedRef<{
         readonly id: string;
         source: {
             [x: string]: any;
             originUrls?: string[] | undefined;
             dom: HTMLElement | null;
-            meta?: {
+            meta: {
                 [x: string]: any;
                 valid: boolean;
                 width: number;
                 height: number;
                 aspectRatio?: number | undefined;
-                type?: "audio" | "html" | "video" | "image" | null | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
                 size?: number | undefined;
                 ext?: string | undefined;
-            } | undefined;
+            };
             blob?: {
                 readonly size: number;
                 readonly type: string;
@@ -114,16 +116,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
         preview: {
             [x: string]: any;
             dom: HTMLElement | null;
-            meta?: {
+            meta: {
                 [x: string]: any;
                 valid: boolean;
                 width: number;
                 height: number;
                 aspectRatio?: number | undefined;
-                type?: "audio" | "html" | "video" | "image" | null | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
                 size?: number | undefined;
                 ext?: string | undefined;
-            } | undefined;
+            };
             blob?: {
                 readonly size: number;
                 readonly type: string;
@@ -146,6 +148,78 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
         isMatch: boolean;
         isLoaded: boolean;
         isSelected: boolean;
+        setPreviewBlob: (blob: Blob) => void;
+        setSourceBlob: (blob: Blob) => void;
+        setDescription: (description: import("./interface").CardDescription) => void;
+        setPreview: (preview: import("./interface").CardPreview) => void;
+        setSource: (source: import("./interface").CardSource & {
+            originUrls?: string[] | undefined;
+        }) => void;
+    }[]>;
+    filteredCardList: import("vue").ComputedRef<{
+        readonly id: string;
+        source: {
+            [x: string]: any;
+            originUrls?: string[] | undefined;
+            dom: HTMLElement | null;
+            meta: {
+                [x: string]: any;
+                valid: boolean;
+                width: number;
+                height: number;
+                aspectRatio?: number | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
+                size?: number | undefined;
+                ext?: string | undefined;
+            };
+            blob?: {
+                readonly size: number;
+                readonly type: string;
+                arrayBuffer: () => Promise<ArrayBuffer>;
+                slice: (start?: number | undefined, end?: number | undefined, contentType?: string | undefined) => Blob;
+                stream: () => ReadableStream<Uint8Array>;
+                text: () => Promise<string>;
+            } | undefined;
+            url: string;
+            host?: string | undefined;
+        };
+        preview: {
+            [x: string]: any;
+            dom: HTMLElement | null;
+            meta: {
+                [x: string]: any;
+                valid: boolean;
+                width: number;
+                height: number;
+                aspectRatio?: number | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
+                size?: number | undefined;
+                ext?: string | undefined;
+            };
+            blob?: {
+                readonly size: number;
+                readonly type: string;
+                arrayBuffer: () => Promise<ArrayBuffer>;
+                slice: (start?: number | undefined, end?: number | undefined, contentType?: string | undefined) => Blob;
+                stream: () => ReadableStream<Uint8Array>;
+                text: () => Promise<string>;
+            } | undefined;
+            url: string;
+            host?: string | undefined;
+        };
+        description: {
+            [x: string]: any;
+            title: string;
+            content?: string | undefined;
+            dom: HTMLElement | null;
+            url?: string | undefined;
+            host?: string | undefined;
+        };
+        isMatch: boolean;
+        isLoaded: boolean;
+        isSelected: boolean;
+        setPreviewBlob: (blob: Blob) => void;
+        setSourceBlob: (blob: Blob) => void;
         setDescription: (description: import("./interface").CardDescription) => void;
         setPreview: (preview: import("./interface").CardPreview) => void;
         setSource: (source: import("./interface").CardSource & {
@@ -155,6 +229,7 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
     getPageCard: () => Promise<void>;
     clearCardList: () => void;
     removeCard: (id: string) => void;
+    downloadCards: (ids: string[]) => Promise<void>;
 }, "data" | "info" | "filters">>, Pick<{
     data: {
         cardList: {
@@ -163,16 +238,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
                 [x: string]: any;
                 originUrls?: string[] | undefined;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;
@@ -187,16 +262,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             preview: {
                 [x: string]: any;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;
@@ -219,6 +294,8 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             isMatch: boolean;
             isLoaded: boolean;
             isSelected: boolean;
+            setPreviewBlob: (blob: Blob) => void;
+            setSourceBlob: (blob: Blob) => void;
             setDescription: (description: import("./interface").CardDescription) => void;
             setPreview: (preview: import("./interface").CardPreview) => void;
             setSource: (source: import("./interface").CardSource & {
@@ -241,22 +318,22 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             height: [number, number];
         };
     };
-    filteredCardList: import("vue").ComputedRef<{
+    validCardList: import("vue").ComputedRef<{
         readonly id: string;
         source: {
             [x: string]: any;
             originUrls?: string[] | undefined;
             dom: HTMLElement | null;
-            meta?: {
+            meta: {
                 [x: string]: any;
                 valid: boolean;
                 width: number;
                 height: number;
                 aspectRatio?: number | undefined;
-                type?: "audio" | "html" | "video" | "image" | null | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
                 size?: number | undefined;
                 ext?: string | undefined;
-            } | undefined;
+            };
             blob?: {
                 readonly size: number;
                 readonly type: string;
@@ -271,16 +348,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
         preview: {
             [x: string]: any;
             dom: HTMLElement | null;
-            meta?: {
+            meta: {
                 [x: string]: any;
                 valid: boolean;
                 width: number;
                 height: number;
                 aspectRatio?: number | undefined;
-                type?: "audio" | "html" | "video" | "image" | null | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
                 size?: number | undefined;
                 ext?: string | undefined;
-            } | undefined;
+            };
             blob?: {
                 readonly size: number;
                 readonly type: string;
@@ -303,6 +380,78 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
         isMatch: boolean;
         isLoaded: boolean;
         isSelected: boolean;
+        setPreviewBlob: (blob: Blob) => void;
+        setSourceBlob: (blob: Blob) => void;
+        setDescription: (description: import("./interface").CardDescription) => void;
+        setPreview: (preview: import("./interface").CardPreview) => void;
+        setSource: (source: import("./interface").CardSource & {
+            originUrls?: string[] | undefined;
+        }) => void;
+    }[]>;
+    filteredCardList: import("vue").ComputedRef<{
+        readonly id: string;
+        source: {
+            [x: string]: any;
+            originUrls?: string[] | undefined;
+            dom: HTMLElement | null;
+            meta: {
+                [x: string]: any;
+                valid: boolean;
+                width: number;
+                height: number;
+                aspectRatio?: number | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
+                size?: number | undefined;
+                ext?: string | undefined;
+            };
+            blob?: {
+                readonly size: number;
+                readonly type: string;
+                arrayBuffer: () => Promise<ArrayBuffer>;
+                slice: (start?: number | undefined, end?: number | undefined, contentType?: string | undefined) => Blob;
+                stream: () => ReadableStream<Uint8Array>;
+                text: () => Promise<string>;
+            } | undefined;
+            url: string;
+            host?: string | undefined;
+        };
+        preview: {
+            [x: string]: any;
+            dom: HTMLElement | null;
+            meta: {
+                [x: string]: any;
+                valid: boolean;
+                width: number;
+                height: number;
+                aspectRatio?: number | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
+                size?: number | undefined;
+                ext?: string | undefined;
+            };
+            blob?: {
+                readonly size: number;
+                readonly type: string;
+                arrayBuffer: () => Promise<ArrayBuffer>;
+                slice: (start?: number | undefined, end?: number | undefined, contentType?: string | undefined) => Blob;
+                stream: () => ReadableStream<Uint8Array>;
+                text: () => Promise<string>;
+            } | undefined;
+            url: string;
+            host?: string | undefined;
+        };
+        description: {
+            [x: string]: any;
+            title: string;
+            content?: string | undefined;
+            dom: HTMLElement | null;
+            url?: string | undefined;
+            host?: string | undefined;
+        };
+        isMatch: boolean;
+        isLoaded: boolean;
+        isSelected: boolean;
+        setPreviewBlob: (blob: Blob) => void;
+        setSourceBlob: (blob: Blob) => void;
         setDescription: (description: import("./interface").CardDescription) => void;
         setPreview: (preview: import("./interface").CardPreview) => void;
         setSource: (source: import("./interface").CardSource & {
@@ -312,7 +461,8 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
     getPageCard: () => Promise<void>;
     clearCardList: () => void;
     removeCard: (id: string) => void;
-}, "filteredCardList">, Pick<{
+    downloadCards: (ids: string[]) => Promise<void>;
+}, "validCardList" | "filteredCardList">, Pick<{
     data: {
         cardList: {
             readonly id: string;
@@ -320,16 +470,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
                 [x: string]: any;
                 originUrls?: string[] | undefined;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;
@@ -344,16 +494,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             preview: {
                 [x: string]: any;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;
@@ -376,6 +526,8 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             isMatch: boolean;
             isLoaded: boolean;
             isSelected: boolean;
+            setPreviewBlob: (blob: Blob) => void;
+            setSourceBlob: (blob: Blob) => void;
             setDescription: (description: import("./interface").CardDescription) => void;
             setPreview: (preview: import("./interface").CardPreview) => void;
             setSource: (source: import("./interface").CardSource & {
@@ -398,22 +550,22 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
             height: [number, number];
         };
     };
-    filteredCardList: import("vue").ComputedRef<{
+    validCardList: import("vue").ComputedRef<{
         readonly id: string;
         source: {
             [x: string]: any;
             originUrls?: string[] | undefined;
             dom: HTMLElement | null;
-            meta?: {
+            meta: {
                 [x: string]: any;
                 valid: boolean;
                 width: number;
                 height: number;
                 aspectRatio?: number | undefined;
-                type?: "audio" | "html" | "video" | "image" | null | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
                 size?: number | undefined;
                 ext?: string | undefined;
-            } | undefined;
+            };
             blob?: {
                 readonly size: number;
                 readonly type: string;
@@ -428,16 +580,16 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
         preview: {
             [x: string]: any;
             dom: HTMLElement | null;
-            meta?: {
+            meta: {
                 [x: string]: any;
                 valid: boolean;
                 width: number;
                 height: number;
                 aspectRatio?: number | undefined;
-                type?: "audio" | "html" | "video" | "image" | null | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
                 size?: number | undefined;
                 ext?: string | undefined;
-            } | undefined;
+            };
             blob?: {
                 readonly size: number;
                 readonly type: string;
@@ -460,6 +612,78 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
         isMatch: boolean;
         isLoaded: boolean;
         isSelected: boolean;
+        setPreviewBlob: (blob: Blob) => void;
+        setSourceBlob: (blob: Blob) => void;
+        setDescription: (description: import("./interface").CardDescription) => void;
+        setPreview: (preview: import("./interface").CardPreview) => void;
+        setSource: (source: import("./interface").CardSource & {
+            originUrls?: string[] | undefined;
+        }) => void;
+    }[]>;
+    filteredCardList: import("vue").ComputedRef<{
+        readonly id: string;
+        source: {
+            [x: string]: any;
+            originUrls?: string[] | undefined;
+            dom: HTMLElement | null;
+            meta: {
+                [x: string]: any;
+                valid: boolean;
+                width: number;
+                height: number;
+                aspectRatio?: number | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
+                size?: number | undefined;
+                ext?: string | undefined;
+            };
+            blob?: {
+                readonly size: number;
+                readonly type: string;
+                arrayBuffer: () => Promise<ArrayBuffer>;
+                slice: (start?: number | undefined, end?: number | undefined, contentType?: string | undefined) => Blob;
+                stream: () => ReadableStream<Uint8Array>;
+                text: () => Promise<string>;
+            } | undefined;
+            url: string;
+            host?: string | undefined;
+        };
+        preview: {
+            [x: string]: any;
+            dom: HTMLElement | null;
+            meta: {
+                [x: string]: any;
+                valid: boolean;
+                width: number;
+                height: number;
+                aspectRatio?: number | undefined;
+                type?: "image" | "video" | "audio" | "html" | null | undefined;
+                size?: number | undefined;
+                ext?: string | undefined;
+            };
+            blob?: {
+                readonly size: number;
+                readonly type: string;
+                arrayBuffer: () => Promise<ArrayBuffer>;
+                slice: (start?: number | undefined, end?: number | undefined, contentType?: string | undefined) => Blob;
+                stream: () => ReadableStream<Uint8Array>;
+                text: () => Promise<string>;
+            } | undefined;
+            url: string;
+            host?: string | undefined;
+        };
+        description: {
+            [x: string]: any;
+            title: string;
+            content?: string | undefined;
+            dom: HTMLElement | null;
+            url?: string | undefined;
+            host?: string | undefined;
+        };
+        isMatch: boolean;
+        isLoaded: boolean;
+        isSelected: boolean;
+        setPreviewBlob: (blob: Blob) => void;
+        setSourceBlob: (blob: Blob) => void;
         setDescription: (description: import("./interface").CardDescription) => void;
         setPreview: (preview: import("./interface").CardPreview) => void;
         setSource: (source: import("./interface").CardSource & {
@@ -469,5 +693,6 @@ declare const _default: import("pinia").StoreDefinition<"cardStore", import("pin
     getPageCard: () => Promise<void>;
     clearCardList: () => void;
     removeCard: (id: string) => void;
-}, "getPageCard" | "clearCardList" | "removeCard">>;
+    downloadCards: (ids: string[]) => Promise<void>;
+}, "getPageCard" | "clearCardList" | "removeCard" | "downloadCards">>;
 export default _default;

@@ -4,7 +4,7 @@
 		<!-- 路由出口 -->
 		<RouterView />
 		<!-- 悬浮按钮 -->
-		<HoverButton :teleport-to="windowContainer!" />
+		<HoverButton :teleport-to="false" />
 		<!-- 顶层元素的承载容器 -->
 		<div ref="windowContainer" class="online-gallery-top-container"></div>
 	</div>
@@ -14,9 +14,12 @@
 	import { ref, defineAsyncComponent, onMounted } from "vue";
 	import { RouterView } from "vue-router";
 	import { useGlobalStore } from "@/stores";
+	import { GM_getValue } from "$";
+
+	console.log("获取油猴配置", GM_getValue("ruleList"));
 
 	const globalStore = useGlobalStore();
-	globalStore.visibleScrollbar(false);
+	// globalStore.visibleScrollbar(false);
 
 	const appContainer = ref<HTMLElement | null>(null);
 	const windowContainer = ref<HTMLElement | null>(null);
@@ -31,7 +34,7 @@
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
 	.online-gallery-container {
 		box-sizing: border-box;
-		position: fixed;
+		position: fixed !important;
 		overflow: hidden;
 		width: unset;
 		height: unset;
@@ -70,10 +73,21 @@
 		border: unset;
 		font-size: unset;
 		color: unset;
-		min-height: unset;
+		border: unset;
+		box-shadow: unset;
 		min-width: unset;
+		min-height: unset;
 	}
 	:deep(.v-slider) input {
 		display: unset;
+		background: unset;
+		border: unset;
+		box-shadow: unset;
+		margin: unset;
+		padding: unset;
+		border-radius: unset;
+		border: unset;
+		font-size: unset;
+		color: unset;
 	}
 </style>

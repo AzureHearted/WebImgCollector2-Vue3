@@ -1,6 +1,11 @@
 import { ref, defineAsyncComponent, onMounted } from "vue";
 import { RouterView } from "vue-router";
+import { useGlobalStore } from "@/stores";
+import { GM_getValue } from "$";
 const { defineProps, defineSlots, defineEmits, defineExpose, defineModel, defineOptions, withDefaults, } = await import('vue');
+console.log("获取油猴配置", GM_getValue("ruleList"));
+const globalStore = useGlobalStore();
+// globalStore.visibleScrollbar(false);
 const appContainer = ref(null);
 const windowContainer = ref(null);
 // 异步导入HoverButton组件
@@ -48,10 +53,10 @@ function __VLS_template() {
         }
         {
             const __VLS_10 = {}.HoverButton;
-            const __VLS_11 = __VLS_asFunctionalComponent(__VLS_10, new __VLS_10({ ...{}, teleportTo: ((__VLS_ctx.windowContainer)), }));
+            const __VLS_11 = __VLS_asFunctionalComponent(__VLS_10, new __VLS_10({ ...{}, teleportTo: ((false)), }));
             ({}.HoverButton);
-            const __VLS_12 = __VLS_11({ ...{}, teleportTo: ((__VLS_ctx.windowContainer)), }, ...__VLS_functionalComponentArgsRest(__VLS_11));
-            ({}({ ...{}, teleportTo: ((__VLS_ctx.windowContainer)), }));
+            const __VLS_12 = __VLS_11({ ...{}, teleportTo: ((false)), }, ...__VLS_functionalComponentArgsRest(__VLS_11));
+            ({}({ ...{}, teleportTo: ((false)), }));
             const __VLS_13 = __VLS_pickFunctionalComponentCtx(__VLS_10, __VLS_12);
         }
         {
@@ -72,7 +77,7 @@ function __VLS_template() {
     }
     var __VLS_slots;
     // @ts-ignore
-    [appContainer, windowContainer, windowContainer,];
+    [appContainer, windowContainer,];
     return __VLS_slots;
 }
 const __VLS_internalComponent = (await import('vue')).defineComponent({

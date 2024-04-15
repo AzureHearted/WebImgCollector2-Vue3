@@ -91,8 +91,8 @@ export function getHostByUrl(url: string): string {
  */
 export function getNameByUrl(url: string): string {
 	url = decodeURI(url);
-	url = url.replace(/(\/)$/, "");
-	const list = url.match(/(?<=\/)([^/\r\n$]+)$/g) || [];
+	url = url.replace(/([/\\])$/, "");
+	const list = url.match(/(?<=[/\\]+)([^\\/\r\n$]+)$/g) || [];
 	if (list.length > 0) {
 		return list[0] || url;
 	} else {
@@ -285,47 +285,28 @@ export async function getClipBoardText() {
 	return text;
 }
 
-/** 防抖函数
- * @param {Function} func 要进行防抖的函数
- * @param {number} delay 防抖延时
- * @returns {Function} 返回一个函数,执行该函数可以实现防抖
- * @abstract
- * 在delay期间内重复触发返回的这个函数,则一直重置计时器,
- * 直到两次触发的间隔超过delay才能成功执行一次。
+/**
+ * f 字节 -> 自动单位
+ * @param byteSize 字节大小
  */
-export function debounce(func: Function, delay = 500) {
-	// 声明全局变量timeout
-	let timeout: number;
-	// 返回一个函数(通过解构的方式将所有变量传给args)
-	return function (...args: any[]) {
-		// 清除超时
-		clearTimeout(timeout);
-		// 设置超时
-		timeout = setTimeout(() => {
-			// 调用函数
-			func(...args);
-		}, delay);
-	};
-}
-
-/** 节流函数
- * @param {Function} func 要进行节流的函数
- * @param {number} wait 节流等待
- * @returns {Function} 返回一个函数,执行该函数可以实现节流
- */
-export function throttle(func: Function, wait = 500) {
-	// 声明全局变量timeout
-	let timeout: number;
-	// 返回一个函数(通过解构的方式将所有变量传给args)
-	return function (...args: any[]) {
-		// 如果定时器为null才执行
-		if (!timeout) {
-			// 设置定时器
-			timeout = setTimeout(function () {
-				clearTimeout(timeout); // 清除定时器
-				func(...args);
-			}, wait);
+export function byteAutoUnit(byteSize: number, decimal: number = 2): string {
+	// 单位映射表
+	const unitMap = new Map([
+		[1, "B"],
+		[2, "KB"],
+		[3, "MB"],
+		[4, "GB"],
+		[5, "TB"],
+	]);
+	let unit = 1;
+	let num = byteSize;
+	while (num / 1024 >= 1) {
+		if (unit + 1 >= 1 && unit <= 5) {
+			num = num / 1024;
+			unit++;
+		} else {
+			break;
 		}
-	};
+	}
+	return `${num.toFixed(decimal)}${unitMap.get(unit)}`;
 }
-

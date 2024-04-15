@@ -3,18 +3,27 @@ import {
 	createWebHistory,
 	createWebHashHistory,
 } from "vue-router";
+import type { RouterOptions } from "vue-router";
 import Layout from "@/views/layout/layout-index.vue";
 
 const Gallery = () => import("@/views/gallery/gallery-index.vue");
+const RuleEdit = () => import("@/views/rule-edit/rule-edit-index.vue");
 
-const routes = [
+const routes: RouterOptions["routes"] = [
 	{
 		path: "/",
 		component: Layout,
+		redirect: "/gallery",
 		children: [
 			{
-				path: "/",
+				path: "/gallery",
+				name: "Gallery",
 				component: Gallery,
+			},
+			{
+				path: "/ruleEdit",
+				name: "RuleEdit",
+				component: RuleEdit,
 			},
 		],
 	},
@@ -22,9 +31,15 @@ const routes = [
 
 const router = createRouter({
 	// history: createWebHistory(import.meta.env.BASE_URL),
-	history: createWebHistory(location.pathname),
+	// history: createWebHistory(location.pathname),
+	history: createWebHashHistory(), // 使用 hash 模式
 	// history: createWebHashHistory(location.pathname + location.hash), // 使用 hash 模式
 	routes,
+});
+
+// 全局前置守卫
+router.beforeEach((to, from) => {
+	console.log("全局前置守卫", to, from);
 });
 
 export default router;

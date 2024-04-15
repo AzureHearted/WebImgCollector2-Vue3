@@ -48,7 +48,7 @@ const itemStyle = computed(() => {
     return { padding };
 });
 // f 数据改变(带防抖)
-let timer; // 计时器
+let timer = null; // 计时器
 let handleTask = () => { }; // 任务
 function handleResetPosition(task, options // 配置选项,可用于临时调整时间间隔
 ) {
@@ -61,7 +61,10 @@ function handleResetPosition(task, options // 配置选项,可用于临时调整
         handleTask = task;
     }
     // 如果计时器还没结束就又出触发该函数就清除计时器(重置计时)
-    clearTimeout(timer);
+    if (timer) {
+        clearTimeout(timer);
+        timer = null;
+    }
     // 获取配置参数
     const { delay } = { ...defaultOptions, ...options };
     // 设置计时器等待时间到达执行重新布局
@@ -242,6 +245,7 @@ function setContainerHeight(nextTops) {
 }
 // 容器内有元素过渡结束时的回调
 function handleTransitionend(e) {
+    console.log("元素过渡结束");
     // const propertyNames = ["width", "height", "top", "left", "aspect-ratio"];
     const propertyNames = ["height", "aspect-ratio"];
     if (propertyNames.includes(e.propertyName)) {

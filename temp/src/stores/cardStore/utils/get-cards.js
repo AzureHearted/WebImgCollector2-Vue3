@@ -1,5 +1,6 @@
 import { getDOM, getDOMInfo } from "@/utils/dom";
 import Card from "../class/Card";
+import { getBlobByUrlAuto } from "@/utils/http";
 // 获取卡片
 export default async function getCard(rule, 
 // 当获取到所有DOM时的回调
@@ -28,11 +29,24 @@ onCardGet = async () => { }) {
                 if (!meta.valid) {
                     meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
                 }
+                // 推断如果是链接就 获取blob
+                let blob;
+                if (isUrl(value)) {
+                    const res = await getBlobByUrlAuto(value);
+                    if (res) {
+                        blob = res;
+                        // 推断blob类型
+                        const { mainType, subType } = inferBlobType(blob);
+                        meta.type = mainType;
+                        meta.ext = subType;
+                    }
+                }
                 return {
                     url: value,
                     // 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
                     dom,
                     meta,
+                    blob,
                 };
             });
             // s preview的匹配
@@ -49,10 +63,23 @@ onCardGet = async () => { }) {
                     if (!meta.valid) {
                         meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
                     }
+                    // 推断如果是链接就 获取blob
+                    let blob;
+                    if (isUrl(value)) {
+                        const res = await getBlobByUrlAuto(value);
+                        if (res) {
+                            blob = res;
+                            // 推断blob类型
+                            const { mainType, subType } = inferBlobType(blob);
+                            meta.type = mainType;
+                            meta.ext = subType;
+                        }
+                    }
                     return {
                         url: value,
                         dom,
                         meta,
+                        blob,
                     };
                 });
             }
@@ -137,6 +164,17 @@ onCardGet = async () => { }) {
                 // 如果无效在使用匹配到的内容判断
                 source.meta = await getMeta(source.url);
             }
+            // 推断如果是链接就 获取source.blob
+            if (isUrl(source.url)) {
+                const blob = await getBlobByUrlAuto(source.url);
+                if (blob) {
+                    source.blob = blob;
+                    // 推断blob类型
+                    const { mainType, subType } = inferBlobType(source.blob);
+                    source.meta.type = mainType;
+                    source.meta.ext = subType;
+                }
+            }
             // s 获取preview信息
             let preview;
             if (rule.preview.enable) {
@@ -145,6 +183,7 @@ onCardGet = async () => { }) {
                 preview = {
                     url: await getDOMInfo(previewDOM, rule.preview.infoType, rule.preview.name),
                     dom: previewDOM,
+                    meta: { valid: false, width: 0, height: 0 }, // 初始化meta未一个无效值
                 };
                 // 获取preview.meta
                 // 先使用dom进行判断
@@ -152,6 +191,17 @@ onCardGet = async () => { }) {
                 if (!preview.meta.valid) {
                     // 如果无效在使用匹配到的内容判断
                     preview.meta = await getMeta(preview.url);
+                }
+                // 推断如果是链接就 获取preview.blob
+                if (isUrl(preview.url)) {
+                    const blob = await getBlobByUrlAuto(preview.url);
+                    if (blob) {
+                        preview.blob = blob;
+                        // 推断blob类型
+                        const { mainType, subType } = inferBlobType(preview.blob);
+                        preview.meta.type = mainType;
+                        preview.meta.ext = subType;
+                    }
                 }
             }
             else {
@@ -161,6 +211,7 @@ onCardGet = async () => { }) {
                     meta: {
                         ...source.meta,
                     },
+                    blob: source.blob,
                 };
             }
             // s 获取description信息

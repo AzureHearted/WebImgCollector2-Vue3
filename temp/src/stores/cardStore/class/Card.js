@@ -5,10 +5,12 @@ export default class Card {
     source = {
         url: "", // 卡片来源url，可能为空，因为可能从本地创建的卡片，没有url
         dom: null,
+        meta: { valid: false, width: 0, height: 0 },
     };
     preview = {
         url: "", // 预览图url,
         dom: null,
+        meta: { valid: false, width: 0, height: 0 },
     };
     description = {
         title: "", // 卡片标题，可能为空，因为可能从本地创建的卡片，没有标题
@@ -30,6 +32,14 @@ export default class Card {
             ...this.description,
             ...description,
         };
+    }
+    // 设置Preview blob
+    setPreviewBlob(blob) {
+        this.preview.blob = blob;
+    }
+    // 设置Source blob
+    setSourceBlob(blob) {
+        this.source.blob = blob;
     }
     // 设置卡片描述
     setDescription(description) {

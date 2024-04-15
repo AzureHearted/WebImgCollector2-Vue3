@@ -1,8 +1,10 @@
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { RouterView } from "vue-router";
 import useGlobalStore from "@/stores/global"; //导入全局仓库
 const { defineProps, defineSlots, defineEmits, defineExpose, defineModel, defineOptions, withDefaults, } = await import('vue');
 const globalStore = useGlobalStore();
+import IconMenu from "@svg/menu.svg";
+import IconMoreVertical from "@svg/more-vertical.svg";
 let layoutContainer = ref(null);
 let appBarIsCollapse = ref(true); // 应用栏是否折叠的标志位
 // 导入Fancybox和相关配置
@@ -12,6 +14,11 @@ onMounted(() => {
         ...configFancybox,
         parentEl: layoutContainer.value, // 设置Fancybox的父容器为layoutContainer
     }); // 绑定Fancybox到指定的元素上
+});
+watch(() => globalStore.openWindow, (val) => {
+    if (val) {
+        layoutContainer.value?.focus();
+    }
 });
 // console.log(globalStore.openWindow);
 let __VLS_modelEmitsType;
@@ -50,22 +57,34 @@ function __VLS_template() {
     [VAppBar, VAppBar,];
     __VLS_intrinsicElements.template;
     __VLS_intrinsicElements.template;
+    __VLS_intrinsicElements.template;
+    __VLS_intrinsicElements.template;
     __VLS_components.VAppBarNavIcon;
     __VLS_components.vAppBarNavIcon;
     __VLS_components.VAppBarNavIcon;
     __VLS_components.vAppBarNavIcon;
     // @ts-ignore
     [VAppBarNavIcon, VAppBarNavIcon,];
-    __VLS_components.VarIcon;
-    __VLS_components.varIcon;
+    __VLS_components.IconMenu;
+    __VLS_components.IconMenu;
     // @ts-ignore
-    [VarIcon,];
+    [IconMenu,];
     __VLS_components.VAppBarTitle;
     __VLS_components.vAppBarTitle;
     __VLS_components.VAppBarTitle;
     __VLS_components.vAppBarTitle;
     // @ts-ignore
     [VAppBarTitle, VAppBarTitle,];
+    __VLS_components.VBtn;
+    __VLS_components.vBtn;
+    __VLS_components.VBtn;
+    __VLS_components.vBtn;
+    // @ts-ignore
+    [VBtn, VBtn,];
+    __VLS_components.IconMoreVertical;
+    __VLS_components.IconMoreVertical;
+    // @ts-ignore
+    [IconMoreVertical,];
     __VLS_components.VMain;
     __VLS_components.vMain;
     __VLS_components.VMain;
@@ -131,11 +150,11 @@ function __VLS_template() {
                                     }
                                 };
                                 {
-                                    const __VLS_31 = {}.VarIcon;
-                                    const __VLS_32 = __VLS_asFunctionalComponent(__VLS_31, new __VLS_31({ ...{}, name: ("menu"), }));
-                                    ({}.VarIcon);
-                                    const __VLS_33 = __VLS_32({ ...{}, name: ("menu"), }, ...__VLS_functionalComponentArgsRest(__VLS_32));
-                                    ({}({ ...{}, name: ("menu"), }));
+                                    const __VLS_31 = {}.IconMenu;
+                                    const __VLS_32 = __VLS_asFunctionalComponent(__VLS_31, new __VLS_31({ ...{}, style: ({}), }));
+                                    ({}.IconMenu);
+                                    const __VLS_33 = __VLS_32({ ...{}, style: ({}), }, ...__VLS_functionalComponentArgsRest(__VLS_32));
+                                    ({}({ ...{}, style: ({}), }));
                                     const __VLS_34 = __VLS_pickFunctionalComponentCtx(__VLS_31, __VLS_33);
                                 }
                                 (__VLS_28.slots).default;
@@ -154,25 +173,53 @@ function __VLS_template() {
                         (__VLS_39.slots).default;
                         const __VLS_39 = __VLS_pickFunctionalComponentCtx(__VLS_36, __VLS_38);
                     }
+                    {
+                        const __VLS_41 = __VLS_intrinsicElements["template"];
+                        const __VLS_42 = __VLS_elementAsFunctionalComponent(__VLS_41);
+                        const __VLS_43 = __VLS_42({ ...{}, }, ...__VLS_functionalComponentArgsRest(__VLS_42));
+                        ({}({ ...{}, }));
+                        {
+                            (__VLS_19.slots).append;
+                            {
+                                const __VLS_45 = {}.VBtn;
+                                const __VLS_46 = __VLS_asFunctionalComponent(__VLS_45, new __VLS_45({ ...{}, density: ("compact"), icon: (true), ripple: ((false)), }));
+                                ({}.VBtn);
+                                ({}.VBtn);
+                                const __VLS_47 = __VLS_46({ ...{}, density: ("compact"), icon: (true), ripple: ((false)), }, ...__VLS_functionalComponentArgsRest(__VLS_46));
+                                ({}({ ...{}, density: ("compact"), icon: (true), ripple: ((false)), }));
+                                __VLS_directiveFunction(__VLS_ctx.vRipple)(undefined);
+                                {
+                                    const __VLS_50 = {}.IconMoreVertical;
+                                    const __VLS_51 = __VLS_asFunctionalComponent(__VLS_50, new __VLS_50({ ...{}, style: ({}), }));
+                                    ({}.IconMoreVertical);
+                                    const __VLS_52 = __VLS_51({ ...{}, style: ({}), }, ...__VLS_functionalComponentArgsRest(__VLS_51));
+                                    ({}({ ...{}, style: ({}), }));
+                                    const __VLS_53 = __VLS_pickFunctionalComponentCtx(__VLS_50, __VLS_52);
+                                }
+                                (__VLS_48.slots).default;
+                                const __VLS_48 = __VLS_pickFunctionalComponentCtx(__VLS_45, __VLS_47);
+                            }
+                        }
+                    }
                     const __VLS_19 = __VLS_pickFunctionalComponentCtx(__VLS_16, __VLS_18);
                 }
                 {
-                    const __VLS_41 = {}.VMain;
-                    const __VLS_42 = __VLS_asFunctionalComponent(__VLS_41, new __VLS_41({ ...{}, }));
+                    const __VLS_55 = {}.VMain;
+                    const __VLS_56 = __VLS_asFunctionalComponent(__VLS_55, new __VLS_55({ ...{}, }));
                     ({}.VMain);
                     ({}.VMain);
-                    const __VLS_43 = __VLS_42({ ...{}, }, ...__VLS_functionalComponentArgsRest(__VLS_42));
+                    const __VLS_57 = __VLS_56({ ...{}, }, ...__VLS_functionalComponentArgsRest(__VLS_56));
                     ({}({ ...{}, }));
                     {
-                        const __VLS_46 = {}.RouterView;
-                        const __VLS_47 = __VLS_asFunctionalComponent(__VLS_46, new __VLS_46({ ...{}, }));
+                        const __VLS_60 = {}.RouterView;
+                        const __VLS_61 = __VLS_asFunctionalComponent(__VLS_60, new __VLS_60({ ...{}, }));
                         ({}.RouterView);
-                        const __VLS_48 = __VLS_47({ ...{}, }, ...__VLS_functionalComponentArgsRest(__VLS_47));
+                        const __VLS_62 = __VLS_61({ ...{}, }, ...__VLS_functionalComponentArgsRest(__VLS_61));
                         ({}({ ...{}, }));
-                        const __VLS_49 = __VLS_pickFunctionalComponentCtx(__VLS_46, __VLS_48);
+                        const __VLS_63 = __VLS_pickFunctionalComponentCtx(__VLS_60, __VLS_62);
                     }
-                    (__VLS_44.slots).default;
-                    const __VLS_44 = __VLS_pickFunctionalComponentCtx(__VLS_41, __VLS_43);
+                    (__VLS_58.slots).default;
+                    const __VLS_58 = __VLS_pickFunctionalComponentCtx(__VLS_55, __VLS_57);
                 }
                 (__VLS_14.slots).default;
                 const __VLS_14 = __VLS_pickFunctionalComponentCtx(__VLS_11, __VLS_13);
@@ -196,6 +243,8 @@ const __VLS_internalComponent = (await import('vue')).defineComponent({
         return {
             RouterView: RouterView,
             globalStore: globalStore,
+            IconMenu: IconMenu,
+            IconMoreVertical: IconMoreVertical,
             layoutContainer: layoutContainer,
             appBarIsCollapse: appBarIsCollapse,
         };

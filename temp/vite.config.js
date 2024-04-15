@@ -33,6 +33,7 @@ export default defineConfig({
                 match: ["http*://*", "http*://*/*"], // 要匹配的网站
                 // exclude: ["*://element-plus.org/*"], // 要排除的网站
                 noframes: true, //是否在iframe中使用
+                connect: ["*"],
                 "run-at": "document-body", // 嵌入时机
                 require: [],
             },
@@ -48,14 +49,12 @@ export default defineConfig({
                 math: "always",
             },
         },
-        postcss: {
-            plugins: [],
-        },
     },
     resolve: {
         // 路径别名设置
         alias: {
             "@": fileURLToPath(new URL("./src", import.meta.url)),
+            "@svg": fileURLToPath(new URL("./src/assets/svg", import.meta.url)),
         },
     },
     server: {

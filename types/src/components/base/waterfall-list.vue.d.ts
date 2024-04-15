@@ -73,8 +73,8 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
     };
     loading: boolean;
 }>>>, {
-    data: IData[];
     loading: boolean;
+    data: IData[];
     keyProp: string;
     itemPadding: string | number;
     itemBaseWidth: number;
@@ -88,6 +88,7 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
         item: {
             [x: string]: any;
             id?: string | undefined;
+            name?: string | undefined;
             description: {
                 [x: string]: any;
                 title: string;
@@ -99,16 +100,16 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
             preview: {
                 [x: string]: any;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;
@@ -124,16 +125,16 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
                 [x: string]: any;
                 originUrls?: string[] | undefined;
                 dom: HTMLElement | null;
-                meta?: {
+                meta: {
                     [x: string]: any;
                     valid: boolean;
                     width: number;
                     height: number;
                     aspectRatio?: number | undefined;
-                    type?: "audio" | "html" | "video" | "image" | null | undefined;
+                    type?: "image" | "video" | "audio" | "html" | null | undefined;
                     size?: number | undefined;
                     ext?: string | undefined;
-                } | undefined;
+                };
                 blob?: {
                     readonly size: number;
                     readonly type: string;

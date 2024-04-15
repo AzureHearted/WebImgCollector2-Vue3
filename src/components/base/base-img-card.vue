@@ -1,5 +1,9 @@
 <template>
 	<div class="img-card-container" :style="cardStyle">
+		<!-- 顶部区域 -->
+		<div class="base-card-header" :data-layout="layout">
+			<slot name="header" :data="data"></slot>
+		</div>
 		<!-- 图片组件(默认插槽) -->
 		<slot :data="data" :src="imgUrl" :thumb="imgThumb">
 			<BaseImg
@@ -9,12 +13,8 @@
 				@loaded="loaded"
 				@error="error" />
 		</slot>
-		<!-- 顶部区域 -->
-		<div class="card-header" :style="headerStyle as any">
-			<slot name="header" :data="data"></slot>
-		</div>
 		<!-- 底部区域 -->
-		<div class="card-footer" :style="footerStyle as any">
+		<div class="base-card-footer" :data-layout="layout">
 			<slot name="footer" :data="data"></slot>
 		</div>
 	</div>
@@ -107,5 +107,36 @@
 	}
 	.img-card-container:hover {
 		box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); // 阴影效果，根据需要自行调整。
+	}
+	.base-card-header {
+		position: relative;
+		z-index: 1;
+
+		pointer-events: none;
+		* {
+			pointer-events: auto;
+		}
+
+		&[data-layout="absolute"] {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+		}
+	}
+	.base-card-footer {
+		position: relative;
+
+		pointer-events: none;
+		* {
+			pointer-events: auto;
+		}
+
+		&[data-layout="absolute"] {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+		}
 	}
 </style>

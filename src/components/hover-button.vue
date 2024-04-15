@@ -22,7 +22,7 @@
 					:elevation="10"
 					round
 					:loading="loading"
-					@dblclick="toggleWindow">
+					@dblclick="toggleWindow(route.name as string)">
 					<!-- 图标 -->
 					<IconGridRound style="width: 36px" />
 				</var-button>
@@ -54,12 +54,12 @@
 				type="danger"
 				:max-value="999"
 				:hidden="true">
-				<var-button type="success" round @click="toggleWindow">
+				<var-button type="success" round @click="toggleWindow('Gallery')">
 					<IconDashboard />
 				</var-button>
 			</var-badge>
 			<!-- 规则管理 -->
-			<var-button type="info" round>
+			<var-button type="info" round @click="toggleWindow('RuleEdit')">
 				<IconBxsBookBookmark />
 			</var-button>
 			<!-- 设置 -->
@@ -76,6 +76,9 @@
 
 <script setup lang="ts">
 	import { defineProps, ref, reactive } from "vue";
+	import { useRoute, useRouter } from "vue-router";
+	const route = useRoute();
+	const router = useRouter();
 	// 引入公共方法
 	import { isMobile } from "@/utils/common";
 	// 引入图标
@@ -95,7 +98,7 @@
 	// 定义Props
 	const props = withDefaults(
 		defineProps<{
-			teleportTo?: string | HTMLElement; // 指定浮动按钮的挂载点
+			teleportTo?: string | HTMLElement | false; // 指定浮动按钮的挂载点
 			loading?: boolean;
 		}>(),
 		{
@@ -113,8 +116,19 @@
 	// const scrollingToUp = ref(false); // 控制滚动按钮的显示状态
 
 	// 切换窗口显示
-	function toggleWindow() {
-		globalStore.openWindow = !globalStore.openWindow;
+	function toggleWindow(name?: string) {
+		if (name) {
+			if (name === route.name) {
+				console.log(name, route.name);
+				globalStore.openWindow = !globalStore.openWindow;
+			} else {
+				router.push({ name });
+				globalStore.openWindow = true;
+			}
+		} else {
+			console.log("切换显示");
+			globalStore.openWindow = !globalStore.openWindow;
+		}
 	}
 
 	// 滚动容器到底部
@@ -123,7 +137,7 @@
 		container: HTMLElement = document.documentElement, // 滚动元素
 		interval: number = 1000 // 滚动间隔
 	): void {
-		let scrollInterval: number | null = null;
+		let scrollInterval: NodeJS.Timeout | null = null;
 
 		// 执行一次滚动操作
 		function scrollOnce(): void {

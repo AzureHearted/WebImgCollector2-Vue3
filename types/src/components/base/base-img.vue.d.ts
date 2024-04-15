@@ -16,7 +16,7 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
     useThumb?: boolean | undefined;
     thumb?: string | undefined;
     thumbMaxSize?: number | undefined;
-    viewportDom?: Element | Document | null | undefined;
+    viewportDom?: Document | Element | null | undefined;
     viewRootMargin?: string | undefined;
     observerOnce?: boolean | undefined;
     manualControl?: boolean | undefined;
@@ -43,7 +43,7 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
     useThumb?: boolean | undefined;
     thumb?: string | undefined;
     thumbMaxSize?: number | undefined;
-    viewportDom?: Element | Document | null | undefined;
+    viewportDom?: Document | Element | null | undefined;
     viewRootMargin?: string | undefined;
     observerOnce?: boolean | undefined;
     manualControl?: boolean | undefined;
@@ -64,17 +64,17 @@ declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__
     onError?: (() => any) | undefined;
     onLoaded?: ((info: returnInfo) => any) | undefined;
 }, {
+    draggable: boolean;
     src: string;
     initWidth: number;
     initHeight: number;
     useThumb: boolean;
     thumb: string;
     thumbMaxSize: number;
-    viewportDom: Element | Document | null;
+    viewportDom: Document | Element | null;
     viewRootMargin: string;
     observerOnce: boolean;
     manualControl: boolean;
-    draggable: boolean;
 }, {}>, {
     default?(_: {}): any;
 }>;

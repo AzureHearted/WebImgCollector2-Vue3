@@ -1,22 +1,45 @@
 <template>
-	<div>
-		<v-sheet class="gallery-container-toolbar" width="100%" :elevation="4">
+	<div class="gallery-toolbar-container">
+		<!-- 工具栏 -->
+		<v-sheet class="gallery-toolbar" width="100%" :elevation="4">
+			<!-- 进度条 -->
+			<v-progress-linear
+				class="gallery-toolbar-loading"
+				color="primary"
+				:active="loadingStore.loading"
+				:max="loadingStore.total"
+				:model-value="loadingStore.current"
+				height="14"
+				rounded
+				rounded-bar>
+				<template #default="{ value }">
+					<strong> {{ value.toFixed(2) }}% </strong>
+				</template>
+			</v-progress-linear>
 			<!-- 操作栏 -->
 			<v-sheet
 				class="gallery-container-control-panel"
 				:elevation="0"
 				width="fit-content">
 				<!-- 控制按钮组 -->
-				<div>
+				<var-badge
+					:offset-y="2"
+					:offset-x="-8"
+					style="z-index: 2"
+					:hidden="!cardStore.validCardList.length"
+					:value="cardStore.validCardList.length">
 					<var-menu
 						placement="bottom"
 						:default-style="false"
 						same-width
 						:trigger="isMobile() ? 'click' : 'hover'"
-						teleport=".online-gallery-top-container">
-						<var-button-group type="primary">
+						:teleport="false">
+						<var-button-group
+							:size="isMobile() ? 'small' : 'normal'"
+							type="success">
+							<!-- 加载按钮 -->
 							<var-button
-								@click="getCards"
+								@click.stop="getCards"
 								:loading="state.loading"
 								block
 								icon-container>
@@ -27,7 +50,10 @@
 							</var-button>
 						</var-button-group>
 						<template #menu>
-							<var-button-group vertical>
+							<var-button-group
+								:size="isMobile() ? 'small' : 'normal'"
+								vertical>
+								<!-- 清空按钮 -->
 								<var-button type="danger" icon-container block @click="clear">
 									<IconCloseCircleMultiple
 										class="gallery-toolbar-icon"
@@ -37,7 +63,7 @@
 							</var-button-group>
 						</template>
 					</var-menu>
-				</div>
+				</var-badge>
 			</v-sheet>
 			<!-- 选择器 -->
 			<v-sheet
@@ -45,10 +71,12 @@
 				:elevation="0"
 				width="fit-content">
 				<!-- 选择器按钮组 -->
-				<var-button-group class="control-button-group" size="normal">
+				<var-button-group
+					class="control-button-group"
+					:size="isMobile() ? 'small' : 'normal'">
 					<var-button type="primary" @click="checkAll"> 全选 </var-button>
-					<var-button type="primary" @click="inverseAll"> 反选 </var-button>
-					<var-button type="primary" @click="cancel"> 取消 </var-button>
+					<var-button type="info" @click="inverseAll"> 反选 </var-button>
+					<var-button @click="cancel"> 取消 </var-button>
 				</var-button-group>
 			</v-sheet>
 			<!-- 下载控制 -->
@@ -59,7 +87,7 @@
 				<!-- 下载按钮 -->
 				<var-badge
 					type="info"
-					:offset-y="4"
+					:offset-y="2"
 					style="z-index: 1"
 					:hidden="!checkedCardList.length"
 					:value="checkedCardList.length">
@@ -67,15 +95,19 @@
 						placement="bottom"
 						:default-style="false"
 						:trigger="isMobile() ? 'click' : 'hover'"
-						teleport=".online-gallery-top-container">
-						<var-button-group type="primary">
-							<var-button @click="downloadSelected"> 选中下载 </var-button>
+						:teleport="false">
+						<var-button-group
+							:size="isMobile() ? 'small' : 'normal'"
+							type="primary">
+							<var-button @click.stop="downloadSelected"> 选中下载 </var-button>
 							<var-button style="padding: 0 4px">
 								<IconArrowDown style="width: 24px; fill: white" />
 							</var-button>
 						</var-button-group>
 						<template #menu>
-							<var-button-group vertical>
+							<var-button-group
+								:size="isMobile() ? 'small' : 'normal'"
+								vertical>
 								<var-button
 									icon-container
 									block
@@ -178,13 +210,18 @@
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 
+	// 导入svg
 	import IconDownload from "@svg/download.svg";
 	import IconArrowDown from "@svg/arrow-down.svg";
 	import IconCloseCircleMultiple from "@svg/close-circle-multiple.svg";
 
-	import { useCardStore } from "@/stores";
+	// 导入公用ts库
 	import { isMobile } from "@/utils/common";
+
+	// 导入仓库
+	import { useCardStore, useLoadingStore } from "@/stores";
 	const cardStore = useCardStore();
+	const loadingStore = useLoadingStore();
 
 	// 状态数据
 	const state = reactive({
@@ -204,6 +241,21 @@
 			]),
 		},
 	});
+
+	// 监听card仓库卡片尺寸最大值变化
+	watch(
+		() => [cardStore.info.size.width[1], cardStore.info.size.height[1]],
+		([width, height]) => {
+			// console.log("过滤器变化", width, height);
+			// 更新组件过滤器最大值
+			if (filters.size.width[1] < width) {
+				filters.size.width[1] = width;
+			}
+			if (filters.size.height[1] < height) {
+				filters.size.height[1] = height;
+			}
+		}
+	);
 
 	// 被选中的卡片
 	const checkedCardList: ComputedRef<BaseCard[]> = computed(() => {
@@ -256,18 +308,27 @@
 
 	// 下载全部
 	function downloadAll() {
-		const ids = cardStore.validCardList.map((x) => x.id);
+		const ids = cardStore.filteredCardList.map((x) => x.id);
 		cardStore.downloadCards(ids);
 	}
 </script>
 
 <style lang="less" scoped>
+	// 工具栏容器
+	.gallery-toolbar-container {
+		position: relative;
+	}
+
+	.gallery-toolbar-loading {
+		margin: 4px 0;
+	}
+
 	// 工具栏样式
-	.gallery-container-toolbar {
+	.gallery-toolbar {
 		flex: 0;
 		display: flex;
 		flex-flow: row wrap;
-		padding: 10px 4px 0 4px;
+		padding: 4px 4px 0 4px;
 		background: transparent;
 		align-content: center;
 	}

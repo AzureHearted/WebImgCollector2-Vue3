@@ -1,9 +1,9 @@
 <template>
-	<div @click="checked = !checked">
+	<div @click="isChecked = !isChecked">
 		<Transition appear>
 			<var-button
-				v-if="!checked"
-				:type="checked ? 'success' : 'default'"
+				v-if="!isChecked"
+				:type="isChecked ? 'success' : 'default'"
 				icon-container
 				round>
 				<IconCheckboxBlank
@@ -12,7 +12,7 @@
 			</var-button>
 			<var-button
 				v-else
-				:type="checked ? 'success' : 'default'"
+				:type="isChecked ? 'success' : 'default'"
 				icon-container
 				round>
 				<IconCheckboxChecked
@@ -24,11 +24,31 @@
 </template>
 
 <script setup lang="ts">
-	import { defineModel } from "vue";
+	import { defineProps, withDefaults, computed, defineEmits } from "vue";
 	import IconCheckboxBlank from "@svg/checkbox-blank-circle-outline.svg";
 	import IconCheckboxChecked from "@svg/check-circle.svg";
 
-	const checked = defineModel({ type: Boolean, default: false });
+	const props = withDefaults(
+		defineProps<{
+			checked: boolean;
+		}>(),
+		{
+			checked: false,
+		}
+	);
+
+	const emits = defineEmits<{
+		(e: "change", val: boolean): void;
+	}>();
+
+	const isChecked = computed({
+		get() {
+			return props.checked;
+		},
+		set(val) {
+			emits("change", val);
+		},
+	});
 </script>
 
 <style scoped lang="less">

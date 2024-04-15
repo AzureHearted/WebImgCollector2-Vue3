@@ -1,5 +1,5 @@
 import type { BaseCard, CardDescription, CardPreview, CardSource, BaseState } from "../interface";
-type ICard = Partial<BaseCard> & BaseState;
+export type ICard = Partial<BaseCard> & BaseState;
 export default class Card implements ICard {
     readonly id: string;
     source: CardSource;
@@ -9,10 +9,11 @@ export default class Card implements ICard {
     isLoaded: boolean;
     isSelected: boolean;
     constructor(source?: CardSource, preview?: CardPreview, description?: CardDescription);
+    setPreviewBlob(blob: Blob): void;
+    setSourceBlob(blob: Blob): void;
     setDescription(description: CardDescription): void;
     setPreview(preview: CardPreview): void;
     setSource(source: CardSource & {
         originUrls?: string[];
     }): void;
 }
-export {};

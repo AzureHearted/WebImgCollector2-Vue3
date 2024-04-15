@@ -40,10 +40,11 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted } from "vue";
+	import { ref, onMounted, watch } from "vue";
 	import { RouterView } from "vue-router";
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
+
 	import IconMenu from "@svg/menu.svg";
 	import IconMoreVertical from "@svg/more-vertical.svg";
 
@@ -59,6 +60,15 @@
 			parentEl: layoutContainer.value, // 设置Fancybox的父容器为layoutContainer
 		}); // 绑定Fancybox到指定的元素上
 	});
+
+	watch(
+		() => globalStore.openWindow,
+		(val) => {
+			if (val) {
+				layoutContainer.value?.focus();
+			}
+		}
+	);
 
 	// console.log(globalStore.openWindow);
 </script>

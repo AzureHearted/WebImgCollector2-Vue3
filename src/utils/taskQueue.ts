@@ -1,9 +1,9 @@
 interface Options {
 	interval: number;
 	maxConcurrent: number;
-	onTaskComplete: (result: any) => void;
+	onTaskComplete: (result: any, completedCount: number) => void;
 	onTaskError: (error: any, task: Function) => void;
-	onAllTasksComplete: () => void;
+	onAllTasksComplete: (completedCount: number, failedCount: number) => void;
 }
 
 // 任务队列
@@ -17,15 +17,15 @@ export class TaskQueue {
 	private completedCount: number = 0; // 执行完成的任务。
 	private failedTasks: Array<{ task: Function | undefined; error: any }> = []; // 失败的任务数组。
 	private isComplete = false; // 是否已经完成。
-	private timer: number | null = null; // 计时器
+	private timer: NodeJS.Timeout | null = null; // 计时器
 	private runningTasks: Function[] = []; // 记录正在执行的任务
 
 	// 每次任务完成时的回调
-	private onTaskComplete: (...arg: any[]) => void;
+	private onTaskComplete: Options["onTaskComplete"];
 	// 任务执行出错时的回调
-	private onTaskError: (...arg: any[]) => void;
+	private onTaskError: Options["onTaskError"];
 	// 所有任务完成时的回调
-	private onAllTasksComplete: (...arg: any[]) => void;
+	private onAllTasksComplete: Options["onAllTasksComplete"];
 
 	constructor(options?: Partial<Options>) {
 		// 默认配置
@@ -129,9 +129,9 @@ export class TaskQueue {
 				const p = task();
 				this.runningTasks.push(p); // 记录正在执行的任务
 				const res = await p;
-				this.onTaskComplete(res); // 执行任务完成后的回调
+				this.onTaskComplete(res, this.completedCount); // 执行任务完成后的回调
 			} catch (error: any) {
-				this.onTaskError(task, error);
+				this.onTaskError(error, task);
 				this.failedTasks.push({ task, error }); // 记录失败的任务
 			}
 		} else {
@@ -143,13 +143,13 @@ export class TaskQueue {
 	// 暂停执行
 	public pause(): void {
 		if (this.paused || this.isComplete) return;
-		console.log("任务暂停");
+		// console.log("任务暂停");
 		this.paused = true;
 	}
 	// 继续执行
 	public continue(): void {
 		if (!this.paused || this.isComplete) return;
-		console.log("任务继续");
+		// console.log("任务继续");
 		this.paused = false;
 		this.run();
 	}
@@ -158,7 +158,7 @@ export class TaskQueue {
 	private handleComplete() {
 		if (!this.isComplete) {
 			this.isComplete = true;
-			this.onAllTasksComplete();
+			this.onAllTasksComplete(this.completedCount, this.failedTasks.length);
 		}
 	}
 }

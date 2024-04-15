@@ -27,18 +27,8 @@ export declare function getUrlType(url: string): "image" | "video" | "html";
 export declare function getBlobType(blob: Blob): "image" | "video" | "html" | "audio";
 export declare function guessUrlType(url: string): "image" | "video" | "html";
 export declare function getClipBoardText(): Promise<string>;
-/** 防抖函数
- * @param {Function} func 要进行防抖的函数
- * @param {number} delay 防抖延时
- * @returns {Function} 返回一个函数,执行该函数可以实现防抖
- * @abstract
- * 在delay期间内重复触发返回的这个函数,则一直重置计时器,
- * 直到两次触发的间隔超过delay才能成功执行一次。
+/**
+ * f 字节 -> 自动单位
+ * @param byteSize 字节大小
  */
-export declare function debounce(func: Function, delay?: number): (...args: any[]) => void;
-/** 节流函数
- * @param {Function} func 要进行节流的函数
- * @param {number} wait 节流等待
- * @returns {Function} 返回一个函数,执行该函数可以实现节流
- */
-export declare function throttle(func: Function, wait?: number): (...args: any[]) => void;
+export declare function byteAutoUnit(byteSize: number, decimal?: number): string;

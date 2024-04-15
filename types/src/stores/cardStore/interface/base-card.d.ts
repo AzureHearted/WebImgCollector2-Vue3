@@ -1,5 +1,6 @@
 export interface BaseCard extends BaseState {
     id?: string;
+    name?: string;
     description: CardDescription;
     preview: CardPreview;
     source: CardSource;
@@ -27,13 +28,13 @@ export interface BaseLink {
 export interface CardSource extends BaseLink {
     originUrls?: string[];
     dom: HTMLElement | null;
-    meta?: BaseMeta;
+    meta: BaseMeta;
     blob?: Blob;
     [key: string]: any;
 }
 export interface CardPreview extends BaseLink {
     dom: HTMLElement | null;
-    meta?: BaseMeta;
+    meta: BaseMeta;
     blob?: Blob;
     [key: string]: any;
 }

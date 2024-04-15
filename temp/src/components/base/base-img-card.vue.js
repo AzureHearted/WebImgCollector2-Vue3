@@ -89,52 +89,52 @@ function __VLS_template() {
         const __VLS_2 = __VLS_1({ ...{}, class: ("img-card-container"), style: ((__VLS_ctx.cardStyle)), }, ...__VLS_functionalComponentArgsRest(__VLS_1));
         ({}({ ...{}, class: ("img-card-container"), style: ((__VLS_ctx.cardStyle)), }));
         {
-            const __VLS_5 = {}.slot;
-            const __VLS_6 = __VLS_asFunctionalComponent(__VLS_5, new __VLS_5({ ...{}, data: ((__VLS_ctx.data)), src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), }));
-            const __VLS_7 = __VLS_6({ ...{}, data: ((__VLS_ctx.data)), src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), }, ...__VLS_functionalComponentArgsRest(__VLS_6));
+            const __VLS_5 = __VLS_intrinsicElements["div"];
+            const __VLS_6 = __VLS_elementAsFunctionalComponent(__VLS_5);
+            const __VLS_7 = __VLS_6({ ...{}, class: ("base-card-header"), "data-layout": ((__VLS_ctx.layout)), }, ...__VLS_functionalComponentArgsRest(__VLS_6));
+            ({}({ ...{}, class: ("base-card-header"), "data-layout": ((__VLS_ctx.layout)), }));
+            {
+                const __VLS_10 = {}.slot;
+                const __VLS_11 = __VLS_asFunctionalComponent(__VLS_10, new __VLS_10({ ...{}, data: ((__VLS_ctx.data)), }));
+                const __VLS_12 = __VLS_11({ ...{}, data: ((__VLS_ctx.data)), }, ...__VLS_functionalComponentArgsRest(__VLS_11));
+                ({}({ ...{}, data: ((__VLS_ctx.data)), }));
+                var __VLS_14 = {
+                    data: (__VLS_ctx.data),
+                };
+            }
+            (__VLS_8.slots).default;
+            const __VLS_8 = __VLS_pickFunctionalComponentCtx(__VLS_5, __VLS_7);
+        }
+        {
+            const __VLS_15 = {}.slot;
+            const __VLS_16 = __VLS_asFunctionalComponent(__VLS_15, new __VLS_15({ ...{}, data: ((__VLS_ctx.data)), src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), }));
+            const __VLS_17 = __VLS_16({ ...{}, data: ((__VLS_ctx.data)), src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), }, ...__VLS_functionalComponentArgsRest(__VLS_16));
             ({}({ ...{}, data: ((__VLS_ctx.data)), src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), }));
-            var __VLS_9 = {
+            var __VLS_19 = {
                 data: (__VLS_ctx.data),
                 src: (__VLS_ctx.imgUrl),
                 thumb: (__VLS_ctx.imgThumb),
             };
             {
-                const __VLS_10 = {}.BaseImg;
-                const __VLS_11 = __VLS_asFunctionalComponent(__VLS_10, new __VLS_10({ ...{ 'onLoaded': {}, 'onError': {}, }, src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), useThumb: ((__VLS_ctx.useThumb)), }));
+                const __VLS_20 = {}.BaseImg;
+                const __VLS_21 = __VLS_asFunctionalComponent(__VLS_20, new __VLS_20({ ...{ 'onLoaded': {}, 'onError': {}, }, src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), useThumb: ((__VLS_ctx.useThumb)), }));
                 ({}.BaseImg);
-                const __VLS_12 = __VLS_11({ ...{ 'onLoaded': {}, 'onError': {}, }, src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), useThumb: ((__VLS_ctx.useThumb)), }, ...__VLS_functionalComponentArgsRest(__VLS_11));
+                const __VLS_22 = __VLS_21({ ...{ 'onLoaded': {}, 'onError': {}, }, src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), useThumb: ((__VLS_ctx.useThumb)), }, ...__VLS_functionalComponentArgsRest(__VLS_21));
                 ({}({ ...{ 'onLoaded': {}, 'onError': {}, }, src: ((__VLS_ctx.imgUrl)), thumb: ((__VLS_ctx.imgThumb)), useThumb: ((__VLS_ctx.useThumb)), }));
-                let __VLS_15 = { 'loaded': __VLS_pickEvent(__VLS_14['loaded'], {}.onLoaded) };
-                __VLS_15 = { loaded: (__VLS_ctx.loaded) };
-                let __VLS_16 = { 'error': __VLS_pickEvent(__VLS_14['error'], {}.onError) };
-                __VLS_16 = { error: (__VLS_ctx.error) };
-                const __VLS_13 = __VLS_pickFunctionalComponentCtx(__VLS_10, __VLS_12);
-                let __VLS_14;
+                let __VLS_25 = { 'loaded': __VLS_pickEvent(__VLS_24['loaded'], {}.onLoaded) };
+                __VLS_25 = { loaded: (__VLS_ctx.loaded) };
+                let __VLS_26 = { 'error': __VLS_pickEvent(__VLS_24['error'], {}.onError) };
+                __VLS_26 = { error: (__VLS_ctx.error) };
+                const __VLS_23 = __VLS_pickFunctionalComponentCtx(__VLS_20, __VLS_22);
+                let __VLS_24;
             }
             (__VLS_3.slots).default;
         }
         {
-            const __VLS_17 = __VLS_intrinsicElements["div"];
-            const __VLS_18 = __VLS_elementAsFunctionalComponent(__VLS_17);
-            const __VLS_19 = __VLS_18({ ...{}, class: ("card-header"), style: __VLS_ctx.headerStyle, }, ...__VLS_functionalComponentArgsRest(__VLS_18));
-            ({}({ ...{}, class: ("card-header"), style: __VLS_ctx.headerStyle, }));
-            {
-                const __VLS_22 = {}.slot;
-                const __VLS_23 = __VLS_asFunctionalComponent(__VLS_22, new __VLS_22({ ...{}, data: ((__VLS_ctx.data)), }));
-                const __VLS_24 = __VLS_23({ ...{}, data: ((__VLS_ctx.data)), }, ...__VLS_functionalComponentArgsRest(__VLS_23));
-                ({}({ ...{}, data: ((__VLS_ctx.data)), }));
-                var __VLS_26 = {
-                    data: (__VLS_ctx.data),
-                };
-            }
-            (__VLS_20.slots).default;
-            const __VLS_20 = __VLS_pickFunctionalComponentCtx(__VLS_17, __VLS_19);
-        }
-        {
             const __VLS_27 = __VLS_intrinsicElements["div"];
             const __VLS_28 = __VLS_elementAsFunctionalComponent(__VLS_27);
-            const __VLS_29 = __VLS_28({ ...{}, class: ("card-footer"), style: __VLS_ctx.footerStyle, }, ...__VLS_functionalComponentArgsRest(__VLS_28));
-            ({}({ ...{}, class: ("card-footer"), style: __VLS_ctx.footerStyle, }));
+            const __VLS_29 = __VLS_28({ ...{}, class: ("base-card-footer"), "data-layout": ((__VLS_ctx.layout)), }, ...__VLS_functionalComponentArgsRest(__VLS_28));
+            ({}({ ...{}, class: ("base-card-footer"), "data-layout": ((__VLS_ctx.layout)), }));
             {
                 const __VLS_32 = {}.slot;
                 const __VLS_33 = __VLS_asFunctionalComponent(__VLS_32, new __VLS_32({ ...{}, data: ((__VLS_ctx.data)), }));
@@ -152,12 +152,12 @@ function __VLS_template() {
     }
     if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {
         __VLS_styleScopedClasses["img-card-container"];
-        __VLS_styleScopedClasses["card-header"];
-        __VLS_styleScopedClasses["card-footer"];
+        __VLS_styleScopedClasses["base-card-header"];
+        __VLS_styleScopedClasses["base-card-footer"];
     }
     var __VLS_slots;
     // @ts-ignore
-    [cardStyle, data, imgUrl, imgThumb, imgUrl, imgThumb, useThumb, loaded, error, headerStyle, data, footerStyle, data,];
+    [cardStyle, layout, data, data, imgUrl, imgThumb, imgUrl, imgThumb, useThumb, loaded, error, layout, data,];
     return __VLS_slots;
 }
 const __VLS_internalComponent = (await import('vue')).defineComponent({
@@ -165,8 +165,6 @@ const __VLS_internalComponent = (await import('vue')).defineComponent({
         return {
             BaseImg: BaseImg,
             cardStyle: cardStyle,
-            headerStyle: headerStyle,
-            footerStyle: footerStyle,
             loaded: loaded,
             error: error,
         };

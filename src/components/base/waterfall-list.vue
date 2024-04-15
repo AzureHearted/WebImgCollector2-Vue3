@@ -1,5 +1,5 @@
 <template>
-	<div class="waterfall-container" @transitionend="handleTransitionend">
+	<div class="waterfall-container" @transitionend.self="handleTransitionend">
 		<transition-group
 			name="list-complete"
 			appear
@@ -125,7 +125,7 @@
 	});
 
 	// f 数据改变(带防抖)
-	let timer: number; // 计时器
+	let timer: NodeJS.Timeout | null = null; // 计时器
 	let handleTask: Function = () => {}; // 任务
 	function handleResetPosition(
 		task?: (() => void) | any,
@@ -140,7 +140,10 @@
 			handleTask = task;
 		}
 		// 如果计时器还没结束就又出触发该函数就清除计时器(重置计时)
-		clearTimeout(timer);
+		if (timer) {
+			clearTimeout(timer);
+			timer = null;
+		}
 		// 获取配置参数
 		const { delay } = { ...defaultOptions, ...options };
 		// 设置计时器等待时间到达执行重新布局
@@ -338,6 +341,7 @@
 
 	// 容器内有元素过渡结束时的回调
 	function handleTransitionend(e: TransitionEvent) {
+		console.log("元素过渡结束");
 		// const propertyNames = ["width", "height", "top", "left", "aspect-ratio"];
 		const propertyNames = ["height", "aspect-ratio"];
 		if (propertyNames.includes(e.propertyName)) {

@@ -7,6 +7,8 @@ import router from "./router";
 import vuetify from "@/plugin/vuetify";
 // Varlet组件库
 import Varlet from "@/plugin/varlet";
+import { GM_xmlhttpRequest } from "$";
+console.log({ GM_xmlhttpRequest });
 // 创建 Vue 容器
 const appContainer = document.createElement("div");
 // 创建 Vue 应用
