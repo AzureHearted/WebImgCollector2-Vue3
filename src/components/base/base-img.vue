@@ -102,6 +102,9 @@
 	const loadImage = async (src: string) => {
 		// console.log("src", src);
 		const img = new Image();
+		// img.referrerPolicy = "strict-origin-when-cross-origin";
+		// img.referrerPolicy = "no-referrer";
+		img.referrerPolicy = "no-referrer-when-downgrade";
 		// 图片加载函数
 		const handleLoad = () => {
 			// console.log(imgDom.value);

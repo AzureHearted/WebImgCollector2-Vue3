@@ -1,3 +1,4 @@
+import { getHostByUrl } from "../common";
 import { GMRequest } from "./GMRequest";
 
 // 通过链接获取blob
@@ -8,18 +9,27 @@ export function getBlobByUrl(
 ): Promise<Blob | null> {
 	// 防止url为空
 	if (!url || !url.trim().length) return Promise.resolve(null);
+
 	if (mode === "Fetch") {
 		// 使用Fetch API
 		return new Promise<Blob | null>((resolve) => {
 			(async () => {
-				const blob = await fetch(url)
+				// 首次尝试：直接通过链接获取
+				let blob = await fetch(url)
 					.then((res) => res.blob())
 					.catch(() => null);
-				if (blob) {
+				if (blob && blob.size) {
+					// console.log("Fetch请求成功", blob);
+					resolve(blob);
+				}
+				// 第二次尝试：如果第一次尝试失败则再次设置cache为no-cache再次尝试
+				blob = await fetch(url, { cache: "no-cache" })
+					.then((res) => res.blob())
+					.catch(() => null);
+				if (blob && blob.size) {
 					// console.log("Fetch请求成功", blob);
 					resolve(blob);
 				} else {
-					// console.log("Fetch请求失败", blob);
 					resolve(null);
 				}
 			})();
@@ -28,7 +38,7 @@ export function getBlobByUrl(
 		// 使用油猴GM_xmlhttpRequest的API
 		return new Promise<Blob | null>((resolve) => {
 			GMRequest({ url, referer, responseType: "blob" }).then((blob) => {
-				if (blob) {
+				if (blob && blob.size) {
 					// console.log("GM请求成功", blob);
 					resolve(blob);
 				} else {
@@ -44,19 +54,46 @@ export function getBlobByUrl(
 export async function getBlobByUrlAuto(url: string): Promise<Blob | null> {
 	//s 链接为空直接返回空blob
 	if (!url || !url.trim().length) return null;
+
+	// 尝试获取blob
+	console.groupCollapsed(`请求资源：${url}`);
+	const blob = await tryGetBlob(url, [
+		{ mode: "Fetch", message: "Fetch请求" },
+		{ mode: "GM", message: "GM请求1" },
+		{
+			mode: "GM",
+			referer: location.origin + "/",
+			message: "GM请求2(referer为指定当前域名)",
+		},
+		{
+			mode: "GM",
+			referer: getHostByUrl(url) + "/",
+			message: "GM请求3(referer为链接域名)",
+		},
+	]);
+	console.groupEnd();
+	return blob;
+}
+
+// 尝试获取Blob(通过传入的请求队列一次请求blob,一旦成功就直接返回结果)
+async function tryGetBlob(
+	url: string,
+	// 尝试队列
+	requests: { mode: "Fetch" | "GM"; referer?: string; message?: string }[]
+): Promise<Blob | null> {
 	let blob: Blob | null = null;
-	// console.log("Fetch请求", url);
-	//s 先尝试通过Fetch方法获取
-	blob = await getBlobByUrl(url, "Fetch");
-	//s Fetch失败后尝试通过GM不指定referer方式获取
-	if (!blob) {
-		// console.log("GM请求1", url);
-		blob = await getBlobByUrl(url, "GM");
+
+	for (const request of requests) {
+		// 打印日志消息
+		if (request.message && !!request.message.trim().length) {
+			console.log("[日志]WebImgCollector2:", `${request.message}: ${url}`);
+		}
+		// 请求blob
+		blob = await getBlobByUrl(url, request.mode, request.referer);
+		// 一旦成功就跳出循环
+		if (blob) break;
 	}
-	//s 再次失败后尝试通过GM指定referer方式获取
-	if (!blob) {
-		// console.log("GM请求2", url, location.origin);
-		blob = await getBlobByUrl(url, "GM", location.origin);
-	}
+	console.log(blob);
+
 	return blob;
 }

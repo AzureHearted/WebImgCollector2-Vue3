@@ -91,7 +91,16 @@ export function getHostByUrl(url: string): string {
  */
 export function getNameByUrl(url: string): string {
 	url = decodeURI(url);
-	url = url.replace(/([/\\])$/, "");
+	// 先尝试转为URL对象
+	let urlObj: URL;
+	try {
+		urlObj = new URL(url);
+	} catch {
+		// 如果不是url则替换掉所有“/”“\”后返回
+		return url.replace(/[/\\]/, "-");
+	}
+	// 去除查询参数和结尾的“/”
+	url = url.replace(/([/\\])$/, "").replace(urlObj.search, "");
 	const list = url.match(/(?<=[/\\]+)([^\\/\r\n$]+)$/g) || [];
 	if (list.length > 0) {
 		return list[0] || url;

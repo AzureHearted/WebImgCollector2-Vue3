@@ -7,23 +7,37 @@ import type {
 	CardSource,
 } from "../interface";
 import Card from "../class/Card";
-
+// 导入请求工具
 import { getBlobByUrlAuto } from "@/utils/http";
+import { getNameByUrl } from "@/utils/common";
 
-// 获取卡片
-export default async function getCard(
-	rule: MatchRule,
+// 配置接口
+interface Options {
 	// 当获取到所有DOM时的回调
-	onAllDOMGet: (doms: HTMLElement[]) => Promise<HTMLElement[]> = async (doms) =>
-		doms, // 用于给用户过滤dom
+	onAllDOMGet: (doms: HTMLElement[]) => Promise<HTMLElement[]>;
 	// 每当有一个卡片获取到的时候的回调
 	onCardGet: (
 		card: Card,
 		index: number,
 		dom: HTMLElement | null,
 		addCard: () => Promise<void>
-	) => Promise<void> = async () => {}
+	) => Promise<void>;
+}
+
+// 获取卡片
+export default async function getCard(
+	rule: MatchRule,
+	options: Partial<Options>
 ) {
+	// 默认配置
+	const defaultOptions: Options = {
+		onAllDOMGet: async (doms) => doms,
+		onCardGet: async () => {},
+	};
+	// 合并配置
+	options = { ...defaultOptions, ...options };
+	const { onAllDOMGet, onCardGet } = options as Options;
+
 	// 卡片列表
 	const cardList = [] as Card[];
 
@@ -134,7 +148,7 @@ export default async function getCard(
 						// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
 						value = value || source.url || preview.url;
 						return {
-							title: value,
+							title: getNameByUrl(value),
 							dom,
 						};
 					}
@@ -642,6 +656,6 @@ function inferBlobType(blob: Blob) {
 	const [mainType, subType] = blob.type.split("/") as [MainType, string];
 	return {
 		mainType,
-		subType,
+		subType: subType === "jpeg" ? "jpg" : subType, // 处理子类型是jpeg的情况
 	};
 }

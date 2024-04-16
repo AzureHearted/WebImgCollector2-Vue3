@@ -58,6 +58,7 @@ const valueElements = [
 	HTMLMeterElement,
 	HTMLProgressElement,
 ];
+
 // 获取元素的值
 function getDOMValue(dom: HTMLElement) {
 	// 判断DOM类型

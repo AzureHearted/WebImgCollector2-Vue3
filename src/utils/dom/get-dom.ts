@@ -17,12 +17,12 @@ export default function getDOM(
 	selector: keyof HTMLElementTagNameMap | string,
 	options?: Partial<optionsType>
 ): HTMLElement[] | HTMLElement | null {
-	// 默认选项蚕食
+	// 默认选项
 	const defaultOptions: optionsType = {
 		mode: "first",
 		regionDOM: document.body,
 	};
-	// 初始化参数
+	// 合并选项
 	const { mode, regionDOM } = { ...defaultOptions, ...options };
 
 	// 获取dom

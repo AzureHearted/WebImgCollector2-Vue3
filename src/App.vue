@@ -42,8 +42,8 @@
 		background-color: transparent;
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
-		z-index: 2147483647;
-		// z-index: 1049;
+		// z-index: 2147483647;
+		z-index: 1050;
 		// 仅仅让容器本身不响应鼠标事件
 		pointer-events: none;
 

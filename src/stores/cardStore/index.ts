@@ -15,6 +15,8 @@ import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现�
 // 导入其他仓库
 import { useLoadingStore } from "@/stores";
 
+import { Snackbar } from "@varlet/ui";
+
 export default defineStore("cardStore", () => {
 	const loadingStore = useLoadingStore();
 
@@ -74,17 +76,21 @@ export default defineStore("cardStore", () => {
 	// 获取页面资源
 	async function getPageCard() {
 		loadingStore.start();
+		console.groupCollapsed(
+			`获取页面资源：${location.origin + location.pathname}`
+		);
 		// 记录开始前的cardList长度
 		await getCard(
+			// 规则配置
 			{
 				region: {
 					enable: false,
 					selector: "",
 				},
 				source: {
-					selector: "img",
-					infoType: "property",
-					name: "src",
+					selector: "a:has(img[src]),img[data-src],img[src]",
+					infoType: "attribute",
+					name: "href|data-src|src",
 				},
 				preview: {
 					origin: "source",
@@ -106,27 +112,31 @@ export default defineStore("cardStore", () => {
 					height: [350, 2000] as [number, number],
 				},
 			},
-			async (doms) => {
-				// console.log("匹配到的DOM", doms);
-				loadingStore.update(0, doms.length);
-				return doms;
-			},
-			async (card, index, dom, addCard) => {
-				loadingStore.update(index + 1); // 刷新进度
-				// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
-				if (card.source.meta.valid && !data.urlSet.has(card.source.url)) {
-					// console.log(`第${oldLength + index}张卡片获取成功!`, card);
-					if (dom) {
-						data.domSet.add(dom); // 记录dom用于排序
+			// 选项配置
+			{
+				async onAllDOMGet(doms) {
+					// console.log("匹配到的DOM", doms);
+					loadingStore.update(0, doms.length);
+					return doms;
+				},
+				async onCardGet(card, index, dom, addCard) {
+					loadingStore.update(index + 1); // 刷新进度
+					// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
+					if (card.source.meta.valid && !data.urlSet.has(card.source.url)) {
+						// console.log(`第${oldLength + index}张卡片获取成功!`, card);
+						if (dom) {
+							data.domSet.add(dom); // 记录dom用于排序
+						}
+						data.urlSet.add(card.source.url); // 添加到链接集合中
+						// data.cardList.push(card); // 添加到卡片列表中。
+						data.cardList[index] = card; // 添加到卡片列表中。
+						updateMaxSize(card.source.meta.width, card.source.meta.height); // 更新最大宽高。
+						await addCard(); //执行回调函数
 					}
-					data.urlSet.add(card.source.url); // 添加到链接集合中
-					// data.cardList.push(card); // 添加到卡片列表中。
-					data.cardList[index] = card; // 添加到卡片列表中。
-					updateMaxSize(card.source.meta.width, card.source.meta.height); // 更新最大宽高。
-					await addCard(); //执行回调函数
-				}
+				},
 			}
 		);
+		console.groupEnd();
 		loadingStore.end();
 	}
 
@@ -176,9 +186,19 @@ export default defineStore("cardStore", () => {
 				}
 			}
 			// 保存
-			saveAs(card.source.blob!, getNameByUrl(card.source.url));
+			saveAs(
+				card.source.blob!,
+				`${getNameByUrl(card.source.url)}.${card.source.meta.ext}`
+			);
 			loadingStore.end(); // 结束进度条
 		} else {
+			console.groupCollapsed("批量下载");
+			Snackbar.allowMultiple(true);
+			Snackbar({
+				content: "开始下载",
+				type: "info",
+			});
+
 			// 大于1的时候进行打包
 			// 创建zip容器
 			const zipContainer = new JSZip();
@@ -192,6 +212,11 @@ export default defineStore("cardStore", () => {
 				},
 				// 所有任务处理完成时的回调
 				async onAllTasksComplete() {
+					Snackbar({
+						content: "下载完成！正在打包……",
+						type: "success",
+					});
+
 					// console.log("全部处理完成", zipContainer);
 					loadingStore.update(0, zipContainer.length);
 					//s 生成压缩包
@@ -226,9 +251,15 @@ export default defineStore("cardStore", () => {
 					} else {
 						zipName = getNameByUrl(decodeURI(location.href)); // 如果标题获取失败就直接使用href提取标题
 					}
+
 					// console.log("压缩包名称:", zipName);
 					saveAs(zip, `${zipName}.zip`);
+					Snackbar({
+						content: "开始下载压缩包……",
+						type: "success",
+					});
 					loadingStore.end(); // 结束进度条
+					console.groupEnd();
 				},
 			});
 			// 添加任务
@@ -250,7 +281,9 @@ export default defineStore("cardStore", () => {
 								}
 								// 将blob存入zip容器
 								zipContainer.file(
-									`${i} - ${getNameByUrl(card.description.title)}`,
+									`${i} - ${getNameByUrl(card.source.url)}.${
+										card.source.meta.ext
+									}`,
 									card.source.blob
 								);
 								resolve(zipContainer);
