@@ -26,7 +26,11 @@ export default defineConfig({
 			resolvers: [VarletImportResolver()],
 		}),
 		autoImport({
-			resolvers: [VarletImportResolver({ autoImport: true })],
+			resolvers: [
+				VarletImportResolver({
+					autoImport: true,
+				}),
+			],
 			imports: [util.unimportPreset],
 		}),
 		monkey({

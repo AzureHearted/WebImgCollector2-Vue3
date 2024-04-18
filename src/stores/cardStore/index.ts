@@ -29,6 +29,10 @@ export default defineStore("cardStore", () => {
 		domSet: new Set() as Set<HTMLElement>,
 		// 所有被排除的卡片集合
 		excludeIdSet: new Set() as Set<Card["id"]>,
+		// 类型与数量的映射表
+		typeMap: new Map<string, number>([]),
+		// 扩展名与数量的映射表
+		extensionMap: new Map<string, number>([]),
 	});
 
 	// 卡片数据信息定义，用于过滤。
@@ -45,14 +49,15 @@ export default defineStore("cardStore", () => {
 			width: ref<[number, number]>([350, info.size.width[1]]), //宽度过滤器
 			height: ref<[number, number]>([350, info.size.height[1]]), //高度过滤器
 		},
+		type: ref<string[]>([]), //类型过滤器
+		extension: ref<string[]>([]), //扩展名过滤器
 	});
 
-	// 有效的卡片
+	// j 有效的卡片
 	const validCardList = computed(() => {
 		return data.cardList.filter((x) => !!x);
 	});
 
-	// 计算属性定义
 	// j 过滤后的卡片
 	const filteredCardList = computed(() => {
 		// 后续添加处理逻辑，例如过滤、排序等操作。
@@ -60,6 +65,12 @@ export default defineStore("cardStore", () => {
 			const isMatch =
 				!!x && // 过滤排除
 				!data.excludeIdSet.has(x.id) && // 过滤被排除的项
+				(filters.type.length > 0
+					? filters.type.includes(String(x.source.meta.type))
+					: true) &&
+				(filters.extension.length > 0
+					? filters.extension.includes(String(x.source.meta.ext))
+					: true) &&
 				x.source.meta?.width! >= filters.size.width[0] &&
 				x.source.meta?.width! <= filters.size.width[1] &&
 				x.source.meta?.height! >= filters.size.height[0] &&
@@ -71,6 +82,44 @@ export default defineStore("cardStore", () => {
 			}
 			return isMatch;
 		});
+	});
+
+	// j 类型列表
+	const typeOptions = computed(() => {
+		const typeNameMap = new Map<string, string>([
+			["image", "图片"],
+			["video", "视频"],
+			["html", "网页"],
+		]);
+		return [...data.typeMap.keys()]
+			.sort((a, b) => {
+				// 降序排序
+				return data.typeMap.get(b)! - data.typeMap.get(a)!;
+			})
+			.map((x) => {
+				const label = typeNameMap.get(x);
+				return {
+					value: x,
+					label: label ? label : x,
+					count: data.typeMap.get(x),
+				};
+			});
+	});
+
+	// j 扩展名列表
+	const extensionOptions = computed(() => {
+		return [...data.extensionMap.keys()]
+			.sort((a, b) => {
+				// 降序排序
+				return data.extensionMap.get(b)! - data.extensionMap.get(a)!;
+			})
+			.map((x) => {
+				return {
+					value: x,
+					label: x,
+					count: data.extensionMap.get(x),
+				};
+			});
 	});
 
 	// 获取页面资源
@@ -88,7 +137,7 @@ export default defineStore("cardStore", () => {
 					selector: "",
 				},
 				source: {
-					selector: "a:has(img[src]),img[data-src],img[src]",
+					selector: "a:has(img),img[data-src],img[src]",
 					infoType: "attribute",
 					name: "href|data-src|src",
 				},
@@ -120,17 +169,43 @@ export default defineStore("cardStore", () => {
 					return doms;
 				},
 				async onCardGet(card, index, dom, addCard) {
+					console.log(card, dom, addCard);
 					loadingStore.update(index + 1); // 刷新进度
+					const sourceMeta = card.source.meta;
 					// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
-					if (card.source.meta.valid && !data.urlSet.has(card.source.url)) {
+					if (sourceMeta.valid && !data.urlSet.has(card.source.url)) {
 						// console.log(`第${oldLength + index}张卡片获取成功!`, card);
 						if (dom) {
 							data.domSet.add(dom); // 记录dom用于排序
 						}
 						data.urlSet.add(card.source.url); // 添加到链接集合中
+						// 如果类型存在则记录类型
+						if (sourceMeta.type) {
+							if (data.typeMap.has(sourceMeta.type)) {
+								// 如果已经存在了就++
+								data.typeMap.set(
+									sourceMeta.type,
+									data.typeMap.get(sourceMeta.type)! + 1
+								);
+							} else {
+								data.typeMap.set(sourceMeta.type, 1);
+							}
+						}
+						// 如果扩展名存在则记录扩展名
+						if (sourceMeta.ext) {
+							if (data.extensionMap.has(sourceMeta.ext)) {
+								// 如果已经存在了就++
+								data.extensionMap.set(
+									sourceMeta.ext,
+									data.extensionMap.get(sourceMeta.ext)! + 1
+								);
+							} else {
+								data.extensionMap.set(sourceMeta.ext, 1);
+							}
+						}
 						// data.cardList.push(card); // 添加到卡片列表中。
 						data.cardList[index] = card; // 添加到卡片列表中。
-						updateMaxSize(card.source.meta.width, card.source.meta.height); // 更新最大宽高。
+						updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
 						await addCard(); //执行回调函数
 					}
 				},
@@ -156,11 +231,15 @@ export default defineStore("cardStore", () => {
 		data.urlSet.clear(); // 清空链接集合
 		data.domSet.clear(); // 清空DOM集合
 		data.excludeIdSet.clear(); //清空被排除卡片id集合
+		data.typeMap.clear(); // 清空类型映射表
+		data.extensionMap.clear(); // 清空扩展名映射表
 		data.cardList = []; // 清空卡片列表
 		info.size.width = [0, 2000]; // 重置宽度范围。
 		info.size.height = [0, 2000]; // 重置高度范围。
 		filters.size.width = [350, 2000];
 		filters.size.height = [350, 2000];
+		filters.extension = [];
+		filters.type = [];
 	}
 
 	// 移除卡片
@@ -302,6 +381,8 @@ export default defineStore("cardStore", () => {
 		filters,
 		validCardList,
 		filteredCardList,
+		typeOptions,
+		extensionOptions,
 		getPageCard,
 		clearCardList,
 		removeCard,

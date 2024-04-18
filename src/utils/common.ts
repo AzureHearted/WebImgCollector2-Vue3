@@ -109,6 +109,17 @@ export function getNameByUrl(url: string): string {
 	}
 }
 
+// 提取链接扩展名
+export function getExtByUrl(url: string): string {
+	let ext = "";
+	const name = getNameByUrl(url);
+	const match = /(?<=\.)[^.]+$/.exec(name);
+	if (match) {
+		ext = match[0];
+	}
+	return ext;
+}
+
 // f [功能封装]通过blob获取图片原信息meta
 export async function getPicMetaByBlob(blob: Blob) {
 	type Meta = {

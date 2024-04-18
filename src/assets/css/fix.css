@@ -1,0 +1,32 @@
+.var-checkbox__icon {
+	display: flex !important;
+}
+.var-select__chip {
+	margin: 0 !important;
+}
+.v-list-item-title,
+.v-list-item-subtitle {
+	width: fit-content;
+}
+
+textarea,
+input[type="text"],
+input[type="email"],
+input[type="search"],
+input[type="button"],
+input[type="submit"],
+button {
+	all: unset;
+}
+button,
+[type="submit"],
+[type="button"] {
+	all: unset;
+}
+.v-overlay-container {
+	z-index: 2147483647;
+}
+
+.v-overlay-container .v-menu {
+	z-index: 2147483647 !important;
+}

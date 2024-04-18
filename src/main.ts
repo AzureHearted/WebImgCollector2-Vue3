@@ -25,7 +25,6 @@ app.use(router);
 app.use(vuetify);
 app.use(Varlet);
 
-console.log("准备挂载");
-document.documentElement.appendChild(appContainer);
 app.mount(appContainer); // 挂载app
-console.log("挂载成功");
+// 插入到页面
+document.body.appendChild(appContainer);

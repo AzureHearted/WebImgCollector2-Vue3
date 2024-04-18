@@ -17,7 +17,6 @@
 							density="compact"
 							v-ripple
 							@click="appBarIsCollapse = !appBarIsCollapse">
-							<IconMenu style="width: 24px" />
 						</v-app-bar-nav-icon>
 					</template>
 					<v-app-bar-title>图片收集器</v-app-bar-title>

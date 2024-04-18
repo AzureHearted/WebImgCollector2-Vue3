@@ -9,7 +9,7 @@ import type {
 import Card from "../class/Card";
 // 导入请求工具
 import { getBlobByUrlAuto } from "@/utils/http";
-import { getNameByUrl } from "@/utils/common";
+import { getExtByUrl, getNameByUrl } from "@/utils/common";
 
 // 配置接口
 interface Options {
@@ -218,7 +218,7 @@ export default async function getCard(
 					rule.source.name
 				),
 				dom: sourceDOM,
-				meta: { valid: false, width: 0, height: 0 }, // 初始化meta未一个无效值
+				meta: { valid: false, width: 0, height: 0, type: false, ext: false }, // 初始化meta未一个无效值
 			};
 			// 获取source.meta
 			// 先使用dom进行判断
@@ -251,7 +251,7 @@ export default async function getCard(
 						rule.preview.name
 					),
 					dom: previewDOM,
-					meta: { valid: false, width: 0, height: 0 }, // 初始化meta未一个无效值
+					meta: { valid: false, width: 0, height: 0, type: false, ext: false }, // 初始化meta未一个无效值
 				};
 				// 获取preview.meta
 				// 先使用dom进行判断
@@ -394,6 +394,8 @@ async function getMeta(
 		valid: false,
 		width: 0,
 		height: 0,
+		type: false,
+		ext: false,
 	}; //设置一个初始空值
 	if (method === "auto") {
 		// s 安装优先级顺序一次尝试各种方式获取meta
@@ -401,11 +403,7 @@ async function getMeta(
 			// console.log("获取元信息(类型:DOM元素)", target);
 			// 如果只能是一个HTML元素
 			const { width, height } = getDOMNaturalSize(target);
-			meta = {
-				valid: width > 0 && height > 0,
-				width,
-				height,
-			};
+			meta = { ...meta, ...{ valid: width > 0 && height > 0, width, height } };
 		}
 		if (!meta.valid && typeof target === "string" && isUrl(target)) {
 			const url = new URL(target);
@@ -428,11 +426,7 @@ async function getMeta(
 		) {
 			// 如果只能是一个HTML元素
 			const { width, height } = getDOMNaturalSize(target);
-			meta = {
-				valid: width > 0 && height > 0,
-				width,
-				height,
-			};
+			meta = { ...meta, ...{ valid: width > 0 && height > 0, width, height } };
 		} else if (
 			method === "byUrl" &&
 			typeof target === "string" &&
@@ -453,6 +447,8 @@ async function getMeta(
 				valid: false,
 				width: 0,
 				height: 0,
+				type: false,
+				ext: false,
 			};
 		}
 	}
@@ -462,19 +458,30 @@ async function getMeta(
 
 // 获取元信息(通过url)
 async function getMetaByUrl(url: URL) {
+	// meta初始值
+	let meta: BaseMeta = {
+		valid: false,
+		width: 0,
+		height: 0,
+		ext: false,
+		type: false,
+	};
 	// 先推断链接类型
 	const type = inferUrlType(url);
 	// console.log("链接类型==>", type);
-	let meta: BaseMeta;
 	if (type === "image") {
 		// 处理图片类型
-		meta = await getImgMetaByImage(url.href);
+		meta = { ...meta, ...(await getImgMetaByImage(url.href)) };
+	} else if (type === "html") {
+		meta.valid = true;
 	} else {
 		// 其他类型暂时不进行处理
 		meta = {
 			valid: false,
 			width: 0,
 			height: 0,
+			type: false,
+			ext: false,
 		};
 	}
 	return meta;
@@ -482,18 +489,29 @@ async function getMetaByUrl(url: URL) {
 
 // 获取元信息(通过Blob对象)
 async function getMetaByBlob(blob: Blob) {
-	let meta: BaseMeta;
+	// meta初始值
+	let meta: BaseMeta = {
+		valid: false,
+		width: 0,
+		height: 0,
+		ext: false,
+		type: false,
+	};
 	// 先推断类型
 	const blobType = inferBlobType(blob);
 	// 判断主类型
 	if (blobType.mainType === "image") {
-		meta = await getMetaByBlob(blob);
+		// 图片类型
+		meta = { ...meta, ...(await getImgMetaByBlob(blob)) };
+	} else if (blobType.subType === "html" || blobType.mainType === "audio") {
+		// html类型和audio类型
+		meta.valid = true;
+		meta.ext = blobType.subType;
 	} else {
 		// 其他类型暂不处理
 		meta = {
-			valid: false,
-			width: 0,
-			height: 0,
+			...meta,
+			...{ ext: blobType.subType },
 		};
 	}
 	return meta;
@@ -507,6 +525,8 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 			valid: false,
 			width: 0,
 			height: 0,
+			type: false,
+			ext: false,
 		};
 		return Promise.resolve(errMeta);
 	}
@@ -521,6 +541,8 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 				width: img.width,
 				height: img.height,
 				aspectRatio: img.width / img.height,
+				type: "image",
+				ext: getExtByUrl(url),
 			};
 			resolve(meta);
 		} else {
@@ -533,6 +555,8 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 						width: img.width,
 						height: img.height,
 						aspectRatio: img.width / img.height,
+						type: "image",
+						ext: getExtByUrl(url),
 					};
 					resolve(meta);
 				},
@@ -546,6 +570,8 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 						valid: false,
 						width: 0,
 						height: 0,
+						type: false,
+						ext: getExtByUrl(url),
 					};
 					resolve(meta);
 				},
@@ -556,8 +582,9 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 }
 
 //f [功能封装]通过blob获取图片meta
-export function getImgMetaByBlob(blob: Blob): Promise<BaseMeta> {
-	let meta: BaseMeta;
+export function getImgMetaByBlob(blob: Blob) {
+	type Meta = Pick<BaseMeta, "valid" | "width" | "height" | "aspectRatio">;
+	let meta: Meta;
 	return new Promise((resolve) => {
 		const reader = new FileReader();
 		reader.readAsDataURL(blob);
@@ -602,11 +629,14 @@ export function getImgMetaByBlob(blob: Blob): Promise<BaseMeta> {
 			};
 			resolve(meta);
 		});
-	});
+	}) as Promise<Meta>;
 }
 
 // 获取DOM的natural尺寸
-function getDOMNaturalSize(dom: HTMLElement) {
+function getDOMNaturalSize(dom: HTMLElement): {
+	width: number;
+	height: number;
+} {
 	let [width, height] = [0, 0]; // 初始化宽高为0
 	// 判断是否是img、video或canvas,如果是就获取自然宽高
 	if (dom instanceof HTMLImageElement) {
@@ -649,13 +679,35 @@ function inferUrlType(url: URL) {
 	return type;
 }
 
+// blob类型接口
+interface BlobType {
+	mainType: "image" | "video" | "audio" | "html" | false;
+	subType: string | false;
+}
+
 // 推测Blob类型
 function inferBlobType(blob: Blob) {
 	// 获取Blob的MIME类型，并判断是否为图片类型。
-	type MainType = "image" | "video" | "audio" | "html";
-	const [mainType, subType] = blob.type.split("/") as [MainType, string];
+	const mimeType = getMIMEinfo(blob.type);
+	const { mainType, subType } = mimeType;
+	const blobType: BlobType = {
+		mainType: mainType === "text" ? "html" : mainType, // 对主类型是text类型的特殊处理
+		subType: subType === "jpeg" ? "jpg" : subType, // 处理子类型是jpeg的情况
+	};
+	return blobType;
+}
+
+type MIMEMainType = "image" | "video" | "audio" | "text";
+// 获取MIME的主次类型
+function getMIMEinfo(mime: string): {
+	mainType: MIMEMainType | false;
+	subType: string | false;
+} {
+	const [mainType = false, subType = false] = mime
+		.split("/")
+		.filter(Boolean) as [MIMEMainType | false, string | false];
 	return {
 		mainType,
-		subType: subType === "jpeg" ? "jpg" : subType, // 处理子类型是jpeg的情况
+		subType,
 	};
 }

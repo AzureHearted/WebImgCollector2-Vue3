@@ -48,9 +48,11 @@
 				:data-id="data.id"
 				:href="data.source.url"
 				:thumb="data.preview.url"
-				:data-type="data.source.meta.type"
+				:data-type="boxType"
 				:init-width="data.source.meta.width"
 				:init-height="data.source.meta.height"
+				:data-width="data.source.meta.width ? data.source.meta.width : false"
+				:data-height="data.source.meta.height ? data.source.meta.height : false"
 				data-fancybox="online-gallery"
 				:data-thumb="data.preview.url"
 				:data-download-src="data.source.url"
@@ -62,6 +64,7 @@
 			<div class="gallery-card-footer">
 				<!-- 尺寸信息 -->
 				<var-chip
+					v-if="data.source.meta.type === 'image'"
 					type="primary"
 					:size="isMobile() ? 'mini' : 'small'"
 					:round="false">
@@ -69,18 +72,18 @@
 				</var-chip>
 				<!-- 扩展名信息 -->
 				<var-chip
+					v-if="!!data.source.meta.ext"
 					type="success"
 					:size="isMobile() ? 'mini' : 'small'"
-					:round="false"
-					v-if="!!data.source.meta.ext">
+					:round="false">
 					{{ data.source.meta.ext }}
 				</var-chip>
 				<!-- 扩展名信息 -->
 				<var-chip
+					v-if="!!data.source.blob && !!data.source.blob.size"
 					type="info"
 					:size="isMobile() ? 'mini' : 'small'"
-					:round="false"
-					v-if="!!data.source.blob">
+					:round="false">
 					{{ size }}
 				</var-chip>
 			</div>
@@ -128,6 +131,26 @@
 		} else {
 			return `0B`;
 		}
+	});
+
+	// 定义Fancybox的默认类型
+	type FancyboxType =
+		| "image"
+		| "iframe"
+		| "youtube"
+		| "vimeo"
+		| "inline"
+		| "html"
+		| "ajax"
+		| false;
+	// 计算默认类型
+	const boxType: ComputedRef<FancyboxType> = computed(() => {
+		const { type: metaType } = props.data.source.meta;
+		let type: FancyboxType = "image";
+		if (metaType && metaType === "html") {
+			type = "iframe";
+		}
+		return type;
 	});
 
 	// 处理卡片加载完成的事件

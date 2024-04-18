@@ -21,9 +21,9 @@ export interface BaseMeta {
 	width: number;
 	height: number;
 	aspectRatio?: number;
-	type?: "image" | "video" | "audio" | "html" | null;
+	type: "image" | "video" | "audio" | "html" | false;
 	size?: number;
-	ext?: string; // 后缀如果有
+	ext: string | false; // 后缀如果有
 	[key: string]: any; // 允许添加其他属性
 }
 

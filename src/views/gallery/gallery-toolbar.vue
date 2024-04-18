@@ -115,7 +115,7 @@
 									:elevation="false">
 									<IconDownload
 										class="gallery-toolbar-icon"
-										style="margin: 0 12px 0 0" />
+										style="margin: 0 8px 0 0" />
 									全部下载
 								</var-button>
 							</var-button-group>
@@ -123,11 +123,96 @@
 					</var-menu>
 				</var-badge>
 			</v-sheet>
-			<!-- 过滤器 -->
+			<!-- 其他过滤器 -->
 			<v-sheet
 				class="gallery-container-control-panel filter-control-panel"
-				:elevation="0"
-				:width="200">
+				:elevation="0">
+				<!-- 类型过滤器 -->
+				<v-select
+					class="filter-input-select select-type"
+					active
+					v-model="cardStore.filters.type"
+					:items="cardStore.typeOptions"
+					variant="solo"
+					label="类型过滤"
+					placeholder="选择要过滤的类型"
+					item-title="label"
+					item-value="value"
+					density="comfortable"
+					clearable
+					chips
+					hide-details
+					:ripple="false"
+					:attach="false"
+					multiple>
+					<template #chip="{ item, index }">
+						<v-chip v-if="index < 2" density="comfortable">
+							<span>{{ item.title }}</span>
+						</v-chip>
+						<span
+							v-if="index === 2"
+							class="text-grey text-caption align-self-center">
+							(+{{ cardStore.filters.type.length - 2 }})
+						</span>
+					</template>
+					<template #item="{ item, props }">
+						<v-list-item v-bind="props" :subtitle="`${item.raw.count}个`">
+							<template #prepend="{ isActive }">
+								<v-checkbox
+									density="compact"
+									:model-value="isActive"
+									:ripple="false"
+									hide-details></v-checkbox>
+							</template>
+						</v-list-item>
+					</template>
+				</v-select>
+				<!-- 扩展名过滤器 -->
+				<v-select
+					class="filter-input-select select-type"
+					active
+					v-model="cardStore.filters.extension"
+					:items="cardStore.extensionOptions"
+					variant="solo"
+					label="扩展名过滤"
+					placeholder="选择要过滤的扩展名"
+					item-title="label"
+					item-value="value"
+					density="comfortable"
+					clearable
+					chips
+					hide-details
+					:ripple="false"
+					:attach="false"
+					multiple>
+					<template #chip="{ item, index }">
+						<v-chip v-if="index < 2" density="comfortable">
+							<span>{{ item.title }}</span>
+						</v-chip>
+						<span
+							v-if="index === 2"
+							class="text-grey text-caption align-self-center">
+							(+{{ cardStore.filters.type.length - 2 }})
+						</span>
+					</template>
+					<template #item="{ item, props }">
+						<v-list-item v-bind="props" :subtitle="`${item.raw.count}个`">
+							<template #prepend="{ isActive }">
+								<v-checkbox
+									density="compact"
+									:model-value="isActive"
+									:ripple="false"
+									hide-details></v-checkbox>
+							</template>
+						</v-list-item>
+					</template>
+				</v-select>
+			</v-sheet>
+			<!-- 尺寸过滤器 -->
+			<v-sheet
+				class="gallery-container-control-panel filter-control-panel"
+				:elevation="0">
+				<!-- 宽度过滤器 -->
 				<v-range-slider
 					class="filter-input-slider"
 					label="宽度"
@@ -209,7 +294,6 @@
 	import { ref, reactive, computed, watch } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
-
 	// 导入svg
 	import IconDownload from "@svg/download.svg";
 	import IconArrowDown from "@svg/arrow-down.svg";
@@ -339,6 +423,7 @@
 		margin-right: 2px;
 		margin-bottom: 2px;
 		display: flex;
+		align-items: center;
 		background: inherit;
 	}
 	// 图标样式
@@ -374,20 +459,24 @@
 		}
 		.filter-input-number {
 			position: relative;
-			height: 30px;
 			width: 60px;
 			border: 0;
 		}
 
-		:deep(.v-field),
-		:deep(.v-text-field),
-		:deep(.v-field__field),
-		:deep(.v-field__input) {
-			height: 30px;
-			padding: unset;
-			margin: unset;
-			min-height: unset;
+		// 选择器样式
+		.filter-input-select {
+			// flex: 1;
+			margin: 0 2px;
 		}
+		.filter-input-select.select-extension {
+			min-width: 100px !important;
+			max-width: 200px !important;
+		}
+		.filter-input-select.select-type {
+			min-width: 150px !important;
+			max-width: 300px !important;
+		}
+
 		:deep(input) {
 			padding: 0 4px;
 		}
