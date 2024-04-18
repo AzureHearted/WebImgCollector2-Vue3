@@ -117,6 +117,7 @@
 
 	// 切换窗口显示
 	function toggleWindow(name?: string) {
+		active.value = false;
 		if (name) {
 			if (name === route.name) {
 				console.log(name, route.name);

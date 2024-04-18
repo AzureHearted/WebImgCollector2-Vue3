@@ -1,7 +1,11 @@
 <template>
 	<div class="gallery-toolbar-container">
 		<!-- 工具栏 -->
-		<v-sheet class="gallery-toolbar" width="100%" :elevation="4">
+		<v-sheet
+			class="gallery-toolbar"
+			width="100%"
+			color="transparent"
+			:elevation="4">
 			<!-- 进度条 -->
 			<v-progress-linear
 				class="gallery-toolbar-loading"
@@ -20,6 +24,7 @@
 			<v-sheet
 				class="gallery-container-control-panel"
 				:elevation="0"
+				color="transparent"
 				width="fit-content">
 				<!-- 控制按钮组 -->
 				<var-badge
@@ -40,7 +45,7 @@
 							<!-- 加载按钮 -->
 							<var-button
 								@click.stop="getCards"
-								:loading="state.loading"
+								:loading="loadingStore.loading"
 								block
 								icon-container>
 								加载
@@ -69,6 +74,7 @@
 			<v-sheet
 				class="gallery-container-control-panel"
 				:elevation="0"
+				color="transparent"
 				width="fit-content">
 				<!-- 选择器按钮组 -->
 				<var-button-group
@@ -83,6 +89,7 @@
 			<v-sheet
 				class="gallery-container-control-panel"
 				:elevation="0"
+				color="transparent"
 				width="fit-content">
 				<!-- 下载按钮 -->
 				<var-badge
@@ -125,44 +132,54 @@
 			</v-sheet>
 			<!-- 其他过滤器 -->
 			<v-sheet
-				class="gallery-container-control-panel filter-control-panel"
+				class="filter-control-panel other-filter"
+				width="fit-content"
+				color="transparent"
 				:elevation="0">
 				<!-- 类型过滤器 -->
 				<v-select
 					class="filter-input-select select-type"
-					active
 					v-model="cardStore.filters.type"
 					:items="cardStore.typeOptions"
 					variant="solo"
 					label="类型过滤"
-					placeholder="选择要过滤的类型"
 					item-title="label"
 					item-value="value"
-					density="comfortable"
-					clearable
+					density="compact"
 					chips
 					hide-details
-					:ripple="false"
-					:attach="false"
 					multiple>
 					<template #chip="{ item, index }">
-						<v-chip v-if="index < 2" density="comfortable">
+						<v-chip v-if="index < 2" density="compact">
 							<span>{{ item.title }}</span>
 						</v-chip>
 						<span
 							v-if="index === 2"
 							class="text-grey text-caption align-self-center">
-							(+{{ cardStore.filters.type.length - 2 }})
+							+ {{ cardStore.filters.type.length - 2 }}
 						</span>
 					</template>
 					<template #item="{ item, props }">
-						<v-list-item v-bind="props" :subtitle="`${item.raw.count}个`">
+						<v-list-item
+							v-bind="props"
+							density="compact"
+							:subtitle="`${item.raw.count}个`">
 							<template #prepend="{ isActive }">
 								<v-checkbox
 									density="compact"
 									:model-value="isActive"
 									:ripple="false"
 									hide-details></v-checkbox>
+							</template>
+							<template #title="{ title }">
+								<span style="font-size: 14px">
+									{{ title }}
+								</span>
+							</template>
+							<template #subtitle="{ subtitle }">
+								<span style="font-size: 12px">
+									{{ subtitle }}
+								</span>
 							</template>
 						</v-list-item>
 					</template>
@@ -170,33 +187,31 @@
 				<!-- 扩展名过滤器 -->
 				<v-select
 					class="filter-input-select select-type"
-					active
 					v-model="cardStore.filters.extension"
 					:items="cardStore.extensionOptions"
 					variant="solo"
 					label="扩展名过滤"
-					placeholder="选择要过滤的扩展名"
 					item-title="label"
 					item-value="value"
-					density="comfortable"
-					clearable
+					density="compact"
 					chips
 					hide-details
-					:ripple="false"
-					:attach="false"
 					multiple>
 					<template #chip="{ item, index }">
-						<v-chip v-if="index < 2" density="comfortable">
+						<v-chip v-if="index < 2" density="compact">
 							<span>{{ item.title }}</span>
 						</v-chip>
 						<span
 							v-if="index === 2"
 							class="text-grey text-caption align-self-center">
-							(+{{ cardStore.filters.type.length - 2 }})
+							+ {{ cardStore.filters.extension.length - 2 }}
 						</span>
 					</template>
 					<template #item="{ item, props }">
-						<v-list-item v-bind="props" :subtitle="`${item.raw.count}个`">
+						<v-list-item
+							v-bind="props"
+							density="compact"
+							:subtitle="`${item.raw.count}个`">
 							<template #prepend="{ isActive }">
 								<v-checkbox
 									density="compact"
@@ -204,13 +219,24 @@
 									:ripple="false"
 									hide-details></v-checkbox>
 							</template>
+							<template #title="{ title }">
+								<span style="font-size: 14px">
+									{{ title }}
+								</span>
+							</template>
+							<template #subtitle="{ subtitle }">
+								<span style="font-size: 12px">
+									{{ subtitle }}
+								</span>
+							</template>
 						</v-list-item>
 					</template>
 				</v-select>
 			</v-sheet>
 			<!-- 尺寸过滤器 -->
 			<v-sheet
-				class="gallery-container-control-panel filter-control-panel"
+				class="filter-control-panel size-filter"
+				color="transparent"
 				:elevation="0">
 				<!-- 宽度过滤器 -->
 				<v-range-slider
@@ -304,13 +330,9 @@
 
 	// 导入仓库
 	import { useCardStore, useLoadingStore } from "@/stores";
+	import { Snackbar } from "@varlet/ui";
 	const cardStore = useCardStore();
 	const loadingStore = useLoadingStore();
-
-	// 状态数据
-	const state = reactive({
-		loading: false,
-	});
 
 	// 过滤器定义
 	const filters = reactive({
@@ -348,9 +370,7 @@
 
 	// 获取卡片
 	async function getCards() {
-		state.loading = true;
 		await cardStore.getPageCard();
-		state.loading = false;
 	}
 
 	// 过滤器改变
@@ -440,41 +460,49 @@
 	}
 	// 过滤器面板样式
 	.filter-control-panel {
-		flex: 1 360px;
 		display: flex;
 		flex-flow: row wrap;
 		// background: wheat;
 		padding: 4px 0;
 
-		.filter-input-slider {
-			flex: 1;
-			min-width: 350px !important;
-			max-width: 500px !important;
-			font-size: 12px;
-		}
-		// 标签样式
-		.filter-input-slider .input-slider-label {
-			margin: 0 10px 2px 0;
-			font-size: 14px;
-		}
-		.filter-input-number {
-			position: relative;
-			width: 60px;
-			border: 0;
+		// 尺寸过滤器
+		&.size-filter {
+			flex: 1 1 auto;
+			flex-wrap: wrap;
+
+			.filter-input-slider {
+				flex: 1;
+				min-width: 320px;
+				max-width: 600px;
+				font-size: 12px;
+			}
+
+			// 标签样式
+			.filter-input-slider .input-slider-label {
+				margin: 0 10px 2px 0;
+				font-size: 14px;
+			}
+			.filter-input-number {
+				flex: 0 1 auto;
+				position: relative;
+				width: 70px;
+				border: 0;
+			}
 		}
 
-		// 选择器样式
-		.filter-input-select {
-			// flex: 1;
-			margin: 0 2px;
-		}
-		.filter-input-select.select-extension {
-			min-width: 100px !important;
-			max-width: 200px !important;
-		}
-		.filter-input-select.select-type {
-			min-width: 150px !important;
-			max-width: 300px !important;
+		// 其他选择器
+		&.other-filter {
+			flex: 0 1 content;
+			flex-wrap: wrap;
+
+			// 选择器样式
+			.filter-input-select {
+				flex: 0 1 content;
+				width: 200px;
+				min-width: 150px;
+				max-width: 200px;
+				margin: 0 2px;
+			}
 		}
 
 		:deep(input) {

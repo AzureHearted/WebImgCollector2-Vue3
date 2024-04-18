@@ -1,6 +1,7 @@
 <template>
 	<BaseImgCard
-		style="border-radius: 4px; overflow: hidden"
+		:data-show="isMobile()"
+		style="overflow: hidden; border: unset"
 		:data-checked="data.isSelected"
 		class="gallery-card"
 		:data="data"
@@ -48,7 +49,7 @@
 				:data-id="data.id"
 				:href="data.source.url"
 				:thumb="data.preview.url"
-				:data-type="boxType"
+				:data-type="showType"
 				:init-width="data.source.meta.width"
 				:init-height="data.source.meta.height"
 				:data-width="data.source.meta.width ? data.source.meta.width : false"
@@ -144,7 +145,7 @@
 		| "ajax"
 		| false;
 	// 计算默认类型
-	const boxType: ComputedRef<FancyboxType> = computed(() => {
+	const showType: ComputedRef<FancyboxType> = computed(() => {
 		const { type: metaType } = props.data.source.meta;
 		let type: FancyboxType = "image";
 		if (metaType && metaType === "html") {
@@ -215,6 +216,7 @@
 		transform: translateY(-150%);
 		transition: transform 0.3s;
 	}
+	.gallery-card[data-show="true"] .gallery-card-header-left,
 	.gallery-card:hover .gallery-card-header-left,
 	.gallery-card[data-checked="true"] .gallery-card-header-left {
 		transform: translateY(0);
@@ -230,6 +232,7 @@
 		transform: translateY(-100%);
 		transition: transform 0.3s;
 	}
+	.gallery-card[data-show="true"] .gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);
 	}
@@ -266,17 +269,9 @@
 			pointer-events: auto;
 		}
 	}
+
+	.gallery-card[data-show="true"] .gallery-card-footer,
 	.gallery-card:hover .gallery-card-footer {
 		transform: translateY(0);
 	}
-
-	// .v-enter-active,
-	// .v-leave-active {
-	// 	transition: opacity 0.5s ease;
-	// }
-
-	// .v-enter-from,
-	// .v-leave-to {
-	// 	opacity: 0;
-	// }
 </style>

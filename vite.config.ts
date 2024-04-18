@@ -41,7 +41,7 @@ export default defineConfig({
 				namespace: "npm/vite-plugin-monkey", // 命名空间
 				match: ["http*://*", "http*://*/*"], // 要匹配的网站
 				// exclude: ["*://element-plus.org/*"], // 要排除的网站
-				noframes: true, //是否在iframe中使用
+				noframes: false, //是否在iframe中使用
 				connect: ["*"],
 				"run-at": "document-body", // 嵌入时机
 				require: [],

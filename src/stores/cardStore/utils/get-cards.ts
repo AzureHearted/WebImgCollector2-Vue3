@@ -10,6 +10,7 @@ import Card from "../class/Card";
 // 导入请求工具
 import { getBlobByUrlAuto } from "@/utils/http";
 import { getExtByUrl, getNameByUrl } from "@/utils/common";
+import { TaskQueue } from "@/utils/taskQueue";
 
 // 配置接口
 interface Options {
@@ -22,6 +23,8 @@ interface Options {
 		dom: HTMLElement | null,
 		addCard: () => Promise<void>
 	) => Promise<void>;
+	// 已有的url和Blob的映射表(用于判断是否需要发送新的请求)
+	existingUrlBlobMap: Map<string, Blob>;
 }
 
 // 获取卡片
@@ -33,13 +36,16 @@ export default async function getCard(
 	const defaultOptions: Options = {
 		onAllDOMGet: async (doms) => doms,
 		onCardGet: async () => {},
+		existingUrlBlobMap: new Map<string, Blob>(),
 	};
 	// 合并配置
 	options = { ...defaultOptions, ...options };
-	const { onAllDOMGet, onCardGet } = options as Options;
+	const { onAllDOMGet, onCardGet, existingUrlBlobMap } = options as Options;
 
 	// 卡片列表
 	const cardList = [] as Card[];
+	// 任务列表
+	const taskList = [] as Function[];
 
 	// 判断是否开启区域匹配
 	if (rule.region.enable) {
@@ -54,52 +60,15 @@ export default async function getCard(
 
 		// 遍历所有区域dom，获取卡片dom列表
 		for (let i = 0; i < regionDOMs.length; i++) {
-			const regionDOM = regionDOMs[i]; // 拿到当前区域DOM
-
-			// s source的匹配
-			const source = await handleRegionGetInfo<CardSource>(
-				rule.source,
-				regionDOM,
-				async (value, dom) => {
-					dom = dom || regionDOM;
-					// 元信息获取
-					let meta = await getMeta(dom); // 获取元信息(通过dom)
-					if (!meta.valid) {
-						meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
-					}
-					// 推断如果是链接就 获取blob
-					let blob: Blob | undefined;
-					if (isUrl(value)) {
-						const res = await getBlobByUrlAuto(value);
-						if (res) {
-							blob = res;
-							// 推断blob类型
-							const { mainType, subType } = inferBlobType(blob);
-							meta.type = mainType;
-							meta.ext = subType;
-						}
-					}
-					return {
-						url: value,
-						// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-						dom,
-						meta,
-						blob,
-					};
-				}
-			);
-			// s preview的匹配
-			let preview: CardPreview;
-			// 判断是否启用匹配preview
-			if (rule.preview.enable) {
-				preview = await handleRegionGetInfo<CardPreview>(
-					rule.preview,
+			// 定义任务
+			const task = async () => {
+				const regionDOM = regionDOMs[i]; // 拿到当前区域DOM
+				// s source的匹配
+				const source = await handleRegionGetInfo<CardSource>(
+					rule.source,
 					regionDOM,
 					async (value, dom) => {
-						// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-						dom = dom || source.dom || regionDOM;
-						// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
-						value = value || source.url;
+						dom = dom || regionDOM;
 						// 元信息获取
 						let meta = await getMeta(dom); // 获取元信息(通过dom)
 						if (!meta.valid) {
@@ -108,67 +77,128 @@ export default async function getCard(
 						// 推断如果是链接就 获取blob
 						let blob: Blob | undefined;
 						if (isUrl(value)) {
-							const res = await getBlobByUrlAuto(value);
-							if (res) {
-								blob = res;
-								// 推断blob类型
-								const { mainType, subType } = inferBlobType(blob);
-								meta.type = mainType;
-								meta.ext = subType;
+							// 获取链接前先判断是否已有缓存的Blob
+							if (
+								existingUrlBlobMap.has(value) &&
+								existingUrlBlobMap.get(value) &&
+								existingUrlBlobMap.get(value)!.size > 0
+							) {
+								blob = existingUrlBlobMap.get(value)!;
+							} else {
+								const res = await getBlobByUrlAuto(value);
+								if (res) {
+									blob = res;
+									// 推断blob类型
+									const { mainType, subType } = inferBlobType(blob);
+									meta.type = mainType;
+									meta.ext = subType;
+								}
 							}
 						}
 						return {
 							url: value,
+							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 							dom,
 							meta,
 							blob,
 						};
 					}
 				);
-			} else {
-				// 如果不匹配就直接使用source
-				preview = {
-					url: source.url,
-					dom: source.dom,
-					meta: {
-						...source.meta!,
-					},
-				};
-			}
+				// s preview的匹配
+				let preview: CardPreview;
+				// 判断是否启用匹配preview
+				if (rule.preview.enable) {
+					preview = await handleRegionGetInfo<CardPreview>(
+						rule.preview,
+						regionDOM,
+						async (value, dom) => {
+							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
+							dom = dom || source.dom || regionDOM;
+							// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
+							value = value || source.url;
+							// 元信息获取
+							let meta = await getMeta(dom); // 获取元信息(通过dom)
+							if (!meta.valid) {
+								meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
+							}
+							// 推断如果是链接就 获取blob
+							let blob: Blob | undefined;
+							if (isUrl(value)) {
+								// 获取链接前先判断是否已有缓存的Blob
+								if (
+									existingUrlBlobMap.has(value) &&
+									existingUrlBlobMap.get(value) &&
+									existingUrlBlobMap.get(value)!.size > 0
+								) {
+									blob = existingUrlBlobMap.get(value)!;
+								} else {
+									const res = await getBlobByUrlAuto(value);
+									if (res) {
+										blob = res;
+										// 推断blob类型
+										const { mainType, subType } = inferBlobType(blob);
+										meta.type = mainType;
+										meta.ext = subType;
+									}
+								}
+							}
+							return {
+								url: value,
+								dom,
+								meta,
+								blob,
+							};
+						}
+					);
+				} else {
+					// 如果不匹配就直接使用source
+					preview = {
+						url: source.url,
+						dom: source.dom,
+						meta: {
+							...source.meta!,
+						},
+					};
+				}
 
-			// s description的匹配
-			let description: CardDescription;
-			if (rule.description.enable) {
-				description = await handleRegionGetInfo<CardDescription>(
-					rule.preview,
-					regionDOM,
-					async (value, dom) => {
-						// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-						dom = dom || source.dom || regionDOM || preview.dom;
-						// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
-						value = value || source.url || preview.url;
-						return {
-							title: getNameByUrl(value),
-							dom,
-						};
-					}
-				);
-			} else {
-				// 如果不匹配就直接使用source
-				description = {
-					title: source.url,
-					dom: source.dom,
-				};
-			}
+				// s description的匹配
+				let description: CardDescription;
+				if (rule.description.enable) {
+					description = await handleRegionGetInfo<CardDescription>(
+						rule.preview,
+						regionDOM,
+						async (value, dom) => {
+							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
+							dom = dom || source.dom || regionDOM || preview.dom;
+							// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
+							value = value || source.url || preview.url;
+							return {
+								title: getNameByUrl(value),
+								dom,
+							};
+						}
+					);
+				} else {
+					// 如果不匹配就直接使用source
+					description = {
+						title: source.url,
+						dom: source.dom,
+					};
+				}
 
-			// f 创建卡片
-			const card = new Card(source, preview, description);
+				// f 创建卡片
+				const card = new Card(source, preview, description);
 
-			// 触发回调
-			onCardGet(card, i, regionDOM, async () => {
-				// 传出函数用给外部判断是否要添加该卡片
-				cardList.push(card);
-			});
+				// 触发回调
+				onCardGet(card, i, regionDOM, async () => {
+					// 传出函数用给外部判断是否要添加该卡片
+					cardList.push(card);
+				});
+
+				return card;
+			};
+			// 存入任务
+			taskList.push(task);
 		}
 	} else {
 		// ! 全局匹配模式(先分别匹配source、preview、description，然后创建卡片)
@@ -209,111 +239,164 @@ export default async function getCard(
 
 		// 遍历所有sourceDOMs，获取卡片信息。
 		for (let i = 0; i < sourceDOMs.length; i++) {
-			const sourceDOM = sourceDOMs[i];
-			// s 直接获取source信息
-			const source: CardSource = {
-				url: await getDOMInfo(
-					sourceDOM,
-					rule.source.infoType,
-					rule.source.name
-				),
-				dom: sourceDOM,
-				meta: { valid: false, width: 0, height: 0, type: false, ext: false }, // 初始化meta未一个无效值
-			};
-			// 获取source.meta
-			// 先使用dom进行判断
-			source.meta = await getMeta(source.dom as HTMLElement);
-			if (!source.meta.valid) {
-				// 如果无效在使用匹配到的内容判断
-				source.meta = await getMeta(source.url);
-			}
-			// 推断如果是链接就 获取source.blob
-			if (isUrl(source.url)) {
-				const blob = await getBlobByUrlAuto(source.url);
-				if (blob) {
-					source.blob = blob;
-					// 推断blob类型
-					const { mainType, subType } = inferBlobType(source.blob);
-					source.meta.type = mainType;
-					source.meta.ext = subType;
-				}
-			}
-
-			// s 获取preview信息
-			let preview: CardPreview;
-			if (rule.preview.enable) {
-				const previewDOM = previewDOMs[i] || sourceDOM;
-				// 获取到基础信息
-				preview = {
+			// 定义任务
+			const task = async () => {
+				const sourceDOM = sourceDOMs[i];
+				// s 直接获取source信息
+				const source: CardSource = {
 					url: await getDOMInfo(
-						previewDOM,
-						rule.preview.infoType,
-						rule.preview.name
+						sourceDOM,
+						rule.source.infoType,
+						rule.source.name
 					),
-					dom: previewDOM,
+					dom: sourceDOM,
 					meta: { valid: false, width: 0, height: 0, type: false, ext: false }, // 初始化meta未一个无效值
 				};
-				// 获取preview.meta
+				// 获取source.meta
 				// 先使用dom进行判断
-				preview.meta = await getMeta(preview.dom as HTMLElement);
-				if (!preview.meta.valid) {
+				source.meta = await getMeta(source.dom as HTMLElement);
+				if (!source.meta.valid) {
 					// 如果无效在使用匹配到的内容判断
-					preview.meta = await getMeta(preview.url);
+					source.meta = await getMeta(source.url);
 				}
-
-				// 推断如果是链接就 获取preview.blob
-				if (isUrl(preview.url)) {
-					const blob = await getBlobByUrlAuto(preview.url);
+				// 推断如果是链接就 获取source.blob
+				if (isUrl(source.url)) {
+					let blob: Blob | null;
+					// 获取链接前先判断是否已有缓存的Blob
+					if (
+						existingUrlBlobMap.has(source.url) &&
+						existingUrlBlobMap.get(source.url) &&
+						existingUrlBlobMap.get(source.url)!.size > 0
+					) {
+						console.log("已有blob缓存,不在发送请求");
+						// 如果有且为有效Blob就进行直接赋值
+						blob = existingUrlBlobMap.get(source.url)!;
+					} else {
+						blob = await getBlobByUrlAuto(source.url);
+					}
+					// 如果blob存在则推断类型
 					if (blob) {
-						preview.blob = blob;
+						source.blob = blob;
 						// 推断blob类型
-						const { mainType, subType } = inferBlobType(preview.blob);
-						preview.meta.type = mainType;
-						preview.meta.ext = subType;
+						const { mainType, subType } = inferBlobType(source.blob);
+						source.meta.type = mainType;
+						source.meta.ext = subType;
 					}
 				}
-			} else {
-				preview = {
-					url: source.url,
-					dom: source.dom,
-					meta: {
-						...source.meta,
-					},
-					blob: source.blob,
-				};
-			}
 
-			// s 获取description信息
-			let description: CardDescription;
-			if (rule.description.enable) {
-				const descriptionDOM = descriptionDOMs[i] || sourceDOM;
-				description = {
-					title: await getDOMInfo(
-						descriptionDOM,
-						rule.description.infoType,
-						rule.description.name
-					),
-					dom: descriptionDOM,
-				};
-			} else {
-				description = {
-					title: source.url,
-					dom: source.dom,
-				};
-			}
+				// s 获取preview信息
+				let preview: CardPreview;
+				if (rule.preview.enable) {
+					const previewDOM = previewDOMs[i] || sourceDOM;
+					// 获取到基础信息
+					preview = {
+						url: await getDOMInfo(
+							previewDOM,
+							rule.preview.infoType,
+							rule.preview.name
+						),
+						dom: previewDOM,
+						meta: {
+							valid: false,
+							width: 0,
+							height: 0,
+							type: false,
+							ext: false,
+						}, // 初始化meta未一个无效值
+					};
+					// 获取preview.meta
+					// 先使用dom进行判断
+					preview.meta = await getMeta(preview.dom as HTMLElement);
+					if (!preview.meta.valid) {
+						// 如果无效在使用匹配到的内容判断
+						preview.meta = await getMeta(preview.url);
+					}
 
-			// 创建卡片
-			const card = new Card(source, preview, description);
+					// 推断如果是链接就 获取preview.blob
+					if (isUrl(preview.url)) {
+						let blob: Blob | null;
 
-			// 触发回调
-			onCardGet(card, i, source.dom, async () => {
-				// 传出函数用给外部判断是否要添加该卡片
-				cardList.push(card);
-			});
+						// 获取链接前先判断是否已有缓存的Blob
+						if (
+							existingUrlBlobMap.has(preview.url) &&
+							existingUrlBlobMap.get(preview.url) &&
+							existingUrlBlobMap.get(preview.url)!.size > 0
+						) {
+							console.log("已有blob缓存,不在发送请求");
+							blob = existingUrlBlobMap.get(preview.url)!;
+						} else {
+							blob = await getBlobByUrlAuto(preview.url);
+						}
+						if (blob) {
+							preview.blob = blob;
+							// 推断blob类型
+							const { mainType, subType } = inferBlobType(preview.blob);
+							preview.meta.type = mainType;
+							preview.meta.ext = subType;
+						}
+					}
+				} else {
+					preview = {
+						url: source.url,
+						dom: source.dom,
+						meta: {
+							...source.meta,
+						},
+						blob: source.blob,
+					};
+				}
+
+				// s 获取description信息
+				let description: CardDescription;
+				if (rule.description.enable) {
+					const descriptionDOM = descriptionDOMs[i] || sourceDOM;
+					description = {
+						title: await getDOMInfo(
+							descriptionDOM,
+							rule.description.infoType,
+							rule.description.name
+						),
+						dom: descriptionDOM,
+					};
+				} else {
+					description = {
+						title: source.url,
+						dom: source.dom,
+					};
+				}
+
+				// 创建卡片
+				const card = new Card(source, preview, description);
+
+				// 触发回调
+				onCardGet(card, i, source.dom, async () => {
+					// 传出函数用给外部判断是否要添加该卡片
+					cardList.push(card);
+				});
+
+				return card;
+			};
+			// 存入任务
+			taskList.push(task);
 		}
 	}
 
-	return cardList;
+	return new Promise<void>((resolve) => {
+		// 创建任务队列
+		const taskQueue = new TaskQueue({
+			interval: 200,
+			maxConcurrent: 4,
+			// onTaskComplete: (result, count) => {
+			// 	console.log("任务完成", result, count);
+			// },
+			// 执行完成后调用resolve
+			onAllTasksComplete: () => resolve(),
+		});
+		// 添加任务
+		taskQueue.addTask(taskList);
+		// 开始执行任务队列
+		taskQueue.run();
+	});
 }
 
 // 获取在region模式下信息的处理函数

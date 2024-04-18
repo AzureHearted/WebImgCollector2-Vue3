@@ -56,22 +56,20 @@ export async function getBlobByUrlAuto(url: string): Promise<Blob | null> {
 	if (!url || !url.trim().length) return null;
 
 	// 尝试获取blob
-	console.groupCollapsed(`请求资源：${url}`);
 	const blob = await tryGetBlob(url, [
-		{ mode: "Fetch", message: "Fetch请求" },
-		{ mode: "GM", message: "GM请求1" },
+		{ mode: "Fetch" /* message: "Fetch请求" */ },
+		{ mode: "GM" /* message: "GM请求1" */ },
 		{
 			mode: "GM",
 			referer: location.origin + "/",
-			message: "GM请求2(referer为指定当前域名)",
+			// message: "GM请求2(referer为指定当前域名)",
 		},
 		{
 			mode: "GM",
 			referer: getHostByUrl(url) + "/",
-			message: "GM请求3(referer为链接域名)",
+			// message: "GM请求3(referer为链接域名)",
 		},
 	]);
-	console.groupEnd();
 	return blob;
 }
 
@@ -93,7 +91,7 @@ async function tryGetBlob(
 		// 一旦成功就跳出循环
 		if (blob) break;
 	}
-	console.log(blob);
+	// console.log("请求结果blob:", blob);
 
 	return blob;
 }

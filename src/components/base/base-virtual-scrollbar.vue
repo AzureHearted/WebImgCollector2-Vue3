@@ -11,10 +11,7 @@
 			class="base-virtual-scrollbar-wrapper"
 			@scroll.stop="setScrollbarPosition">
 			<!-- 内容内部区域 -->
-			<div
-				ref="contentDOM"
-				class="base-virtual-scrollbar-content"
-				@transitionend="calculateScrollbarSize">
+			<div ref="contentDOM" class="base-virtual-scrollbar-content">
 				<slot></slot>
 			</div>
 		</div>
@@ -42,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, onMounted, computed, watch, nextTick } from "vue";
+	import { ref, reactive, onMounted, computed, watch } from "vue";
 	import type { ComputedRef, CSSProperties } from "vue";
 	import { useElementBounding, useDraggable } from "@vueuse/core";
 
@@ -58,6 +55,7 @@
 	const contentInfo = reactive({
 		...useElementBounding(contentDOM),
 	});
+
 	watch(
 		() => [
 			viewportInfo.width,
@@ -196,7 +194,7 @@
 	};
 </script>
 
-<style lang="less" scoped >
+<style lang="less" scoped>
 	// 视口容器
 	.base-virtual-scrollbar-viewport {
 		position: relative;
@@ -216,6 +214,7 @@
 
 	/* 去除原生滚动条样式 */
 	.base-virtual-scrollbar-wrapper::-webkit-scrollbar {
+		display: none !important;
 		width: 0px !important;
 		height: 0px !important;
 	}

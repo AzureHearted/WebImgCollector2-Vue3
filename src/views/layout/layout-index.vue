@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted, watch } from "vue";
+	import { ref, onMounted, watch, onBeforeMount, nextTick } from "vue";
 	import { RouterView } from "vue-router";
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
@@ -50,15 +50,6 @@
 	let layoutContainer = ref<HTMLElement | null>(null);
 
 	let appBarIsCollapse = ref(true); // 应用栏是否折叠的标志位
-
-	// 导入Fancybox和相关配置
-	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
-	onMounted(() => {
-		Fancybox.bind(layoutContainer.value, "[data-fancybox]", {
-			...configFancybox,
-			parentEl: layoutContainer.value, // 设置Fancybox的父容器为layoutContainer
-		}); // 绑定Fancybox到指定的元素上
-	});
 
 	watch(
 		() => globalStore.openWindow,

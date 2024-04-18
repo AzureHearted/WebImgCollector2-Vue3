@@ -26,5 +26,7 @@ app.use(vuetify);
 app.use(Varlet);
 
 app.mount(appContainer); // 挂载app
-// 插入到页面
 document.body.appendChild(appContainer);
+
+// 为止bug临时修复
+document.body.classList.remove("tag");

@@ -5,15 +5,6 @@ import type {
 import type { Fancybox } from "@fancyapps/ui";
 // import type { Fancybox } from "@fancyapps/ui/types";
 
-type UserSlide = {
-	src: string;
-	thumbElSrc: string;
-	downloadSrc: string;
-	fancybox: string;
-	thumbEl: HTMLElement;
-	triggerEl: HTMLElement;
-};
-
 export default {
 	// 要显示的工具
 	display: {
@@ -30,18 +21,11 @@ export default {
       `,
 			// 点击事件定义
 			click: (instance) => {
-				const userSlides = (instance.instance as any).userSlides as UserSlide[];
-				let index = 0;
-				if (userSlides.length > 1) {
-					index = Number(
-						(
-							(instance.instance as Fancybox).container?.querySelector(
-								".is-nav-selected"
-							) as HTMLElement
-						)?.dataset.index
-					);
-				}
-				const url = userSlides[index].src;
+				const carousel = instance.instance.carousel;
+				const index = carousel!.page;
+				const triggerEl = carousel?.slides[index].triggerEl;
+				if (!triggerEl) return;
+				const url = triggerEl.dataset.downloadSrc;
 				window.open(url, "_blank");
 			},
 		},
@@ -58,27 +42,18 @@ export default {
 			</button>
       `,
 			click(instance) {
-				const userSlides = (instance.instance as any).userSlides as UserSlide[];
-				let index = 0;
-				if (userSlides.length > 1) {
-					index = Number(
-						(
-							(instance.instance as Fancybox).container?.querySelector(
-								".is-nav-selected"
-							) as HTMLElement
-						)?.dataset.index
-					);
-				}
-
-				(instance.instance as Fancybox).close(); // 关闭当前图片，但不关闭弹窗。
-
+				const carousel = instance.instance.carousel;
+				const index = carousel!.page;
+				const triggerEl = carousel?.slides[index].triggerEl;
+				if (!triggerEl) return;
 				setTimeout(() => {
-					(userSlides[index].thumbEl as HTMLElement).scrollIntoView({
-						behavior: "smooth",
+					triggerEl.scrollIntoView({
+						behavior: "instant",
 						block: "center",
 						inline: "center",
 					});
-				}, 100);
+				}, 0);
+				(instance.instance as Fancybox).close(); // 关闭当前图片，但不关闭弹窗。
 			},
 		},
 	} as ToolbarItemsType,

@@ -54,7 +54,7 @@
 
 	//! 子窗口容器样式(主要作为弹窗的容器)
 	.web-img-collector-top-container {
-		position: fixed !important;
+		position: absolute !important;
 		inset: 0;
 		// background: wheat;
 		// 仅仅让容器本身不响应鼠标事件
@@ -88,31 +88,5 @@
 		border: unset;
 		font-size: unset;
 		color: unset;
-	}
-
-	textarea,
-	input[type="text"],
-	input[type="email"],
-	input[type="search"],
-	input[type="button"],
-	input[type="submit"],
-	button {
-		all: unset;
-	}
-	button,
-	[type="submit"],
-	[type="button"] {
-		all: unset;
-	}
-
-	.var-checkbox__icon {
-		display: flex !important;
-	}
-	.var-select__chip {
-		margin: 0 !important;
-	}
-	.v-list-item-title,
-	.v-list-item-subtitle {
-		width: fit-content;
 	}
 </style>

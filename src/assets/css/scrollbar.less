@@ -2,6 +2,10 @@
 :root {
 	&[data-show-scrollbar="false"] {
 		overflow: overlay;
+
+		scrollbar-color: unset;
+		scrollbar-width: unset;
+
 		> ::-webkit-scrollbar {
 			width: 0px !important;
 			height: 0px !important;
@@ -17,25 +21,25 @@
 	height: 0px;
 }
 
-@media screen and (min-width: 767px) {
-	::-webkit-scrollbar {
-		width: 10px;
-		height: 10px;
-		display: block;
-	}
-}
-@media screen and (min-width: 425px) and (max-width: 767px) {
-	::-webkit-scrollbar {
-		width: 5px;
-		height: 5px;
-		display: block;
-	}
-}
-@media screen and (max-width: 425px) {
-	::-webkit-scrollbar {
-		display: none;
-	}
-}
+// @media screen and (min-width: 767px) {
+// 	::-webkit-scrollbar {
+// 		width: 10px;
+// 		height: 10px;
+// 		display: block;
+// 	}
+// }
+// @media screen and (min-width: 425px) and (max-width: 767px) {
+// 	::-webkit-scrollbar {
+// 		width: 5px;
+// 		height: 5px;
+// 		display: block;
+// 	}
+// }
+// @media screen and (max-width: 425px) {
+// 	::-webkit-scrollbar {
+// 		display: none;
+// 	}
+// }
 
 ::-webkit-scrollbar-thumb {
 	/* 滚动条里面小方块 */

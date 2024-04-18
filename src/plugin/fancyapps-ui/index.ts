@@ -6,21 +6,13 @@ import "@fancyapps/ui/dist/fancybox/fancybox.css";
 import l10n from "./l10n"; //导入汉化配置
 import Toolbar from "./toolbar"; //导入工具配置
 import Images from "./images"; //导入图像配置
+import Thumbs from "./thumbs"; // 缩略图配置
 
 export const configFancybox: Partial<OptionsType> = {
-	l10n, // 汉化配置
-	Images, // 图像相关设置
-	Toolbar, // 工具栏相关设置
-	on: {
-		done: (fancybox, slide) => {
-			console.log(slide);
-			const aspectRatio = Number(slide.width) / Number(slide.height);
-			slide.contentEl.style.width =
-				(slide.el as HTMLElement).clientHeight * 0.9 * aspectRatio + "px";
-			slide.contentEl.style.height =
-				(slide.el as HTMLElement).clientHeight * 0.9 + "px";
-		},
-	},
+	l10n,
+	Images,
+	Toolbar,
+	Thumbs,
 };
 
 export const Fancybox = _Fancybox;

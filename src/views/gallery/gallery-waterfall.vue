@@ -1,7 +1,7 @@
 <template>
-	<div class="waterfall-wrapper" @wheel.stop>
+	<div ref="waterfallContainer" class="waterfall-wrapper" @wheel.stop>
 		<BaseVirtualScrollbar>
-			<WaterFallList :data="(cardList as any)" item-padding="1px">
+			<WaterFallList :data="(cardList as any)" item-padding="2px">
 				<template #default="{ item }">
 					<GalleryCard
 						:data="item"
@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, computed, watch } from "vue";
+	import { ref, reactive, computed, watch, onMounted, nextTick } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 
@@ -24,6 +24,17 @@
 	import { useCardStore } from "@/stores";
 
 	const cardStore = useCardStore();
+
+	const waterfallContainer = ref<HTMLElement | null>(null);
+
+	// 导入Fancybox和相关配置
+	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
+	onMounted(() => {
+		Fancybox.bind("[data-fancybox]", {
+			...configFancybox,
+			parentEl: waterfallContainer.value, // 设置Fancybox的父容器为layoutContainer
+		});
+	});
 
 	// 卡片列表
 	const cardList: ComputedRef<BaseCard[]> = computed(() => {

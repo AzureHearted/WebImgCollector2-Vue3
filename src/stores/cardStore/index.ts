@@ -33,6 +33,8 @@ export default defineStore("cardStore", () => {
 		typeMap: new Map<string, number>([]),
 		// 扩展名与数量的映射表
 		extensionMap: new Map<string, number>([]),
+		// 记录所有链接与Blob的映射表
+		urlBlobMap: new Map<string, Blob>(),
 	});
 
 	// 卡片数据信息定义，用于过滤。
@@ -49,7 +51,7 @@ export default defineStore("cardStore", () => {
 			width: ref<[number, number]>([350, info.size.width[1]]), //宽度过滤器
 			height: ref<[number, number]>([350, info.size.height[1]]), //高度过滤器
 		},
-		type: ref<string[]>([]), //类型过滤器
+		type: ref<string[]>(["image"]), //类型过滤器
 		extension: ref<string[]>([]), //扩展名过滤器
 	});
 
@@ -71,10 +73,12 @@ export default defineStore("cardStore", () => {
 				(filters.extension.length > 0
 					? filters.extension.includes(String(x.source.meta.ext))
 					: true) &&
-				x.source.meta?.width! >= filters.size.width[0] &&
-				x.source.meta?.width! <= filters.size.width[1] &&
-				x.source.meta?.height! >= filters.size.height[0] &&
-				x.source.meta?.height! <= filters.size.height[1];
+				(x.source.meta.type === "image"
+					? x.source.meta.width! >= filters.size.width[0] &&
+					  x.source.meta.width! <= filters.size.width[1] &&
+					  x.source.meta.height! >= filters.size.height[0] &&
+					  x.source.meta.height! <= filters.size.height[1]
+					: true);
 			if (!isMatch) {
 				// 如果不匹配的需要将选中状态设置为false
 				x.isSelected = false;
@@ -89,9 +93,10 @@ export default defineStore("cardStore", () => {
 		const typeNameMap = new Map<string, string>([
 			["image", "图片"],
 			["video", "视频"],
+			["audio", "音频"],
 			["html", "网页"],
 		]);
-		return [...data.typeMap.keys()]
+		const options = [...data.typeMap.keys()]
 			.sort((a, b) => {
 				// 降序排序
 				return data.typeMap.get(b)! - data.typeMap.get(a)!;
@@ -104,6 +109,14 @@ export default defineStore("cardStore", () => {
 					count: data.typeMap.get(x),
 				};
 			});
+		if (!options.length) {
+			options.push({
+				label: "图片",
+				value: "image",
+				count: 0,
+			});
+		}
+		return options;
 	});
 
 	// j 扩展名列表
@@ -125,9 +138,6 @@ export default defineStore("cardStore", () => {
 	// 获取页面资源
 	async function getPageCard() {
 		loadingStore.start();
-		console.groupCollapsed(
-			`获取页面资源：${location.origin + location.pathname}`
-		);
 		// 记录开始前的cardList长度
 		await getCard(
 			// 规则配置
@@ -139,7 +149,7 @@ export default defineStore("cardStore", () => {
 				source: {
 					selector: "a:has(img),img[data-src],img[src]",
 					infoType: "attribute",
-					name: "href|data-src|src",
+					name: "href|srcset|data-src|src",
 				},
 				preview: {
 					origin: "source",
@@ -163,18 +173,19 @@ export default defineStore("cardStore", () => {
 			},
 			// 选项配置
 			{
-				async onAllDOMGet(doms) {
+				// 当获取到所有基准dom时的回调
+				onAllDOMGet: async (doms) => {
 					// console.log("匹配到的DOM", doms);
 					loadingStore.update(0, doms.length);
 					return doms;
 				},
-				async onCardGet(card, index, dom, addCard) {
-					console.log(card, dom, addCard);
-					loadingStore.update(index + 1); // 刷新进度
+				// 当获得卡片时的回调
+				onCardGet: async (card, index, dom, addCard) => {
+					loadingStore.current++;
 					const sourceMeta = card.source.meta;
 					// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
 					if (sourceMeta.valid && !data.urlSet.has(card.source.url)) {
-						// console.log(`第${oldLength + index}张卡片获取成功!`, card);
+						// console.log("新增卡片", card, dom);
 						if (dom) {
 							data.domSet.add(dom); // 记录dom用于排序
 						}
@@ -203,15 +214,20 @@ export default defineStore("cardStore", () => {
 								data.extensionMap.set(sourceMeta.ext, 1);
 							}
 						}
+						// (如果blob存在则)记录到url和blob的Map对象中
+						if (card.source.blob) {
+							data.urlBlobMap.set(card.source.url, card.source.blob);
+						}
 						// data.cardList.push(card); // 添加到卡片列表中。
 						data.cardList[index] = card; // 添加到卡片列表中。
 						updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
 						await addCard(); //执行回调函数
 					}
 				},
+				// 传入已有url和blob的map对象,用于防止重复发送请求
+				existingUrlBlobMap: data.urlBlobMap,
 			}
 		);
-		console.groupEnd();
 		loadingStore.end();
 	}
 
@@ -233,6 +249,7 @@ export default defineStore("cardStore", () => {
 		data.excludeIdSet.clear(); //清空被排除卡片id集合
 		data.typeMap.clear(); // 清空类型映射表
 		data.extensionMap.clear(); // 清空扩展名映射表
+		data.urlBlobMap.clear(); // 清空url和blob的Map对象
 		data.cardList = []; // 清空卡片列表
 		info.size.width = [0, 2000]; // 重置宽度范围。
 		info.size.height = [0, 2000]; // 重置高度范围。
@@ -275,7 +292,6 @@ export default defineStore("cardStore", () => {
 			Snackbar.allowMultiple(true);
 			Snackbar({
 				content: "开始下载",
-				type: "info",
 			});
 
 			// 大于1的时候进行打包
@@ -283,8 +299,8 @@ export default defineStore("cardStore", () => {
 			const zipContainer = new JSZip();
 			// 创建任务队列实例
 			const taskQueue = new TaskQueue({
-				interval: 500, // 至少2s的循环间隔
-				maxConcurrent: 4,
+				interval: 300,
+				maxConcurrent: 6,
 				// 每个任务处理完成时的回调
 				onTaskComplete(_, completed) {
 					loadingStore.update(completed);
@@ -293,7 +309,7 @@ export default defineStore("cardStore", () => {
 				async onAllTasksComplete() {
 					Snackbar({
 						content: "下载完成！正在打包……",
-						type: "success",
+						type: "info",
 					});
 
 					// console.log("全部处理完成", zipContainer);
