@@ -1,17 +1,17 @@
 <template>
 	<!-- 脚本应用容器 -->
-	<div ref="appContainer" class="online-gallery-container">
+	<div ref="appContainer" class="web-img-collector-container">
 		<!-- 路由出口 -->
 		<RouterView />
 		<!-- 悬浮按钮 -->
 		<HoverButton :teleport-to="false" />
 		<!-- 顶层元素的承载容器 -->
-		<div ref="windowContainer" class="online-gallery-top-container"></div>
+		<div ref="windowContainer" class="web-img-collector-top-container"></div>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { ref, defineAsyncComponent, onMounted } from "vue";
+	import { ref, defineAsyncComponent } from "vue";
 	import { RouterView } from "vue-router";
 	import { useGlobalStore } from "@/stores";
 	import { GM_getValue } from "$";
@@ -32,7 +32,7 @@
 
 <style lang="less" scoped>
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
-	.online-gallery-container {
+	.web-img-collector-container {
 		box-sizing: border-box;
 		position: fixed !important;
 		overflow: hidden;
@@ -43,8 +43,6 @@
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
 		z-index: 2147483647;
-		// z-index: 2000;
-		// z-index: auto;
 		// 仅仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
@@ -55,7 +53,7 @@
 	}
 
 	//! 子窗口容器样式(主要作为弹窗的容器)
-	.online-gallery-top-container {
+	.web-img-collector-top-container {
 		position: fixed !important;
 		inset: 0;
 		// background: wheat;
@@ -90,5 +88,31 @@
 		border: unset;
 		font-size: unset;
 		color: unset;
+	}
+
+	textarea,
+	input[type="text"],
+	input[type="email"],
+	input[type="search"],
+	input[type="button"],
+	input[type="submit"],
+	button {
+		all: unset;
+	}
+	button,
+	[type="submit"],
+	[type="button"] {
+		all: unset;
+	}
+
+	.var-checkbox__icon {
+		display: flex !important;
+	}
+	.var-select__chip {
+		margin: 0 !important;
+	}
+	.v-list-item-title,
+	.v-list-item-subtitle {
+		width: fit-content;
 	}
 </style>

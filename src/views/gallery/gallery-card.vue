@@ -53,7 +53,7 @@
 				:init-height="data.source.meta.height"
 				:data-width="data.source.meta.width ? data.source.meta.width : false"
 				:data-height="data.source.meta.height ? data.source.meta.height : false"
-				data-fancybox="online-gallery"
+				data-fancybox="web-img-collector"
 				:data-thumb="data.preview.url"
 				:data-download-src="data.source.url"
 				@loaded="handleCardLoaded(data, $event)"
