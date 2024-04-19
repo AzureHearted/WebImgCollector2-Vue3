@@ -263,11 +263,12 @@
     const taskQueue = new TaskQueue({showMessage: false, max: 5, delay: 100});
     //s 创建zip容器
     let zipContainer: JSZipType = new JSZip();
+    
     let finallyCount = 0;
     //s 创建任务清单
     const taskList: ITask[] = downloadCards.map((card, index) => {
       //s 队列任务定义
-      return <ITask>{
+      return {
         index: index,
         //s 主要执行函数(定义)
         main: async () => {
@@ -299,7 +300,7 @@
           finallyCount++;
           loading.percentage = (finallyCount / downloadCards.length) * 100;
         },
-      };
+      } as ITask;
     });
     //s 将任务清单push进队列
     taskQueue.pushTask(taskList);

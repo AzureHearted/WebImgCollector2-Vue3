@@ -1115,8 +1115,6 @@ export async function getTagInfo(
     }
   } else if (type == 4) {
     //s 提取 innerText内部文本
-    let a = document.createElement("div");
-
     result = dom.innerText;
   } else if (type == 5) {
     //s 提取 innerHTML

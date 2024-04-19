@@ -103,7 +103,7 @@ export default defineConfig({
         namespace: "npm/vite-plugin-monkey",
         // match: ["*://*"],
         match: ["http*://*", "http*://*/*"],
-        exclude: ["*://element-plus.org/*"],
+        // exclude: ["*://element-plus.org/*"],
         connect: ["*"],
         noframes: true,
         require: [],
