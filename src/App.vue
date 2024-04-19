@@ -4,7 +4,7 @@
 		<!-- 路由出口 -->
 		<RouterView />
 		<!-- 悬浮按钮 -->
-		<HoverButton :teleport-to="false" />
+		<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
 		<!-- 顶层元素的承载容器 -->
 		<div ref="windowContainer" class="web-img-collector-top-container"></div>
 	</div>
@@ -14,9 +14,9 @@
 	import { ref, defineAsyncComponent, onMounted } from "vue";
 	import { RouterView } from "vue-router";
 	import { useGlobalStore } from "@/stores";
-	import { GM_getValue } from "$";
+	import { GM_getValue, GM_setValue, GM_info } from "$";
 
-	console.log("获取油猴配置", GM_getValue("ruleList"));
+	// console.log("油猴信息：", GM_info);
 
 	const globalStore = useGlobalStore();
 	// globalStore.visibleScrollbar(false);
@@ -26,7 +26,7 @@
 
 	// 异步导入HoverButton组件
 	const HoverButton = defineAsyncComponent(
-		() => import("@/components/hover-button.vue")
+		() => import("@/views/hover-button.vue")
 	);
 </script>
 

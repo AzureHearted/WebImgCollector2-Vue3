@@ -1,24 +1,30 @@
 import "vuetify/styles";
 import { createVuetify } from "vuetify";
-import * as components from "vuetify/components";
-import * as directives from "vuetify/directives";
-
 import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
-import { mdiAccount } from "@mdi/js";
+
+// 引入要使用的字体图标
+import {
+	mdiDotsVertical,
+	mdiCloseCircle,
+	mdiViewGallery,
+	mdiBookCog,
+} from "@mdi/js";
 
 const vuetify = createVuetify({
-	components,
-	directives,
 	defaults: {
 		global: {
-			ripple: false,
+			ripple: false, // vuetify的ripple组件有bug先默认关闭
 		},
 	},
 	icons: {
 		defaultSet: "mdi",
 		aliases: {
 			...aliases,
-			account: mdiAccount,
+			// 字体图标设置全局别名
+			dotsVertical: mdiDotsVertical,
+			closeCircle: mdiCloseCircle,
+			viewGallery: mdiViewGallery,
+			bookCog: mdiBookCog,
 		},
 		sets: {
 			mdi,

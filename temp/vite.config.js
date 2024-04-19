@@ -10,6 +10,9 @@ import autoImport from "unplugin-auto-import/vite";
 import { VarletImportResolver } from "@varlet/import-resolver";
 //s 用于在vue项目中使用svg文件
 import svgLoader from "vite-svg-loader";
+// 打包分析插件
+import { visualizer } from "rollup-plugin-visualizer";
+import vuetify from "vite-plugin-vuetify";
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
@@ -21,21 +24,30 @@ export default defineConfig({
             resolvers: [VarletImportResolver()],
         }),
         autoImport({
-            resolvers: [
-                VarletImportResolver({
-                    autoImport: true,
-                }),
-            ],
+            resolvers: [VarletImportResolver({ autoImport: true })],
             imports: [util.unimportPreset],
+        }),
+        vuetify({
+            autoImport: {
+                ignore: ["Ripple"], // vuetify的ripple组件有bug不适用它
+                // labs: true,
+            },
+        }),
+        visualizer({
+            open: true, //注意这里要设置为true，否则无效
+            gzipSize: true,
+            brotliSize: true,
         }),
         monkey({
             entry: "./src/main.ts",
             userscript: {
                 author: "ls", // 作者
+                // updateURL: "", //更新地址
                 icon: "https://vitejs.dev/logo.svg", // 图标
                 namespace: "npm/vite-plugin-monkey", // 命名空间
                 match: ["http*://*", "http*://*/*"], // 要匹配的网站
                 // exclude: ["*://element-plus.org/*"], // 要排除的网站
+                exclude: ["*://vuetifyjs.com/*"],
                 noframes: false, //是否在iframe中使用
                 connect: ["*"],
                 "run-at": "document-body", // 嵌入时机

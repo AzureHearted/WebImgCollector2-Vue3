@@ -48,9 +48,7 @@ export default {
 				if (!triggerEl) return;
 				setTimeout(() => {
 					triggerEl.scrollIntoView({
-						behavior: "instant",
-						block: "center",
-						inline: "center",
+						behavior: "auto",
 					});
 				}, 0);
 				(instance.instance as Fancybox).close(); // 关闭当前图片，但不关闭弹窗。

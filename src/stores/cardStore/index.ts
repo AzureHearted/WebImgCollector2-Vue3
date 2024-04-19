@@ -5,7 +5,7 @@ import Card from "./class/Card";
 import { TaskQueue } from "@/utils/taskQueue"; // 任务队列
 // 导入工具
 import getCard from "./utils/get-cards";
-import { getNameByUrl } from "@/utils/common";
+import { getBlobType, getExtByBlob, getNameByUrl } from "@/utils/common";
 // 导入网络工具请求
 import { getBlobByUrlAuto } from "@/utils/http";
 // 导入打包和保存工具
@@ -48,8 +48,8 @@ export default defineStore("cardStore", () => {
 	// 过滤器
 	const filters = reactive({
 		size: {
-			width: ref<[number, number]>([350, info.size.width[1]]), //宽度过滤器
-			height: ref<[number, number]>([350, info.size.height[1]]), //高度过滤器
+			width: ref<[number, number]>([300, info.size.width[1]]), //宽度过滤器
+			height: ref<[number, number]>([300, info.size.height[1]]), //高度过滤器
 		},
 		type: ref<string[]>(["image"]), //类型过滤器
 		extension: ref<string[]>([]), //扩展名过滤器
@@ -281,11 +281,12 @@ export default defineStore("cardStore", () => {
 					card.source.blob = blob;
 				}
 			}
+			let name = getNameByUrl(card.source.url);
+			if (card.source.meta.type !== "html") {
+				name = name + `.${card.source.meta.ext}`;
+			}
 			// 保存
-			saveAs(
-				card.source.blob!,
-				`${getNameByUrl(card.source.url)}.${card.source.meta.ext}`
-			);
+			saveAs(card.source.blob!, name);
 			loadingStore.end(); // 结束进度条
 		} else {
 			console.groupCollapsed("批量下载");
@@ -373,14 +374,15 @@ export default defineStore("cardStore", () => {
 										resolve();
 										return;
 									}
+									card.source.meta.type = getBlobType(card.source.blob);
+									card.source.meta.ext = getExtByBlob(card.source.blob);
+								}
+								let name = getNameByUrl(card.source.url);
+								if (card.source.meta.type !== "html") {
+									name = name + `.${card.source.meta.ext}`;
 								}
 								// 将blob存入zip容器
-								zipContainer.file(
-									`${i} - ${getNameByUrl(card.source.url)}.${
-										card.source.meta.ext
-									}`,
-									card.source.blob
-								);
+								zipContainer.file(`${i} - ${name}`, card.source.blob);
 								resolve(zipContainer);
 							})();
 						});

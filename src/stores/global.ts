@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 
 export default defineStore("global", () => {
 	const openWindow = ref(false); // 窗口打开状态
+
 	//给滚动条注入样式
 	visibleScrollbar(true);
 

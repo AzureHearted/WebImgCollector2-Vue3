@@ -28,7 +28,7 @@
 				width="fit-content">
 				<!-- 控制按钮组 -->
 				<var-badge
-					:offset-y="2"
+					:offset-y="-4"
 					:offset-x="-8"
 					style="z-index: 2"
 					:hidden="!cardStore.validCardList.length"
@@ -94,10 +94,10 @@
 				<!-- 下载按钮 -->
 				<var-badge
 					type="info"
-					:offset-y="2"
+					:offset-y="-4"
 					style="z-index: 1"
 					:hidden="!checkedCardList.length"
-					:value="checkedCardList.length">
+					:value="`${checkedCardList.length} (${checkedTotalSize})`">
 					<var-menu
 						placement="bottom"
 						:default-style="false"
@@ -106,8 +106,14 @@
 						<var-button-group
 							:size="isMobile() ? 'small' : 'normal'"
 							type="primary">
-							<var-button @click.stop="downloadSelected"> 选中下载 </var-button>
-							<var-button style="padding: 0 4px">
+							<var-button
+								:disabled="!checkedCardList.length"
+								@click.stop="downloadSelected">
+								选中下载
+							</var-button>
+							<var-button
+								:disabled="!checkedCardList.length"
+								style="padding: 0 4px">
 								<IconArrowDown style="width: 24px; fill: white" />
 							</var-button>
 						</var-button-group>
@@ -168,7 +174,6 @@
 								<v-checkbox
 									density="compact"
 									:model-value="isActive"
-									:ripple="false"
 									hide-details></v-checkbox>
 							</template>
 							<template #title="{ title }">
@@ -216,7 +221,6 @@
 								<v-checkbox
 									density="compact"
 									:model-value="isActive"
-									:ripple="false"
 									hide-details></v-checkbox>
 							</template>
 							<template #title="{ title }">
@@ -250,7 +254,6 @@
 					step="1"
 					:max="cardStore.info.size.width[1]"
 					:min="cardStore.info.size.width[0]"
-					:ripple="false"
 					@end="filterChange('width', $event)">
 					<template #label>
 						<v-label class="input-slider-label">宽度</v-label>
@@ -287,7 +290,6 @@
 					step="1"
 					:max="cardStore.info.size.height[1]"
 					:min="cardStore.info.size.height[0]"
-					:ripple="false"
 					@end="filterChange('height', $event)">
 					<template #label>
 						<v-label class="input-slider-label">高度</v-label>
@@ -326,7 +328,7 @@
 	import IconCloseCircleMultiple from "@svg/close-circle-multiple.svg";
 
 	// 导入公用ts库
-	import { isMobile } from "@/utils/common";
+	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入仓库
 	import { useCardStore, useLoadingStore } from "@/stores";
@@ -366,6 +368,16 @@
 	// 被选中的卡片
 	const checkedCardList: ComputedRef<BaseCard[]> = computed(() => {
 		return cardStore.validCardList.filter((x) => x.isSelected);
+	});
+
+	// 计算被选中的卡片对应的体积大小总和
+	const checkedTotalSize: ComputedRef<string> = computed(() => {
+		const totalByte = checkedCardList.value.reduce(
+			(total, curr) =>
+				total + (curr.source.blob! && curr.source.blob.size) || 0,
+			0
+		);
+		return byteAutoUnit(totalByte);
 	});
 
 	// 获取卡片
@@ -494,7 +506,7 @@
 		&.other-filter {
 			flex: 0 content;
 			flex-wrap: wrap;
-
+			align-items: center;
 			// 选择器样式
 			.filter-input-select {
 				flex: 1;
@@ -502,6 +514,11 @@
 				min-width: 150px;
 				max-width: 200px;
 				margin: 0 2px;
+			}
+
+			:deep(.v-field),
+			:deep(.v-input) {
+				height: fit-content;
 			}
 		}
 

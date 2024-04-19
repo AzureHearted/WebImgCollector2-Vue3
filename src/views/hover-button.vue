@@ -1,15 +1,15 @@
 <template>
 	<!-- s悬浮按钮 -->
 	<var-fab
+		:show="show"
 		v-model:active="active"
 		type="primary"
 		bottom="20vh"
-		right="10vh"
+		right="8vh"
 		direction="top"
 		:trigger="isMobile() ? 'click' : 'hover'"
 		drag
-		:elevation="24"
-		:teleport="teleportTo">
+		:teleport="false">
 		<template #trigger>
 			<!-- 图库显示切换按钮 -->
 			<var-badge
@@ -18,13 +18,14 @@
 				:max-value="999"
 				:hidden="true">
 				<var-button
-					color="#29B6F6"
-					:elevation="10"
+					elevation
+					type="primary"
 					round
+					icon-container
 					:loading="loading"
-					@dblclick="toggleWindow(route.name as string)">
+					@dblclick="toggleWindow()">
 					<!-- 图标 -->
-					<IconGridRound style="width: 36px" />
+					<IconGridRound style="width: 40px" />
 				</var-button>
 				<!-- 底部悬浮按钮 -->
 				<div class="bottom-fab" :data-active="active || state.scrolling">
@@ -77,8 +78,16 @@
 <script setup lang="ts">
 	import { defineProps, ref, reactive } from "vue";
 	import { useRoute, useRouter } from "vue-router";
+
 	const route = useRoute();
 	const router = useRouter();
+
+	// console.log(
+	// 	"路由信息",
+	// 	route,
+	// 	router.getRoutes().map((x) => x.name)
+	// );
+
 	// 引入公共方法
 	import { isMobile } from "@/utils/common";
 	// 引入图标
@@ -96,14 +105,16 @@
 	const active = ref(false); // 控制悬浮按钮的显示状态
 
 	// 定义Props
-	const props = withDefaults(
+	withDefaults(
 		defineProps<{
 			teleportTo?: string | HTMLElement | false; // 指定浮动按钮的挂载点
 			loading?: boolean;
+			show?: boolean;
 		}>(),
 		{
 			teleportTo: () => "body",
 			loading: false,
+			show: true,
 		}
 	);
 
@@ -120,14 +131,23 @@
 		active.value = false;
 		if (name) {
 			if (name === route.name) {
-				console.log(name, route.name);
+				// console.log(name, route.name);
 				globalStore.openWindow = !globalStore.openWindow;
 			} else {
 				router.push({ name });
 				globalStore.openWindow = true;
 			}
 		} else {
-			console.log("切换显示");
+			// console.log("切换显示");
+			// 判断当前路由是否属于改应用定义了路由,不属于的话就重定向到gallery路由
+			if (
+				!router
+					.getRoutes()
+					.map((x) => x.name)
+					.includes(route.name || "")
+			) {
+				router.push({ name: "Gallery" });
+			}
 			globalStore.openWindow = !globalStore.openWindow;
 		}
 	}

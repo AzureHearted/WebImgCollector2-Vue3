@@ -72,9 +72,13 @@
 
 	// 定义宽高比
 	const aspectRatio = computed(() => {
-		return state.width && state.height && !state.isError
-			? state.width / state.height
-			: 1;
+		if (state.isError) {
+			return props.initWidth && props.initHeight
+				? props.initWidth / props.initHeight
+				: 1;
+		} else {
+			return state.width && state.height ? state.width / state.height : 1;
+		}
 	});
 
 	// 定义img标签的ref
@@ -161,7 +165,7 @@
 					state.height = img.naturalHeight;
 
 					// eslint-disable-next-line @typescript-eslint/no-unused-vars
-					let { errorImg, loaded, isError, show, ...infoRest } = state;
+					let { loaded, isError, show, ...infoRest } = state;
 
 					// 对剩余的属性进行类型标注
 					let info: returnInfo = {
@@ -197,6 +201,7 @@
 					console.log("图片加载错误", src);
 					state.isError = true;
 					state.loaded = true;
+					imgDom.value!.src = state.errorImg;
 					// 触发error事件
 					emit("error");
 				},

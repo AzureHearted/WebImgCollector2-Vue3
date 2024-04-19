@@ -9,4 +9,5 @@ export default {
 	TOGGLE_SLIDESHOW: "切换幻灯片显示",
 	TOGGLE_THUMBS: "切换缩略图显示",
 	CLOSE: "关闭",
+	TO_LOCATE: "定位图片",
 } as OptionsType["l10n"];

@@ -12,6 +12,7 @@ const RuleEdit = () => import("@/views/rule-edit/rule-edit-index.vue");
 const routes: RouterOptions["routes"] = [
 	{
 		path: "/",
+		name: "Layout",
 		component: Layout,
 		redirect: "/gallery",
 		children: [
@@ -39,7 +40,8 @@ const router = createRouter({
 
 // 全局前置守卫
 router.beforeEach((to, from) => {
-	console.log("全局前置守卫", to, from);
+	console.log("当前路由-->", from);
+	console.log("目标路由-->", to);
 });
 
 export default router;

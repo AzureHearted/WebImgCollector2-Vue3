@@ -119,7 +119,7 @@ function getSrcsetMaximumValue(srcsetString: string) {
 	let result = srcsetString;
 	if (/\d+(w|x)/.test(srcsetString)) {
 		const dataList = srcsetString
-			.split(/, */)
+			.split(/, +/)
 			.filter((item) => !!item && !!item.trim().length)
 			.map((item) => {
 				const itemDataInfos = item.split(" ");

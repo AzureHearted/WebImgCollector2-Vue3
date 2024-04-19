@@ -52,6 +52,7 @@ export function getBlobByUrl(
 
 // 通过链接获取blob(自动)
 export async function getBlobByUrlAuto(url: string): Promise<Blob | null> {
+	// console.log("请求", url);
 	//s 链接为空直接返回空blob
 	if (!url || !url.trim().length) return null;
 

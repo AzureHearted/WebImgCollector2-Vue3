@@ -8,10 +8,9 @@
 			<v-layout>
 				<!-- 应用栏 -->
 				<v-app-bar
-					:elevation="2"
+					:elevation="1"
 					density="compact"
-					height="50"
-					:collapse="appBarIsCollapse">
+					style="height: 50px">
 					<template v-slot:prepend>
 						<v-app-bar-nav-icon
 							density="compact"
@@ -21,13 +20,36 @@
 					</template>
 					<v-app-bar-title>图片收集器</v-app-bar-title>
 					<template v-slot:append>
-						<v-btn density="compact" icon :ripple="false" v-ripple>
-							<IconMoreVertical style="width: 24px" />
+						<v-btn
+							color="red"
+							density="compact"
+							icon="$closeCircle"
+							v-ripple
+							@click="globalStore.openWindow = false">
 						</v-btn>
 					</template>
 				</v-app-bar>
 				<!-- 抽屉导航 -->
-				<!-- <v-navigation-drawer  > 抽屉导航 </v-navigation-drawer> -->
+				<v-navigation-drawer
+					temporary
+					touchless
+					width="fit-content"
+					v-model="appBarIsCollapse">
+					<v-list density="compact" nav>
+						<v-list-item
+							prepend-icon="$viewGallery"
+							title="图库"
+							value="Gallery"
+							:to="{ name: 'Gallery' }"
+							v-ripple></v-list-item>
+						<v-list-item
+							prepend-icon="$bookCog"
+							title="规则管理"
+							value="RuleEdit"
+							:to="{ name: 'RuleEdit' }"
+							v-ripple></v-list-item>
+					</v-list>
+				</v-navigation-drawer>
 				<!-- 内容区 -->
 				<v-main>
 					<!-- 容器 -->
@@ -39,24 +61,14 @@
 </template>
 
 <script setup lang="ts">
-	import {
-		ref,
-		onMounted,
-		watch,
-		onBeforeMount,
-		nextTick,
-		onUnmounted,
-		onUpdated,
-	} from "vue";
+	import { ref, onMounted, watch, onUnmounted, onUpdated } from "vue";
 	import { RouterView } from "vue-router";
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
 
-	import IconMoreVertical from "@svg/more-vertical.svg";
-
 	let layoutContainer = ref<HTMLElement | null>(null);
 
-	let appBarIsCollapse = ref(true); // 应用栏是否折叠的标志位
+	let appBarIsCollapse = ref(false); // 应用栏是否折叠的标志位
 
 	watch(
 		() => globalStore.openWindow,
@@ -69,6 +81,7 @@
 
 	// 导入Fancybox和相关配置
 	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
+	import type cardStore from "@/stores/cardStore";
 	onMounted(() => {
 		FancyboxBind(layoutContainer.value, "[data-fancybox]");
 	});

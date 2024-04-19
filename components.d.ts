@@ -11,7 +11,6 @@ declare module 'vue' {
     BaseImg: typeof import('./src/components/base/base-img.vue')['default']
     BaseImgCard: typeof import('./src/components/base/base-img-card.vue')['default']
     BaseVirtualScrollbar: typeof import('./src/components/base/base-virtual-scrollbar.vue')['default']
-    HoverButton: typeof import('./src/components/hover-button.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VarBadge: typeof import('@varlet/ui')['_BadgeComponent']
