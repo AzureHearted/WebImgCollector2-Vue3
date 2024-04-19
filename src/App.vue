@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, defineAsyncComponent } from "vue";
+	import { ref, defineAsyncComponent, onMounted } from "vue";
 	import { RouterView } from "vue-router";
 	import { useGlobalStore } from "@/stores";
 	import { GM_getValue } from "$";
@@ -54,7 +54,7 @@
 
 	//! 子窗口容器样式(主要作为弹窗的容器)
 	.web-img-collector-top-container {
-		position: absolute !important;
+		position: absolute;
 		inset: 0;
 		// background: wheat;
 		// 仅仅让容器本身不响应鼠标事件
@@ -74,8 +74,8 @@
 		color: unset;
 		border: unset;
 		box-shadow: unset;
-		min-width: unset;
-		min-height: unset;
+		// min-width: unset;
+		// min-height: unset;
 	}
 	:deep(.v-slider) input {
 		display: unset;

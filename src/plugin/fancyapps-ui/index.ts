@@ -13,6 +13,7 @@ export const configFancybox: Partial<OptionsType> = {
 	Images,
 	Toolbar,
 	Thumbs,
+	autoFocus: true,
 };
 
 export const Fancybox = _Fancybox;

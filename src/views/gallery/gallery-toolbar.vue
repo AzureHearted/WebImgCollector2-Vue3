@@ -467,7 +467,7 @@
 
 		// 尺寸过滤器
 		&.size-filter {
-			flex: 1 1 auto;
+			flex: 1;
 			flex-wrap: wrap;
 
 			.filter-input-slider {
@@ -492,12 +492,12 @@
 
 		// 其他选择器
 		&.other-filter {
-			flex: 0 1 content;
+			flex: 0 content;
 			flex-wrap: wrap;
 
 			// 选择器样式
 			.filter-input-select {
-				flex: 0 1 content;
+				flex: 1;
 				width: 200px;
 				min-width: 150px;
 				max-width: 200px;

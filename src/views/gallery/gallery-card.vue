@@ -170,6 +170,15 @@
 		) {
 			card.source.meta.width = card.preview.meta.width;
 			card.source.meta.height = card.preview.meta.height;
+			// 更新仓库的尺寸范围信息
+			cardStore.info.size.width[1] = Math.max(
+				cardStore.info.size.width[1],
+				card.source.meta.width
+			);
+			cardStore.info.size.height[1] = Math.max(
+				cardStore.info.size.height[1],
+				card.source.meta.height
+			);
 		}
 	}
 

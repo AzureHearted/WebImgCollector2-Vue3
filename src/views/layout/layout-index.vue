@@ -39,12 +39,19 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted, watch, onBeforeMount, nextTick } from "vue";
+	import {
+		ref,
+		onMounted,
+		watch,
+		onBeforeMount,
+		nextTick,
+		onUnmounted,
+		onUpdated,
+	} from "vue";
 	import { RouterView } from "vue-router";
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
 
-	import IconMenu from "@svg/menu.svg";
 	import IconMoreVertical from "@svg/more-vertical.svg";
 
 	let layoutContainer = ref<HTMLElement | null>(null);
@@ -60,7 +67,30 @@
 		}
 	);
 
-	// console.log(globalStore.openWindow);
+	// 导入Fancybox和相关配置
+	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
+	onMounted(() => {
+		FancyboxBind(layoutContainer.value, "[data-fancybox]");
+	});
+	onUpdated(() => {
+		Fancybox.unbind(layoutContainer.value);
+		Fancybox.close();
+		FancyboxBind(layoutContainer.value, "[data-fancybox]");
+	});
+	onUnmounted(() => {
+		Fancybox.destroy();
+	});
+
+	function FancyboxBind(
+		listContainerDOM: HTMLElement | null,
+		itemSelector: string = "[data-fancybox]",
+		teleportToDOMs?: HTMLElement
+	) {
+		Fancybox.bind(listContainerDOM, itemSelector, {
+			...configFancybox,
+			parentEl: teleportToDOMs ? teleportToDOMs : listContainerDOM,
+		});
+	}
 </script>
 
 <style lang="less" scoped>

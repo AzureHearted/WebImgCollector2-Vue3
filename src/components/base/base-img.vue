@@ -122,7 +122,11 @@
 		// 将图片赋值给img对象(开始加载)
 		img.src = src;
 		if (img.complete) {
-			// console.log("图片已经加载过了");
+			// console.log("图片已经加载过了", img.naturalWidth, img.naturalHeight);
+
+			state.width = img.naturalWidth;
+			state.height = img.naturalHeight;
+
 			let info: returnInfo = {
 				meta: {
 					valid: true,
@@ -131,6 +135,7 @@
 					aspectRatio: img.naturalWidth / img.naturalHeight, // 宽高比.
 				},
 			};
+
 			// 判断是否需要用户手动加载
 			if (!props.manualControl) {
 				// 如果用户不需要手动加载就立即加载

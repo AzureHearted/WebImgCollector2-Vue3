@@ -27,15 +27,6 @@
 
 	const waterfallContainer = ref<HTMLElement | null>(null);
 
-	// 导入Fancybox和相关配置
-	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
-	onMounted(() => {
-		Fancybox.bind("[data-fancybox]", {
-			...configFancybox,
-			parentEl: waterfallContainer.value, // 设置Fancybox的父容器为layoutContainer
-		});
-	});
-
 	// 卡片列表
 	const cardList: ComputedRef<BaseCard[]> = computed(() => {
 		return cardStore.filteredCardList;
