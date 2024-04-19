@@ -1,8 +1,8 @@
 import "@/ts/global_mount"; //s 先挂载全局依赖的js库
 
-import {createApp} from "vue";
+import { createApp } from "vue";
 import Vue3TouchEvents from "vue3-touch-events"; //s vue3移动端touch事件支持
-import "@/style/scss/global.scss"; //s 自定义全局样式引入
+import "/public/style/scss/global.scss"; //s 自定义全局样式引入
 import "@fancyapps/ui/dist/fancybox/fancybox.css"; //s fancybox样式
 import "@varlet/touch-emulator"; //s varlet ui的桌面端支持
 
