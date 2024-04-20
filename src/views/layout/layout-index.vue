@@ -7,10 +7,7 @@
 		<v-app class="layout-app-container">
 			<v-layout>
 				<!-- 应用栏 -->
-				<v-app-bar
-					:elevation="1"
-					density="compact"
-					style="height: 50px">
+				<v-app-bar :elevation="1" density="compact" height="50">
 					<template v-slot:prepend>
 						<v-app-bar-nav-icon
 							density="compact"
@@ -18,7 +15,7 @@
 							@click="appBarIsCollapse = !appBarIsCollapse">
 						</v-app-bar-nav-icon>
 					</template>
-					<v-app-bar-title>图片收集器</v-app-bar-title>
+					<v-app-bar-title>Web Img Collector 2</v-app-bar-title>
 					<template v-slot:append>
 						<v-btn
 							color="red"
@@ -44,9 +41,9 @@
 							v-ripple></v-list-item>
 						<v-list-item
 							prepend-icon="$bookCog"
-							title="规则管理"
-							value="RuleEdit"
-							:to="{ name: 'RuleEdit' }"
+							title="方案管理"
+							value="PatternEdit"
+							:to="{ name: 'PatternEdit' }"
 							v-ripple></v-list-item>
 					</v-list>
 				</v-navigation-drawer>

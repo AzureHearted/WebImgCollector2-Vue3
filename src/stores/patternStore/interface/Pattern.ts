@@ -1,27 +1,30 @@
 // 匹配方案
-export interface MatchPattern {
+export interface BasePattern {
 	id: string; // 方案id
-	mainInfo: MainInfo; // 方案信息
-	rules: MatchRule[]; // 可以有多条匹配规则
+	mainInfo: BaseMainInfo; // 方案信息
+	rules: BaseRule[]; // 可以有多条匹配规则
+	state: BaseStatus; // 状态
 }
 
 // 主要信息
-export interface MainInfo {
+export interface BaseMainInfo {
 	name: string; //s 规则名称
 	host: string; //s 域名
 	// 路径过滤器
-	filter: Pick<Regex, "pattern" | "flags">;
+	filter: Pick<BaseRegex, "pattern" | "flags">;
 	icon: string; //s 站点图标链接
 	titleSelector: string; //s 标题选择器
 }
 
 // 匹配规则
-export interface MatchRule {
-	region: MatchRegion; // 区域匹配
-	preview: MatchPreview; // 预览源匹配
-	source: MatchSource; // 源匹配
-	description: MatchDescription; // 描述匹配
-	filter: RuleFilter; // 过滤器
+export interface BaseRule {
+	id: string; // 规则id
+	name: string; // 规则名称
+	region: BaseMatchRegion; // 区域匹配
+	preview: BaseMatchPreview; // 预览源匹配
+	source: BaseMatchSource; // 源匹配
+	description: BaseMatchDescription; // 描述匹配
+	filter: BaseFilter; // 过滤器
 }
 
 // 基础匹配接口
@@ -38,51 +41,50 @@ export interface BaseMatch {
 }
 
 //s 匹配区域
-export interface MatchRegion extends Pick<BaseMatch, "selector"> {
+export interface BaseMatchRegion extends Pick<BaseMatch, "selector"> {
 	//s 时候启用区域限定(开启后将以该项指定的区域作为起点查找查询其他项目)
 	enable: boolean; // 是否开启
 }
 
 // s 匹配来源
-export interface MatchSource extends BaseMatch {}
+export interface BaseMatchSource extends BaseMatch {}
 
 // s 匹配预览来源
-export interface MatchPreview extends BaseMatch {
+export interface BaseMatchPreview extends BaseMatch {
 	enable: boolean;
 	origin: "custom" | "region" | "source"; // 获取来源
 }
 
 // s 匹配描述内容
-export interface MatchDescription extends BaseMatch {
+export interface BaseMatchDescription extends BaseMatch {
 	enable: boolean;
 	origin: "custom" | "region" | "source"; // 获取来源
 }
 
 // 基础正则接口
-interface Regex {
+interface BaseRegex {
 	pattern: string; //s 正则表达式
 	replaceTo: string; //s 替换结果
 	flags: string[]; //s 正则修饰符
 }
 
 //s 正则提取修正类型的接口
-interface MatchRegExtract extends Pick<Regex, "pattern" | "flags"> {}
+interface BaseMatchRegExtract extends Pick<BaseRegex, "pattern" | "flags"> {}
 
 //s 正则替换类型的接口
-interface MatchRegReplace extends Regex {}
+interface BaseMatchRegReplace extends BaseRegex {}
 
 //s 正则修正类型
-type RegexFix = [MatchRegExtract | MatchRegReplace] | [];
+type BaseRegexFix = [BaseMatchRegExtract | BaseMatchRegReplace] | [];
 
 //s 匹配过滤器
-interface RuleFilter {
+export interface BaseFilter {
 	formats: string[]; //格式列表
 	width: [number, number]; // 宽度范围
 	height: [number, number]; // 高度范围
 }
 
 //? 规则状态
-interface RuleStatus {
+export interface BaseStatus {
 	editing: boolean;
-	isNewCreated: boolean;
 }

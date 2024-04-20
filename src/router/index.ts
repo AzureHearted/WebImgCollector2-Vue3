@@ -7,7 +7,8 @@ import type { RouterOptions } from "vue-router";
 import Layout from "@/views/layout/layout-index.vue";
 
 const Gallery = () => import("@/views/gallery/gallery-index.vue");
-const RuleEdit = () => import("@/views/rule-edit/rule-edit-index.vue");
+const PatternEdit = () =>
+	import("@/views/pattern-edit/pattern-edit-index.vue");
 
 const routes: RouterOptions["routes"] = [
 	{
@@ -22,9 +23,9 @@ const routes: RouterOptions["routes"] = [
 				component: Gallery,
 			},
 			{
-				path: "/ruleEdit",
-				name: "RuleEdit",
-				component: RuleEdit,
+				path: "/pattern-edit",
+				name: "PatternEdit",
+				component: PatternEdit,
 			},
 		],
 	},

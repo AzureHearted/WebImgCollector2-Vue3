@@ -1,13 +1,15 @@
 <template>
-	<!-- 脚本应用容器 -->
-	<div ref="appContainer" class="web-img-collector-container">
-		<!-- 路由出口 -->
-		<RouterView />
-		<!-- 悬浮按钮 -->
-		<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
-		<!-- 顶层元素的承载容器 -->
-		<div ref="windowContainer" class="web-img-collector-top-container"></div>
-	</div>
+	<el-config-provider namespace="wic2">
+		<!-- 脚本应用容器 -->
+		<div ref="appContainer" class="web-img-collector-container">
+			<!-- 路由出口 -->
+			<RouterView />
+			<!-- 悬浮按钮 -->
+			<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
+			<!-- 顶层元素的承载容器 -->
+			<div ref="windowContainer" class="web-img-collector-top-container"></div>
+		</div>
+	</el-config-provider>
 </template>
 
 <script setup lang="ts">
@@ -42,7 +44,7 @@
 		background-color: transparent;
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
-		z-index: 2147483647;
+		z-index: 2147483646;
 		// 仅仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
@@ -74,8 +76,6 @@
 		color: unset;
 		border: unset;
 		box-shadow: unset;
-		// min-width: unset;
-		// min-height: unset;
 	}
 	:deep(.v-slider) input {
 		display: unset;

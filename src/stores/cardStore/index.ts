@@ -142,6 +142,8 @@ export default defineStore("cardStore", () => {
 		await getCard(
 			// 规则配置
 			{
+				id: "###",
+				name: "###",
 				region: {
 					enable: false,
 					selector: "",

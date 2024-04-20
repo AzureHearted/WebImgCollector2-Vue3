@@ -11,6 +11,10 @@ import components from "unplugin-vue-components/vite";
 import autoImport from "unplugin-auto-import/vite";
 // varlet组件库的自动引入配置
 import { VarletImportResolver } from "@varlet/import-resolver";
+// element-plus组件库的自动引入配置
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
+import IconsResolver from "unplugin-icons/resolver";
+import Icons from "unplugin-icons/vite";
 
 //s 用于在vue项目中使用svg文件
 import svgLoader from "vite-svg-loader";
@@ -28,15 +32,35 @@ export default defineConfig({
 		//f 用于在vue项目中使用svg文件
 		svgLoader(),
 		components({
-			resolvers: [VarletImportResolver()],
+			resolvers: [
+				VarletImportResolver(),
+				// 自动注册图标组件
+				IconsResolver({
+					enabledCollections: ["ep"],
+				}),
+				ElementPlusResolver({
+					importStyle: "sass",
+				}),
+			],
 		}),
 		autoImport({
-			resolvers: [VarletImportResolver({ autoImport: true })],
+			resolvers: [
+				VarletImportResolver({ autoImport: true }),
+				IconsResolver({
+					prefix: "Icon",
+				}),
+				ElementPlusResolver({
+					importStyle: "sass",
+				}),
+			],
 			imports: [util.unimportPreset],
+		}),
+		Icons({
+			autoInstall: true,
 		}),
 		vuetify({
 			autoImport: {
-				ignore: ["Ripple"], // vuetify的ripple组件有bug不适用它
+				ignore: ["Ripple"], // vuetify的ripple组件有bug进行排除
 				// labs: true,
 			},
 		}),
@@ -68,8 +92,11 @@ export default defineConfig({
 	css: {
 		// 预处理器配置项
 		preprocessorOptions: {
+			scss: {
+				additionalData: `@use "@/styles/element/index.scss" as *;`,
+			},
 			less: {
-				math: "always",
+				math: "always", //启用 Less 预处理器中的数学运算功能
 			},
 		},
 	},

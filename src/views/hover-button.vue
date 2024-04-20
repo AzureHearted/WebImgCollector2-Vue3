@@ -59,8 +59,8 @@
 					<IconDashboard />
 				</var-button>
 			</var-badge>
-			<!-- 规则管理 -->
-			<var-button type="info" round @click="toggleWindow('RuleEdit')">
+			<!-- 方案管理 -->
+			<var-button type="info" round @click="toggleWindow('PatternEdit')">
 				<IconBxsBookBookmark />
 			</var-button>
 			<!-- 设置 -->

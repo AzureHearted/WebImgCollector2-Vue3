@@ -15,7 +15,7 @@
 		"paths": {
 			"@/*": ["./src/*"],
 			"@svg/*": ["./src/assets/svg/*"]
-		}
+		},
 		// "noEmit": true
 	}
 }

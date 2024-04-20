@@ -1,5 +1,5 @@
 import { getDOM, getDOMInfo } from "@/utils/dom";
-import type { BaseMatch, MatchRule } from "../interface/match-rule";
+import type { BaseMatch, BaseRule } from "../../patternStore/interface/Pattern";
 import type {
 	BaseMeta,
 	CardDescription,
@@ -29,7 +29,7 @@ interface Options {
 
 // 获取卡片
 export default async function getCard(
-	rule: MatchRule,
+	rule: BaseRule,
 	options: Partial<Options>
 ) {
 	// 默认配置
