@@ -21,7 +21,6 @@ declare module 'vue' {
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTree: typeof import('element-plus/es')['ElTree']
-    ElTreeV2: typeof import('element-plus/es')['ElTreeV2']
     IAntDesignCheckCircleFilled: typeof import('~icons/ant-design/check-circle-filled')['default']
     IAntDesignEditOutlined: typeof import('~icons/ant-design/edit-outlined')['default']
     IEpCirclePlus: typeof import('~icons/ep/circle-plus')['default']
