@@ -30,7 +30,6 @@ declare global {
   const GM_unregisterMenuCommand: typeof import('vite-plugin-monkey/dist/client')['GM_unregisterMenuCommand']
   const GM_webRequest: typeof import('vite-plugin-monkey/dist/client')['GM_webRequest']
   const GM_xmlhttpRequest: typeof import('vite-plugin-monkey/dist/client')['GM_xmlhttpRequest']
-  const Varlet: typeof import('@varlet/ui')['let']
   const monkeyWindow: typeof import('vite-plugin-monkey/dist/client')['monkeyWindow']
   const unsafeWindow: typeof import('vite-plugin-monkey/dist/client')['unsafeWindow']
 }

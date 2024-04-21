@@ -13,7 +13,9 @@
 
 <script setup lang="ts">
 	import Tree from "./pattern-edit-tree.vue";
-	import Form from "./pattern-edit-form-tabs.vue";
+	import Form from "./pattern-edit-form.vue";
+
+
 </script>
 
 <style lang="scss" scoped>

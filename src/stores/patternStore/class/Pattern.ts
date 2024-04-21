@@ -124,6 +124,9 @@ export const defaultPattern = new Pattern({
 				width: [300, 2000] as [number, number],
 				height: [300, 2000] as [number, number],
 			},
+			state: {
+				editing: false,
+			},
 		},
 	],
 });

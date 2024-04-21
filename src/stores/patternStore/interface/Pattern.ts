@@ -25,6 +25,7 @@ export interface BaseRule {
 	source: BaseMatchSource; // 源匹配
 	description: BaseMatchDescription; // 描述匹配
 	filter: BaseFilter; // 过滤器
+	state: BaseStatus; // 状态
 }
 
 // 基础匹配接口

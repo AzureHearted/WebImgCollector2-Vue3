@@ -7,18 +7,25 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    BaseCheckbox: typeof import('./src/components/base/base-checkbox.vue')['default']
-    BaseImg: typeof import('./src/components/base/base-img.vue')['default']
-    BaseImgCard: typeof import('./src/components/base/base-img-card.vue')['default']
-    BaseVirtualScrollbar: typeof import('./src/components/base/base-virtual-scrollbar.vue')['default']
+    BaseCheckbox: typeof import('./../src/components/base/base-checkbox.vue')['default']
+    BaseImg: typeof import('./../src/components/base/base-img.vue')['default']
+    BaseImgCard: typeof import('./../src/components/base/base-img-card.vue')['default']
+    BaseVirtualScrollbar: typeof import('./../src/components/base/base-virtual-scrollbar.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
     ElConfigProvider: typeof import('element-plus/es')['ElConfigProvider']
+    ElForm: typeof import('element-plus/es')['ElForm']
+    ElFormItem: typeof import('element-plus/es')['ElFormItem']
     ElInput: typeof import('element-plus/es')['ElInput']
     ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
     ElTabPane: typeof import('element-plus/es')['ElTabPane']
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTree: typeof import('element-plus/es')['ElTree']
+    ElTreeV2: typeof import('element-plus/es')['ElTreeV2']
+    IAntDesignCheckCircleFilled: typeof import('~icons/ant-design/check-circle-filled')['default']
+    IAntDesignEditOutlined: typeof import('~icons/ant-design/edit-outlined')['default']
+    IEpCirclePlus: typeof import('~icons/ep/circle-plus')['default']
+    IEpDelete: typeof import('~icons/ep/delete')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VarBadge: typeof import('@varlet/ui')['_BadgeComponent']
@@ -27,7 +34,7 @@ declare module 'vue' {
     VarChip: typeof import('@varlet/ui')['_ChipComponent']
     VarFab: typeof import('@varlet/ui')['_FabComponent']
     VarMenu: typeof import('@varlet/ui')['_MenuComponent']
-    WaterfallList: typeof import('./src/components/base/waterfall-list.vue')['default']
+    WaterfallList: typeof import('./../src/components/base/waterfall-list.vue')['default']
   }
   export interface ComponentCustomProperties {
     vRipple: typeof import('@varlet/ui')['_RippleComponent']

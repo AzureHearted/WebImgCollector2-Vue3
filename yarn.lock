@@ -828,6 +828,13 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-2.0.3.tgz#4a2868d75d6d6963e423bcf90b7fd1be343409d3"
   integrity sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==
 
+"@iconify-json/ant-design@^1.1.16":
+  version "1.1.16"
+  resolved "https://registry.yarnpkg.com/@iconify-json/ant-design/-/ant-design-1.1.16.tgz#292d35de75ce3e84a1e3ae29d76997e4b5a185f0"
+  integrity sha512-DJ2BDf/XNuYu0p0zDQh3RM8FkPsp9GwZ7WytkVwU7cn73AgpNfOGc2P5zvZzgejx5YK0otG9MYi/cHI4qvfnVQ==
+  dependencies:
+    "@iconify/types" "*"
+
 "@iconify-json/ep@^1.1.11":
   version "1.1.11"
   resolved "https://registry.yarnpkg.com/@iconify-json/ep/-/ep-1.1.11.tgz#d23465dea8c715a3e10c4361c9164be28690565e"

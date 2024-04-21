@@ -5,6 +5,7 @@ import type {
 	BaseRule,
 	BaseMatchSource,
 	BaseFilter,
+	BaseStatus,
 } from "../interface/Pattern";
 import { buildUUID } from "@/utils/common";
 
@@ -39,6 +40,9 @@ export class Rule implements BaseRule {
 		width: [0, -1],
 		height: [0, -1],
 	};
+	public state: BaseStatus = {
+		editing: false,
+	};
 
 	constructor(options?: Partial<BaseRule>) {
 		this.id = options?.id || buildUUID();
@@ -62,5 +66,9 @@ export class Rule implements BaseRule {
 			...this.filter,
 			...options?.filter,
 		};
+		this.state = {
+			...this.state,
+			...options?.state,
+		}
 	}
 }

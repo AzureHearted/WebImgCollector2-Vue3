@@ -1,4 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
+import path from "path";
+const pathSrc = path.resolve(__dirname, "src");
 
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
@@ -34,26 +36,26 @@ export default defineConfig({
 		components({
 			resolvers: [
 				VarletImportResolver(),
-				// 自动注册图标组件
-				IconsResolver({
-					enabledCollections: ["ep"],
-				}),
 				ElementPlusResolver({
 					importStyle: "sass",
 				}),
+				// 自动注册图标组件
+				IconsResolver({
+					// prefix: "Icon", //图标组件前缀,默认是“i”
+					enabledCollections: ["ep", "ant-design"],
+				}),
 			],
+			dts: "./types/components.d.ts",
 		}),
 		autoImport({
 			resolvers: [
 				VarletImportResolver({ autoImport: true }),
-				IconsResolver({
-					prefix: "Icon",
-				}),
 				ElementPlusResolver({
 					importStyle: "sass",
 				}),
 			],
 			imports: [util.unimportPreset],
+			dts: "./types/auto-imports.d.ts",
 		}),
 		Icons({
 			autoInstall: true,

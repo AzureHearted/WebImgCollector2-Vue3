@@ -29,6 +29,7 @@
 		"vuetify": "^3.5.14"
 	},
 	"devDependencies": {
+		"@iconify-json/ant-design": "^1.1.16",
 		"@iconify-json/ep": "^1.1.11",
 		"@mdi/font": "^7.4.47",
 		"@mdi/js": "^7.4.47",
