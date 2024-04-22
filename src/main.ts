@@ -13,7 +13,7 @@ import vuetify from "@/plugin/vuetify";
 import "@/plugin/varlet";
 
 // 导入样式动态修复模块
-import { fixStyle } from "@/styles/website";
+// import { fixStyle } from "@/styles/website";
 
 // 创建 Vue 容器
 const appContainer = document.createElement("div");
@@ -31,4 +31,4 @@ document.body.appendChild(appContainer);
 document.body.classList.remove("tag");
 
 // 最后执行样式修复
-fixStyle(window.location.hostname);
+// fixStyle(window.location.hostname);

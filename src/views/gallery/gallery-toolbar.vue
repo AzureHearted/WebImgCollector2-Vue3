@@ -528,7 +528,6 @@
 	}
 
 	:deep(.v-slider) input {
-		display: unset;
 		background: unset;
 		border: unset;
 		box-shadow: unset;
