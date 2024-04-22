@@ -332,7 +332,7 @@
 
 	// 导入仓库
 	import { useCardStore, useLoadingStore } from "@/stores";
-	import { Snackbar } from "@varlet/ui";
+
 	const cardStore = useCardStore();
 	const loadingStore = useLoadingStore();
 
@@ -525,5 +525,18 @@
 		:deep(input) {
 			padding: 0 4px;
 		}
+	}
+
+	:deep(.v-slider) input {
+		display: unset;
+		background: unset;
+		border: unset;
+		box-shadow: unset;
+		margin: unset;
+		padding: unset;
+		border-radius: unset;
+		border: unset;
+		font-size: unset;
+		color: unset;
 	}
 </style>

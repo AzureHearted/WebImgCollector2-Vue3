@@ -4,7 +4,7 @@
 			<WaterFallList :data="(cardList as any)" item-padding="2px">
 				<template #default="{ item }">
 					<GalleryCard
-						:data="item"
+						:data="(item as any)"
 						@change:selected="item.isSelected = $event" />
 				</template>
 			</WaterFallList>
@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, computed, watch, onMounted, nextTick } from "vue";
+	import { ref, computed } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 

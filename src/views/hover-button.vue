@@ -158,7 +158,7 @@
 		container: HTMLElement = document.documentElement, // 滚动元素
 		interval: number = 1000 // 滚动间隔
 	): void {
-		let scrollInterval: NodeJS.Timeout | null = null;
+		let scrollInterval: number | null = null;
 
 		// 执行一次滚动操作
 		function scrollOnce(): void {
@@ -181,7 +181,7 @@
 		// 开始执行滚动操作的定时器
 		function startScrollInterval(): void {
 			if (!scrollInterval) {
-				scrollInterval = setInterval(() => {
+				scrollInterval = window.setInterval(() => {
 					// console.log(`滚动中:${direction}`);
 					if (direction === "up") {
 						state.scrollingToUp = true; // 取消显示滚动按钮的加载状态

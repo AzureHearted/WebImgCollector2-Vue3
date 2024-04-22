@@ -77,16 +77,4 @@
 		border: unset;
 		box-shadow: unset;
 	}
-	:deep(.v-slider) input {
-		display: unset;
-		background: unset;
-		border: unset;
-		box-shadow: unset;
-		margin: unset;
-		padding: unset;
-		border-radius: unset;
-		border: unset;
-		font-size: unset;
-		color: unset;
-	}
 </style>

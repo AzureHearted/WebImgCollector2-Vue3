@@ -172,6 +172,9 @@ export default defineStore("cardStore", () => {
 					width: [350, 2000] as [number, number],
 					height: [350, 2000] as [number, number],
 				},
+				state: {
+					editing: false,
+				},
 			},
 			// 选项配置
 			{
@@ -270,7 +273,6 @@ export default defineStore("cardStore", () => {
 	// 下载卡片
 	async function downloadCards(ids: string[]) {
 		if (!ids.length) return;
-		loadingStore.start(ids.length); // 开启进度条
 		// 先找到对应的卡片
 		const cards = validCardList.value.filter((x) => ids.includes(x.id));
 		if (cards.length === 1) {
@@ -289,8 +291,9 @@ export default defineStore("cardStore", () => {
 			}
 			// 保存
 			saveAs(card.source.blob!, name);
-			loadingStore.end(); // 结束进度条
 		} else {
+			loadingStore.start(ids.length); // 开启进度条
+
 			console.groupCollapsed("批量下载");
 			Snackbar.allowMultiple(true);
 			Snackbar({

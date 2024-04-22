@@ -21,4 +21,8 @@
 		flex-flow: column;
 		overflow: hidden;
 	}
+	:deep(input) {
+		background: unset;
+		box-shadow: unset;
+	}
 </style>

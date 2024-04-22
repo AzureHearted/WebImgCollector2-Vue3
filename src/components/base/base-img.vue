@@ -331,6 +331,9 @@
 	.img-wrapper {
 		position: relative;
 		box-sizing: border-box; // 盒子模型，确保边框不会影响内容的大小。
+		* {
+			box-sizing: border-box;
+		}
 	}
 
 	img {

@@ -17,7 +17,7 @@ export class TaskQueue {
 	private completedCount: number = 0; // 执行完成的任务。
 	private failedTasks: Array<{ task: Function | undefined; error: any }> = []; // 失败的任务数组。
 	private isComplete = false; // 是否已经完成。
-	private timer: NodeJS.Timeout | null = null; // 计时器
+	private timer: number | null = null; // 计时器
 	private runningTasks: Function[] = []; // 记录正在执行的任务
 
 	// 每次任务完成时的回调
@@ -78,7 +78,7 @@ export class TaskQueue {
 			return;
 		}
 		// 设置定时器开始计时
-		this.timer = setTimeout(() => {
+		this.timer = window.setTimeout(() => {
 			this.handleRun();
 		}, this.interval);
 	}

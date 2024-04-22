@@ -54,35 +54,6 @@
 		return { backgroundColor: props.backgroundColor } as CSSProperties;
 	});
 
-	// 顶部样式
-	const headerStyle = computed(() => {
-		let css: CSSProperties = {};
-		if (props.layout == "absolute") {
-			css = {
-				position: "absolute",
-				top: 0,
-				left: 0,
-				right: 0,
-			};
-		}
-		return css;
-	});
-
-	// 底部样式
-	const footerStyle = computed(() => {
-		let css: CSSProperties = {};
-		if (props.layout == "absolute") {
-			css = {
-				position: "absolute",
-				bottom: 0,
-				left: 0,
-				right: 0,
-				// zIndex: 1,
-			};
-		}
-		return css;
-	});
-
 	// 图片加载完成后的回调
 	function loaded(...args: any[]) {
 		emit("loaded", ...args);
@@ -98,12 +69,16 @@
 	// 容器基础样式
 	.img-card-container {
 		position: relative; // 设置相对定位，以便于其他内容可以定位到图片上。
-		box-sizing: border-box; // 盒子模型，确保边框不会影响内容的大小。
 		display: flex;
 		flex-flow: column;
 		border: 1px solid #ccc; // 边框样式，根据需要自行调整。
 		box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.5); // 阴影效果，根据需要自行调整。
 		transition: box-shadow 0.5s; // 过渡效果，使阴影效果更平滑。
+
+		box-sizing: border-box; // 盒子模型，确保边框不会影响内容的大小。
+		* {
+			box-sizing: border-box;
+		}
 	}
 	.img-card-container:hover {
 		box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); // 阴影效果，根据需要自行调整。

@@ -14,8 +14,6 @@
 <script setup lang="ts">
 	import Tree from "./pattern-edit-tree.vue";
 	import Form from "./pattern-edit-form.vue";
-
-
 </script>
 
 <style lang="scss" scoped>
@@ -33,5 +31,11 @@
 			padding: 4px;
 			// background-color: orange;
 		}
+	}
+
+	:deep(input) {
+		background: white;
+		box-shadow: unset;
+		color: #606266;
 	}
 </style>
