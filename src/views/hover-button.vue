@@ -1,7 +1,7 @@
 <template>
 	<!-- s悬浮按钮 -->
 	<var-fab
-		:show="show"
+		:show="show && state.loaded"
 		v-model:active="active"
 		type="primary"
 		bottom="20vh"
@@ -77,10 +77,10 @@
 
 <script setup lang="ts">
 	import { defineProps, ref, reactive } from "vue";
-	import { useRoute, useRouter } from "vue-router";
 
-	const route = useRoute();
-	const router = useRouter();
+	// import { useRoute, useRouter } from "vue-router";
+	// const route = useRoute();
+	// const router = useRouter();
 
 	// console.log(
 	// 	"路由信息",
@@ -100,6 +100,7 @@
 	import IconArrowheadUp from "@svg/arrowhead-up.svg";
 
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
+	import { onMounted } from "vue";
 	const globalStore = useGlobalStore();
 
 	const active = ref(false); // 控制悬浮按钮的显示状态
@@ -122,32 +123,40 @@
 		scrolling: false,
 		scrollingToDown: false,
 		scrollingToUp: false,
+		loaded: false,
 	});
 	// const scrollingToDown = ref(false); // 控制滚动按钮的显示状态
 	// const scrollingToUp = ref(false); // 控制滚动按钮的显示状态
+
+	onMounted(() => {
+		state.loaded = true;
+	});
 
 	// 切换窗口显示
 	function toggleWindow(name?: string) {
 		active.value = false;
 		if (name) {
-			if (name === route.name) {
-				// console.log(name, route.name);
-				globalStore.openWindow = !globalStore.openWindow;
-			} else {
-				router.push({ name });
-				globalStore.openWindow = true;
-			}
+			// if (name === route.name) {
+			// 	// console.log(name, route.name);
+			// 	globalStore.openWindow = !globalStore.openWindow;
+			// } else {
+			// 	router.push({ name });
+			// 	globalStore.openWindow = true;
+			// }
+			globalStore.tab = name;
+			globalStore.openWindow = true;
 		} else {
 			// console.log("切换显示");
-			// 判断当前路由是否属于改应用定义了路由,不属于的话就重定向到gallery路由
-			if (
-				!router
-					.getRoutes()
-					.map((x) => x.name)
-					.includes(route.name || "")
-			) {
-				router.push({ name: "Gallery" });
-			}
+			// 判断当前路由是否属于该应用定义了路由,不属于的话就重定向到gallery路由
+			// if (
+			// 	!router
+			// 		.getRoutes()
+			// 		.map((x) => x.name)
+			// 		.includes(route.name || "")
+			// ) {
+			// 	router.push({ name: "Gallery" });
+			// }
+			globalStore.tab = "Gallery";
 			globalStore.openWindow = !globalStore.openWindow;
 		}
 	}

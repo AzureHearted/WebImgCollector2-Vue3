@@ -1,22 +1,30 @@
 <template>
-	<el-config-provider namespace="wic2">
-		<!-- 脚本应用容器 -->
-		<div ref="appContainer" class="web-img-collector-container">
+	<!-- 脚本应用容器 -->
+	<div ref="appContainer" class="web-img-collector-container">
+		<!-- 消息通知类信息容器 -->
+		<el-config-provider namespace="el">
+			<div class="web-img-collector-notification-container"></div>
+		</el-config-provider>
+		<!-- 内容区 -->
+		<el-config-provider namespace="wic2">
 			<!-- 路由出口 -->
-			<RouterView />
+			<!-- <RouterView /> -->
+			<Layout />
 			<!-- 悬浮按钮 -->
 			<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
 			<!-- 顶层元素的承载容器 -->
 			<div ref="windowContainer" class="web-img-collector-top-container"></div>
-		</div>
-	</el-config-provider>
+		</el-config-provider>
+	</div>
 </template>
 
 <script setup lang="ts">
-	import { ref, defineAsyncComponent, onMounted } from "vue";
-	import { RouterView } from "vue-router";
+	import { ref, defineAsyncComponent } from "vue";
 	import { useGlobalStore } from "@/stores";
-	import { GM_getValue, GM_setValue, GM_info } from "$";
+	// import Layout from "./views/layout/layout-index.vue";
+	const Layout = defineAsyncComponent(
+		() => import("@/views/layout/layout-index.vue")
+	);
 
 	// console.log("油猴信息：", GM_info);
 
@@ -45,12 +53,62 @@
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
 		z-index: 2147483646;
-		// 仅仅让容器本身不响应鼠标事件
+		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
-		// 子元素默认还能响应
+		body,
+		div,
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6,
+		p,
+		ul,
+		li,
+		dd,
+		dt {
+			color: initial;
+		}
+
 		:deep(*) {
+			// 子元素默认还能响应
 			pointer-events: auto;
+			// margin: unset;
+			// padding: unset;
+			// border-radius: unset;
+			// border: unset;
+			// font-size: unset;
+			// color: auto;
+			// border: unset;
+			// box-shadow: unset;
+			&.layout-container *[class^="var-"] {
+				margin: unset;
+			}
+			&[class^="v-"] > input {
+				border: unset;
+			}
+
+			&[class^="v-input"] {
+				margin-inline-end: unset;
+			}
+
+			body,
+			div,
+			h1,
+			h2,
+			h3,
+			h4,
+			h5,
+			h6,
+			p,
+			ul,
+			li,
+			dd,
+			dt {
+				color: unset;
+			}
 		}
 	}
 
@@ -59,22 +117,12 @@
 		position: absolute;
 		inset: 0;
 		// background: wheat;
-		// 仅仅让容器本身不响应鼠标事件
+		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
 		// 子元素默认还能响应
 		:deep(*) {
 			pointer-events: auto;
 		}
-	}
-	:deep(*) {
-		margin: unset;
-		padding: unset;
-		border-radius: unset;
-		border: unset;
-		font-size: unset;
-		color: unset;
-		border: unset;
-		box-shadow: unset;
 	}
 </style>

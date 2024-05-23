@@ -36,21 +36,25 @@
 						<v-list-item
 							prepend-icon="$viewGallery"
 							title="图库"
+							:active="globalStore.tab === 'Gallery'"
 							value="Gallery"
-							:to="{ name: 'Gallery' }"
+							@click="globalStore.tab = 'Gallery'"
 							v-ripple></v-list-item>
 						<v-list-item
 							prepend-icon="$bookCog"
 							title="方案管理"
 							value="PatternEdit"
-							:to="{ name: 'PatternEdit' }"
+							:active="globalStore.tab === 'PatternEdit'"
+							@click="globalStore.tab = 'PatternEdit'"
 							v-ripple></v-list-item>
 					</v-list>
 				</v-navigation-drawer>
 				<!-- 内容区 -->
 				<v-main>
 					<!-- 容器 -->
-					<RouterView />
+					<!-- <RouterView /> -->
+					<!-- <views></views> -->
+					<component :is="nowPage"></component>
 				</v-main>
 			</v-layout>
 		</v-app>
@@ -58,13 +62,20 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted, watch, onUnmounted, onUpdated } from "vue";
-	import { RouterView } from "vue-router";
+	import { ref, computed, onMounted, watch, onUnmounted, onUpdated } from "vue";
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
+	// 导入组件
+	import Gallery from "@/views/gallery/gallery-index.vue";
+	import PatternEdit from "@/views/pattern-edit/pattern-edit-index.vue";
+	// 组件记对象
+	const views: { [key: string]: any } = { Gallery, PatternEdit };
+	// 动态组件
+	const nowPage = computed(() => {
+		return views[globalStore.tab];
+	});
 
 	let layoutContainer = ref<HTMLElement | null>(null);
-
 	let appBarIsCollapse = ref(false); // 应用栏是否折叠的标志位
 
 	watch(
@@ -75,7 +86,6 @@
 			}
 		}
 	);
-
 	// 导入Fancybox和相关配置
 	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
 	import type cardStore from "@/stores/cardStore";

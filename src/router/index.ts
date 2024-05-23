@@ -6,35 +6,35 @@ import {
 import type { RouterOptions } from "vue-router";
 import Layout from "@/views/layout/layout-index.vue";
 
-const Gallery = () => import("@/views/gallery/gallery-index.vue");
-const PatternEdit = () =>
-	import("@/views/pattern-edit/pattern-edit-index.vue");
+// const Gallery = () => import("@/views/gallery/gallery-index.vue");
+// const PatternEdit = () => import("@/views/pattern-edit/pattern-edit-index.vue");
 
 const routes: RouterOptions["routes"] = [
 	{
 		path: "/",
 		name: "Layout",
 		component: Layout,
-		redirect: "/gallery",
-		children: [
-			{
-				path: "/gallery",
-				name: "Gallery",
-				component: Gallery,
-			},
-			{
-				path: "/pattern-edit",
-				name: "PatternEdit",
-				component: PatternEdit,
-			},
-		],
+		// children: [
+		// 	{
+		// 		path: "/",
+		// 		name: "Gallery",
+		// 		component: Gallery,
+		// 	},
+		// 	{
+		// 		path: "/pattern-edit",
+		// 		name: "PatternEdit",
+		// 		component: PatternEdit,
+		// 	},
+		// ],
 	},
 ];
 
 const router = createRouter({
 	// history: createWebHistory(import.meta.env.BASE_URL),
-	// history: createWebHistory(location.pathname),
-	history: createWebHashHistory(), // 使用 hash 模式
+	history: createWebHistory(
+		location.pathname + location.search + location.hash
+	),
+	// history: createWebHashHistory(), // 使用 hash 模式
 	// history: createWebHashHistory(location.pathname + location.hash), // 使用 hash 模式
 	routes,
 });

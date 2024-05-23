@@ -15,7 +15,7 @@ import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现�
 // 导入其他仓库
 import { useLoadingStore } from "@/stores";
 
-import { Snackbar } from "@varlet/ui";
+import { ElNotification } from "@/plugin/element-plus";
 
 export default defineStore("cardStore", () => {
 	const loadingStore = useLoadingStore();
@@ -138,6 +138,12 @@ export default defineStore("cardStore", () => {
 	// 获取页面资源
 	async function getPageCard() {
 		loadingStore.start();
+		ElNotification({
+			title: "提示",
+			message: "正在获取信息……",
+			type: "info",
+			appendTo: ".web-img-collector-notification-container",
+		});
 		// 记录开始前的cardList长度
 		await getCard(
 			// 规则配置
@@ -149,7 +155,8 @@ export default defineStore("cardStore", () => {
 					selector: "",
 				},
 				source: {
-					selector: "a:has(img),img[data-src],img[src]",
+					selector:
+						"a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]",
 					infoType: "attribute",
 					name: "href|srcset|data-src|src",
 				},
@@ -294,10 +301,11 @@ export default defineStore("cardStore", () => {
 		} else {
 			loadingStore.start(ids.length); // 开启进度条
 
-			console.groupCollapsed("批量下载");
-			Snackbar.allowMultiple(true);
-			Snackbar({
-				content: "开始下载",
+			ElNotification({
+				title: "提示",
+				message: "开始下载……",
+				type: "info",
+				appendTo: ".web-img-collector-notification-container",
 			});
 
 			// 大于1的时候进行打包
@@ -313,9 +321,11 @@ export default defineStore("cardStore", () => {
 				},
 				// 所有任务处理完成时的回调
 				async onAllTasksComplete() {
-					Snackbar({
-						content: "下载完成！正在打包……",
+					ElNotification({
+						title: "提示",
+						message: "下载完成！正在打包……",
 						type: "info",
+						appendTo: ".web-img-collector-notification-container",
 					});
 
 					// console.log("全部处理完成", zipContainer);
@@ -355,12 +365,15 @@ export default defineStore("cardStore", () => {
 
 					// console.log("压缩包名称:", zipName);
 					saveAs(zip, `${zipName}.zip`);
-					Snackbar({
-						content: "开始下载压缩包……",
+
+					ElNotification({
+						title: "成功",
+						message: "开始下载压缩包……",
 						type: "success",
+						appendTo: ".web-img-collector-notification-container",
 					});
 					loadingStore.end(); // 结束进度条
-					console.groupEnd();
+					// console.groupEnd();
 				},
 			});
 			// 添加任务

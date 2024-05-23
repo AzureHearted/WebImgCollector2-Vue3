@@ -384,7 +384,7 @@ export default async function getCard(
 	return new Promise<void>((resolve) => {
 		// 创建任务队列
 		const taskQueue = new TaskQueue({
-			interval: 200,
+			interval: 300,
 			maxConcurrent: 4,
 			// onTaskComplete: (result, count) => {
 			// 	console.log("任务完成", result, count);
