@@ -117,6 +117,8 @@ export function getExtByUrl(url: string): string {
 	if (match) {
 		ext = match[0];
 	}
+	// 特殊情况处理
+	if (ext === "jpeg") ext = "jpg";
 	return ext;
 }
 
@@ -242,21 +244,6 @@ export function isMobile(): boolean {
 	return regex.test(sUserAgent);
 }
 
-//f 链接类型判断
-export function getUrlType(url: string): "image" | "video" | "html" {
-	let urlType: "image" | "video" | "html" = "html";
-	const isImg = /\.(jpg|jpeg|png|gif|webp|bmp|icon|svg)$/i;
-	const isVideo =
-		/\.(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)$/i;
-
-	if (isImg.test(url)) {
-		urlType = "image";
-	} else if (isVideo.test(url)) {
-		urlType = "video";
-	}
-
-	return urlType;
-}
 
 //f blob类型判断
 export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
@@ -282,19 +269,6 @@ export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
 	return blobType;
 }
 
-//f 通过链接"推测"链接类型
-export function guessUrlType(url: string): "image" | "video" | "html" {
-	let urlType: "image" | "video" | "html" = "html";
-	const isImg = /(jpg|jpeg|png|gif|webp|bmp|icon|svg)/i;
-	const isVideo =
-		/(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)/i;
-	if (isImg.test(url)) {
-		urlType = "image";
-	} else if (isVideo.test(url)) {
-		urlType = "video";
-	}
-	return urlType;
-}
 
 //f 获取剪切板文本
 export async function getClipBoardText() {

@@ -1,18 +1,21 @@
 <template>
 	<div class="img-wrapper" :class="{ loading: !state.loaded }">
 		<!-- 图片主体 -->
-		<img
-			ref="imgDom"
+		<div
+			class="img-container"
 			:class="{
 				loading: !state.loaded,
 				show: state.show,
 				error: state.isError,
 			}"
-			v-lazy.src="src"
-			:style="{ aspectRatio: aspectRatio }"
-			:draggable="draggable" />
+			:style="{ aspectRatio: aspectRatio }">
+			<slot>
+				<img ref="imgDom" v-lazy.src="src" :draggable="draggable" />
+			</slot>
+		</div>
+
 		<!-- 其他内容(插槽) -->
-		<slot></slot>
+		<slot name="other"></slot>
 	</div>
 </template>
 
@@ -44,6 +47,7 @@
 			observerOnce?: boolean;
 			manualControl?: boolean;
 			draggable?: boolean; // 是否允许拖拽图片
+			initShow?: boolean;
 		}>(),
 		{
 			src: "",
@@ -57,6 +61,7 @@
 			observerOnce: true,
 			manualControl: false,
 			draggable: true, // 默认允许拖拽图片
+			initShow: false,
 		}
 	);
 
@@ -65,9 +70,9 @@
 		errorImg: errorImg,
 		width: props.initWidth,
 		height: props.initHeight,
-		loaded: ref(false),
 		isError: ref(false),
-		show: ref(false),
+		loaded: ref(props.initShow),
+		show: ref(props.initShow),
 	});
 
 	// 定义宽高比
@@ -335,13 +340,29 @@
 			box-sizing: border-box;
 		}
 	}
-
+	.img-container {
+		opacity: 0; //默认不显示
+		transition: 0.5s ease-in-out; // 添加过渡效果
+	}
+	// 加载中的样式
+	.img-container.loading {
+		opacity: 0;
+	}
+	// 加载完成且可见的样式
+	.img-container.show {
+		opacity: 1;
+	}
+	// 加载错误的样式
+	.img-container.error {
+		transform: scale(0.5);
+		opacity: 0.5;
+		object-fit: contain;
+	}
 	img {
 		display: block;
 		width: 100%;
 		height: auto;
 		padding: 0;
-		opacity: 0; //默认不显示
 		object-fit: cover;
 		background: transparent;
 		/* 禁止选中文字 */
@@ -349,19 +370,6 @@
 		/* 禁止图文拖拽 */
 		-webkit-user-drag: none;
 		transition: 0.5s ease-in-out; // 添加过渡效果
-	}
-	// 加载错误的样式
-	img.error {
-		transform: scale(0.5);
-		object-fit: contain;
-	}
-	// 加载中的样式
-	img.loading {
-		opacity: 0;
-	}
-	// 加载完成且可见的样式
-	img.show {
-		opacity: 1;
 	}
 
 	/* 图片加载动画 */

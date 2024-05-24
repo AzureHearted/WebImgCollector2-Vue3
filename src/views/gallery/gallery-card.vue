@@ -33,7 +33,10 @@
 								<IconMapMarker style="width: 20px; fill: white" />
 							</var-button>
 							<!-- 下载 -->
-							<var-button type="default" @click="toDownload(data)">
+							<var-button
+								:loading="downloading"
+								type="default"
+								@click="toDownload(data)">
 								<IconDownload style="width: 20px; fill: #333" />
 							</var-button>
 						</var-button-group>
@@ -43,22 +46,36 @@
 		</template>
 		<!-- 卡片主体(图片) -->
 		<template #default>
-			<BaseImg
-				:src="data.source.url"
-				use-thumb
+			<div
+				data-fancybox="web-img-collector"
 				:data-id="data.id"
 				:href="data.source.url"
-				:thumb="data.preview.url"
 				:data-type="showType"
-				:init-width="data.source.meta.width"
-				:init-height="data.source.meta.height"
 				:data-width="data.source.meta.width ? data.source.meta.width : false"
 				:data-height="data.source.meta.height ? data.source.meta.height : false"
-				data-fancybox="web-img-collector"
 				:data-thumb="data.preview.url"
-				:data-download-src="data.source.url"
-				@loaded="handleCardLoaded(data, $event)"
-				:draggable="false"></BaseImg>
+				:data-download-src="data.source.url">
+				<BaseImg
+					v-if="data.source.meta.type == 'image'"
+					:src="data.source.url"
+					use-thumb
+					:thumb="data.preview.url"
+					:init-width="data.source.meta.width"
+					:init-height="data.source.meta.height"
+					@loaded="handleCardLoaded(data, $event)"
+					:draggable="false"></BaseImg>
+				<BaseImg
+					v-else
+					src=""
+					:init-show="true"
+					:init-width="data.source.meta.width"
+					:init-height="data.source.meta.height"
+					@loaded="handleCardLoaded(data, $event)"
+					:draggable="false">
+					<htmlTypeImg
+						style="width: 100%; height: auto; transform: scale(0.5)" />
+				</BaseImg>
+			</div>
 		</template>
 		<!-- 卡片底部 -->
 		<template #footer>
@@ -107,9 +124,11 @@
 	import IconDownload from "@svg/download-2.svg";
 	import IconMapMarker from "@svg/map-marker-outline.svg";
 	import IconTrashCan from "@svg/trash-can.svg";
+	import htmlTypeImg from "@svg/html.svg";
 
 	// 导入仓库
 	import { useGlobalStore, useCardStore } from "@/stores";
+	import { ref } from "vue";
 	const globalStore = useGlobalStore();
 	const cardStore = useCardStore();
 
@@ -198,9 +217,12 @@
 		cardStore.removeCard(item.id!); // 删除卡片数据模型中的卡片。
 	}
 	// 下载
-	function toDownload(item: Pick<BaseCard, "id">) {
+	const downloading = ref(false);
+	async function toDownload(item: Pick<BaseCard, "id">) {
+		downloading.value = true;
 		console.log("下载", item);
-		cardStore.downloadCards([item.id!]);
+		await cardStore.downloadCards([item.id!]);
+		downloading.value = false;
 	}
 </script>
 

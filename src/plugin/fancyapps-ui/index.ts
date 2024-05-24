@@ -15,6 +15,21 @@ export const configFancybox: Partial<OptionsType> = {
 	Thumbs,
 	autoFocus: true,
 	Hash: false,
+	on: {
+		done: (fancybox, slide) => {
+			// console.log(slide);
+			if (
+				slide.contentEl.style.width == "0px" ||
+				slide.contentEl.style.height == "0px"
+			) {
+				const aspectRatio = Number(slide.width) / Number(slide.height);
+				slide.contentEl.style.width =
+					(slide.el as HTMLElement).clientHeight * 0.9 * aspectRatio + "px";
+				slide.contentEl.style.height =
+					(slide.el as HTMLElement).clientHeight * 0.9 + "px";
+			}
+		},
+	},
 };
 
 export const Fancybox = _Fancybox;

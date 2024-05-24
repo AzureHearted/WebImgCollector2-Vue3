@@ -74,33 +74,12 @@ export default async function getCard(
 						if (!meta.valid) {
 							meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 						}
-						// 推断如果是链接就 获取blob
-						let blob: Blob | undefined;
-						if (isUrl(value)) {
-							// 获取链接前先判断是否已有缓存的Blob
-							if (
-								existingUrlBlobMap.has(value) &&
-								existingUrlBlobMap.get(value) &&
-								existingUrlBlobMap.get(value)!.size > 0
-							) {
-								blob = existingUrlBlobMap.get(value)!;
-							} else {
-								const res = await getBlobByUrlAuto(value);
-								if (res) {
-									blob = res;
-									// 推断blob类型
-									const { mainType, subType } = inferBlobType(blob);
-									meta.type = mainType;
-									meta.ext = subType;
-								}
-							}
-						}
+						meta.ext = getExtByUrl(value);
 						return {
 							url: value,
 							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 							dom,
 							meta,
-							blob,
 						};
 					}
 				);
@@ -121,32 +100,12 @@ export default async function getCard(
 							if (!meta.valid) {
 								meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 							}
-							// 推断如果是链接就 获取blob
-							let blob: Blob | undefined;
-							if (isUrl(value)) {
-								// 获取链接前先判断是否已有缓存的Blob
-								if (
-									existingUrlBlobMap.has(value) &&
-									existingUrlBlobMap.get(value) &&
-									existingUrlBlobMap.get(value)!.size > 0
-								) {
-									blob = existingUrlBlobMap.get(value)!;
-								} else {
-									const res = await getBlobByUrlAuto(value);
-									if (res) {
-										blob = res;
-										// 推断blob类型
-										const { mainType, subType } = inferBlobType(blob);
-										meta.type = mainType;
-										meta.ext = subType;
-									}
-								}
-							}
+							meta.ext = getExtByUrl(value);
+
 							return {
 								url: value,
 								dom,
 								meta,
-								blob,
 							};
 						}
 					);
@@ -255,33 +214,10 @@ export default async function getCard(
 				// 获取source.meta
 				// 先使用dom进行判断
 				source.meta = await getMeta(source.dom as HTMLElement);
+				source.meta.ext = getExtByUrl(source.url);
 				if (!source.meta.valid) {
 					// 如果无效在使用匹配到的内容判断
 					source.meta = await getMeta(source.url);
-				}
-				// 推断如果是链接就 获取source.blob
-				if (isUrl(source.url)) {
-					let blob: Blob | null;
-					// 获取链接前先判断是否已有缓存的Blob
-					if (
-						existingUrlBlobMap.has(source.url) &&
-						existingUrlBlobMap.get(source.url) &&
-						existingUrlBlobMap.get(source.url)!.size > 0
-					) {
-						console.log("已有blob缓存,不在发送请求");
-						// 如果有且为有效Blob就进行直接赋值
-						blob = existingUrlBlobMap.get(source.url)!;
-					} else {
-						blob = await getBlobByUrlAuto(source.url);
-					}
-					// 如果blob存在则推断类型
-					if (blob) {
-						source.blob = blob;
-						// 推断blob类型
-						const { mainType, subType } = inferBlobType(source.blob);
-						source.meta.type = mainType;
-						source.meta.ext = subType;
-					}
 				}
 
 				// s 获取preview信息
@@ -300,40 +236,17 @@ export default async function getCard(
 							valid: false,
 							width: 0,
 							height: 0,
-							type: false,
+							type: "image",
 							ext: false,
 						}, // 初始化meta未一个无效值
 					};
 					// 获取preview.meta
 					// 先使用dom进行判断
 					preview.meta = await getMeta(preview.dom as HTMLElement);
+					preview.meta.ext = getExtByUrl(preview.url);
 					if (!preview.meta.valid) {
 						// 如果无效在使用匹配到的内容判断
 						preview.meta = await getMeta(preview.url);
-					}
-
-					// 推断如果是链接就 获取preview.blob
-					if (isUrl(preview.url)) {
-						let blob: Blob | null;
-
-						// 获取链接前先判断是否已有缓存的Blob
-						if (
-							existingUrlBlobMap.has(preview.url) &&
-							existingUrlBlobMap.get(preview.url) &&
-							existingUrlBlobMap.get(preview.url)!.size > 0
-						) {
-							console.log("已有blob缓存,不在发送请求");
-							blob = existingUrlBlobMap.get(preview.url)!;
-						} else {
-							blob = await getBlobByUrlAuto(preview.url);
-						}
-						if (blob) {
-							preview.blob = blob;
-							// 推断blob类型
-							const { mainType, subType } = inferBlobType(preview.blob);
-							preview.meta.type = mainType;
-							preview.meta.ext = subType;
-						}
 					}
 				} else {
 					preview = {
@@ -471,34 +384,42 @@ function isUrl(str: string) {
 // 获取元信息(根据传入的值类型判断获取方式)
 async function getMeta(
 	target: string | Blob | HTMLElement,
-	method: "auto" | "byNaturalSize" | "byUrl" | "byBlob" = "auto"
+	method: "auto" | "byNaturalSize" | "byImage" | "byUrl" | "byBlob" = "auto"
 ) {
 	let meta: BaseMeta = {
 		valid: false,
 		width: 0,
 		height: 0,
-		type: false,
+		type: "image",
 		ext: false,
 	}; //设置一个初始空值
+	console.log("Meta获取 target:", target);
 	if (method === "auto") {
 		// s 安装优先级顺序一次尝试各种方式获取meta
 		if (typeof target === "object" && target instanceof HTMLElement) {
 			// console.log("获取元信息(类型:DOM元素)", target);
 			// 如果只能是一个HTML元素
 			const { width, height } = getDOMNaturalSize(target);
-			meta = { ...meta, ...{ valid: width > 0 && height > 0, width, height } };
+			meta = {
+				...meta,
+				...{ valid: width > 0 && height > 0, width, height, type: "image" },
+			};
+			// console.log("getDOMNaturalSize 获取结果", target, meta);
+			// console.count('通过HTML获取元信息')
 		}
 		if (!meta.valid && typeof target === "string" && isUrl(target)) {
 			const url = new URL(target);
 			// console.log("获取元信息(类型:链接)", url);
 			// 如果是一个链接
-			meta = await getMetaByUrl(url);
-			// console.log("获取结果", target, meta);
+			meta = await getMetaByUrl(url, { type: "html" });
+			// console.log("getMetaByUrl 获取结果", target, meta);
+			console.count("通过Url获取元信息");
 		}
 		if (!meta.valid && typeof target === "object" && target instanceof Blob) {
-			// console.log("获取元信息(类型:Blob)", target);
 			// 如果是一个Blob
 			meta = await getMetaByBlob(target);
+			// console.log("getMetaByBlob 获取结果", target, meta);
+			console.count("通过Blob获取元信息");
 		}
 	} else {
 		// s 指定方式
@@ -540,7 +461,7 @@ async function getMeta(
 }
 
 // 获取元信息(通过url)
-async function getMetaByUrl(url: URL) {
+async function getMetaByUrl(url: URL, _default: Partial<BaseMeta> = {}) {
 	// meta初始值
 	let meta: BaseMeta = {
 		valid: false,
@@ -549,21 +470,19 @@ async function getMetaByUrl(url: URL) {
 		ext: false,
 		type: false,
 	};
+	meta = { ...meta, ..._default };
 	// 先推断链接类型
 	const type = inferUrlType(url);
 	// console.log("链接类型==>", type);
 	if (type === "image") {
 		// 处理图片类型
 		meta = { ...meta, ...(await getImgMetaByImage(url.href)) };
-	} else if (type === "html") {
-		meta.valid = true;
 	} else {
-		// 其他类型暂时不进行处理
 		meta = {
-			valid: false,
+			valid: true,
 			width: 0,
 			height: 0,
-			type: false,
+			type: "html",
 			ext: false,
 		};
 	}
@@ -608,6 +527,7 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 			valid: false,
 			width: 0,
 			height: 0,
+			aspectRatio: 1,
 			type: false,
 			ext: false,
 		};
@@ -739,10 +659,10 @@ function getDOMNaturalSize(dom: HTMLElement): {
 // 推断链接类型
 function inferUrlType(url: URL) {
 	// 推测链接类型
-	const imageRegex = /(jpg|jpeg|png|gif|webp|bmp|icon|svg)/i;
+	const imageRegex = /\.(jpg|jpeg|png|gif|webp|bmp|icon|svg)$/i;
 	const videoRegex =
-		/(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)/i;
-	const audioRegex = /(mp3|wav|ogg|aac|flac)/i;
+		/\.(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)$/i;
+	const audioRegex = /\.(mp3|wav|ogg|aac|flac)$/i;
 
 	// 默认标记类型为未确定
 	let type: "image" | "video" | "html" | "audio" | null = null;

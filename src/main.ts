@@ -12,7 +12,6 @@ import vuetify from "@/plugin/vuetify";
 // Varlet组件库(配置)
 import "@/plugin/varlet";
 
-
 // 导入样式动态修复模块
 // import { fixStyle } from "@/styles/website";
 
@@ -30,6 +29,3 @@ document.body.appendChild(appContainer);
 
 // 为止bug临时修复
 document.body.classList.remove("tag");
-
-// 最后执行样式修复
-// fixStyle(window.location.hostname);
