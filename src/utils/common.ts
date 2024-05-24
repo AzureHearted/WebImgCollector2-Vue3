@@ -118,7 +118,7 @@ export function getExtByUrl(url: string): string {
 		ext = match[0];
 	}
 	// 特殊情况处理
-	if (ext === "jpeg") ext = "jpg";
+	// if (ext === "jpeg") ext = "jpg";
 	return ext;
 }
 
