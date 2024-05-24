@@ -48,6 +48,8 @@ export function getExtByBlob(blob: Blob) {
 			ext = match[0].trim().length > 0 ? match[0] : "";
 		}
 	}
+	// 特殊情况处理
+	if (ext === "jpeg") ext = "jpg";
 	return ext;
 }
 
@@ -118,7 +120,7 @@ export function getExtByUrl(url: string): string {
 		ext = match[0];
 	}
 	// 特殊情况处理
-	// if (ext === "jpeg") ext = "jpg";
+	if (ext === "jpeg") ext = "jpg";
 	return ext;
 }
 
@@ -244,7 +246,6 @@ export function isMobile(): boolean {
 	return regex.test(sUserAgent);
 }
 
-
 //f blob类型判断
 export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
 	const blobTypeRegex = {
@@ -268,7 +269,6 @@ export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
 
 	return blobType;
 }
-
 
 //f 获取剪切板文本
 export async function getClipBoardText() {
