@@ -1,96 +1,103 @@
 <template>
 	<div>
-		<!-- s主容器 -->
-		<div
-			id="onlineGallery-container"
-			ref="container"
-			:data-open="appInfo.container.open"
-			:style="{
-				'--width':
-					appInfo.window.width * appInfo.container.widthPercentage * 0.01 +
-					'px',
-			}">
-			<Body />
-			<!-- s关闭按钮 -->
-			<el-button
-				class="onlineGallery-button-close"
-				type="danger"
-				circle
-				@click="appInfo.container.open = false">
-				<template #icon>
-					<el-icon><i-ep-Close /></el-icon>
+		<el-config-provider namespace="wic">
+			<!-- s主容器 -->
+			<div
+				id="onlineGallery-container"
+				ref="container"
+				:data-open="appInfo.container.open"
+				:style="{
+					'--width':
+						appInfo.window.width * appInfo.container.widthPercentage * 0.01 +
+						'px',
+				}">
+				<Body />
+				<!-- s关闭按钮 -->
+				<el-button
+					class="onlineGallery-button-close"
+					type="danger"
+					circle
+					@click="appInfo.container.open = false">
+					<template #icon>
+						<el-icon><i-ep-Close /></el-icon>
+					</template>
+				</el-button>
+			</div>
+
+			<!-- s子窗口容器 -->
+			<div
+				ref="childWindowContainer"
+				class="onlineGallery-child-window-container">
+				<!-- s规则管理器窗口 -->
+				<RuleEditor />
+				<EagleSaveBox />
+				<TestBoard v-model="testBoardOpen" />
+				<!-- s设置窗口 -->
+				<!-- <AppSettingMenu /> -->
+			</div>
+
+			<!-- s悬浮按钮 -->
+			<var-fab
+				type="primary"
+				bottom="30vh"
+				right="30px"
+				direction="top"
+				:drag="true"
+				:trigger="isMobile() ? 'click' : 'hover'"
+				:elevation="24"
+				:teleport="childWindowContainer">
+				<template #trigger>
+					<var-badge
+						style="z-index: 1"
+						type="danger"
+						:value="cardsStore.data.cardList.length"
+						:hidden="!cardsStore.data.cardList.length"
+						:max-value="999">
+						<!-- s图库显示切换按钮 -->
+						<var-button
+							color="rgb(64,158,255,1)"
+							@dblclick="appInfo.container.open = !appInfo.container.open"
+							class="onlineGallery-float-button">
+							<IconGirdRound />
+						</var-button>
+					</var-badge>
 				</template>
-			</el-button>
-		</div>
-
-		<!-- s子窗口容器 -->
-		<div class="onlineGallery-child-window-container">
-			<!-- s规则管理器窗口 -->
-			<RuleEditor />
-			<EagleSaveBox />
-			<TestBoard v-model="testBoardOpen" />
-			<!-- s设置窗口 -->
-			<!-- <AppSettingMenu /> -->
-		</div>
-
-		<!-- s悬浮按钮 -->
-		<var-fab
-			type="primary"
-			bottom="30vh"
-			right="30px"
-			direction="top"
-			:drag="true"
-			:trigger="isMobile() ? 'click' : 'hover'"
-			:elevation="24"
-			teleport=".onlineGallery-child-window-container">
-			<template #trigger>
-				<var-badge
-					style="z-index: 1"
-					type="danger"
-					:value="cardsStore.data.cardList.length"
-					:hidden="!cardsStore.data.cardList.length"
-					:max-value="999">
-					<!-- s图库显示切换按钮 -->
+				<template #default>
+					<!-- s图库 -->
+					<var-badge
+						style="z-index: 1"
+						type="danger"
+						:value="cardsStore.data.cardList.length"
+						:hidden="!cardsStore.data.cardList.length"
+						:max-value="999">
+						<var-button
+							type="success"
+							@click="appInfo.container.open = true"
+							round>
+							<IconDashboard />
+						</var-button>
+					</var-badge>
+					<!-- s规则管理 -->
 					<var-button
-						color="rgb(64,158,255,1)"
-						@dblclick="appInfo.container.open = !appInfo.container.open"
-						class="onlineGallery-float-button">
-						<IconGirdRound />
-					</var-button>
-				</var-badge>
-			</template>
-			<template #default>
-				<!-- s图库 -->
-				<var-badge
-					style="z-index: 1"
-					type="danger"
-					:value="cardsStore.data.cardList.length"
-					:hidden="!cardsStore.data.cardList.length"
-					:max-value="999">
-					<var-button
-						type="success"
-						@click="appInfo.container.open = true"
+						type="info"
+						@click="ruleEditor.container.open = true"
 						round>
-						<IconDashboard />
+						<IconBxsBookBookmark />
 					</var-button>
-				</var-badge>
-				<!-- s规则管理 -->
-				<var-button type="info" @click="ruleEditor.container.open = true" round>
-					<IconBxsBookBookmark />
-				</var-button>
-				<!-- s设置 -->
-				<var-button color="rgb(217, 121, 252)" @click="" round>
-					<IconToolsFill />
-				</var-button>
-				<!-- ?测试窗口 -->
-				<var-button
-					color="rgb(117, 121, 252)"
-					@click="testBoardOpen = true"
-					round>
-					<IconTestTube />
-				</var-button>
-			</template>
-		</var-fab>
+					<!-- s设置 -->
+					<var-button color="rgb(217, 121, 252)" @click="" round>
+						<IconToolsFill />
+					</var-button>
+					<!-- ?测试窗口 -->
+					<var-button
+						color="rgb(117, 121, 252)"
+						@click="testBoardOpen = true"
+						round>
+						<IconTestTube />
+					</var-button>
+				</template>
+			</var-fab>
+		</el-config-provider>
 	</div>
 </template>
 
@@ -111,6 +118,7 @@
 
 	//s 组件或html元素的接收器定义
 	const container = ref(); //s接收container dom
+	const childWindowContainer = ref();
 
 	//s 悬浮功能按钮
 	const floatButtonRef = ref();

@@ -1,0 +1,9 @@
+@forward "element-plus/theme-chalk/src/mixins/config.scss" with (
+	$namespace: "wic"
+);
+
+.wic-popper,
+.wic-message,
+.wic-notification {
+	z-index: 2147483647 !important;
+}
