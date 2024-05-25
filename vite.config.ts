@@ -83,6 +83,7 @@ export default defineConfig({
 				exclude: [
 					"*://vuetifyjs.com/*",
 					"*://yiyan.baidu.com/*",
+					"*://github.com/*",
 					// "*://www.baidu.com/*",
 				],
 				noframes: true, // 禁止在iframe中使用

@@ -25,8 +25,7 @@
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")
 	);
-	
-	
+
 	// console.log("油猴信息：", GM_info);
 
 	const globalStore = useGlobalStore();
@@ -87,8 +86,17 @@
 			&.layout-container *[class^="var-"] {
 				margin: unset;
 			}
+
+			&[class^="v-"] {
+				color: initial;
+			}
 			&[class^="v-"] > input {
 				border: unset;
+			}
+
+			&[class^="v-"] > header.v-toolbar.v-theme--light {
+				height: unset;
+				background: white;
 			}
 
 			&[class^="v-input"] {

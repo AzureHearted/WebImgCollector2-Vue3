@@ -156,9 +156,9 @@ export default defineStore("cardStore", () => {
 				},
 				source: {
 					selector:
-						"a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]",
+						'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]',
 					infoType: "attribute",
-					name: "href|srcset|data-src|src",
+					name: "content|href|srcset|data-src|src",
 				},
 				preview: {
 					origin: "source",
@@ -176,8 +176,8 @@ export default defineStore("cardStore", () => {
 				},
 				filter: {
 					formats: [],
-					width: [350, 2000] as [number, number],
-					height: [350, 2000] as [number, number],
+					width: [300, 2000] as [number, number],
+					height: [300, 2000] as [number, number],
 				},
 				state: {
 					editing: false,
@@ -265,10 +265,10 @@ export default defineStore("cardStore", () => {
 		data.cardList = []; // 清空卡片列表
 		info.size.width = [0, 2000]; // 重置宽度范围。
 		info.size.height = [0, 2000]; // 重置高度范围。
-		filters.size.width = [350, 2000];
-		filters.size.height = [350, 2000];
+		filters.size.width = [300, 2000];
+		filters.size.height = [300, 2000];
 		filters.extension = [];
-		filters.type = [];
+		filters.type = ["image"];
 	}
 
 	// 移除卡片
