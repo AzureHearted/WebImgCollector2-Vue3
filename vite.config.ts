@@ -42,7 +42,7 @@ export default defineConfig({
 				// 自动注册图标组件
 				IconsResolver({
 					// prefix: "Icon", //图标组件前缀,默认是“i”
-					enabledCollections: ["ep", "ant-design"],
+					enabledCollections: ["ep", "ant-design", "material-symbols"],
 				}),
 			],
 			dts: "./types/components.d.ts",
@@ -85,6 +85,7 @@ export default defineConfig({
 					"*://yiyan.baidu.com/*",
 					"*://github.com/*",
 					// "*://www.baidu.com/*",
+					"*://cprs.patentstar.com*",
 				],
 				noframes: true, // 禁止在iframe中使用
 				connect: ["*"],

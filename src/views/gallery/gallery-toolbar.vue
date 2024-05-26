@@ -1,31 +1,22 @@
 <template>
 	<div class="gallery-toolbar-container">
 		<!-- 工具栏 -->
-		<v-sheet
-			class="gallery-toolbar"
-			width="100%"
-			color="transparent"
-			:elevation="4">
+		<div class="gallery-toolbar">
 			<!-- 进度条 -->
-			<v-progress-linear
+			<el-progress
 				class="gallery-toolbar-loading"
-				color="primary"
-				:active="loadingStore.loading"
-				:max="loadingStore.total"
-				:model-value="loadingStore.current"
-				height="14"
-				rounded
-				rounded-bar>
-				<template #default="{ value }">
-					<strong> {{ value.toFixed(2) }}% </strong>
-				</template>
-			</v-progress-linear>
+				:class="{ 'loading-active': loadingStore.loading }"
+				:status="loadingStore.percentage === 100 ? 'success' : ''"
+				:stroke-width="12"
+				:show-text="false"
+				:text-inside="true"
+				:percentage="loadingStore.percentage">
+				<span style="font-size: 12px">
+					{{ loadingStore.percentage.toFixed(2) }}%
+				</span>
+			</el-progress>
 			<!-- 操作栏 -->
-			<v-sheet
-				class="gallery-container-control-panel"
-				:elevation="0"
-				color="transparent"
-				width="fit-content">
+			<div class="gallery-container-control-panel">
 				<!-- 控制按钮组 -->
 				<var-badge
 					:offset-y="-4"
@@ -69,9 +60,9 @@
 						</template>
 					</var-menu>
 				</var-badge>
-			</v-sheet>
+			</div>
 			<!-- 选择器 -->
-			<v-sheet
+			<div
 				class="gallery-container-control-panel"
 				:elevation="0"
 				color="transparent"
@@ -84,13 +75,9 @@
 					<var-button type="info" @click="inverseAll"> 反选 </var-button>
 					<var-button @click="cancel"> 取消 </var-button>
 				</var-button-group>
-			</v-sheet>
+			</div>
 			<!-- 下载控制 -->
-			<v-sheet
-				class="gallery-container-control-panel"
-				:elevation="0"
-				color="transparent"
-				width="fit-content">
+			<div class="gallery-container-control-panel">
 				<!-- 下载按钮 -->
 				<var-badge
 					type="info"
@@ -135,186 +122,113 @@
 						</template>
 					</var-menu>
 				</var-badge>
-			</v-sheet>
+			</div>
 			<!-- 其他过滤器 -->
-			<v-sheet
-				class="filter-control-panel other-filter"
-				width="fit-content"
-				color="transparent"
-				:elevation="0">
+			<div class="filter-control-panel other-filter">
 				<!-- 类型过滤器 -->
-				<v-select
-					class="filter-input-select select-type"
+				<el-select
+					class="filter-input-select"
 					v-model="cardStore.filters.type"
-					:items="cardStore.typeOptions"
-					variant="solo"
-					label="类型过滤"
-					item-title="label"
-					item-value="value"
-					density="compact"
-					chips
-					hide-details
-					multiple>
-					<template #chip="{ item, index }">
-						<v-chip v-if="index < 2" density="compact">
-							<span>{{ item.title }}</span>
-						</v-chip>
-						<span
-							v-if="index === 2"
-							class="text-grey text-caption align-self-center">
-							+ {{ cardStore.filters.type.length - 2 }}
+					size="large"
+					multiple
+					collapse-tags
+					:max-collapse-tags="2"
+					collapse-tags-tooltip
+					placeholder="类型过滤">
+					<el-option
+						v-for="item in cardStore.typeOptions"
+						:key="item.value"
+						:label="item.label"
+						:value="item.value">
+						<span style="float: left">{{ item.label }} </span>
+						<span style="float: right; font-size: 12px">
+							({{ item.count }}个)
 						</span>
-					</template>
-					<template #item="{ item, props }">
-						<v-list-item
-							v-bind="props"
-							density="compact"
-							:subtitle="`${item.raw.count}个`">
-							<template #prepend="{ isActive }">
-								<v-checkbox
-									density="compact"
-									:model-value="isActive"
-									hide-details></v-checkbox>
-							</template>
-							<template #title="{ title }">
-								<span style="font-size: 14px">
-									{{ title }}
-								</span>
-							</template>
-							<template #subtitle="{ subtitle }">
-								<span style="font-size: 12px">
-									{{ subtitle }}
-								</span>
-							</template>
-						</v-list-item>
-					</template>
-				</v-select>
+					</el-option>
+				</el-select>
+
 				<!-- 扩展名过滤器 -->
-				<v-select
-					class="filter-input-select select-type"
+				<el-select
+					class="filter-input-select"
 					v-model="cardStore.filters.extension"
-					:items="cardStore.extensionOptions"
-					variant="solo"
-					label="扩展名过滤"
-					item-title="label"
-					item-value="value"
-					density="compact"
-					chips
-					hide-details
-					multiple>
-					<template #chip="{ item, index }">
-						<v-chip v-if="index < 2" density="compact">
-							<span>{{ item.title }}</span>
-						</v-chip>
-						<span
-							v-if="index === 2"
-							class="text-grey text-caption align-self-center">
-							+ {{ cardStore.filters.extension.length - 2 }}
+					size="large"
+					multiple
+					collapse-tags
+					:max-collapse-tags="2"
+					collapse-tags-tooltip
+					placeholder="类型过滤">
+					<el-option
+						v-for="item in cardStore.extensionOptions"
+						:key="item.value"
+						:label="item.label"
+						:value="item.value">
+						<span style="float: left">{{ item.label }} </span>
+						<span style="float: right; font-size: 12px">
+							({{ item.count }}个)
 						</span>
-					</template>
-					<template #item="{ item, props }">
-						<v-list-item
-							v-bind="props"
-							density="compact"
-							:subtitle="`${item.raw.count}个`">
-							<template #prepend="{ isActive }">
-								<v-checkbox
-									density="compact"
-									:model-value="isActive"
-									hide-details></v-checkbox>
-							</template>
-							<template #title="{ title }">
-								<span style="font-size: 14px">
-									{{ title }}
-								</span>
-							</template>
-							<template #subtitle="{ subtitle }">
-								<span style="font-size: 12px">
-									{{ subtitle }}
-								</span>
-							</template>
-						</v-list-item>
-					</template>
-				</v-select>
-			</v-sheet>
+					</el-option>
+				</el-select>
+			</div>
 			<!-- 尺寸过滤器 -->
-			<v-sheet
-				class="filter-control-panel size-filter"
-				color="transparent"
-				:elevation="0">
+			<div class="filter-control-panel size-filter">
 				<!-- 宽度过滤器 -->
-				<v-range-slider
-					class="filter-input-slider"
-					label="宽度"
-					v-model="filters.size.width"
-					color="primary"
-					density="compact"
-					rounded
-					hide-details
-					step="1"
-					:max="cardStore.info.size.width[1]"
-					:min="cardStore.info.size.width[0]"
-					@end="filterChange('width', $event)">
-					<template #label>
-						<v-label class="input-slider-label">宽度</v-label>
-					</template>
-					<template #prepend>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.width[0]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details>
-						</v-text-field>
-					</template>
-					<template #append>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.width[1]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details></v-text-field>
-					</template>
-				</v-range-slider>
+				<div class="filter-input">
+					<div class="input-slider-label">宽度</div>
+					<el-input-number
+						class="filter-input-number"
+						v-model="filters.size.width[0]"
+						:min="cardStore.info.size.width[0]"
+						:max="cardStore.info.size.width[1]"
+						readonly
+						step-strictly
+						controls-position="right" />
+					<el-slider
+						class="filter-input-slider"
+						v-model="filters.size.width"
+						range
+						:step="1"
+						:max="cardStore.info.size.width[1]"
+						:min="cardStore.info.size.width[0]"
+						@change="filterChange('width', $event as [number, number])" />
+					<el-input-number
+						class="filter-input-number"
+						v-model="filters.size.width[1]"
+						:min="cardStore.info.size.width[0]"
+						:max="cardStore.info.size.width[1]"
+						readonly
+						step-strictly
+						controls-position="right" />
+				</div>
 				<!-- 高度过滤器 -->
-				<v-range-slider
-					class="filter-input-slider"
-					label="高度"
-					v-model="filters.size.height"
-					color="primary"
-					density="comfortable"
-					rounded
-					hide-details
-					step="1"
-					:max="cardStore.info.size.height[1]"
-					:min="cardStore.info.size.height[0]"
-					@end="filterChange('height', $event)">
-					<template #label>
-						<v-label class="input-slider-label">高度</v-label>
-					</template>
-					<template #prepend>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.height[0]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details></v-text-field>
-					</template>
-					<template #append>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.height[1]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details></v-text-field>
-					</template>
-				</v-range-slider>
-			</v-sheet>
-		</v-sheet>
+				<div class="filter-input">
+					<div class="input-slider-label">高度</div>
+					<el-input-number
+						class="filter-input-number"
+						v-model="filters.size.height[0]"
+						:min="cardStore.info.size.height[0]"
+						:max="cardStore.info.size.height[1]"
+						readonly
+						step-strictly
+						controls-position="right" />
+					<el-slider
+						class="filter-input-slider"
+						v-model="filters.size.height"
+						range
+						:step="1"
+						:max="cardStore.info.size.height[1]"
+						:min="cardStore.info.size.height[0]"
+						@change="filterChange('height', $event as [number, number])" />
+					<el-input-number
+						class="filter-input-number"
+						v-model="filters.size.height[1]"
+						:min="cardStore.info.size.height[0]"
+						:max="cardStore.info.size.height[1]"
+						readonly
+						step-strictly
+						controls-position="right" />
+				</div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -387,7 +301,7 @@
 
 	// 过滤器改变
 	function filterChange(key: "width" | "height", value: [number, number]) {
-		// console.log("过滤器变化", key, value);
+		console.log("过滤器变化", key, value);
 		cardStore.filters.size[key] = value; // 更新仓库过滤器
 	}
 
@@ -429,7 +343,8 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
+	@use "@/styles/shadow.scss" as shadow;
 	// 工具栏容器
 	.gallery-toolbar-container {
 		position: relative;
@@ -437,6 +352,20 @@
 
 	.gallery-toolbar-loading {
 		margin: 4px 0;
+		width: 100%;
+		transform: translateY(-20px);
+		height: 0;
+		// transform: scaleY(0);
+		transition: 0.5s 1s;
+		&.loading-active {
+			transform: translateY(0);
+			height: 20px;
+			// transform: scaleY(1);
+			transition: 0.3s;
+		}
+		:deep(.wic2-progress-bar__inner) {
+			line-height: 0;
+		}
 	}
 
 	// 工具栏样式
@@ -447,6 +376,7 @@
 		padding: 4px 4px 0 4px;
 		background: transparent;
 		align-content: center;
+		box-shadow: shadow.$elevation;
 	}
 	// 控制面板样式
 	.gallery-container-control-panel {
@@ -482,23 +412,45 @@
 			flex: 1;
 			flex-wrap: wrap;
 
-			.filter-input-slider {
+			.filter-input {
 				flex: 1;
 				min-width: 320px;
 				max-width: 600px;
 				font-size: 12px;
+				display: flex;
+				align-items: center;
+				margin: 0 8px;
+				.filter-input-slider {
+					margin: 0 8px;
+				}
+				:deep(.wic2-input__wrapper) {
+					padding-left: 0;
+					padding-right: 31px;
+					.wic2-input__inner {
+						text-align: start;
+					}
+				}
+				:deep(.wic2-slider__button-wrapper) {
+					width: unset;
+				}
 			}
 
 			// 标签样式
-			.filter-input-slider .input-slider-label {
-				margin: 0 10px 2px 0;
+			.filter-input .input-slider-label {
+				display: flex;
+				align-items: center;
+				width: 50px;
 				font-size: 14px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				margin-bottom: 0;
+				user-select: none;
 			}
+			// 数字输入框
 			.filter-input-number {
-				flex: 0 1 auto;
-				position: relative;
-				width: 70px;
-				border: 0;
+				width: 130px;
+				margin: 0 8px;
 			}
 		}
 
@@ -524,6 +476,7 @@
 
 		:deep(input) {
 			padding: 0 4px;
+			background-color: unset;
 		}
 	}
 

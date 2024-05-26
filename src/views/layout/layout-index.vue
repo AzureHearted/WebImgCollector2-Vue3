@@ -4,60 +4,67 @@
 		ref="layoutContainer"
 		:class="{ open: globalStore.openWindow }"
 		@wheel.stop.passive>
-		<v-app class="layout-app-container">
-			<v-layout>
-				<!-- 应用栏 -->
-				<v-app-bar :elevation="1" density="compact" height="50">
-					<template v-slot:prepend>
-						<v-app-bar-nav-icon
-							density="compact"
-							v-ripple
-							@click="appBarIsCollapse = !appBarIsCollapse">
-						</v-app-bar-nav-icon>
-					</template>
-					<v-app-bar-title>Web Img Collector 2</v-app-bar-title>
-					<template v-slot:append>
-						<v-btn
-							color="red"
-							density="compact"
-							icon="$closeCircle"
-							v-ripple
-							@click="globalStore.openWindow = false">
-						</v-btn>
-					</template>
-				</v-app-bar>
-				<!-- 抽屉导航 -->
-				<v-navigation-drawer
-					temporary
-					touchless
-					width="fit-content"
-					v-model="appBarIsCollapse">
-					<v-list density="compact" nav>
-						<v-list-item
-							prepend-icon="$viewGallery"
-							title="图库"
-							:active="globalStore.tab === 'Gallery'"
-							value="Gallery"
-							@click="globalStore.tab = 'Gallery'"
-							v-ripple></v-list-item>
-						<v-list-item
-							prepend-icon="$bookCog"
-							title="方案管理"
-							value="PatternEdit"
-							:active="globalStore.tab === 'PatternEdit'"
-							@click="globalStore.tab = 'PatternEdit'"
-							v-ripple></v-list-item>
-					</v-list>
-				</v-navigation-drawer>
+		<el-container style="height: 100%">
+			<el-header class="layout-container-header" height="34px">
+				<var-button
+					style="aspect-ratio: 1; margin-left: 6px"
+					text
+					round
+					icon-container
+					@click="appBarIsCollapse = !appBarIsCollapse">
+					<i-ant-design-menu-outlined
+						width="20"
+						height="20"
+						style="color: black" />
+				</var-button>
+				<div style="flex: 1; margin-left: 16px; font-size: 20px">
+					Web Img Collector 2
+				</div>
+				<var-button
+					style="aspect-ratio: 1"
+					text
+					round
+					icon-container
+					@click="globalStore.openWindow = false">
+					<i-ant-design-close-circle-filled
+						width="24"
+						height="24"
+						style="color: red" />
+				</var-button>
+			</el-header>
+			<el-main style="padding: unset">
 				<!-- 内容区 -->
-				<v-main>
-					<!-- 容器 -->
-					<!-- <RouterView /> -->
-					<!-- <views></views> -->
-					<component :is="nowPage"></component>
-				</v-main>
-			</v-layout>
-		</v-app>
+				<component :is="nowPage"></component>
+				<!-- 导航菜单 -->
+				<el-drawer
+					class="layout-container-menu"
+					size="fit-content"
+					direction="ltr"
+					:show-close="false"
+					v-model="appBarIsCollapse">
+					<el-menu :default-active="globalStore.tab">
+						<el-menu-item
+							index="Gallery"
+							@click="globalStore.tab = 'Gallery'"
+							v-ripple>
+							<el-icon>
+								<i-material-symbols-gallery-thumbnail />
+							</el-icon>
+							<span>图库</span>
+						</el-menu-item>
+						<el-menu-item
+							index="PatternEdit"
+							@click="globalStore.tab = 'PatternEdit'"
+							v-ripple>
+							<el-icon>
+								<i-material-symbols-box-edit />
+							</el-icon>
+							<span>方案管理</span>
+						</el-menu-item>
+					</el-menu>
+				</el-drawer>
+			</el-main>
+		</el-container>
 	</div>
 </template>
 
@@ -113,7 +120,9 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
+	@use "@/styles/shadow.scss" as shadow;
+
 	// 布局容器样式
 	.layout-container {
 		position: absolute;
@@ -130,6 +139,34 @@
 		}
 	}
 
+	.layout-container-header {
+		background: white;
+		padding: 0 4px;
+		display: flex;
+		align-items: center;
+		box-shadow: shadow.$elevation;
+	}
+
+	.layout-container-menu {
+		.wic2-menu-item {
+			height: 40px;
+		}
+		.wic2-menu--vertical:not(.wic2-menu--collapse):not(
+				.wic2-menu--popup-container
+			)
+			.wic2-menu-item,
+		.wic2-menu--vertical:not(.wic2-menu--collapse):not(
+				.wic2-menu--popup-container
+			)
+			.wic2-sub-menu__title,
+		.wic2-menu--vertical:not(.wic2-menu--collapse):not(
+				.wic2-menu--popup-container
+			)
+			.wic2-menu-item-group__title {
+			padding-left: unset;
+			padding: 8px;
+		}
+	}
 	.layout-app-container {
 		background: unset;
 		height: 100%;

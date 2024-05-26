@@ -33,7 +33,7 @@
 	});
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 瀑布流容器样式
 	.waterfall-wrapper {
 		flex: 1;

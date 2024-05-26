@@ -367,7 +367,7 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 瀑布流组件外侧容器
 	.waterfall-container {
 		// background: orange;

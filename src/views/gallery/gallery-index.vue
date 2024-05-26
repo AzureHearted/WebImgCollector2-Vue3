@@ -12,7 +12,7 @@
 	import GalleryWaterfall from "./gallery-waterfall.vue";
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 画廊容器样式
 	.gallery-container {
 		width: 100%;

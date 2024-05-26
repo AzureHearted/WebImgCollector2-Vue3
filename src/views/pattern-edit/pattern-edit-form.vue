@@ -41,7 +41,7 @@
 	const { findRule } = patternStore;
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	:deep(.wic2-form-item__label) {
 		color: black;
 	}

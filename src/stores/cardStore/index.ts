@@ -138,12 +138,12 @@ export default defineStore("cardStore", () => {
 	// 获取页面资源
 	async function getPageCard() {
 		loadingStore.start();
-		ElNotification({
-			title: "提示",
-			message: "正在获取信息……",
-			type: "info",
-			appendTo: ".web-img-collector-notification-container",
-		});
+		// ElNotification({
+		// 	title: "提示",
+		// 	message: "正在获取信息……",
+		// 	type: "info",
+		// 	appendTo: ".web-img-collector-notification-container",
+		// });
 		// 记录开始前的cardList长度
 		await getCard(
 			// 规则配置

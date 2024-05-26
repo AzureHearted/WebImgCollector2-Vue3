@@ -51,7 +51,7 @@
 	});
 </script>
 
-<style scoped lang="less">
+<style scoped lang="scss">
 	// 进入动画的结束状态,进入动画的起始状态
 	.v-leave-to,
 	.v-enter-from {

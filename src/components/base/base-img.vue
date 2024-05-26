@@ -332,7 +332,7 @@
 	};
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	.img-wrapper {
 		position: relative;
 		box-sizing: border-box; // 盒子模型，确保边框不会影响内容的大小。

@@ -65,7 +65,7 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 容器基础样式
 	.img-card-container {
 		position: relative; // 设置相对定位，以便于其他内容可以定位到图片上。

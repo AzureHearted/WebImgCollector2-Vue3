@@ -40,7 +40,7 @@
 	);
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
 	.web-img-collector-container {
 		box-sizing: border-box;
@@ -73,6 +73,7 @@
 		}
 
 		:deep(*) {
+			text-align: left;
 			// 子元素默认还能响应
 			pointer-events: auto;
 			// margin: unset;
@@ -83,9 +84,9 @@
 			// color: auto;
 			// border: unset;
 			// box-shadow: unset;
-			&.layout-container *[class^="var-"] {
-				margin: unset;
-			}
+			// &.layout-container *[class^="var-"] {
+			// 	margin: unset;
+			// }
 
 			&[class^="v-"] {
 				color: initial;
@@ -101,22 +102,6 @@
 
 			&[class^="v-input"] {
 				margin-inline-end: unset;
-			}
-
-			body,
-			div,
-			h1,
-			h2,
-			h3,
-			h4,
-			h5,
-			h6,
-			p,
-			ul,
-			li,
-			dd,
-			dt {
-				color: unset;
 			}
 		}
 	}

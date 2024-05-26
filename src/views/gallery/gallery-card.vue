@@ -226,7 +226,7 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 卡片顶部
 	.gallery-card-header {
 		position: relative;
@@ -298,6 +298,15 @@
 		pointer-events: none;
 		* {
 			pointer-events: auto;
+		}
+
+		:deep(.var-chip) {
+			justify-content: start;
+			.var-chip__text-small {
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				text-align: left;
+			}
 		}
 	}
 

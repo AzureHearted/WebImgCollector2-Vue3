@@ -277,7 +277,7 @@
 	};
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	.pattern-tree-container {
 		display: flex;
 		flex-flow: column;
