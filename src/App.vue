@@ -76,6 +76,13 @@
 			// 子元素默认还能响应
 			pointer-events: auto;
 		}
+
+		:deep(input) {
+			margin: unset;
+		}
+		:deep(button) {
+			margin: unset;
+		}
 	}
 
 	//! 子窗口容器样式(主要作为弹窗的容器)

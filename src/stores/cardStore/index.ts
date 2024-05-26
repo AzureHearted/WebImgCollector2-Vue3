@@ -335,6 +335,7 @@ export default defineStore("cardStore", () => {
 
 	// 下载卡片
 	async function downloadCards(ids: string[]) {
+		
 		if (!ids.length) return;
 		// 先找到对应的卡片
 		const cards = validCardList.value.filter((x) => ids.includes(x.id));

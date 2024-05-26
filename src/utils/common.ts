@@ -304,3 +304,18 @@ export function byteAutoUnit(byteSize: number, decimal: number = 2): string {
 	}
 	return `${num.toFixed(decimal)}${unitMap.get(unit)}`;
 }
+
+// 推断字符串是否是链接
+export function isUrl(str: string) {
+	const regex = /^([^/]+?:)?\/\/[\w.,@?^=%&:/~+#-]+/i;
+	let isUrl = false;
+	if (regex.test(str)) {
+		try {
+			new URL(str);
+			isUrl = true;
+		} catch {
+			isUrl = false;
+		}
+	}
+	return isUrl;
+}

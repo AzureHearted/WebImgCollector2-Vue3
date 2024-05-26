@@ -9,7 +9,7 @@ import type {
 import Card from "../class/Card";
 // 导入请求工具
 import { getBlobByUrlAuto } from "@/utils/http";
-import { getExtByUrl, getNameByUrl } from "@/utils/common";
+import { getExtByUrl, getNameByUrl, isUrl } from "@/utils/common";
 import { TaskQueue } from "@/utils/taskQueue";
 
 // 配置接口
@@ -364,21 +364,6 @@ function fillArrayToLength<T>(
 		}
 	}
 	return newArray;
-}
-
-// 推断字符串是否是链接
-function isUrl(str: string) {
-	const regex = /^([^/]+?:)?\/\/[\w.,@?^=%&:/~+#-]+/i;
-	let isUrl = false;
-	if (regex.test(str)) {
-		try {
-			new URL(str);
-			isUrl = true;
-		} catch {
-			isUrl = false;
-		}
-	}
-	return isUrl;
 }
 
 // 获取元信息(根据传入的值类型判断获取方式)

@@ -1,4 +1,5 @@
-import { getHostByUrl } from "../common";
+import { ElNotification } from "@/plugin/element-plus";
+import { getHostByUrl, isUrl } from "../common";
 import { GMRequest } from "./GMRequest";
 
 // 通过链接获取blob
@@ -54,7 +55,8 @@ export function getBlobByUrl(
 export async function getBlobByUrlAuto(url: string): Promise<Blob | null> {
 	// console.log("请求", url);
 	//s 链接为空直接返回空blob
-	if (!url || !url.trim().length) return null;
+
+	if (!url || !url.trim().length || !isUrl(url)) return null;
 
 	// 尝试获取blob
 	const blob = await tryGetBlob(url, [
@@ -82,6 +84,9 @@ async function tryGetBlob(
 ): Promise<Blob | null> {
 	let blob: Blob | null = null;
 
+	const objURL = new URL(url);
+	const urlUnSearch = objURL.origin + objURL.pathname; // 去除查询语句的URL
+
 	for (const request of requests) {
 		// 打印日志消息
 		if (request.message && !!request.message.trim().length) {
@@ -89,6 +94,16 @@ async function tryGetBlob(
 		}
 		// 请求blob
 		blob = await getBlobByUrl(url, request.mode, request.referer);
+		// 如果第一次失败且url去除查询语句后于与去除后不相同，则进行一次对去除查询语句后的url的请求
+		if (!blob) {
+			// ElNotification({
+			// 	title: "提示",
+			// 	message: "尝试进行不带查询语句的请求",
+			// 	type: "info",
+			// 	appendTo: ".web-img-collector-notification-container",
+			// });
+			blob = await getBlobByUrl(urlUnSearch, request.mode, request.referer);
+		}
 		// 一旦成功就跳出循环
 		if (blob) break;
 	}

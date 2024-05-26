@@ -82,11 +82,11 @@ export default defineConfig({
 				match: ["http*://*", "http*://*/*"], // 要匹配的网站
 				// exclude: ["*://element-plus.org/*"], // 要排除的网站
 				exclude: [
-					"*://vuetifyjs.com/*",
-					"*://yiyan.baidu.com/*",
-					"*://github.com/*",
+					// "*://vuetifyjs.com/*",
+					// "*://yiyan.baidu.com/*",
+					// "*://github.com/*",
 					// "*://www.baidu.com/*",
-					"*://cprs.patentstar.com*",
+					// "*://cprs.patentstar.com*",
 				],
 				noframes: true, // 禁止在iframe中使用
 				connect: ["*"],
