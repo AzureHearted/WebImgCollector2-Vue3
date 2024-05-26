@@ -76,6 +76,7 @@ export default defineConfig({
 			userscript: {
 				author: "ls", // 作者
 				// updateURL: "", //更新地址
+				version:'1.2.0',
 				icon: "https://vitejs.dev/logo.svg", // 图标
 				namespace: "npm/vite-plugin-monkey", // 命名空间
 				match: ["http*://*", "http*://*/*"], // 要匹配的网站

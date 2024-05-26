@@ -42,6 +42,7 @@ export default defineStore("cardStore", () => {
 		size: {
 			width: ref<[number, number]>([0, 2000]), //宽度范围
 			height: ref<[number, number]>([0, 2000]), //高度范围
+			max: ref(2000),
 		},
 	});
 
@@ -50,6 +51,59 @@ export default defineStore("cardStore", () => {
 		size: {
 			width: ref<[number, number]>([300, info.size.width[1]]), //宽度过滤器
 			height: ref<[number, number]>([300, info.size.height[1]]), //高度过滤器
+			marks: computed(() => {
+				const markStyle = reactive({
+					"font-size": "10px !important",
+					"margin-top": "0 !important",
+					bottom: "10px",
+				});
+				const tempMarks = {
+					360: {
+						label: "360",
+						style: markStyle,
+					},
+					720: {
+						label: "720",
+						style: {
+							...markStyle,
+							display: info.size.max / 720 < 3 ? "" : "none",
+						},
+					},
+					1080: {
+						label: "1080",
+						style: {
+							...markStyle,
+							display: info.size.max / 1080 < 3 ? "" : "none",
+						},
+					},
+					1920: {
+						label: "1920",
+						style: {
+							...markStyle,
+							display: info.size.max / 1920 < 3 ? "" : "none",
+						},
+					},
+					2560: {
+						label: "2560",
+						style: {
+							...markStyle,
+							display: info.size.max / 2560 < 3 ? "" : "none",
+						},
+					},
+					3840: {
+						label: "3840",
+						style: markStyle,
+					},
+					[`${info.size.max}`]: {
+						label: `${info.size.max}`,
+						style: {
+							...markStyle,
+							display: info.size.max > 1.8 * 3840 ? "" : "none",
+						},
+					},
+				};
+				return tempMarks;
+			}),
 		},
 		type: ref<string[]>(["image"]), //类型过滤器
 		extension: ref<string[]>([]), //扩展名过滤器
@@ -250,6 +304,7 @@ export default defineStore("cardStore", () => {
 	) {
 		info.size.width[1] = Math.max(info.size.width[1], width ? width : 0); // 更新最大宽度。
 		info.size.height[1] = Math.max(info.size.height[1], height ? height : 0); // 更新最大高度。
+		info.size.max = Math.max(info.size.width[1], info.size.height[1]);
 		filters.size.width[1] = info.size.width[1]; // 更新过滤器最大宽度。
 		filters.size.height[1] = info.size.height[1]; // 更新过滤器最大宽度。
 	}
@@ -265,6 +320,7 @@ export default defineStore("cardStore", () => {
 		data.cardList = []; // 清空卡片列表
 		info.size.width = [0, 2000]; // 重置宽度范围。
 		info.size.height = [0, 2000]; // 重置高度范围。
+		info.size.max = 2000;
 		filters.size.width = [300, 2000];
 		filters.size.height = [300, 2000];
 		filters.extension = [];

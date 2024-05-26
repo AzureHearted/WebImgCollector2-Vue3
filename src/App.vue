@@ -73,7 +73,6 @@
 		}
 
 		:deep(*) {
-			text-align: left;
 			// 子元素默认还能响应
 			pointer-events: auto;
 			// margin: unset;

@@ -393,7 +393,7 @@ async function getMeta(
 		type: "image",
 		ext: false,
 	}; //设置一个初始空值
-	console.log("Meta获取 target:", target);
+	// console.log("Meta获取 target:", target);
 	if (method === "auto") {
 		// s 安装优先级顺序一次尝试各种方式获取meta
 		if (typeof target === "object" && target instanceof HTMLElement) {

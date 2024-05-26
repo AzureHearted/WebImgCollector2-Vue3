@@ -99,7 +99,7 @@
 								选中下载
 							</var-button>
 							<var-button
-								:disabled="!checkedCardList.length"
+								:disabled="!cardStore.validCardList.length"
 								style="padding: 0 4px">
 								<IconArrowDown style="width: 24px; fill: white" />
 							</var-button>
@@ -129,7 +129,7 @@
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.type"
-					size="large"
+					:size="isMobile() ? 'default' : 'large'"
 					multiple
 					collapse-tags
 					:max-collapse-tags="2"
@@ -151,12 +151,12 @@
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.extension"
-					size="large"
+					:size="isMobile() ? 'default' : 'large'"
 					multiple
 					collapse-tags
 					:max-collapse-tags="2"
 					collapse-tags-tooltip
-					placeholder="类型过滤">
+					placeholder="扩展名过滤">
 					<el-option
 						v-for="item in cardStore.extensionOptions"
 						:key="item.value"
@@ -176,6 +176,7 @@
 					<div class="input-slider-label">宽度</div>
 					<el-input-number
 						class="filter-input-number"
+						size="small"
 						v-model="filters.size.width[0]"
 						:min="cardStore.info.size.width[0]"
 						:max="cardStore.info.size.width[1]"
@@ -184,14 +185,17 @@
 						controls-position="right" />
 					<el-slider
 						class="filter-input-slider"
+						:size="isMobile() ? 'small' : 'default'"
 						v-model="filters.size.width"
 						range
 						:step="1"
 						:max="cardStore.info.size.width[1]"
 						:min="cardStore.info.size.width[0]"
+						:marks="cardStore.filters.size.marks"
 						@change="filterChange('width', $event as [number, number])" />
 					<el-input-number
 						class="filter-input-number"
+						size="small"
 						v-model="filters.size.width[1]"
 						:min="cardStore.info.size.width[0]"
 						:max="cardStore.info.size.width[1]"
@@ -204,6 +208,7 @@
 					<div class="input-slider-label">高度</div>
 					<el-input-number
 						class="filter-input-number"
+						size="small"
 						v-model="filters.size.height[0]"
 						:min="cardStore.info.size.height[0]"
 						:max="cardStore.info.size.height[1]"
@@ -212,14 +217,17 @@
 						controls-position="right" />
 					<el-slider
 						class="filter-input-slider"
+						:size="isMobile() ? 'small' : 'default'"
 						v-model="filters.size.height"
 						range
 						:step="1"
 						:max="cardStore.info.size.height[1]"
 						:min="cardStore.info.size.height[0]"
+						:marks="cardStore.filters.size.marks"
 						@change="filterChange('height', $event as [number, number])" />
 					<el-input-number
 						class="filter-input-number"
+						size="small"
 						v-model="filters.size.height[1]"
 						:min="cardStore.info.size.height[0]"
 						:max="cardStore.info.size.height[1]"
@@ -419,13 +427,14 @@
 				font-size: 12px;
 				display: flex;
 				align-items: center;
-				margin: 0 8px;
+				margin: 0 4px;
+
 				.filter-input-slider {
 					margin: 0 8px;
 				}
 				:deep(.wic2-input__wrapper) {
 					padding-left: 0;
-					padding-right: 31px;
+					padding-right: 26px;
 					.wic2-input__inner {
 						text-align: start;
 					}
@@ -439,7 +448,7 @@
 			.filter-input .input-slider-label {
 				display: flex;
 				align-items: center;
-				width: 50px;
+				width: 60px;
 				font-size: 14px;
 				overflow: hidden;
 				text-overflow: ellipsis;

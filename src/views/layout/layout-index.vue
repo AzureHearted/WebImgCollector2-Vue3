@@ -17,7 +17,8 @@
 						height="20"
 						style="color: black" />
 				</var-button>
-				<div style="flex: 1; margin-left: 16px; font-size: 20px">
+				<div
+					style="flex: 1; margin-left: 16px; font-size: 20px; text-align: left">
 					Web Img Collector 2
 				</div>
 				<var-button
@@ -41,6 +42,7 @@
 					size="fit-content"
 					direction="ltr"
 					:show-close="false"
+					:with-header="false"
 					v-model="appBarIsCollapse">
 					<el-menu :default-active="globalStore.tab">
 						<el-menu-item
