@@ -75,33 +75,6 @@
 		:deep(*) {
 			// 子元素默认还能响应
 			pointer-events: auto;
-			// margin: unset;
-			// padding: unset;
-			// border-radius: unset;
-			// border: unset;
-			// font-size: unset;
-			// color: auto;
-			// border: unset;
-			// box-shadow: unset;
-			// &.layout-container *[class^="var-"] {
-			// 	margin: unset;
-			// }
-
-			&[class^="v-"] {
-				color: initial;
-			}
-			&[class^="v-"] > input {
-				border: unset;
-			}
-
-			&[class^="v-"] > header.v-toolbar.v-theme--light {
-				height: unset;
-				background: white;
-			}
-
-			&[class^="v-input"] {
-				margin-inline-end: unset;
-			}
 		}
 	}
 
