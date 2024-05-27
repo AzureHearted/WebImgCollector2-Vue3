@@ -21,6 +21,7 @@ export function getBlobByUrl(
 					.catch(() => null);
 				if (blob && blob.size) {
 					// console.log("Fetch请求成功", blob);
+					console.count("Fetch请求成功!");
 					resolve(blob);
 				}
 				// 第二次尝试：如果第一次尝试失败则再次设置cache为no-cache再次尝试
@@ -29,8 +30,10 @@ export function getBlobByUrl(
 					.catch(() => null);
 				if (blob && blob.size) {
 					// console.log("Fetch请求成功", blob);
+					console.count("Fetch请求成功!");
 					resolve(blob);
 				} else {
+					console.count("Fetch请求失败");
 					resolve(null);
 				}
 			})();
@@ -41,9 +44,11 @@ export function getBlobByUrl(
 			GMRequest({ url, referer, responseType: "blob" }).then((blob) => {
 				if (blob && blob.size) {
 					// console.log("GM请求成功", blob);
+					console.count("GM跨域请求成功!");
 					resolve(blob);
 				} else {
 					// console.log("GM请求失败", blob);
+					console.count("GM跨域请求失败");
 					resolve(null);
 				}
 			});

@@ -8,6 +8,7 @@ interface IGMRequestOptions {
 	referer?: string;
 	responseType?: keyof GmResponseTypeMap;
 	data?: string;
+	timeout?: number;
 }
 // 返回结果映射
 interface GmResponseTypeMap {
@@ -41,8 +42,9 @@ export async function GMRequest(
 		responseType: "json",
 		referer: undefined,
 		data: "",
+		timeout: 10000,
 	};
-	const { url, method, referer, responseType, data } = {
+	const { url, method, referer, responseType, data, timeout } = {
 		...defaultOptions,
 		...options,
 	};
@@ -63,6 +65,7 @@ export async function GMRequest(
 				responseType,
 				headers,
 				data,
+				timeout,
 				onload: (res) => {
 					// console.log(res, res.response, res.status);
 					if (res.status === 200) {
@@ -75,10 +78,12 @@ export async function GMRequest(
 				},
 				onerror: () => {
 					// console.log(`GM失败(referer:${referer})`);
+
 					resolve(null);
 				},
 				ontimeout: () => {
-					// console.log(`GM超时(referer:${referer})`);
+					console.log(`GM超时(referer:${referer})`);
+
 					resolve(null);
 				},
 				onabort: () => {

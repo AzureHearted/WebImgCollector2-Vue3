@@ -7,6 +7,7 @@ import vue from "@vitejs/plugin-vue";
 // import VueDevTools from "vite-plugin-vue-devtools";
 
 import monkey, { util } from "vite-plugin-monkey";
+import type { GreasemonkeyUserScript } from "vite-plugin-monkey";
 
 // 自动按需引入配置
 import components from "unplugin-vue-components/vite";
@@ -73,13 +74,14 @@ export default defineConfig({
 		}),
 		monkey({
 			entry: "./src/main.ts",
-			userscript: {
+			userscript: <GreasemonkeyUserScript>{
 				author: "ls", // 作者
 				// updateURL: "", //更新地址
-				version:'1.2.0',
+				version: "1.2.1",
 				icon: "https://vitejs.dev/logo.svg", // 图标
 				namespace: "npm/vite-plugin-monkey", // 命名空间
-				match: ["http*://*", "http*://*/*"], // 要匹配的网站
+				match: ["*://*", "*://*/*"], // 要匹配的网站
+				include: ["*"],
 				// exclude: ["*://element-plus.org/*"], // 要排除的网站
 				exclude: [
 					// "*://vuetifyjs.com/*",
@@ -119,8 +121,15 @@ export default defineConfig({
 	server: {
 		open: false, // 项目运行时不自动打开浏览器
 	},
+	// 打包配置
 	build: {
 		// 使用terser进行压缩混淆
 		minify: "terser",
+		terserOptions: {
+			compress: {
+				drop_console: true, // 删除所有 console
+				drop_debugger: true, // 删除 debugger
+			},
+		},
 	},
 });
