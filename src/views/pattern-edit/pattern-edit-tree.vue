@@ -5,13 +5,13 @@
 				<template #icon>
 					<i-ep-circle-plus />
 				</template>
-				新建方案
+				新建
 			</el-button>
 			<el-button type="danger">
 				<template #icon>
 					<i-ep-delete />
 				</template>
-				批量删除
+				删除
 			</el-button>
 		</el-button-group>
 		<el-input

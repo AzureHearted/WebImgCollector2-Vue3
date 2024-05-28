@@ -193,17 +193,23 @@ export default defineStore("cardStore", () => {
 
 	// 获取页面资源
 	async function getPageCard() {
+		const patternId = patternStore.used.id;
+		const patternNow =
+			patternStore.findPattern(patternId) || patternStore.list[0];
+		// console.log("当前方案", patternNow);
+		if (!patternNow.rules.length) {
+			ElNotification({
+				title: "提示",
+				type: "warning",
+				message: "该方案没有包含任何规则！(请为方案添加规则后再进行此操作)",
+				appendTo: ".web-img-collector-notification-container",
+			});
+			return;
+		}
 		loadingStore.start();
-		// ElNotification({
-		// 	title: "提示",
-		// 	message: "正在获取信息……",
-		// 	type: "info",
-		// 	appendTo: ".web-img-collector-notification-container",
-		// });
-		// 记录开始前的cardList长度
 		await getCard(
 			// 规则配置
-			patternStore.getCurrentPattern()?.rules[0] as BaseRule,
+			patternNow.rules[0] as BaseRule,
 			// 选项配置
 			{
 				// 当获取到所有基准dom时的回调
@@ -255,6 +261,17 @@ export default defineStore("cardStore", () => {
 						data.cardList[index] = card; // 添加到卡片列表中。
 						updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
 						await addCard(); //执行回调函数
+					}
+				},
+				onFinished() {
+					if (!validCardList.value.length) {
+						ElNotification({
+							title: "提示",
+							type: "info",
+							message: "该方案未匹配到任何有效结果",
+							appendTo: ".web-img-collector-notification-container",
+						});
+						return;
 					}
 				},
 				// 传入已有url和blob的map对象,用于防止重复发送请求

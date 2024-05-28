@@ -23,6 +23,7 @@ interface Options {
 		dom: HTMLElement | null,
 		addCard: () => Promise<void>
 	) => Promise<void>;
+	onFinished: () => void;
 	// 已有的url和Blob的映射表(用于判断是否需要发送新的请求)
 	existingUrlBlobMap: Map<string, Blob>;
 }
@@ -37,11 +38,13 @@ export default async function getCard(
 	const defaultOptions: Options = {
 		onAllDOMGet: async (doms) => doms,
 		onCardGet: async () => {},
+		onFinished: () => {},
 		existingUrlBlobMap: new Map<string, Blob>(),
 	};
 	// 合并配置
 	options = { ...defaultOptions, ...options };
-	const { onAllDOMGet, onCardGet, existingUrlBlobMap } = options as Options;
+	const { onAllDOMGet, onCardGet, onFinished, existingUrlBlobMap } =
+		options as Options;
 
 	// 卡片列表
 	const cardList = [] as Card[];
@@ -52,10 +55,10 @@ export default async function getCard(
 	if (rule.region.enable) {
 		// ! 区域匹配模式
 		// 区域DOM元素列表
-		let regionDOMs = getDOM(rule.region.selector, {
+		let regionDOMs: HTMLElement[] | null = getDOM(rule.region.selector, {
 			mode: "all",
-		}) as HTMLElement[];
-
+		}) as any[];
+		regionDOMs = regionDOMs.filter((x) => x) as HTMLElement[]; //过滤无效值
 		// 触发回调(进行dom过滤)
 		regionDOMs = await onAllDOMGet(regionDOMs);
 
@@ -163,10 +166,10 @@ export default async function getCard(
 	} else {
 		// ! 全局匹配模式(先分别匹配source、preview、description，然后创建卡片)
 		// 获取所有 sourceDOMs
-		let sourceDOMs = getDOM(rule.source.selector, {
+		let sourceDOMs: HTMLElement[] | null = getDOM(rule.source.selector, {
 			mode: "all",
-		}) as HTMLElement[];
-
+		}) as any[];
+		sourceDOMs = sourceDOMs.filter((x) => x) as HTMLElement[]; //过滤无效值
 		// 触发回调(进行dom过滤)
 		sourceDOMs = await onAllDOMGet(sourceDOMs);
 
@@ -304,7 +307,10 @@ export default async function getCard(
 			// 	console.log("任务完成", result, count);
 			// },
 			// 执行完成后调用resolve
-			onAllTasksComplete: () => resolve(),
+			onAllTasksComplete: () => {
+				onFinished();
+				resolve();
+			},
 		});
 		// 添加任务
 		taskQueue.addTask(taskList);

@@ -18,7 +18,7 @@
 			<!-- 方案选择器 -->
 			<div class="pattern-input-select">
 				<el-select
-					v-model="patternStore.current"
+					v-model="patternStore.used.id"
 					:fallback-placements="['bottom-start']"
 					placeholder="请选择一个方案">
 					<el-option

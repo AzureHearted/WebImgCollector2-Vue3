@@ -3,19 +3,32 @@ import type { ComputedRef } from "vue";
 import { defineStore } from "pinia";
 import { Pattern, defaultPattern } from "./class/Pattern";
 import { Rule } from "./class/Rule";
-import { getUserPatternList } from "./utils/handle-user-data";
+import {
+	getUserPatternList,
+	setUserPatternList,
+} from "./utils/handle-user-data";
+// import { GM_getValue, GM_setValue } from "$";
 
 export default defineStore("patternStore", () => {
-	// 用户方案数据
-	const userPatternList = ref<Pattern[]>(getUserPatternList());
 	// console.log("用户方案列表：", userPatternList);
 	// 方案列表
-	const list = ref<Pattern[]>([defaultPattern, ...userPatternList.value]);
-	console.log("方案列表：", list);
+	const list = ref<Pattern[]>([defaultPattern]);
+	// 获取用户方案信息
+	function getUserPatternInfo() {
+		// 用户方案数据
+		const userPatternList: Pattern[] = getUserPatternList();
+		list.value.push(...userPatternList);
+	}
+	// 使用的方案信息
+	const used = reactive({
+		id: "#",
+	});
+
 	// 当前方案信息
 	const current = reactive({
 		id: "#",
 	});
+
 	// 当前编辑中的方案信息
 	const editing = reactive({
 		id: "#", // 方案id
@@ -64,15 +77,18 @@ export default defineStore("patternStore", () => {
 		console.log(index);
 		if (index >= 0) {
 			list.value.splice(index, 1);
+			setUserPatternList(list.value.slice(1));
 		}
 	}
 
 	return {
 		list,
+		used,
 		current,
 		editing,
 		editingPattern,
 		editingRule,
+		getUserPatternInfo,
 		createPattern,
 		deletePattern,
 		findPattern,

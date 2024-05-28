@@ -24,6 +24,14 @@ export default function getDOM(
 	};
 	// 合并选项
 	const { mode, regionDOM } = { ...defaultOptions, ...options };
+	// 选择器为空则返回空值
+	if (!selector) {
+		if (mode === "all") {
+			return [] as HTMLElement[];
+		} else {
+			return null;
+		}
+	}
 	// 获取dom
 	const doms = regionDOM.querySelectorAll(selector);
 	// console.log("selector", selector, "doms", doms);

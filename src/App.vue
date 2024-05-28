@@ -19,17 +19,15 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, defineAsyncComponent } from "vue";
-	import { useGlobalStore } from "@/stores";
+	import { ref, onMounted, defineAsyncComponent } from "vue";
+	import { useGlobalStore, usePatternStore } from "@/stores";
 	// import Layout from "./views/layout/layout-index.vue";
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")
 	);
 
-	// console.log("油猴信息：", GM_info);
-
 	const globalStore = useGlobalStore();
-	// globalStore.visibleScrollbar(false);
+	const patternStore = usePatternStore();
 
 	const appContainer = ref<HTMLElement | null>(null);
 	const windowContainer = ref<HTMLElement | null>(null);
@@ -38,6 +36,9 @@
 	const HoverButton = defineAsyncComponent(
 		() => import("@/views/hover-button.vue")
 	);
+	onMounted(() => {
+		patternStore.getUserPatternInfo(); //获取本地方案信息
+	});
 </script>
 
 <style lang="scss" scoped>
