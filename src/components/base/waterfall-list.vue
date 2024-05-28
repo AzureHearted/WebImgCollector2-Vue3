@@ -198,6 +198,7 @@
 		() => props.data,
 		(newList) => {
 			// console.log("数组变化", newList, oldList);
+			// if (newList.length < oldList.length) console.log("waterfall-list 数组减少");
 			handleResetPosition(() => {
 				dataInfo.list = newList;
 			});

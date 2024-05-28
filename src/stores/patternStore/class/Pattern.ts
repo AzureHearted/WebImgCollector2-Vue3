@@ -85,25 +85,20 @@ export const defaultPattern = new Pattern({
 	mainInfo: {
 		name: "默认方案",
 		host: "",
-		titleSelector: "title",
-		filter: {
-			pattern: "",
-			flags: [],
-		},
 		icon: "",
+		titleSelector: "title",
+		filter: { pattern: "", flags: [] },
 	},
 	rules: [
 		{
 			id: "#default-rule#",
 			name: "默认规则",
-			region: {
-				enable: false,
-				selector: "",
-			},
+			region: { enable: false, selector: "" },
 			source: {
-				selector: "a:has(img),img[data-src],img[src]",
+				selector:
+					'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]',
 				infoType: "attribute",
-				name: "href|srcset|data-src|src",
+				name: "content|href|srcset|data-src|src",
 			},
 			preview: {
 				origin: "source",
@@ -121,12 +116,11 @@ export const defaultPattern = new Pattern({
 			},
 			filter: {
 				formats: [],
-				width: [300, 2000] as [number, number],
-				height: [300, 2000] as [number, number],
+				width: [300, 2000],
+				height: [300, 2000],
 			},
-			state: {
-				editing: false,
-			},
+			state: { editing: false },
 		},
 	],
+	state: { editing: false },
 });

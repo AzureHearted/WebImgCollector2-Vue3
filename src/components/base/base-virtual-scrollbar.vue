@@ -170,10 +170,10 @@
 		const { scrollWidth, scrollHeight } = wrapperDOM.value; // 提取滚动容器内容区宽高
 		// 计算垂直滚动条长度
 		scrollbar.vertical.length =
-			scrollHeight > height ? (height / scrollHeight) * height : -1;
+			scrollHeight > Math.ceil(height) ? (height / scrollHeight) * height : -1;
 		// 计算水平滚动条长度
 		scrollbar.horizontal.length =
-			scrollWidth > width ? (width / scrollWidth) * width : -1;
+			scrollWidth > Math.ceil(width) ? (width / scrollWidth) * width : -1;
 	}
 
 	// 设置滚动条位置

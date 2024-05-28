@@ -32,6 +32,7 @@ export default async function getCard(
 	rule: BaseRule,
 	options: Partial<Options>
 ) {
+	// console.log("当前规则", rule);
 	// 默认配置
 	const defaultOptions: Options = {
 		onAllDOMGet: async (doms) => doms,

@@ -3,10 +3,15 @@ import type { ComputedRef } from "vue";
 import { defineStore } from "pinia";
 import { Pattern, defaultPattern } from "./class/Pattern";
 import { Rule } from "./class/Rule";
+import { getUserPatternList } from "./utils/handle-user-data";
 
 export default defineStore("patternStore", () => {
+	// 用户方案数据
+	const userPatternList = ref<Pattern[]>(getUserPatternList());
+	// console.log("用户方案列表：", userPatternList);
 	// 方案列表
-	const list = ref<Pattern[]>([defaultPattern]);
+	const list = ref<Pattern[]>([defaultPattern, ...userPatternList.value]);
+	console.log("方案列表：", list);
 	// 当前方案信息
 	const current = reactive({
 		id: "#",
@@ -42,9 +47,15 @@ export default defineStore("patternStore", () => {
 		return rule;
 	}
 
+	// 获取当前方案
+	function getCurrentPattern() {
+		return findPattern(current.id);
+	}
+
 	// 创建方案
 	function createPattern() {
 		list.value.push(new Pattern());
+		// console.log(JSON.stringify(list.value));
 	}
 	// 删除方案
 	function deletePattern(id: string) {
@@ -65,6 +76,7 @@ export default defineStore("patternStore", () => {
 		createPattern,
 		deletePattern,
 		findPattern,
+		getCurrentPattern,
 		findRule,
 	};
 });

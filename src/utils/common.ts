@@ -1,3 +1,5 @@
+import { GM_getValue, GM_setValue } from "$";
+
 //f [功能封装]生成uuid
 export function buildUUID(): string {
 	const hexList: string[] = [];
@@ -318,4 +320,31 @@ export function isUrl(str: string) {
 		}
 	}
 	return isUrl;
+}
+
+// 封装油猴存储GM_getValue和GM_setValue
+interface GM_storageOptions {
+	method: "set" | "get";
+	name: string;
+	value: string;
+	default: any;
+}
+export function GM_storage(
+	options: Partial<GM_storageOptions> & {
+		method: "set" | "get";
+		name: string;
+	}
+) {
+	const defaultOptions: GM_storageOptions = {
+		method: "get",
+		name: "",
+		value: "",
+		default: "",
+	};
+	options = Object.assign(defaultOptions, options);
+	if (options.method === "set") {
+		GM_setValue(options.name, options.value);
+	} else {
+		return GM_getValue(options.name, options.default);
+	}
 }

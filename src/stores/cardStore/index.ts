@@ -13,12 +13,14 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现文件保存
 
 // 导入其他仓库
-import { useLoadingStore } from "@/stores";
+import { useLoadingStore, usePatternStore } from "@/stores";
 
 import { ElNotification } from "@/plugin/element-plus";
+import type { BaseRule } from "../patternStore/interface/Pattern";
 
 export default defineStore("cardStore", () => {
 	const loadingStore = useLoadingStore();
+	const patternStore = usePatternStore();
 
 	// 数据定义
 	const data = reactive({
@@ -55,7 +57,7 @@ export default defineStore("cardStore", () => {
 				const markStyle = reactive({
 					"font-size": "10px !important",
 					"margin-top": "0 !important",
-					bottom: "10px",
+					bottom: "5px",
 				});
 				const tempMarks = {
 					360: {
@@ -201,42 +203,7 @@ export default defineStore("cardStore", () => {
 		// 记录开始前的cardList长度
 		await getCard(
 			// 规则配置
-			{
-				id: "###",
-				name: "###",
-				region: {
-					enable: false,
-					selector: "",
-				},
-				source: {
-					selector:
-						'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]',
-					infoType: "attribute",
-					name: "content|href|srcset|data-src|src",
-				},
-				preview: {
-					origin: "source",
-					enable: false,
-					selector: "",
-					infoType: "property",
-					name: "src",
-				},
-				description: {
-					origin: "source",
-					enable: false,
-					selector: "",
-					infoType: "property",
-					name: "src",
-				},
-				filter: {
-					formats: [],
-					width: [300, 2000] as [number, number],
-					height: [300, 2000] as [number, number],
-				},
-				state: {
-					editing: false,
-				},
-			},
+			patternStore.getCurrentPattern()?.rules[0] as BaseRule,
 			// 选项配置
 			{
 				// 当获取到所有基准dom时的回调

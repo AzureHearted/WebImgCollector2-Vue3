@@ -28,7 +28,7 @@
 			show-checkbox
 			check-strictly
 			accordion
-			:default-expanded-keys="defaultExpandedKeys"
+			default-expand-all
 			:props="defaultProps"
 			:filter-node-method="filterNode"
 			@node-click="handleNodeClick">

@@ -15,8 +15,23 @@
 					{{ loadingStore.percentage.toFixed(2) }}%
 				</span>
 			</el-progress>
+			<!-- 方案选择器 -->
+			<div class="pattern-input-select">
+				<el-select
+					v-model="patternStore.current"
+					:fallback-placements="['bottom-start']"
+					placeholder="请选择一个方案">
+					<el-option
+						v-for="item in patternStore.list"
+						:key="item.id"
+						:label="item.mainInfo.name"
+						:value="item.id">
+						<span style="float: left">{{ item.mainInfo.name }} </span>
+					</el-option>
+				</el-select>
+			</div>
 			<!-- 操作栏 -->
-			<div class="gallery-container-control-panel">
+			<div class="toolbar-control-panel">
 				<!-- 控制按钮组 -->
 				<var-badge
 					:offset-y="0"
@@ -29,9 +44,7 @@
 						:default-style="false"
 						:trigger="isMobile() ? 'click' : 'hover'"
 						:teleport="false">
-						<var-button-group
-							:size="isMobile() ? 'small' : 'normal'"
-							type="success">
+						<var-button-group type="success">
 							<!-- 加载按钮 -->
 							<var-button
 								@click.stop="getCards"
@@ -48,9 +61,7 @@
 							</var-button>
 						</var-button-group>
 						<template #menu>
-							<var-button-group
-								:size="isMobile() ? 'small' : 'normal'"
-								vertical>
+							<var-button-group vertical>
 								<!-- 清空按钮 -->
 								<var-button type="danger" icon-container block @click="clear">
 									所有清空
@@ -60,8 +71,9 @@
 					</var-menu>
 				</var-badge>
 			</div>
+
 			<!-- 选择器 -->
-			<div class="gallery-container-control-panel">
+			<div class="toolbar-control-panel">
 				<var-badge
 					:offset-y="0"
 					:offset-x="isMobile() ? -95 : -115"
@@ -69,18 +81,15 @@
 					:hidden="!cardStore.filteredCardList.length"
 					:value="cardStore.filteredCardList.length">
 					<!-- 选择器按钮组 -->
-					<var-button-group
-						class="control-button-group"
-						:size="isMobile() ? 'small' : 'normal'">
+					<var-button-group class="control-button-group">
 						<var-button type="primary" @click="checkAll"> 全选 </var-button>
 						<var-button type="info" @click="inverseAll"> 反选 </var-button>
 						<var-button @click="cancel"> 取消 </var-button>
 					</var-button-group>
 				</var-badge>
 			</div>
-
 			<!-- 下载控制 -->
-			<div class="gallery-container-control-panel">
+			<div class="toolbar-control-panel">
 				<!-- 下载按钮 -->
 				<var-badge
 					type="info"
@@ -93,9 +102,7 @@
 						:default-style="false"
 						:trigger="isMobile() ? 'click' : 'hover'"
 						:teleport="false">
-						<var-button-group
-							:size="isMobile() ? 'small' : 'normal'"
-							type="primary">
+						<var-button-group type="primary">
 							<var-button
 								:disabled="!checkedCardList.length"
 								@click.stop="downloadSelected">
@@ -111,9 +118,7 @@
 							</var-button>
 						</var-button-group>
 						<template #menu>
-							<var-button-group
-								:size="isMobile() ? 'small' : 'normal'"
-								vertical>
+							<var-button-group vertical>
 								<var-button @click="downloadAll"> 全部下载 </var-button>
 								<var-button type="danger" @click="deleteSelected">
 									删除选中项
@@ -123,6 +128,7 @@
 					</var-menu>
 				</var-badge>
 			</div>
+
 			<!-- 其他过滤器 -->
 			<div class="filter-control-panel other-filter">
 				<!-- 类型过滤器 -->
@@ -221,10 +227,11 @@
 	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入仓库
-	import { useCardStore, useLoadingStore } from "@/stores";
+	import { useCardStore, useLoadingStore, usePatternStore } from "@/stores";
 
 	const cardStore = useCardStore();
 	const loadingStore = useLoadingStore();
+	const patternStore = usePatternStore();
 
 	// 过滤器定义
 	const filters = reactive({
@@ -362,9 +369,10 @@
 		align-content: center;
 		box-shadow: shadow.$elevation;
 	}
+
 	// 控制面板样式
-	.gallery-container-control-panel {
-		flex: 0;
+	.toolbar-control-panel {
+		// flex: 1;
 		// padding: 2px;
 		margin-right: 2px;
 		margin-bottom: 2px;
@@ -372,13 +380,14 @@
 		align-items: center;
 		background: inherit;
 	}
-	// 图标样式
-	.gallery-toolbar-icon {
-		width: 20px;
-	}
-	// menu选项样式
-	.gallery-toolbar-menu-cell {
-		cursor: pointer;
+	.pattern-input-select {
+		flex: 1;
+		width: 150px;
+		min-width: 150px;
+		max-width: 200px;
+		margin-right: 2px;
+		display: flex;
+		align-items: center;
 	}
 	// 控制按钮组样式
 	.control-button-group {
@@ -393,18 +402,18 @@
 
 		// 尺寸过滤器
 		&.size-filter {
-			flex: 2;
+			flex: 1;
 			flex-wrap: wrap;
 
 			.filter-input {
-				flex: 1;
+				flex: 1 0;
 				min-width: 320px;
 				max-width: 600px;
 				font-size: 12px;
 				display: flex;
 				align-items: center;
-				margin: 0 4px;
-				padding: 6px 0;
+				margin: 0 3px;
+				// padding: 6px 0;
 
 				.filter-input-slider {
 					margin: 0 8px;
@@ -437,8 +446,8 @@
 
 		// 其他选择器
 		&.other-filter {
-			flex: 1;
-			flex-wrap: wrap;
+			flex: 0;
+			flex-wrap: nowrap;
 			align-items: center;
 			// 选择器样式
 			.filter-input-select {
