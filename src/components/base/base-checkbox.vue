@@ -6,18 +6,14 @@
 				:type="isChecked ? 'success' : 'default'"
 				icon-container
 				round>
-				<IconCheckboxBlank
-					class="card-checkbox-icon"
-					style="width: 20px; fill: #333" />
+				<i-material-symbols-check-box-outline-blank />
 			</var-button>
 			<var-button
 				v-else
 				:type="isChecked ? 'success' : 'default'"
 				icon-container
 				round>
-				<IconCheckboxChecked
-					class="card-checkbox-icon"
-					style="width: 20px; fill: white" />
+				<i-material-symbols-check-box-rounded />
 			</var-button>
 		</Transition>
 	</div>
@@ -25,8 +21,6 @@
 
 <script setup lang="ts">
 	import { defineProps, withDefaults, computed, defineEmits } from "vue";
-	import IconCheckboxBlank from "@svg/checkbox-blank-circle-outline.svg";
-	import IconCheckboxChecked from "@svg/check-circle.svg";
 
 	const props = withDefaults(
 		defineProps<{
@@ -57,20 +51,16 @@
 	.v-enter-from {
 		position: absolute;
 		opacity: 0;
-		transform: translateY(-100%);
+		transform: scale(0);
 	}
-	// 进入动画的结束状态,离开动画的起始状态
-	.v-enter-to,
-	.v-leave-from {
-		// position: absolute;
-	}
+
 	// 进入的过程中
 	.v-enter-active {
-		transition: all 0.5s;
+		transition: 0.5s;
 	}
 	// 离开的过程中
 	.v-leave-active {
-		transition: all 0.5s;
+		transition: 0.5s;
 	}
 
 	:deep(.var-button--round) {

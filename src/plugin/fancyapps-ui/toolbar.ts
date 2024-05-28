@@ -8,8 +8,9 @@ import type { Fancybox } from "@fancyapps/ui";
 export default {
 	// 要显示的工具
 	display: {
-		left: ["infobar"],
-		right: ["toLocate", "open", "download", "thumbs", "fullscreen"],
+		left: ["toLocate", "thumbs"],
+		middle: ["prev", "infobar", "next"],
+		right: ["open", "download", "fullscreen"],
 	},
 	// 自定义的按钮
 	items: {

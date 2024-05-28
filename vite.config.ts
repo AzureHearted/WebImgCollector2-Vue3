@@ -75,21 +75,16 @@ export default defineConfig({
 		monkey({
 			entry: "./src/main.ts",
 			userscript: <GreasemonkeyUserScript>{
+				name: "WebImgCollector2",
+				description: "图片聚合器",
 				author: "ls", // 作者
 				// updateURL: "", //更新地址
-				version: "1.2.1",
+				version: "1.2.2",
 				icon: "https://vitejs.dev/logo.svg", // 图标
 				namespace: "npm/vite-plugin-monkey", // 命名空间
 				match: ["*://*", "*://*/*"], // 要匹配的网站
 				include: ["*"],
 				// exclude: ["*://element-plus.org/*"], // 要排除的网站
-				exclude: [
-					// "*://vuetifyjs.com/*",
-					// "*://yiyan.baidu.com/*",
-					// "*://github.com/*",
-					// "*://www.baidu.com/*",
-					// "*://cprs.patentstar.com*",
-				],
 				noframes: true, // 禁止在iframe中使用
 				connect: ["*"],
 				"run-at": "document-body", // 嵌入时机

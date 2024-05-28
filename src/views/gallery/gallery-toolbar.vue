@@ -19,15 +19,14 @@
 			<div class="gallery-container-control-panel">
 				<!-- 控制按钮组 -->
 				<var-badge
-					:offset-y="-4"
+					:offset-y="0"
 					:offset-x="-8"
 					style="z-index: 2"
 					:hidden="!cardStore.validCardList.length"
 					:value="cardStore.validCardList.length">
 					<var-menu
-						placement="bottom"
+						placement="bottom-start"
 						:default-style="false"
-						same-width
 						:trigger="isMobile() ? 'click' : 'hover'"
 						:teleport="false">
 						<var-button-group
@@ -42,7 +41,10 @@
 								加载
 							</var-button>
 							<var-button style="padding: 0 4px">
-								<IconArrowDown style="width: 24px; fill: white" />
+								<i-material-symbols-arrow-drop-down-rounded
+									style="fill: white"
+									width="24"
+									height="24" />
 							</var-button>
 						</var-button-group>
 						<template #menu>
@@ -51,10 +53,7 @@
 								vertical>
 								<!-- 清空按钮 -->
 								<var-button type="danger" icon-container block @click="clear">
-									<IconCloseCircleMultiple
-										class="gallery-toolbar-icon"
-										style="margin: 0 12px 0 0; fill: white" />
-									清空
+									所有清空
 								</var-button>
 							</var-button-group>
 						</template>
@@ -62,31 +61,35 @@
 				</var-badge>
 			</div>
 			<!-- 选择器 -->
-			<div
-				class="gallery-container-control-panel"
-				:elevation="0"
-				color="transparent"
-				width="fit-content">
-				<!-- 选择器按钮组 -->
-				<var-button-group
-					class="control-button-group"
-					:size="isMobile() ? 'small' : 'normal'">
-					<var-button type="primary" @click="checkAll"> 全选 </var-button>
-					<var-button type="info" @click="inverseAll"> 反选 </var-button>
-					<var-button @click="cancel"> 取消 </var-button>
-				</var-button-group>
+			<div class="gallery-container-control-panel">
+				<var-badge
+					:offset-y="0"
+					:offset-x="isMobile() ? -95 : -115"
+					style="z-index: 2"
+					:hidden="!cardStore.filteredCardList.length"
+					:value="cardStore.filteredCardList.length">
+					<!-- 选择器按钮组 -->
+					<var-button-group
+						class="control-button-group"
+						:size="isMobile() ? 'small' : 'normal'">
+						<var-button type="primary" @click="checkAll"> 全选 </var-button>
+						<var-button type="info" @click="inverseAll"> 反选 </var-button>
+						<var-button @click="cancel"> 取消 </var-button>
+					</var-button-group>
+				</var-badge>
 			</div>
+
 			<!-- 下载控制 -->
 			<div class="gallery-container-control-panel">
 				<!-- 下载按钮 -->
 				<var-badge
 					type="info"
-					:offset-y="-4"
+					:offset-y="0"
 					style="z-index: 1"
 					:hidden="!checkedCardList.length"
 					:value="`${checkedCardList.length} (${checkedTotalSize})`">
 					<var-menu
-						placement="bottom"
+						placement="bottom-start"
 						:default-style="false"
 						:trigger="isMobile() ? 'click' : 'hover'"
 						:teleport="false">
@@ -96,27 +99,24 @@
 							<var-button
 								:disabled="!checkedCardList.length"
 								@click.stop="downloadSelected">
-								选中下载
+								下载
 							</var-button>
 							<var-button
 								:disabled="!cardStore.validCardList.length"
 								style="padding: 0 4px">
-								<IconArrowDown style="width: 24px; fill: white" />
+								<i-material-symbols-arrow-drop-down-rounded
+									style="fill: white"
+									width="24"
+									height="24" />
 							</var-button>
 						</var-button-group>
 						<template #menu>
 							<var-button-group
 								:size="isMobile() ? 'small' : 'normal'"
 								vertical>
-								<var-button
-									icon-container
-									block
-									@click="downloadAll"
-									:elevation="false">
-									<IconDownload
-										class="gallery-toolbar-icon"
-										style="margin: 0 8px 0 0" />
-									全部下载
+								<var-button @click="downloadAll"> 全部下载 </var-button>
+								<var-button type="danger" @click="deleteSelected">
+									删除选中项
 								</var-button>
 							</var-button-group>
 						</template>
@@ -129,10 +129,10 @@
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.type"
-					:size="isMobile() ? 'default' : 'large'"
 					multiple
+					clearable
 					collapse-tags
-					:max-collapse-tags="2"
+					:max-collapse-tags="1"
 					collapse-tags-tooltip
 					placeholder="类型过滤">
 					<el-option
@@ -151,10 +151,10 @@
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.extension"
-					:size="isMobile() ? 'default' : 'large'"
 					multiple
+					clearable
 					collapse-tags
-					:max-collapse-tags="2"
+					:max-collapse-tags="1"
 					collapse-tags-tooltip
 					placeholder="扩展名过滤">
 					<el-option
@@ -173,16 +173,8 @@
 			<div class="filter-control-panel size-filter">
 				<!-- 宽度过滤器 -->
 				<div class="filter-input">
-					<div class="input-slider-label">宽度</div>
-					<el-input-number
-						class="filter-input-number"
-						size="small"
-						v-model="filters.size.width[0]"
-						:min="cardStore.info.size.width[0]"
-						:max="cardStore.info.size.width[1]"
-						readonly
-						step-strictly
-						controls-position="right" />
+					<el-text type="primary" class="input-slider-label">宽度</el-text>
+					<el-text>{{ filters.size.width[0] }}px</el-text>
 					<el-slider
 						class="filter-input-slider"
 						:size="isMobile() ? 'small' : 'default'"
@@ -193,28 +185,14 @@
 						:min="cardStore.info.size.width[0]"
 						:marks="cardStore.filters.size.marks"
 						@change="filterChange('width', $event as [number, number])" />
-					<el-input-number
-						class="filter-input-number"
-						size="small"
-						v-model="filters.size.width[1]"
-						:min="cardStore.info.size.width[0]"
-						:max="cardStore.info.size.width[1]"
-						readonly
-						step-strictly
-						controls-position="right" />
+					<el-text style="margin-left: 8px">
+						{{ filters.size.width[1] }}px
+					</el-text>
 				</div>
 				<!-- 高度过滤器 -->
 				<div class="filter-input">
-					<div class="input-slider-label">高度</div>
-					<el-input-number
-						class="filter-input-number"
-						size="small"
-						v-model="filters.size.height[0]"
-						:min="cardStore.info.size.height[0]"
-						:max="cardStore.info.size.height[1]"
-						readonly
-						step-strictly
-						controls-position="right" />
+					<el-text type="primary" class="input-slider-label">高度</el-text>
+					<el-text>{{ filters.size.height[0] }}px</el-text>
 					<el-slider
 						class="filter-input-slider"
 						:size="isMobile() ? 'small' : 'default'"
@@ -225,15 +203,9 @@
 						:min="cardStore.info.size.height[0]"
 						:marks="cardStore.filters.size.marks"
 						@change="filterChange('height', $event as [number, number])" />
-					<el-input-number
-						class="filter-input-number"
-						size="small"
-						v-model="filters.size.height[1]"
-						:min="cardStore.info.size.height[0]"
-						:max="cardStore.info.size.height[1]"
-						readonly
-						step-strictly
-						controls-position="right" />
+					<el-text style="margin-left: 8px">
+						{{ filters.size.height[1] }}px
+					</el-text>
 				</div>
 			</div>
 		</div>
@@ -244,10 +216,6 @@
 	import { ref, reactive, computed, watch } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
-	// 导入svg
-	import IconDownload from "@svg/download.svg";
-	import IconArrowDown from "@svg/arrow-down.svg";
-	import IconCloseCircleMultiple from "@svg/close-circle-multiple.svg";
 
 	// 导入公用ts库
 	import { byteAutoUnit, isMobile } from "@/utils/common";
@@ -349,6 +317,14 @@
 		const ids = cardStore.filteredCardList.map((x) => x.id);
 		cardStore.downloadCards(ids);
 	}
+
+	// 删除选中项
+	function deleteSelected() {
+		const ids = cardStore.validCardList
+			.filter((x) => x.isSelected)
+			.map((x) => x.id);
+		cardStore.removeCard(ids);
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -359,7 +335,7 @@
 	}
 
 	.gallery-toolbar-loading {
-		margin: 4px 0;
+		margin: 2px 0;
 		width: 100%;
 		transform: translateY(-20px);
 		height: 0;
@@ -413,11 +389,11 @@
 		display: flex;
 		flex-flow: row wrap;
 		// background: wheat;
-		padding: 4px 0;
+		margin: 0 2px 2px 0;
 
 		// 尺寸过滤器
 		&.size-filter {
-			flex: 1;
+			flex: 2;
 			flex-wrap: wrap;
 
 			.filter-input {
@@ -428,6 +404,7 @@
 				display: flex;
 				align-items: center;
 				margin: 0 4px;
+				padding: 6px 0;
 
 				.filter-input-slider {
 					margin: 0 8px;
@@ -456,22 +433,17 @@
 				margin-bottom: 0;
 				user-select: none;
 			}
-			// 数字输入框
-			.filter-input-number {
-				width: 130px;
-				margin: 0 8px;
-			}
 		}
 
 		// 其他选择器
 		&.other-filter {
-			flex: 0 content;
+			flex: 1;
 			flex-wrap: wrap;
 			align-items: center;
 			// 选择器样式
 			.filter-input-select {
 				flex: 1;
-				width: 200px;
+				width: 150px;
 				min-width: 150px;
 				max-width: 200px;
 				margin: 0 2px;

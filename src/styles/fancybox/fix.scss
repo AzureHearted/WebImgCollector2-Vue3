@@ -1,0 +1,8 @@
+// 修复Fancybox的ToolBar中图标遮挡了点击事件的bug
+.fancybox__toolbar button > svg {
+	// pointer-events: none;
+	z-index: -1;
+}
+.fancybox__toolbar .fancybox__infobar:not(:first-child):not(:last-child) {
+	background: unset;
+}

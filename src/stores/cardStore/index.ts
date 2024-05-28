@@ -328,14 +328,16 @@ export default defineStore("cardStore", () => {
 	}
 
 	// 移除卡片
-	function removeCard(id: string) {
-		data.excludeIdSet.add(id);
+	function removeCard(ids: string[]) {
+		for (let i = 0; i < ids.length; i++) {
+			const id = ids[i];
+			data.excludeIdSet.add(id);
+		}
 		return;
 	}
 
 	// 下载卡片
 	async function downloadCards(ids: string[]) {
-		
 		if (!ids.length) return;
 		// 先找到对应的卡片
 		const cards = validCardList.value.filter((x) => ids.includes(x.id));

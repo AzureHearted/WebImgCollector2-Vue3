@@ -17,7 +17,7 @@
 		</div>
 		<!-- 虚拟滚动条 -->
 		<!-- 垂直滚动条 -->
-		<transition>
+		<transition name="scrollbar">
 			<div
 				class="custom-virtual-scrollbar custom-virtual-scrollbar-vertical"
 				ref="verticalBar"
@@ -28,12 +28,28 @@
 				:style="verticalStyle"></div>
 		</transition>
 		<!-- 水平滚动条 -->
-		<transition>
+		<transition name="scrollbar">
 			<div
 				class="custom-virtual-scrollbar custom-virtual-scrollbar-horizontal"
 				ref="horizontalBar"
 				v-show="scrollbar.show && scrollbar.horizontal.length > 0"
 				:style="horizontalStyle"></div>
+		</transition>
+		<transition name="backTop">
+			<div
+				class="base-virtual-scrollbar-backTop"
+				v-show="bakctopShow"
+				@click="backToTop">
+				<i class="backTop-icon">
+					<svg
+						data-v-e6ff9537=""
+						viewBox="0 0 1024 1024"
+						width="1.2em"
+						height="1.2em">
+						<path fill="currentColor" d="M512 320L192 704h639.936z"></path>
+					</svg>
+				</i>
+			</div>
 		</transition>
 	</div>
 </template>
@@ -186,6 +202,17 @@
 			wrapperDOM.value.scrollTo({ top, left, behavior });
 		}
 	}
+
+	// f backTop 回到顶部按钮
+	const bakctopShow = computed<Boolean>(() => {
+		return scrollbar.vertical.top > 20;
+	});
+
+	// 执行回到顶部
+	function backToTop() {
+		const wrapper = wrapperDOM.value; // 提取滚动容器内容区宽高
+		wrapper?.scrollTo({ top: 0, behavior: "smooth" });
+	}
 </script>
 
 <script lang="ts">
@@ -259,9 +286,60 @@
 	}
 
 	// 进入和退出时的过渡
-	.v-enter-from,
-	.v-leave-to {
+	.scrollbar-enter-from,
+	.scrollbar-leave-to {
 		opacity: 0;
 		transition: all 0.5s;
+	}
+
+	//s 返回顶部按钮样式
+	.base-virtual-scrollbar-backTop {
+		position: absolute;
+		width: 40px;
+		height: 40px;
+
+		right: 40px;
+		bottom: 40px;
+
+		border-radius: 50%;
+		color: #409eff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 20px;
+		box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.12);
+		cursor: pointer;
+		z-index: 5;
+		background-color: #ffffff;
+
+		transition: 0.5s;
+
+		&:hover {
+			background-color: #d0e3ff;
+		}
+
+		.backTop-icon {
+			--color: inherit;
+			height: 1em;
+			width: 1em;
+			line-height: 1em;
+			display: inline-flex;
+			justify-content: center;
+			align-items: center;
+			position: relative;
+			fill: currentColor;
+			color: var(--color);
+			font-size: inherit;
+		}
+	}
+
+	.backTop-enter-active,
+	.backTop-leave-active {
+		transition: opacity 0.5s ease;
+	}
+
+	.backTop-enter-from,
+	.backTop-leave-to {
+		opacity: 0;
 	}
 </style>

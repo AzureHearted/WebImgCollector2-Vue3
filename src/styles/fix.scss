@@ -1,3 +1,7 @@
+@import "./element/fix";
+@import "./fancybox/fix";
+@import "./varlet-ui/fix";
+
 .v-overlay-container {
 	z-index: 2147483647;
 	* {
@@ -25,10 +29,4 @@
 div[data-v-app]:has(.var-transition-group .var-snackbar) {
 	position: relative;
 	z-index: 2147483647;
-}
-
-// 修复Fancybox的ToolBar中图标遮挡了点击事件的bug
-.fancybox__toolbar button > svg {
-	// pointer-events: none;
-	z-index: -1;
 }

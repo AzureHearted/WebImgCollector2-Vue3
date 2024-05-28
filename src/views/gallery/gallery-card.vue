@@ -24,20 +24,29 @@
 						<!-- 删除 -->
 						<var-button-group type="primary" size="mini">
 							<var-button type="danger" @click="toRemove(data)">
-								<IconTrashCan style="width: 20px; fill: white" />
+								<i-material-symbols-delete
+									width="20"
+									height="20"
+									style="fill: white" />
 							</var-button>
 						</var-button-group>
 						<var-button-group size="mini">
 							<!-- 在页面中定位 -->
 							<var-button type="primary" @click="toLocate(data)">
-								<IconMapMarker style="width: 20px; fill: white" />
+								<i-material-symbols-location-on-outline
+									width="20"
+									height="20"
+									style="fill: white" />
 							</var-button>
 							<!-- 下载 -->
 							<var-button
 								:loading="downloading"
 								type="default"
 								@click="toDownload(data)">
-								<IconDownload style="width: 20px; fill: #333" />
+								<i-material-symbols-download
+									width="20"
+									height="20"
+									style="fill: #333" />
 							</var-button>
 						</var-button-group>
 					</div>
@@ -84,7 +93,7 @@
 				<var-chip
 					v-if="data.source.meta.type === 'image'"
 					type="primary"
-					:size="isMobile() ? 'mini' : 'small'"
+					size="mini"
 					:round="false">
 					{{ data.source.meta.width }}x{{ data.source.meta.height }}
 				</var-chip>
@@ -92,7 +101,7 @@
 				<var-chip
 					v-if="!!data.source.meta.ext"
 					type="success"
-					:size="isMobile() ? 'mini' : 'small'"
+					size="mini"
 					:round="false">
 					{{ data.source.meta.ext }}
 				</var-chip>
@@ -100,7 +109,7 @@
 				<var-chip
 					v-if="!!data.source.blob && !!data.source.blob.size"
 					type="info"
-					:size="isMobile() ? 'mini' : 'small'"
+					size="mini"
 					:round="false">
 					{{ size }}
 				</var-chip>
@@ -114,6 +123,7 @@
 	import type { ComputedRef } from "vue";
 	import BaseImgCard from "@/components/base/base-img-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
+	import BaseCheckbox from "@/components/base/base-checkbox.vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 
@@ -121,9 +131,6 @@
 	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入svg
-	import IconDownload from "@svg/download-2.svg";
-	import IconMapMarker from "@svg/map-marker-outline.svg";
-	import IconTrashCan from "@svg/trash-can.svg";
 	import htmlTypeImg from "@svg/html.svg";
 
 	// 导入仓库
@@ -214,7 +221,7 @@
 	// 删除卡片
 	function toRemove(item: Pick<BaseCard, "id">) {
 		// 删除卡片数据模型中的卡片。
-		cardStore.removeCard(item.id!); // 删除卡片数据模型中的卡片。
+		cardStore.removeCard([item.id!]); // 删除卡片数据模型中的卡片。
 	}
 	// 下载
 	const downloading = ref(false);
@@ -231,7 +238,7 @@
 	.gallery-card-header {
 		position: relative;
 		display: flex;
-		padding: 2px 4px;
+		padding: 4px;
 		justify-content: space-between;
 
 		pointer-events: none;
@@ -260,7 +267,7 @@
 		flex-flow: row-reverse;
 		align-items: center;
 
-		transform: translateY(-100%);
+		transform: translateY(-150%);
 		transition: transform 0.3s;
 	}
 	.gallery-card[data-show="true"] .gallery-card-header-right,
@@ -280,9 +287,13 @@
 	}
 
 	.card-checkbox {
+		position: absolute;
+		top: -2px;
+		left: -2px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		aspect-ratio: 1;
 		filter: drop-shadow(0 0 1px #ffffff);
 	}
 
@@ -292,7 +303,7 @@
 		display: flex;
 		gap: 4px;
 
-		transform: translateY(100%);
+		// transform: translateY(100%);
 		transition: transform 0.3s;
 
 		pointer-events: none;
