@@ -118,6 +118,7 @@ export default defineConfig({
 	},
 	// 打包配置
 	build: {
+		target: "es2015",
 		// 使用terser进行压缩混淆
 		minify: "terser",
 		terserOptions: {
