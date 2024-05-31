@@ -4,6 +4,13 @@ export interface BasePattern {
 	mainInfo: BaseMainInfo; // 方案信息
 	rules: BaseRule[]; // 可以有多条匹配规则
 	state: BaseStatus; // 状态
+	backup: BasePatternRowData | null;
+}
+
+export interface BasePatternRowData {
+	id?: string; // 方案id
+	mainInfo: BaseMainInfo; // 方案信息
+	rules: BaseRuleRowData[]; // 可以有多条匹配规则
 }
 
 // 主要信息
@@ -11,7 +18,7 @@ export interface BaseMainInfo {
 	name: string; //s 规则名称
 	host: string; //s 域名
 	// 路径过滤器
-	filter: Pick<BaseRegex, "pattern" | "flags">;
+	filter: Pick<BaseRegex, "expression" | "flags">;
 	icon: string; //s 站点图标链接
 	titleSelector: string; //s 标题选择器
 }
@@ -19,6 +26,7 @@ export interface BaseMainInfo {
 // 匹配规则
 export interface BaseRule {
 	id: string; // 规则id
+	enable: boolean; //是否启用
 	name: string; // 规则名称
 	region: BaseMatchRegion; // 区域匹配
 	preview: BaseMatchPreview; // 预览源匹配
@@ -26,6 +34,18 @@ export interface BaseRule {
 	description: BaseMatchDescription; // 描述匹配
 	filter: BaseFilter; // 过滤器
 	state: BaseStatus; // 状态
+	backup: BaseRuleRowData | null;
+}
+
+export interface BaseRuleRowData {
+	id?: string; // 规则id
+	enable: boolean; //是否启用
+	name: string; // 规则名称
+	region: BaseMatchRegion; // 区域匹配
+	preview: BaseMatchPreview; // 预览源匹配
+	source: BaseMatchSource; // 源匹配
+	description: BaseMatchDescription; // 描述匹配
+	filter: BaseFilter; // 过滤器
 }
 
 // 基础匹配接口
@@ -59,18 +79,18 @@ export interface BaseMatchPreview extends BaseMatch {
 // s 匹配描述内容
 export interface BaseMatchDescription extends BaseMatch {
 	enable: boolean;
-	origin: "custom" | "region" | "source"; // 获取来源
+	origin: "custom" | "region" | "source" | "preview"; // 获取来源
 }
 
 // 基础正则接口
 interface BaseRegex {
-	pattern: string; //s 正则表达式
+	expression: string; //s 正则表达式
 	replaceTo: string; //s 替换结果
 	flags: string[]; //s 正则修饰符
 }
 
 //s 正则提取修正类型的接口
-interface BaseMatchRegExtract extends Pick<BaseRegex, "pattern" | "flags"> {}
+interface BaseMatchRegExtract extends Pick<BaseRegex, "expression" | "flags"> {}
 
 //s 正则替换类型的接口
 interface BaseMatchRegReplace extends BaseRegex {}

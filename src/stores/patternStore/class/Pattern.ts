@@ -1,8 +1,10 @@
+import _ from "lodash";
 import type {
 	BasePattern,
 	BaseStatus,
 	BaseMainInfo,
 	BaseRule,
+	BasePatternRowData,
 } from "../interface/Pattern";
 import { Rule } from "./Rule";
 import { buildUUID } from "@/utils/common";
@@ -16,7 +18,7 @@ export class Pattern implements BasePattern {
 		icon: getFavicon(),
 		titleSelector: "title",
 		filter: {
-			pattern: "",
+			expression: "",
 			flags: [],
 		},
 	};
@@ -25,13 +27,16 @@ export class Pattern implements BasePattern {
 		editing: false,
 	};
 
+	public backup: BasePattern["backup"] | null = null;
+
+	// 构造
 	constructor(options?: Partial<BasePattern>) {
 		this.id = options?.id || buildUUID(); // 为规则生成(拷贝)id
 		this.mainInfo = {
 			...this.mainInfo,
 			...options?.mainInfo,
 		};
-		this.rules = options?.rules || [];
+		this.rules = (options?.rules || []).map((x) => new Rule(x));
 		this.state = {
 			...this.state,
 			...options?.state,
@@ -40,7 +45,12 @@ export class Pattern implements BasePattern {
 		// 如果没有规则就创建规则
 		if (!this.rules.length) {
 			this.createRule();
+		} else {
+			this.rules = this.rules.map((r) => new Rule(r));
 		}
+
+		// 构造后进行数据备份
+		this.backupData();
 	}
 
 	// 创建规则
@@ -57,6 +67,58 @@ export class Pattern implements BasePattern {
 		if (index >= 0) {
 			this.rules.splice(index, 1);
 		}
+	}
+
+	// 获取纯数据对象
+
+	public getRowData(options?: { includeId: boolean }): BasePatternRowData {
+		const defaultOptions: { includeId: boolean } = {
+			includeId: true,
+		};
+		const { includeId } = { ...defaultOptions, ...options };
+		return _.cloneDeep({
+			id: includeId ? this.id : undefined,
+			mainInfo: this.mainInfo,
+			rules: this.rules.map((r) =>
+				r.getRowData({
+					includeId,
+				})
+			),
+		});
+	}
+
+	// 数据备份
+	public backupData() {
+		this.rules.forEach((r) => r.backupData());
+		this.backup = {
+			id: _.cloneDeep(this.id),
+			mainInfo: _.cloneDeep(this.mainInfo),
+			rules: _.cloneDeep(this.rules),
+		};
+	}
+
+	// 恢复数据
+	public recoveryData() {
+		this.rules.forEach((r) => r.recoveryData());
+		// 如果备份存在才进行恢复
+		if (this.backup) {
+			this.mainInfo = _.cloneDeep(this.backup.mainInfo);
+			this.rules = _.cloneDeep(this.backup.rules).map((r) => new Rule(r));
+		}
+	}
+
+	// 判断是否发生更改
+	public isChange() {
+		return (
+			!_.isEqual(this.mainInfo, _.cloneDeep(this.backup?.mainInfo)) ||
+			this.rules.some((x) => x.isChange()) ||
+			this.rules.length !== this.backup?.rules.length
+		);
+	}
+
+	// 获取JSON
+	public getJson() {
+		return JSON.stringify(this.getRowData());
 	}
 }
 
@@ -87,13 +149,20 @@ export const defaultPattern = new Pattern({
 		host: "",
 		icon: "",
 		titleSelector: "title",
-		filter: { pattern: "", flags: [] },
+		filter: {
+			expression: "",
+			flags: [],
+		},
 	},
 	rules: [
-		{
+		new Rule({
 			id: "#default-rule#",
+			enable: true,
 			name: "默认规则",
-			region: { enable: false, selector: "" },
+			region: {
+				enable: false,
+				selector: "",
+			},
 			source: {
 				selector:
 					'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]',
@@ -101,15 +170,15 @@ export const defaultPattern = new Pattern({
 				name: "content|href|srcset|data-src|src",
 			},
 			preview: {
-				origin: "source",
 				enable: false,
+				origin: "source",
 				selector: "",
 				infoType: "property",
 				name: "src",
 			},
 			description: {
-				origin: "source",
 				enable: false,
+				origin: "source",
 				selector: "",
 				infoType: "property",
 				name: "src",
@@ -119,8 +188,6 @@ export const defaultPattern = new Pattern({
 				width: [300, 2000],
 				height: [300, 2000],
 			},
-			state: { editing: false },
-		},
+		}),
 	],
-	state: { editing: false },
 });

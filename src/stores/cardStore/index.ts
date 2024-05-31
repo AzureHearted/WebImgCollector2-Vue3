@@ -207,77 +207,87 @@ export default defineStore("cardStore", () => {
 			return;
 		}
 		loadingStore.start();
-		await getCard(
-			// 规则配置
-			patternNow.rules[0] as BaseRule,
-			// 选项配置
-			{
-				// 当获取到所有基准dom时的回调
-				onAllDOMGet: async (doms) => {
-					// console.log("匹配到的DOM", doms);
-					loadingStore.update(0, doms.length);
-					return doms;
-				},
-				// 当获得卡片时的回调
-				onCardGet: async (card, index, dom, addCard) => {
-					loadingStore.current++;
-					const sourceMeta = card.source.meta;
-					// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
-					if (sourceMeta.valid && !data.urlSet.has(card.source.url)) {
-						// console.log("新增卡片", card, dom);
-						if (dom) {
-							data.domSet.add(dom); // 记录dom用于排序
-						}
-						data.urlSet.add(card.source.url); // 添加到链接集合中
-						// 如果类型存在则记录类型
-						if (sourceMeta.type) {
-							if (data.typeMap.has(sourceMeta.type)) {
-								// 如果已经存在了就++
-								data.typeMap.set(
-									sourceMeta.type,
-									data.typeMap.get(sourceMeta.type)! + 1
-								);
-							} else {
-								data.typeMap.set(sourceMeta.type, 1);
+		// 依次执行每个规则
+		let amount = 0; // 累计数量(用于统计每次匹配过程中的结果数量)
+		for (let i = 0; i < patternNow.rules.length; i++) {
+			const rule = patternNow.rules[i];
+			if (!rule.enable) continue; //为启用的规则就跳过
+			const startIndex = amount; //记录起始index
+			await getCard(
+				// 规则配置
+				rule,
+				// 选项配置
+				{
+					// 当获取到所有基准dom时的回调
+					onAllDOMGet: async (doms) => {
+						// console.log("匹配到的DOM", doms);
+						loadingStore.update(0, doms.length);
+						return doms;
+					},
+					// 当获得卡片时的回调
+					onCardGet: async (card, index, dom, addCard) => {
+						loadingStore.current++;
+						const sourceMeta = card.source.meta;
+						// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
+						if (sourceMeta.valid && !data.urlSet.has(card.source.url)) {
+							// console.log("新增卡片", card, dom);
+							if (dom) {
+								data.domSet.add(dom); // 记录dom用于排序
 							}
-						}
-						// 如果扩展名存在则记录扩展名
-						if (sourceMeta.ext) {
-							if (data.extensionMap.has(sourceMeta.ext)) {
-								// 如果已经存在了就++
-								data.extensionMap.set(
-									sourceMeta.ext,
-									data.extensionMap.get(sourceMeta.ext)! + 1
-								);
-							} else {
-								data.extensionMap.set(sourceMeta.ext, 1);
+							data.urlSet.add(card.source.url); // 添加到链接集合中
+							// 如果类型存在则记录类型
+							if (sourceMeta.type) {
+								if (data.typeMap.has(sourceMeta.type)) {
+									// 如果已经存在了就++
+									data.typeMap.set(
+										sourceMeta.type,
+										data.typeMap.get(sourceMeta.type)! + 1
+									);
+								} else {
+									data.typeMap.set(sourceMeta.type, 1);
+								}
 							}
+							// 如果扩展名存在则记录扩展名
+							if (sourceMeta.ext) {
+								if (data.extensionMap.has(sourceMeta.ext)) {
+									// 如果已经存在了就++
+									data.extensionMap.set(
+										sourceMeta.ext,
+										data.extensionMap.get(sourceMeta.ext)! + 1
+									);
+								} else {
+									data.extensionMap.set(sourceMeta.ext, 1);
+								}
+							}
+							// (如果blob存在则)记录到url和blob的Map对象中
+							if (card.source.blob) {
+								data.urlBlobMap.set(card.source.url, card.source.blob);
+							}
+							// data.cardList.push(card); // 添加到卡片列表中。
+							data.cardList[startIndex + index] = card; // 添加到卡片列表中。
+							updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
+							await addCard(); //执行回调函数
 						}
-						// (如果blob存在则)记录到url和blob的Map对象中
-						if (card.source.blob) {
-							data.urlBlobMap.set(card.source.url, card.source.blob);
+					},
+					// 匹配结束后的回调
+					onFinished() {
+						amount = data.cardList.length;
+						if (!validCardList.value.length) {
+							ElNotification({
+								title: "提示",
+								type: "info",
+								message: "该方案未匹配到任何有效结果",
+								appendTo: ".web-img-collector-notification-container",
+							});
+							return;
 						}
-						// data.cardList.push(card); // 添加到卡片列表中。
-						data.cardList[index] = card; // 添加到卡片列表中。
-						updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
-						await addCard(); //执行回调函数
-					}
-				},
-				onFinished() {
-					if (!validCardList.value.length) {
-						ElNotification({
-							title: "提示",
-							type: "info",
-							message: "该方案未匹配到任何有效结果",
-							appendTo: ".web-img-collector-notification-container",
-						});
-						return;
-					}
-				},
-				// 传入已有url和blob的map对象,用于防止重复发送请求
-				existingUrlBlobMap: data.urlBlobMap,
-			}
-		);
+					},
+					// 传入已有url和blob的map对象,用于防止重复发送请求
+					existingUrlBlobMap: data.urlBlobMap,
+				}
+			);
+		}
+
 		loadingStore.end();
 	}
 
@@ -330,7 +340,7 @@ export default defineStore("cardStore", () => {
 			// 等于1的时候不打包，直接下载
 			if (!card.source.blob) {
 				// 如果没有blob先获取
-				const blob = await getBlobByUrlAuto(card.description.title);
+				const blob = await getBlobByUrlAuto(card.source.url);
 				if (blob) {
 					card.source.blob = blob;
 				}
@@ -427,7 +437,7 @@ export default defineStore("cardStore", () => {
 							(async () => {
 								if (!card.source.blob) {
 									// 如果没有blob先获取
-									const blob = await getBlobByUrlAuto(card.description.title);
+									const blob = await getBlobByUrlAuto(card.source.url);
 									if (blob) {
 										card.source.blob = blob;
 									} else {

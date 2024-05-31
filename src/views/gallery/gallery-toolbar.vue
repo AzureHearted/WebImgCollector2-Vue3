@@ -24,9 +24,9 @@
 					<el-option
 						v-for="item in patternStore.list"
 						:key="item.id"
-						:label="item.mainInfo.name"
+						:label="item.backup?.mainInfo.name"
 						:value="item.id">
-						<span style="float: left">{{ item.mainInfo.name }} </span>
+						<span style="float: left">{{ item.backup?.mainInfo.name }} </span>
 					</el-option>
 				</el-select>
 			</div>
@@ -76,7 +76,7 @@
 			<div class="toolbar-control-panel">
 				<var-badge
 					:offset-y="0"
-					:offset-x="isMobile() ? -95 : -115"
+					:offset-x="-115"
 					style="z-index: 2"
 					:hidden="!cardStore.filteredCardList.length"
 					:value="cardStore.filteredCardList.length">
@@ -219,7 +219,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, computed, watch } from "vue";
+	import { ref, reactive, computed, watch, onMounted } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 
@@ -342,7 +342,8 @@
 	}
 
 	.gallery-toolbar-loading {
-		margin: 2px 0;
+		// margin: 2px 0;
+		margin-bottom: 4px;
 		width: 100%;
 		transform: translateY(-20px);
 		height: 0;
@@ -364,8 +365,9 @@
 		flex: 0;
 		display: flex;
 		flex-flow: row wrap;
-		padding: 4px 4px 0 4px;
-		background: transparent;
+		padding: 4px 4px 2px 4px;
+		gap: 2px;
+		background: rgba(255, 255, 255, 0.2);
 		align-content: center;
 		box-shadow: shadow.$elevation;
 	}
@@ -374,17 +376,14 @@
 	.toolbar-control-panel {
 		// flex: 1;
 		// padding: 2px;
-		margin-right: 2px;
-		margin-bottom: 2px;
+		// margin-right: 2px;
+		// margin-bottom: 2px;
 		display: flex;
 		align-items: center;
-		background: inherit;
 	}
+	// 方案选择器样式
 	.pattern-input-select {
-		flex: 1;
-		width: 150px;
-		min-width: 150px;
-		max-width: 200px;
+		width: 130px;
 		margin-right: 2px;
 		display: flex;
 		align-items: center;

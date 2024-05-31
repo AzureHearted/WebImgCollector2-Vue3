@@ -36,8 +36,11 @@
 	const HoverButton = defineAsyncComponent(
 		() => import("@/views/hover-button.vue")
 	);
+
 	onMounted(() => {
 		patternStore.getUserPatternInfo(); //获取本地方案信息
+		patternStore.getInitPattern(); // 获取初始方案
+		// console.log('object');
 	});
 </script>
 
@@ -45,7 +48,7 @@
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
 	.web-img-collector-container {
 		box-sizing: border-box;
-		position: fixed !important;
+		position: fixed;
 		overflow: hidden;
 		width: unset;
 		height: unset;
@@ -78,12 +81,12 @@
 			pointer-events: auto;
 		}
 
-		:deep(input) {
-			margin: unset;
-		}
-		:deep(button) {
-			margin: unset;
-		}
+		// :deep(input) {
+		// 	margin: unset;
+		// }
+		// :deep(button) {
+		// 	margin: unset;
+		// }
 	}
 
 	//! 子窗口容器样式(主要作为弹窗的容器)

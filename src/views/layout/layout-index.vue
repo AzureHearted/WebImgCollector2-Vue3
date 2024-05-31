@@ -35,7 +35,9 @@
 			</el-header>
 			<el-main style="padding: unset">
 				<!-- 内容区 -->
-				<component :is="nowPage"></component>
+				<keep-alive>
+					<component :is="nowPage"></component>
+				</keep-alive>
 				<!-- 导航菜单 -->
 				<el-drawer
 					class="layout-container-menu"

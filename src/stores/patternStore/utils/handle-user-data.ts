@@ -1,8 +1,9 @@
 import { GM_storage } from "@/utils/common";
 import { Pattern } from "../class/Pattern";
+import type { BasePatternRowData } from "../interface/Pattern";
 
 // 设置用户方案数据
-export function setUserPatternList(list: Pattern[] = []) {
+export function setUserPatternList(list: BasePatternRowData[] = []) {
 	GM_storage({
 		method: "set",
 		name: "UserPatternList",

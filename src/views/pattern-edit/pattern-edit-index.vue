@@ -18,12 +18,14 @@
 
 <style lang="scss" scoped>
 	.rule-edit-container {
+		position: relative;
 		display: flex;
-		max-height: 100%;
 		.rule-tree-container {
+			position: sticky;
+			top: 0;
 			width: 225px;
 			padding: 4px;
-			max-height: 100%;
+			height: 100%;
 			// background-color: skyblue;
 		}
 		.rule-form-container {

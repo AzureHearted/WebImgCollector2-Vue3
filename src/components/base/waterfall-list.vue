@@ -185,7 +185,10 @@
 
 	// 当组件被激活时执行
 	onActivated(() => {
-		console.log("组件==>被激活");
+		// console.log("组件==>被激活");
+		nextTick(() => {
+			resetPosition();
+		});
 	});
 
 	// 元素离开前

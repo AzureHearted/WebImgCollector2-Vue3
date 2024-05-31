@@ -28,6 +28,7 @@
 		defineProps,
 		withDefaults,
 		defineEmits,
+		watch,
 	} from "vue";
 	// 导入加载错误时的图片
 	import errorImg from "@/assets/svg/error-img.svg";
@@ -42,7 +43,7 @@
 			useThumb?: boolean;
 			thumb?: string;
 			thumbMaxSize?: number;
-			viewportDom?: IntersectionObserverInit["root"];
+			viewportSelector?: string;
 			viewRootMargin?: IntersectionObserverInit["rootMargin"];
 			observerOnce?: boolean;
 			manualControl?: boolean;
@@ -56,12 +57,27 @@
 			useThumb: false,
 			thumb: "",
 			thumbMaxSize: 400,
-			viewportDom: null,
+			viewportSelector: "",
 			viewRootMargin: "0px 0px 0px 0px",
 			observerOnce: true,
 			manualControl: false,
 			draggable: true, // 默认允许拖拽图片
 			initShow: false,
+		}
+	);
+	const viewportDom = computed<IntersectionObserverInit["root"]>(() => {
+		if (props.viewportSelector.trim()) {
+			return document.querySelector(props.viewportSelector);
+		} else {
+			return null;
+		}
+	});
+
+	watch(
+		() => props.src,
+		(newSrc, oldSrc) => {
+			// console.log("src变化", newSrc, oldSrc);
+			loadImage(newSrc);
 		}
 	);
 
@@ -276,6 +292,7 @@
 	const vLazy = {
 		mounted(el: HTMLImageElement) {
 			// console.log("图片挂载", el.src, el);
+
 			let src: string = props.src; // 默认使用原图
 
 			const handleIntersection = async (
@@ -322,7 +339,7 @@
 
 			// 创建 IntersectionObserver
 			const options: IntersectionObserverInit = {
-				root: props.viewportDom,
+				root: viewportDom.value,
 				rootMargin: props.viewRootMargin,
 			};
 			const observer = new IntersectionObserver(handleIntersection, options);
@@ -381,10 +398,13 @@
 		transform: translate(-50%, -50%);
 		width: 50px;
 		height: 50px;
+		max-width: 80%;
+		max-height: 80%;
 		border: 5px solid #ccc;
 		border-radius: 50%;
 		border-top-color: #007bff;
 		animation: spin 1s linear infinite; /* 旋转动画 */
+		z-index: 100;
 	}
 	/* 图片加载动画定义 */
 	@keyframes spin {

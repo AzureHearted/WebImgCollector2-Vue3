@@ -3,17 +3,38 @@
 		<el-button-group class="pattern-tree-button-group">
 			<el-button type="primary" @click="addPattern">
 				<template #icon>
-					<i-ep-circle-plus />
+					<i-material-symbols-list-alt-add />
 				</template>
-				新建
+				新建方案
 			</el-button>
 			<el-button type="danger">
 				<template #icon>
-					<i-ep-delete />
+					<i-material-symbols-delete-rounded />
 				</template>
 				删除
 			</el-button>
 		</el-button-group>
+		<el-button-group class="pattern-tree-button-group">
+			<el-button type="success" @click="pastePattern">
+				<template #icon>
+					<i-material-symbols-content-paste-search-rounded />
+				</template>
+				粘贴方案
+			</el-button>
+			<el-button
+				v-if="
+					patternStore.editingPattern &&
+					!patternStore.editingPattern.id.includes('#')
+				"
+				type="warning"
+				@click="pasteRule">
+				<template #icon>
+					<i-material-symbols-markdown-paste-rounded />
+				</template>
+				粘贴规则
+			</el-button>
+		</el-button-group>
+
 		<el-input
 			class="pattern-tree-filter-input"
 			clearable
@@ -25,40 +46,71 @@
 			ref="treeRef"
 			:data="data"
 			node-key="id"
+			:indent="14"
 			show-checkbox
+			:expand-on-click-node="false"
 			check-strictly
-			accordion
+			highlight-current
+			:current-node-key="currentNodeKey"
 			default-expand-all
 			:props="defaultProps"
 			:filter-node-method="filterNode"
 			@node-click="handleNodeClick">
 			<template #default="{ node, data }">
 				<span class="custom-tree-node">
-					<span v-if="data.id.includes('#')">
-						{{ node.label }}
-					</span>
-					<!-- 常规方案的按钮 -->
-					<span v-else>
-						<span v-if="data.type === 'pattern'">
-							{{ node.label }}
+					<!-- 节点名称区域 -->
+					<div class="custom-tree-node-left">
+						<!-- 节点图标(图片) -->
+						<span class="custom-tree-node-icon">
+							<BaseImg
+								v-if="data.type === 'pattern' && !data.id.includes('#')"
+								style="width: 16px; height: 16px"
+								:src="(data.rowData as Pattern).backup?.mainInfo.icon">
+							</BaseImg>
+							<el-icon v-if="data.type === 'rule'">
+								<i-material-symbols-regular-expression-rounded />
+							</el-icon>
 						</span>
-						<span v-if="data.type === 'rule'">
-							<span v-if="(data.rowData as Rule).state.editing">
-								<el-input
-									size="small"
-									@blur="(data.rowData as Rule).state.editing = false"
-									v-model="(data.rowData as Rule).name">
-								</el-input>
-							</span>
-							<span
-								v-else
-								style="user-select: none"
-								@dblclick="(data.rowData as Rule).state.editing = true">
-								{{ node.label }}
-							</span>
-						</span>
-					</span>
-					<span v-if="!data.id.includes('#')">
+						<!-- 节点名称 -->
+						<el-tooltip
+							:content="node.label"
+							placement="top-start"
+							:enterable="false">
+							<el-badge
+								class="custom-tree-node-name"
+								is-dot
+								:offset="[-4, 4]"
+								:hidden="!(data.rowData as Pattern|Rule).isChange()">
+								<span v-if="data.id.includes('#')">
+									{{ node.label }}
+								</span>
+								<span v-else>
+									<!-- 方案类型 -->
+									<span v-if="data.type === 'pattern'">
+										<!-- {{ (data.rowData as Pattern).backup?.mainInfo.name }} -->
+										{{ node.label }}
+									</span>
+									<!-- 规则类型 -->
+									<span v-if="data.type === 'rule'">
+										<span v-if="(data.rowData as Rule).state.editing">
+											<el-input
+												size="small"
+												@blur="(data.rowData as Rule).state.editing = false"
+												v-model="(data.rowData as Rule).name">
+											</el-input>
+										</span>
+										<span
+											v-else
+											@dblclick="(data.rowData as Rule).state.editing = true">
+											{{ node.label }}
+										</span>
+									</span>
+								</span>
+							</el-badge>
+						</el-tooltip>
+					</div>
+					<!-- 操作按钮 -->
+					<div class="custom-tree-node-right" v-if="!data.id.includes('#')">
 						<!-- 添加规则 -->
 						<el-button
 							v-if="data.type === 'pattern'"
@@ -88,6 +140,8 @@
 						<el-popconfirm
 							title="确定删除?"
 							:hide-after="0"
+							confirm-button-text="是"
+							cancel-button-text="否"
 							@confirm="
 								data.type === 'pattern'
 									? removePattern(node, data)
@@ -103,7 +157,7 @@
 								</el-button>
 							</template>
 						</el-popconfirm>
-					</span>
+					</div>
 				</span>
 			</template>
 		</el-tree>
@@ -111,28 +165,22 @@
 </template>
 
 <script setup lang="ts">
-	import {
-		ref,
-		watch,
-		computed,
-		nextTick,
-		defineEmits,
-		onBeforeUpdate,
-		onMounted,
-		onUpdated,
-	} from "vue";
+	import { ref, watch, computed, nextTick, onBeforeUpdate } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { ElTree } from "element-plus";
 	import type Node from "element-plus/es/components/tree/src/model/node";
+	import BaseImg from "@/components/base/base-img.vue";
 	import { CirclePlus, Delete } from "@element-plus/icons-vue";
+	import { ElNotification } from "@/plugin/element-plus";
 
 	import { storeToRefs } from "pinia";
 	import { usePatternStore } from "@/stores";
-	import type { Pattern } from "@/stores/patternStore/class/Pattern";
-	import type { Rule } from "@/stores/patternStore/class/Rule";
+	import { Pattern } from "@/stores/patternStore/class/Pattern";
+	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { useClipboard } from "@vueuse/core";
 	const patternStore = usePatternStore();
 	const { list } = storeToRefs(patternStore);
-	const { createPattern, deletePattern } = patternStore;
+	const { createPattern, deletePattern, findPattern } = patternStore;
 
 	// 定义Tree节点结构
 	interface Tree {
@@ -222,28 +270,153 @@
 			// emits("node-click", patternId, data.id);
 			patternStore.editing.id = patternId;
 			patternStore.editing.ruleId = data.id;
+			currentNodeKey.value = data.id;
 		} else {
 			// 如果点击的是"方案"节点
 			const patternId = data.id;
 			patternStore.editing.id = patternId;
 			patternStore.editing.ruleId = "";
+			// 查询是否含义“规则”节点
+			const pattern = findPattern(patternId);
+			if (pattern?.rules.length) {
+				patternStore.editing.ruleId = pattern.rules[0].id;
+				currentNodeKey.value = pattern.rules[0].id;
+			} else {
+				currentNodeKey.value = patternId;
+			}
 			// emits("node-click", patternId);
 		}
 	};
 
 	// 创建方案
-	const addPattern = () => {
+	function addPattern() {
 		createPattern();
-	};
+	}
 
 	// 删除方案
-	const removePattern = (node: Node, data: Tree) => {
+	function removePattern(node: Node, data: Tree) {
 		// console.log("删除方案节点", node, data);
 		deletePattern(data.id);
-	};
+	}
+
+	// 粘贴方案
+	function pastePattern() {
+		navigator.clipboard
+			.readText()
+			.then((dataStr) => {
+				console.log("剪贴板文本：", dataStr);
+				// 先尝试解析成一个对象
+				let obj: any;
+				try {
+					obj = JSON.parse(dataStr);
+				} catch (e) {
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容解析失败",
+						appendTo: ".web-img-collector-notification-container",
+					});
+					return;
+				}
+				// 如果成功解析成对象,则进一步尝试解析为方案
+				let pattern: Pattern | false = false;
+				try {
+					pattern = new Pattern(obj);
+					// 如果成功解析为方案则添加为方案
+					patternStore.list.push(pattern);
+					patternStore.saveUserPatternInfo();
+					ElNotification({
+						type: "success",
+						title: "成功",
+						message: "成功解析为方案",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				} catch (e) {
+					// 如果解析失败则提示错误
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容不符合方案的数据格式",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				}
+			})
+			.catch(() => {
+				ElNotification({
+					type: "error",
+					title: "失败",
+					message: "剪贴板内容读取失败",
+					appendTo: ".web-img-collector-notification-container",
+				});
+			});
+	}
+
+	// 粘贴规则
+	function pasteRule() {
+		navigator.clipboard
+			.readText()
+			.then((dataStr) => {
+				console.log("剪贴板文本：", dataStr);
+				// 先尝试解析成一个对象
+				let obj: any;
+				try {
+					obj = JSON.parse(dataStr);
+				} catch (e) {
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容解析失败",
+						appendTo: ".web-img-collector-notification-container",
+					});
+					return;
+				}
+				// 如果方案解析失败,则进一步尝试解析为规则
+				let rule: Rule | false = false;
+				try {
+					rule = new Rule(obj);
+					// 将解析出来的规则添加到当前编辑中的方案中
+					if (
+						!patternStore.editingPattern ||
+						patternStore.editingPattern.id.includes("#")
+					) {
+						ElNotification({
+							type: "error",
+							title: "失败",
+							message: "请在方案中进行此操作",
+							appendTo: ".web-img-collector-notification-container",
+						});
+						return;
+					}
+					patternStore.editingPattern.rules.push(rule);
+					patternStore.saveUserPatternInfo();
+					ElNotification({
+						type: "success",
+						title: "成功",
+						message: "成功解析为规则",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				} catch (e) {
+					// 如果解析失败则提示错误
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容不符合规则的数据格式",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				}
+			})
+			.catch(() => {
+				ElNotification({
+					type: "error",
+					title: "失败",
+					message: "剪贴板内容读取失败",
+					appendTo: ".web-img-collector-notification-container",
+				});
+			});
+	}
 
 	// 添加规则
-	const addRule = (node: Node, data: Tree) => {
+	function addRule(node: Node, data: Tree) {
 		// console.log("添加规则", node, data);
 		// 获取方案index
 		const index = list.value.findIndex((p) => p.id === data.id);
@@ -257,10 +430,10 @@
 				treeRef.value?.$forceUpdate();
 			});
 		}
-	};
+	}
 
 	// 删除规则
-	const removeRule = (node: Node, data: Tree) => {
+	function removeRule(node: Node, data: Tree) {
 		// console.log("删除规则节点", node, data);
 		const parent = node.parent.data;
 		// 获取方案index
@@ -274,7 +447,7 @@
 			defaultExpandedKeys.value = [pattern.id]; // 暂存
 			treeRef.value?.$forceUpdate();
 		});
-	};
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -295,14 +468,46 @@
 			overflow-y: auto;
 		}
 	}
+	// 自定义节点样式
 	.custom-tree-node {
-		flex: 1;
+		position: relative;
+		flex: auto;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		font-size: 14px;
-		padding-right: 8px;
+		overflow: hidden;
+
+		// 左侧
+		.custom-tree-node-left {
+			flex: 1 auto;
+			display: flex;
+			// background: yellow;
+			padding-right: 4px;
+
+			overflow: hidden;
+
+			// 图标
+			.custom-tree-node-icon {
+				flex: 0;
+				display: flex;
+				align-items: center;
+				margin-right: 1px;
+			}
+			// 节点名称
+			.custom-tree-node-name {
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+		// 右侧
+		.custom-tree-node-right {
+			flex: 0 0;
+			padding: 0 4px;
+		}
 	}
+
 	:deep(.wic2-tree) {
 		--wic2-tree-node-content-height: 40px;
 		.wic2-tree-node__content {

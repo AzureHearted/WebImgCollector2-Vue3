@@ -1,5 +1,9 @@
 import { getDOM, getDOMInfo } from "@/utils/dom";
-import type { BaseMatch, BaseRule } from "../../patternStore/interface/Pattern";
+import type {
+	BaseMatch,
+	BaseMatchPreview,
+	BaseRule,
+} from "../../patternStore/interface/Pattern";
 import type {
 	BaseMeta,
 	CardDescription,
@@ -55,7 +59,7 @@ export default async function getCard(
 	if (rule.region.enable) {
 		// ! 区域匹配模式
 		// 区域DOM元素列表
-		let regionDOMs: HTMLElement[] | null = getDOM(rule.region.selector, {
+		let regionDOMs: HTMLElement[] = getDOM(rule.region.selector, {
 			mode: "all",
 		}) as any[];
 		regionDOMs = regionDOMs.filter((x) => x) as HTMLElement[]; //过滤无效值
@@ -68,10 +72,11 @@ export default async function getCard(
 			const task = async () => {
 				const regionDOM = regionDOMs[i]; // 拿到当前区域DOM
 				// s source的匹配
-				const source = await handleRegionGetInfo<CardSource>(
-					rule.source,
+				const source = await handleRegionGetInfo<CardSource>({
+					type: "source",
+					rule: rule.source,
 					regionDOM,
-					async (value, dom) => {
+					callback: async (value, dom) => {
 						dom = dom || regionDOM;
 						// 元信息获取
 						let meta = await getMeta(dom); // 获取元信息(通过dom)
@@ -85,16 +90,26 @@ export default async function getCard(
 							dom,
 							meta,
 						};
-					}
-				);
+					},
+				});
 				// s preview的匹配
 				let preview: CardPreview;
 				// 判断是否启用匹配preview
 				if (rule.preview.enable) {
-					preview = await handleRegionGetInfo<CardPreview>(
-						rule.preview,
+					// 判断是否指定了来源DOM
+					let targetDOM: HTMLElement | null | false = false; //默认不指定
+					if (rule.preview.origin === "region") {
+						targetDOM = regionDOM;
+					} else if (rule.preview.origin === "source") {
+						targetDOM = source.dom;
+					}
+					// 获取preview
+					preview = await handleRegionGetInfo<CardPreview>({
+						type: "preview",
+						rule: rule.preview,
 						regionDOM,
-						async (value, dom) => {
+						targetDOM,
+						callback: async (value, dom) => {
 							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 							dom = dom || source.dom || regionDOM;
 							// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
@@ -111,8 +126,8 @@ export default async function getCard(
 								dom,
 								meta,
 							};
-						}
-					);
+						},
+					});
 				} else {
 					// 如果不匹配就直接使用source
 					preview = {
@@ -127,10 +142,25 @@ export default async function getCard(
 				// s description的匹配
 				let description: CardDescription;
 				if (rule.description.enable) {
-					description = await handleRegionGetInfo<CardDescription>(
-						rule.preview,
+					// 判断是否指定了来源DOM
+					let targetDOM: HTMLElement | null | false = false; //默认不指定
+					if (rule.description.origin === "region") {
+						targetDOM = regionDOM;
+					} else if (rule.description.origin === "source") {
+						targetDOM = source.dom;
+					} else if (
+						rule.description.origin === "preview" &&
+						rule.preview.enable
+					) {
+						targetDOM = preview.dom;
+					}
+					// 匹配描述信息
+					description = await handleRegionGetInfo<CardDescription>({
+						type: "description",
+						rule: rule.description,
 						regionDOM,
-						async (value, dom) => {
+						targetDOM,
+						callback: async (value, dom) => {
 							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 							dom = dom || source.dom || regionDOM || preview.dom;
 							// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
@@ -139,12 +169,12 @@ export default async function getCard(
 								title: getNameByUrl(value),
 								dom,
 							};
-						}
-					);
+						},
+					});
 				} else {
 					// 如果不匹配就直接使用source
 					description = {
-						title: source.url,
+						title: getNameByUrl(source.url),
 						dom: source.dom,
 					};
 				}
@@ -166,7 +196,7 @@ export default async function getCard(
 	} else {
 		// ! 全局匹配模式(先分别匹配source、preview、description，然后创建卡片)
 		// 获取所有 sourceDOMs
-		let sourceDOMs: HTMLElement[] | null = getDOM(rule.source.selector, {
+		let sourceDOMs: HTMLElement[] = getDOM(rule.source.selector, {
 			mode: "all",
 		}) as any[];
 		sourceDOMs = sourceDOMs.filter((x) => x) as HTMLElement[]; //过滤无效值
@@ -215,6 +245,8 @@ export default async function getCard(
 					dom: sourceDOM,
 					meta: { valid: false, width: 0, height: 0, type: false, ext: false }, // 初始化meta未一个无效值
 				};
+				// 对source进行进一步处理
+
 				// 获取source.meta
 				// 先使用dom进行判断
 				source.meta = await getMeta(source.dom as HTMLElement);
@@ -227,14 +259,19 @@ export default async function getCard(
 				// s 获取preview信息
 				let preview: CardPreview;
 				if (rule.preview.enable) {
-					const previewDOM = previewDOMs[i] || sourceDOM;
+					let previewDOM: HTMLElement | null;
+					if (rule.preview.origin === "source") previewDOM = source.dom;
+					else previewDOM = previewDOMs[i];
+
 					// 获取到基础信息
 					preview = {
-						url: await getDOMInfo(
-							previewDOM,
-							rule.preview.infoType,
-							rule.preview.name
-						),
+						url: previewDOM
+							? await getDOMInfo(
+									previewDOM,
+									rule.preview.infoType,
+									rule.preview.name
+							  )
+							: "",
 						dom: previewDOM,
 						meta: {
 							valid: false,
@@ -244,6 +281,8 @@ export default async function getCard(
 							ext: false,
 						}, // 初始化meta未一个无效值
 					};
+					// 对preview进行进一步处理
+
 					// 获取preview.meta
 					// 先使用dom进行判断
 					preview.meta = await getMeta(preview.dom as HTMLElement);
@@ -266,13 +305,21 @@ export default async function getCard(
 				// s 获取description信息
 				let description: CardDescription;
 				if (rule.description.enable) {
-					const descriptionDOM = descriptionDOMs[i] || sourceDOM;
+					let descriptionDOM: HTMLElement | null;
+					if (rule.description.origin === "preview")
+						descriptionDOM = preview.dom;
+					else if (rule.description.origin === "source")
+						descriptionDOM = source.dom;
+					else descriptionDOM = descriptionDOMs[i];
+					// 获取描述信息
 					description = {
-						title: await getDOMInfo(
-							descriptionDOM,
-							rule.description.infoType,
-							rule.description.name
-						),
+						title: descriptionDOM
+							? await getDOMInfo(
+									descriptionDOM,
+									rule.description.infoType,
+									rule.description.name
+							  )
+							: "",
 						dom: descriptionDOM,
 					};
 				} else {
@@ -280,6 +327,11 @@ export default async function getCard(
 						title: source.url,
 						dom: source.dom,
 					};
+				}
+				// 对description进行进一步处理
+				// 最后判断是否是链接，如果是链接则进行名称提取
+				if (isUrl(description.title)) {
+					description.title = getNameByUrl(description.title);
 				}
 
 				// 创建卡片
@@ -320,35 +372,43 @@ export default async function getCard(
 }
 
 // 获取在region模式下信息的处理函数
-async function handleRegionGetInfo<T>(
-	rule: BaseMatch, // 规则对象
-	regionDOM: HTMLElement = document.body, //区域DOM
-	callback: (value: string, dom: HTMLElement | null) => Promise<T>
-) {
+async function handleRegionGetInfo<T>(options: {
+	type: "source" | "preview" | "description";
+	rule: BaseMatch; // 规则对象
+	regionDOM: HTMLElement | Document | null; // 区域DOM
+	targetDOM?: HTMLElement | null | false; // 指定DOM
+	callback: (value: string, dom: HTMLElement | null) => Promise<T>;
+}) {
+	const { rule, type, callback } = options;
+	let { regionDOM, targetDOM } = options;
+	regionDOM = regionDOM || document;
 	// 获取选择器
 	const { selector, infoType, name } = rule;
 
-	// 匹配DOM
-	let matchDOM: HTMLElement | null;
-	// 判断选择器是否为空
-	if (!!selector && !!selector.trim().length) {
-		// 如果不为空则正常使用选择器获取dom
-		matchDOM = getDOM(selector, {
-			regionDOM,
-		}) as HTMLElement | null;
-	} else {
-		// 如果选择器为空，则使用当前区域DOM作为sourceDOM。
-		matchDOM = regionDOM;
+	// 获取DOM(只有来源DOM未指定时执行)
+	if (targetDOM === false || targetDOM === undefined) {
+		// 判断选择器是否为空
+		if (!!selector && !!selector.trim().length) {
+			// 如果不为空则正常使用选择器获取dom
+			targetDOM = getDOM(selector, {
+				regionDOM,
+			}) as HTMLElement | null;
+		} else {
+			// 如果选择器为空，则使用当前区域DOM作为sourceDOM。
+			targetDOM = regionDOM as HTMLElement;
+		}
 	}
 
 	// 匹配信息
 	let value: string = "";
-	if (matchDOM) {
-		value = await getDOMInfo(matchDOM, infoType, name);
+	if (targetDOM) {
+		value = await getDOMInfo(targetDOM, infoType, name);
 	}
 
+	if (targetDOM === undefined) targetDOM = null;
+
 	// 调用其回调函数将结果以对象形式返回
-	return await callback(value, matchDOM);
+	return await callback(value, targetDOM);
 }
 
 // 填充数组到指定长度，如果数组长度小于指定长度，则用value填充数组。

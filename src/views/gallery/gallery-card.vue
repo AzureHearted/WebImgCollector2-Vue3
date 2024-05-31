@@ -38,12 +38,26 @@
 									height="20"
 									style="fill: white" />
 							</var-button>
-							<!-- 下载 -->
+							<!-- 下载(图片类) -->
 							<var-button
+								v-if="
+									data.source.meta.type === 'image' ||
+									data.preview.meta.type === 'image'
+								"
 								:loading="downloading"
 								type="default"
 								@click="toDownload(data)">
 								<i-material-symbols-download
+									width="20"
+									height="20"
+									style="fill: #333" />
+							</var-button>
+							<!-- 打开(网址类) -->
+							<var-button
+								v-if="data.source.meta.type === 'html'"
+								type="default"
+								@click="openUrl(data.source.url)">
+								<i-material-symbols-open-in-new-rounded
 									width="20"
 									height="20"
 									style="fill: #333" />
@@ -65,12 +79,24 @@
 				:data-thumb="data.preview.url"
 				:data-download-src="data.source.url">
 				<BaseImg
-					v-if="data.source.meta.type == 'image'"
+					v-if="data.source.meta.type === 'image'"
 					:src="data.source.url"
 					use-thumb
+					viewport-dom=".waterfall-wrapper"
 					:thumb="data.preview.url"
 					:init-width="data.source.meta.width"
 					:init-height="data.source.meta.height"
+					@loaded="handleCardLoaded(data, $event)"
+					:draggable="false"></BaseImg>
+				<BaseImg
+					v-else-if="
+						data.source.meta.type === 'html' &&
+						data.preview.meta.type === 'image'
+					"
+					viewport-dom=".waterfall-wrapper"
+					:src="data.preview.url"
+					:init-width="data.preview.meta.width"
+					:init-height="data.preview.meta.height"
 					@loaded="handleCardLoaded(data, $event)"
 					:draggable="false"></BaseImg>
 				<BaseImg
@@ -112,6 +138,22 @@
 					size="mini"
 					:round="false">
 					{{ size }}
+				</var-chip>
+				<!-- 网页标签 -->
+				<var-chip
+					v-if="data.source.meta.type === 'html'"
+					type="info"
+					size="mini"
+					:round="false">
+					网页
+				</var-chip>
+				<!-- 描述标签 -->
+				<var-chip
+					v-if="data.description.title.trim()"
+					type="primary"
+					size="mini"
+					:round="false">
+					{{ data.description.title.trim() }}
 				</var-chip>
 			</div>
 		</template>
@@ -231,6 +273,10 @@
 		await cardStore.downloadCards([item.id!]);
 		downloading.value = false;
 	}
+	// 打开网址
+	async function openUrl(url: string) {
+		window.open(url, "_blank");
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -300,8 +346,12 @@
 	// 卡片底部
 	.gallery-card-footer {
 		padding: 4px;
+		// margin: 2px;
 		display: flex;
+		flex-flow: row wrap;
+		overflow: hidden;
 		gap: 4px;
+		// background-color: wheat;
 
 		// transform: translateY(100%);
 		transition: transform 0.3s;
@@ -313,7 +363,12 @@
 
 		:deep(.var-chip) {
 			justify-content: start;
-			.var-chip__text-small {
+			max-width: 80%;
+			// overflow: hidden;
+			// text-overflow: ellipsis;
+			// white-space: nowrap;
+			& > span {
+				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
 				text-align: left;
