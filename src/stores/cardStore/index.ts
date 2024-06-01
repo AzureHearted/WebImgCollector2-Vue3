@@ -272,20 +272,20 @@ export default defineStore("cardStore", () => {
 					// 匹配结束后的回调
 					onFinished() {
 						amount = data.cardList.length;
-						if (!validCardList.value.length) {
-							ElNotification({
-								title: "提示",
-								type: "info",
-								message: "该方案未匹配到任何有效结果",
-								appendTo: ".web-img-collector-notification-container",
-							});
-							return;
-						}
 					},
 					// 传入已有url和blob的map对象,用于防止重复发送请求
 					existingUrlBlobMap: data.urlBlobMap,
 				}
 			);
+		}
+
+		if (!validCardList.value.length) {
+			ElNotification({
+				title: "提示",
+				type: "info",
+				message: "该方案未匹配到任何有效结果",
+				appendTo: ".web-img-collector-notification-container",
+			});
 		}
 
 		loadingStore.end();
@@ -345,10 +345,14 @@ export default defineStore("cardStore", () => {
 					card.source.blob = blob;
 				}
 			}
-			let name = getNameByUrl(card.source.url);
+			let name = card.description.title.trim();
+			if (!name) {
+				name = getNameByUrl(card.source.url);
+			}
 			if (card.source.meta.type !== "html") {
 				name = name + `.${card.source.meta.ext}`;
 			}
+			console.log(name);
 			// 保存
 			saveAs(card.source.blob!, name);
 		} else {
@@ -448,7 +452,10 @@ export default defineStore("cardStore", () => {
 									card.source.meta.type = getBlobType(card.source.blob);
 									card.source.meta.ext = getExtByBlob(card.source.blob);
 								}
-								let name = getNameByUrl(card.source.url);
+								let name = card.description.title.trim();
+								if (!name) {
+									name = getNameByUrl(card.source.url);
+								}
 								if (card.source.meta.type !== "html") {
 									name = name + `.${card.source.meta.ext}`;
 								}

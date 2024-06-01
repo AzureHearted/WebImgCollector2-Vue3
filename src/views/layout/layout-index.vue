@@ -35,7 +35,7 @@
 			</el-header>
 			<el-main style="padding: unset">
 				<!-- 内容区 -->
-				<keep-alive>
+				<keep-alive :exclude="['gallery-index']">
 					<component :is="nowPage"></component>
 				</keep-alive>
 				<!-- 导航菜单 -->

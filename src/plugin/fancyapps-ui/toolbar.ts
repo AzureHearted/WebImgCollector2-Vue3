@@ -6,11 +6,12 @@ import type { Fancybox } from "@fancyapps/ui";
 // import type { Fancybox } from "@fancyapps/ui/types";
 
 export default {
+	enabled: true,
 	// 要显示的工具
 	display: {
-		left: ["toLocate", "thumbs"],
-		middle: ["prev", "infobar", "next"],
-		right: ["open", "download", "fullscreen"],
+		left: ["open", "download"],
+		middle: ["infobar"],
+		right: ["toLocate", "thumbs", "close"],
 	},
 	// 自定义的按钮
 	items: {

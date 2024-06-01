@@ -1,0 +1,26 @@
+li,
+button,
+fieldset,
+input,
+select,
+textarea {
+	margin: unset;
+}
+button {
+	min-height: unset;
+	i {
+		top: unset;
+	}
+}
+
+img.fancybox-image {
+	border: unset;
+}
+
+.img-container img {
+	border-radius: unset;
+}
+
+.f-thumbs__track {
+	--progress: 1;
+}

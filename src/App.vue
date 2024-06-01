@@ -21,6 +21,10 @@
 <script setup lang="ts">
 	import { ref, onMounted, defineAsyncComponent } from "vue";
 	import { useGlobalStore, usePatternStore } from "@/stores";
+
+	// 导入样式动态修复模块
+	import { fixStyle } from "@/styles/website";
+
 	// import Layout from "./views/layout/layout-index.vue";
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")
@@ -38,6 +42,10 @@
 	);
 
 	onMounted(() => {
+		// 导入修复样式
+		fixStyle(location.hostname);
+
+		// 配置信息获取
 		patternStore.getUserPatternInfo(); //获取本地方案信息
 		patternStore.getInitPattern(); // 获取初始方案
 		// console.log('object');

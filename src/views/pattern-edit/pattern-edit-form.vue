@@ -63,8 +63,12 @@
 						<!-- s输入框后置内容 -->
 						<template #append>
 							<el-select
-								style="width: 180px"
+								style="width: 120px"
 								multiple
+								collapse-tags
+								collapse-tags-tooltip
+								:multiple-limit="1"
+								clearable
 								v-model="editingPattern!.mainInfo.filter.flags"
 								placeholder="修饰符">
 								<el-tooltip
@@ -97,7 +101,7 @@
 						v-model="editingPattern!.mainInfo.icon"
 						placeholder="输入图标地址"
 						clearable>
-						<template #suffix>
+						<template #append>
 							<el-image
 								style="aspect-ratio: 1; height: 24px"
 								:src="editingPattern!.mainInfo.icon">

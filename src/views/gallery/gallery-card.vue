@@ -74,8 +74,17 @@
 				:data-id="data.id"
 				:href="data.source.url"
 				:data-type="showType"
-				:data-width="data.source.meta.width ? data.source.meta.width : false"
-				:data-height="data.source.meta.height ? data.source.meta.height : false"
+				:data-preload="showType === 'iframe' ? false : true"
+				:data-width="
+					data.source.meta.width && showType !== 'iframe'
+						? data.source.meta.width
+						: false
+				"
+				:data-height="
+					data.source.meta.height && showType !== 'iframe'
+						? data.source.meta.height
+						: false
+				"
 				:data-thumb="data.preview.url"
 				:data-download-src="data.source.url">
 				<BaseImg
@@ -131,14 +140,6 @@
 					:round="false">
 					{{ data.source.meta.ext }}
 				</var-chip>
-				<!-- 扩展名信息 -->
-				<var-chip
-					v-if="!!data.source.blob && !!data.source.blob.size"
-					type="info"
-					size="mini"
-					:round="false">
-					{{ size }}
-				</var-chip>
 				<!-- 网页标签 -->
 				<var-chip
 					v-if="data.source.meta.type === 'html'"
@@ -148,12 +149,29 @@
 					网页
 				</var-chip>
 				<!-- 描述标签 -->
+				<el-tooltip
+					v-if="
+						data.description.title.trim().length > 0 &&
+						data.description.title.trim().length < 20
+					"
+					:content="data.description.title.trim()"
+					placement="top-start">
+					<var-chip
+						class="title-chip"
+						type="primary"
+						size="mini"
+						:round="false">
+						{{ data.description.title.trim() }}
+					</var-chip>
+				</el-tooltip>
+
+				<!-- 文件大小信息 -->
 				<var-chip
-					v-if="data.description.title.trim()"
-					type="primary"
+					v-if="!!data.source.blob && !!data.source.blob.size"
+					type="info"
 					size="mini"
 					:round="false">
-					{{ data.description.title.trim() }}
+					{{ size }}
 				</var-chip>
 			</div>
 		</template>
@@ -363,9 +381,12 @@
 
 		:deep(.var-chip) {
 			justify-content: start;
-			max-width: 80%;
+			max-width: 50%;
 			// overflow: hidden;
 			// text-overflow: ellipsis;
+			&.title-chip {
+				max-width: 25%;
+			}
 			// white-space: nowrap;
 			& > span {
 				overflow: hidden;

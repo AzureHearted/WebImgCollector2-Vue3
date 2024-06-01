@@ -1,6 +1,7 @@
+import { isMobile } from "@/utils/common";
 import type { OptionsType } from "@fancyapps/ui/types/Fancybox/options";
 
 export default {
 	type: "modern",
-	showOnStart: false,
+	showOnStart: !isMobile(),
 } as OptionsType["Thumbs"];

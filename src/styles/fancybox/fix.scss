@@ -6,3 +6,8 @@
 .fancybox__toolbar .fancybox__infobar:not(:first-child):not(:last-child) {
 	background: unset;
 }
+
+.fancybox__content:has(.fancybox__iframe) {
+	padding: unset;
+}
+

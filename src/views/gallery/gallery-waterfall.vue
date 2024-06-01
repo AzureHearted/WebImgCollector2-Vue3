@@ -1,6 +1,10 @@
 <template>
-	<div ref="waterfallContainer" class="waterfall-wrapper" @wheel.stop>
-		<BaseVirtualScrollbar>
+	<div
+		ref="waterfallContainer"
+		class="waterfall-wrapper"
+		@wheel.stop
+		@scroll.stop>
+		<BaseVirtualScrollbar ref="scrollbar" :show-scrollbar="showScrollbar">
 			<WaterFallList :data="(cardList as any)" item-padding="2px">
 				<template #default="{ item }">
 					<GalleryCard
@@ -13,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, computed } from "vue";
+	import { ref, computed, watch, nextTick } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 
@@ -22,6 +26,7 @@
 	import GalleryCard from "./gallery-card.vue";
 
 	import { useCardStore } from "@/stores";
+	import { isMobile } from "@/utils/common";
 
 	const cardStore = useCardStore();
 
@@ -31,6 +36,24 @@
 	const cardList: ComputedRef<BaseCard[]> = computed(() => {
 		return cardStore.filteredCardList;
 	});
+
+	const scrollbar = ref<InstanceType<typeof BaseVirtualScrollbar> | null>(null);
+	const showScrollbar = ref(!isMobile());
+
+	watch(
+		() => cardStore.filteredCardList,
+		(newList, oldList) => {
+			if (scrollbar.value && newList.length === 0 && oldList.length > 0) {
+				// 手动刷新showScrollbar,临时解决scrollbar组件中wrapper的scroll尺寸未及时更新的bug
+				showScrollbar.value = !showScrollbar.value;
+				nextTick(() => {
+					setTimeout(() => {
+						showScrollbar.value = !showScrollbar.value;
+					}, 1000);
+				});
+			}
+		}
+	);
 </script>
 
 <style lang="scss" scoped>
