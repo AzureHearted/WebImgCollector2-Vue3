@@ -59,6 +59,7 @@ export interface BaseMatch {
 		| "innerHTML"
 		| "outerHTML";
 	name: string; // 属性名(多个时用竖线“|”分隔)
+	fix: BaseFix[]; // 修正
 }
 
 //s 匹配区域
@@ -90,13 +91,17 @@ interface BaseRegex {
 }
 
 //s 正则提取修正类型的接口
-interface BaseMatchRegExtract extends Pick<BaseRegex, "expression" | "flags"> {}
+interface BaseMatchRegExtract extends Pick<BaseRegex, "expression" | "flags"> {
+	type: "regex-extract";
+}
 
 //s 正则替换类型的接口
-interface BaseMatchRegReplace extends BaseRegex {}
+interface BaseMatchRegReplace extends BaseRegex {
+	type: "regex-replace";
+}
 
 //s 正则修正类型
-type BaseRegexFix = [BaseMatchRegExtract | BaseMatchRegReplace] | [];
+export type BaseFix = BaseMatchRegExtract | BaseMatchRegReplace;
 
 //s 匹配过滤器
 export interface BaseFilter {

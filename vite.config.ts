@@ -6,8 +6,10 @@ import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 // import VueDevTools from "vite-plugin-vue-devtools";
 
+// 导入monkey插件
 import monkey, { util } from "vite-plugin-monkey";
-import type { GreasemonkeyUserScript } from "vite-plugin-monkey";
+// 导入自定义monkey配置
+import monkeyConfig from "./monkey.config";
 
 // 自动按需引入配置
 import components from "unplugin-vue-components/vite";
@@ -69,31 +71,11 @@ export default defineConfig({
 		}),
 		visualizer({
 			open: true, //注意这里要设置为true，否则无效
-			gzipSize: true,
-			brotliSize: true,
+			// gzipSize: true,
+			// brotliSize: true,
 		}),
-		monkey({
-			entry: "./src/main.ts",
-			userscript: <GreasemonkeyUserScript>{
-				name: "WebImgCollector2",
-				description: "图片聚合器",
-				author: "ls", // 作者
-				// updateURL: "", //更新地址
-				version: "1.3.1",
-				icon: "https://vitejs.dev/logo.svg", // 图标
-				namespace: "npm/vite-plugin-monkey", // 命名空间
-				match: ["*://*", "*://*/*"], // 要匹配的网站
-				include: ["*"],
-				// exclude: ["*://element-plus.org/*"], // 要排除的网站
-				noframes: true, // 禁止在iframe中使用
-				connect: ["*"],
-				"run-at": "document-body", // 嵌入时机
-				require: [],
-			},
-			server: {
-				open: false,
-			},
-		}),
+		// 油猴配置
+		monkey(monkeyConfig),
 	],
 	css: {
 		// 预处理器配置项

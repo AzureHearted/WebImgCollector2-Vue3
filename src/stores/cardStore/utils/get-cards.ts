@@ -3,6 +3,7 @@ import type {
 	BaseMatch,
 	BaseMatchPreview,
 	BaseRule,
+	BaseFix,
 } from "../../patternStore/interface/Pattern";
 import type {
 	BaseMeta,
@@ -246,7 +247,7 @@ export default async function getCard(
 					meta: { valid: false, width: 0, height: 0, type: false, ext: false }, // 初始化meta未一个无效值
 				};
 				// 对source进行进一步处理
-
+				source.url = fixResult(source.url, rule.source.fix);
 				// 获取source.meta
 				// 先使用dom进行判断
 				source.meta = await getMeta(source.dom as HTMLElement);
@@ -282,6 +283,7 @@ export default async function getCard(
 						}, // 初始化meta未一个无效值
 					};
 					// 对preview进行进一步处理
+					preview.url = fixResult(preview.url, rule.preview.fix);
 
 					// 获取preview.meta
 					// 先使用dom进行判断
@@ -329,6 +331,7 @@ export default async function getCard(
 					};
 				}
 				// 对description进行进一步处理
+				description.title = fixResult(description.title, rule.description.fix);
 				// 最后判断是否是链接，如果是链接则进行名称提取
 				if (isUrl(description.title)) {
 					description.title = getNameByUrl(description.title);
@@ -407,8 +410,72 @@ async function handleRegionGetInfo<T>(options: {
 
 	if (targetDOM === undefined) targetDOM = null;
 
+	// 获取结果修正
+	// if (rule.fix.length) {
+	// 	for (let i = 0; i < rule.fix.length; i++) {
+	// 		const fixRule = rule.fix[i];
+	// 		// 尝试合成正则表达式
+	// 		const { type: fixType, expression } = fixRule;
+	// 		if (!expression.trim().length) continue; //如果表达式为空则跳过该规则
+	// 		const flags = [...new Set(["g", ...fixRule.flags])].join("");
+	// 		let regex: RegExp;
+	// 		try {
+	// 			regex = new RegExp(expression, flags);
+	// 		} catch (e) {
+	// 			console.error(e);
+	// 			continue; //如果失败则直接跳过该修正规则
+	// 		}
+	// 		// 正则提取类型的修正
+	// 		if (fixType === "regex-extract") {
+	// 			console.log("正则提取", value, regex);
+	// 			const match = value.match(regex);
+	// 			if (match) {
+	// 				value = match[1];
+	// 			}
+	// 		}
+	// 		// 正则替换类型的修正
+	// 		if (fixType === "regex-replace") {
+	// 			console.log("正则替换", value, regex, fixRule.replaceTo);
+	// 			value = value.replace(regex, fixRule.replaceTo);
+	// 		}
+	// 	}
+	// }
+	value = fixResult(value, rule.fix);
+
 	// 调用其回调函数将结果以对象形式返回
 	return await callback(value, targetDOM);
+}
+
+// 修正结果
+function fixResult(value: string, fixRules: BaseFix[]): string {
+	for (let i = 0; i < fixRules.length; i++) {
+		const fixRule = fixRules[i];
+		// 尝试合成正则表达式
+		const { type: fixType, expression } = fixRule;
+		if (!expression.trim().length) continue; //如果表达式为空则跳过该规则
+		const flags = [...new Set(["g", ...fixRule.flags])].join("");
+		let regex: RegExp;
+		try {
+			regex = new RegExp(expression, flags);
+		} catch (e) {
+			console.error(e);
+			continue; //如果失败则直接跳过该修正规则
+		}
+		// 正则提取类型的修正
+		if (fixType === "regex-extract") {
+			// console.log("正则提取", value, regex);
+			const match = value.match(regex);
+			if (match) {
+				value = match[1];
+			}
+		}
+		// 正则替换类型的修正
+		if (fixType === "regex-replace") {
+			// console.log("正则替换", value, regex, fixRule.replaceTo);
+			value = value.replace(regex, fixRule.replaceTo);
+		}
+	}
+	return value;
 }
 
 // 填充数组到指定长度，如果数组长度小于指定长度，则用value填充数组。

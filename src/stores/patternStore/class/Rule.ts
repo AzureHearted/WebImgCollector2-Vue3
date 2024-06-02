@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { cloneDeep, isEqual } from "@/plugin/lodash";
 import type {
 	BaseMatchDescription,
 	BaseMatchPreview,
@@ -6,6 +6,7 @@ import type {
 	BaseRule,
 	BaseMatchSource,
 	BaseFilter,
+	BaseFix,
 	BaseStatus,
 	BaseRuleRowData,
 } from "../interface/Pattern";
@@ -23,6 +24,7 @@ export class Rule implements BaseRule {
 		selector: "",
 		infoType: "property",
 		name: "",
+		fix: [],
 	};
 	public preview: BaseMatchPreview = {
 		enable: false,
@@ -30,6 +32,7 @@ export class Rule implements BaseRule {
 		selector: "",
 		infoType: "property",
 		name: "",
+		fix: [],
 	};
 	public description: BaseMatchDescription = {
 		enable: false,
@@ -37,7 +40,9 @@ export class Rule implements BaseRule {
 		selector: "",
 		infoType: "innerText",
 		name: "",
+		fix: [],
 	};
+	public fix: BaseFix[] = [];
 	public filter: BaseFilter = {
 		formats: [],
 		width: [0, -1],
@@ -88,7 +93,7 @@ export class Rule implements BaseRule {
 			includeId: true,
 		};
 		const { includeId } = { ...defaultOptions, ...options };
-		return _.cloneDeep({
+		return cloneDeep({
 			id: includeId ? this.id : undefined,
 			enable: this.enable,
 			name: this.name,
@@ -109,17 +114,17 @@ export class Rule implements BaseRule {
 	public recoveryData() {
 		// 如果备份存在才进行恢复
 		if (this.backup) {
-			this.name = _.cloneDeep(this.backup.name);
-			this.region = _.cloneDeep(this.backup.region);
-			this.source = _.cloneDeep(this.backup.source);
-			this.preview = _.cloneDeep(this.backup.preview);
-			this.description = _.cloneDeep(this.backup.description);
-			this.filter = _.cloneDeep(this.backup.filter);
+			this.name = cloneDeep(this.backup.name);
+			this.region = cloneDeep(this.backup.region);
+			this.source = cloneDeep(this.backup.source);
+			this.preview = cloneDeep(this.backup.preview);
+			this.description = cloneDeep(this.backup.description);
+			this.filter = cloneDeep(this.backup.filter);
 		}
 	}
 
 	// 判断是否发生更改
 	public isChange() {
-		return !_.isEqual(this.backup, this.getRowData());
+		return !isEqual(this.backup, this.getRowData());
 	}
 }

@@ -4,7 +4,10 @@
 		class="waterfall-wrapper"
 		@wheel.stop
 		@scroll.stop>
-		<BaseVirtualScrollbar ref="scrollbar" :show-scrollbar="showScrollbar">
+		<BaseScrollbar
+			ref="scrollbar"
+			:show-scrollbar="showScrollbar"
+			show-bakctop-button>
 			<WaterFallList :data="(cardList as any)" item-padding="2px">
 				<template #default="{ item }">
 					<GalleryCard
@@ -12,7 +15,7 @@
 						@change:selected="item.isSelected = $event" />
 				</template>
 			</WaterFallList>
-		</BaseVirtualScrollbar>
+		</BaseScrollbar>
 	</div>
 </template>
 
@@ -22,7 +25,7 @@
 	import type { BaseCard } from "@/stores/cardStore/interface";
 
 	import WaterFallList from "@/components/base/waterfall-list.vue"; // 瀑布流组件
-	import BaseVirtualScrollbar from "@/components/base/base-virtual-scrollbar.vue";
+	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import GalleryCard from "./gallery-card.vue";
 
 	import { useCardStore } from "@/stores";
@@ -37,7 +40,7 @@
 		return cardStore.filteredCardList;
 	});
 
-	const scrollbar = ref<InstanceType<typeof BaseVirtualScrollbar> | null>(null);
+	const scrollbar = ref<InstanceType<typeof BaseScrollbar> | null>(null);
 	const showScrollbar = ref(!isMobile());
 
 	watch(
@@ -60,7 +63,7 @@
 	// 瀑布流容器样式
 	.waterfall-wrapper {
 		flex: 1;
-		padding: 2px;
+		padding: 4px;
 		scroll-behavior: smooth;
 		overflow: clip; // 必须要设置溢出裁切
 	}

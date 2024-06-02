@@ -1,9 +1,12 @@
 <template>
 	<div class="rule-edit-container">
 		<!-- 规则侧栏 -->
-		<aside class="rule-tree-container">
+		<!-- <aside class="rule-tree-container">
+			
+		</aside> -->
+		<el-card class="rule-tree-container">
 			<Tree />
-		</aside>
+		</el-card>
 		<!-- 规则表单 -->
 		<main class="rule-form-container">
 			<Form />
@@ -18,20 +21,28 @@
 
 <style lang="scss" scoped>
 	.rule-edit-container {
-		position: relative;
 		display: flex;
+		flex-flow: row wrap;
+		gap: 8px;
+		height: 100%;
+		padding: 4px;
 		.rule-tree-container {
-			position: sticky;
-			top: 0;
 			width: 225px;
-			padding: 4px;
+			// padding: 4px;
 			height: 100%;
-			// background-color: skyblue;
+			// max-height: 100%;
+
+			z-index: 1;
+
+			:deep(.wic2-card__body) {
+				padding: 4px;
+				height: 100%;
+			}
 		}
 		.rule-form-container {
 			flex: 1;
-			padding: 4px;
 			// background-color: orange;
+			min-width: 425px;
 		}
 	}
 

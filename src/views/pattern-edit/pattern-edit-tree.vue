@@ -41,143 +41,144 @@
 			v-model="filterText"
 			placeholder="输入关键词">
 		</el-input>
-		<el-tree
-			class="pattern-tree"
-			ref="treeRef"
-			:data="data"
-			node-key="id"
-			:indent="14"
-			show-checkbox
-			:expand-on-click-node="false"
-			check-strictly
-			highlight-current
-			:current-node-key="currentNodeKey"
-			default-expand-all
-			:props="defaultProps"
-			:filter-node-method="filterNode"
-			@node-click="handleNodeClick">
-			<template #default="{ node, data }">
-				<span class="custom-tree-node">
-					<!-- 节点名称区域 -->
-					<div class="custom-tree-node-left">
-						<!-- 节点图标(图片) -->
-						<span class="custom-tree-node-icon">
-							<BaseImg
-								v-if="data.type === 'pattern' && !data.id.includes('#')"
-								style="width: 16px; height: 16px"
-								:src="(data.rowData as Pattern).backup?.mainInfo.icon">
-							</BaseImg>
-							<el-icon v-if="data.type === 'rule'">
-								<i-material-symbols-regular-expression-rounded />
-							</el-icon>
-						</span>
-						<!-- 节点名称 -->
-						<el-tooltip
-							:content="node.label"
-							placement="top-start"
-							:enterable="false">
-							<el-badge
-								class="custom-tree-node-name"
-								is-dot
-								:offset="[-4, 4]"
-								:hidden="!(data.rowData as Pattern|Rule).isChange()">
-								<span v-if="data.id.includes('#')">
-									{{ node.label }}
-								</span>
-								<span v-else>
-									<!-- 方案类型 -->
-									<span v-if="data.type === 'pattern'">
-										<!-- {{ (data.rowData as Pattern).backup?.mainInfo.name }} -->
+		<BaseScrollbar class="pattern-tree" :show-bakctop-button="false">
+			<el-tree
+				ref="treeRef"
+				:data="data"
+				node-key="id"
+				:indent="14"
+				show-checkbox
+				:expand-on-click-node="false"
+				check-strictly
+				highlight-current
+				:current-node-key="currentNodeKey"
+				default-expand-all
+				:props="defaultProps"
+				:filter-node-method="filterNode"
+				@node-click="handleNodeClick">
+				<template #default="{ node, data }">
+					<span class="custom-tree-node">
+						<!-- 节点名称区域 -->
+						<div class="custom-tree-node-left">
+							<!-- 节点图标(图片) -->
+							<span class="custom-tree-node-icon">
+								<BaseImg
+									v-if="data.type === 'pattern' && !data.id.includes('#')"
+									style="width: 16px; height: 16px"
+									:src="(data.rowData as Pattern).backup?.mainInfo.icon">
+								</BaseImg>
+								<el-icon v-if="data.type === 'rule'">
+									<i-material-symbols-regular-expression-rounded />
+								</el-icon>
+							</span>
+							<!-- 节点名称 -->
+							<el-tooltip
+								:content="node.label"
+								placement="top-start"
+								:enterable="false">
+								<el-badge
+									class="custom-tree-node-name"
+									is-dot
+									:offset="[-4, 4]"
+									:hidden="!(data.rowData as Pattern|Rule).isChange()">
+									<span v-if="data.id.includes('#')">
 										{{ node.label }}
 									</span>
-									<!-- 规则类型 -->
-									<span v-if="data.type === 'rule'">
-										<span v-if="(data.rowData as Rule).state.editing">
-											<el-input
-												size="small"
-												@blur="(data.rowData as Rule).state.editing = false"
-												v-model="(data.rowData as Rule).name">
-											</el-input>
-										</span>
-										<span
-											v-else
-											@dblclick="(data.rowData as Rule).state.editing = true">
+									<span v-else>
+										<!-- 方案类型 -->
+										<span v-if="data.type === 'pattern'">
+											<!-- {{ (data.rowData as Pattern).backup?.mainInfo.name }} -->
 											{{ node.label }}
 										</span>
+										<!-- 规则类型 -->
+										<span v-if="data.type === 'rule'">
+											<span v-if="(data.rowData as Rule).state.editing">
+												<el-input
+													size="small"
+													@blur="(data.rowData as Rule).state.editing = false"
+													v-model="(data.rowData as Rule).name">
+												</el-input>
+											</span>
+											<span
+												v-else
+												@dblclick="(data.rowData as Rule).state.editing = true">
+												{{ node.label }}
+											</span>
+										</span>
 									</span>
-								</span>
-							</el-badge>
-						</el-tooltip>
-					</div>
-					<!-- 操作按钮 -->
-					<div class="custom-tree-node-right" v-if="!data.id.includes('#')">
-						<!-- 添加规则 -->
-						<el-button
-							v-if="data.type === 'pattern'"
-							type="primary"
-							size="small"
-							:icon="CirclePlus"
-							circle
-							@click.stop="addRule(node, data)">
-						</el-button>
-						<!-- 重命名(规则) -->
-						<el-button
-							v-if="data.type === 'rule'"
-							:type="(data.rowData as Rule).state.editing ? 'success' : 'primary'"
-							size="small"
-							circle
-							@click.stop="
-								(data.rowData as Rule).state.editing = !(data.rowData as Rule)
-									.state.editing
-							">
-							<template #icon>
-								<i-ant-design-edit-outlined
-									v-if="!(data.rowData as Rule).state.editing" />
-								<i-ant-design-check-circle-filled v-else />
-							</template>
-						</el-button>
-						<!-- 删除按钮 -->
-						<el-popconfirm
-							title="确定删除?"
-							:hide-after="0"
-							confirm-button-text="是"
-							cancel-button-text="否"
-							@confirm="
-								data.type === 'pattern'
-									? removePattern(node, data)
-									: removeRule(node, data)
-							">
-							<template #reference>
-								<el-button
-									type="danger"
-									size="small"
-									:icon="Delete"
-									circle
-									@click.stop>
-								</el-button>
-							</template>
-						</el-popconfirm>
-					</div>
-				</span>
-			</template>
-		</el-tree>
+								</el-badge>
+							</el-tooltip>
+						</div>
+						<!-- 操作按钮 -->
+						<div class="custom-tree-node-right" v-if="!data.id.includes('#')">
+							<!-- 添加规则 -->
+							<el-button
+								v-if="data.type === 'pattern'"
+								type="primary"
+								size="small"
+								circle
+								@click.stop="addRule(node, data)">
+								<template #icon>
+									<i-ep-circle-plus />
+								</template>
+							</el-button>
+							<!-- 重命名(规则) -->
+							<el-button
+								v-if="data.type === 'rule'"
+								:type="(data.rowData as Rule).state.editing ? 'success' : 'primary'"
+								size="small"
+								circle
+								@click.stop="
+									(data.rowData as Rule).state.editing = !(data.rowData as Rule)
+										.state.editing
+								">
+								<template #icon>
+									<i-ant-design-edit-outlined
+										v-if="!(data.rowData as Rule).state.editing" />
+									<i-ant-design-check-circle-filled v-else />
+								</template>
+							</el-button>
+							<!-- 删除按钮 -->
+							<el-popconfirm
+								title="确定删除?"
+								:hide-after="0"
+								confirm-button-text="是"
+								cancel-button-text="否"
+								@confirm="
+									data.type === 'pattern'
+										? removePattern(node, data)
+										: removeRule(node, data)
+								">
+								<template #reference>
+									<el-button type="danger" size="small" circle @click.stop>
+										<template #icon>
+											<i-material-symbols-delete-rounded />
+										</template>
+									</el-button>
+								</template>
+							</el-popconfirm>
+						</div>
+					</span>
+				</template>
+			</el-tree>
+		</BaseScrollbar>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { ref, watch, computed, nextTick, onBeforeUpdate } from "vue";
+	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import type { ComputedRef } from "vue";
 	import type { ElTree } from "element-plus";
 	import type Node from "element-plus/es/components/tree/src/model/node";
 	import BaseImg from "@/components/base/base-img.vue";
-	import { CirclePlus, Delete } from "@element-plus/icons-vue";
 	import { ElNotification } from "@/plugin/element-plus";
 
 	import { storeToRefs } from "pinia";
 	import { usePatternStore } from "@/stores";
 	import { Pattern } from "@/stores/patternStore/class/Pattern";
 	import { Rule } from "@/stores/patternStore/class/Rule";
-	import { useClipboard } from "@vueuse/core";
+
 	const patternStore = usePatternStore();
 	const { list } = storeToRefs(patternStore);
 	const { createPattern, deletePattern, findPattern } = patternStore;
@@ -454,8 +455,8 @@
 	.pattern-tree-container {
 		display: flex;
 		flex-flow: column;
-		overflow: hidden;
-		max-height: 100%;
+		// overflow: hidden;
+		height: 100%;
 		.pattern-tree-button-group {
 			// flex: 0;
 			margin-bottom: 4px;
@@ -464,7 +465,7 @@
 			// flex: 0;
 		}
 		.pattern-tree {
-			flex: 1;
+			// flex: 1;
 			overflow-y: auto;
 		}
 	}
@@ -477,6 +478,7 @@
 		justify-content: space-between;
 		font-size: 14px;
 		overflow: hidden;
+		padding-right: 8px;
 
 		// 左侧
 		.custom-tree-node-left {

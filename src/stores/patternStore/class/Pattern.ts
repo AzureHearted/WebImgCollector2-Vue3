@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { cloneDeep, isEqual } from "@/plugin/lodash";
 import type {
 	BasePattern,
 	BaseStatus,
@@ -76,7 +76,7 @@ export class Pattern implements BasePattern {
 			includeId: true,
 		};
 		const { includeId } = { ...defaultOptions, ...options };
-		return _.cloneDeep({
+		return cloneDeep({
 			id: includeId ? this.id : undefined,
 			mainInfo: this.mainInfo,
 			rules: this.rules.map((r) =>
@@ -91,9 +91,9 @@ export class Pattern implements BasePattern {
 	public backupData() {
 		this.rules.forEach((r) => r.backupData());
 		this.backup = {
-			id: _.cloneDeep(this.id),
-			mainInfo: _.cloneDeep(this.mainInfo),
-			rules: _.cloneDeep(this.rules),
+			id: cloneDeep(this.id),
+			mainInfo: cloneDeep(this.mainInfo),
+			rules: cloneDeep(this.rules),
 		};
 	}
 
@@ -102,15 +102,15 @@ export class Pattern implements BasePattern {
 		this.rules.forEach((r) => r.recoveryData());
 		// 如果备份存在才进行恢复
 		if (this.backup) {
-			this.mainInfo = _.cloneDeep(this.backup.mainInfo);
-			this.rules = _.cloneDeep(this.backup.rules).map((r) => new Rule(r));
+			this.mainInfo = cloneDeep(this.backup.mainInfo);
+			this.rules = cloneDeep(this.backup.rules).map((r) => new Rule(r));
 		}
 	}
 
 	// 判断是否发生更改
 	public isChange() {
 		return (
-			!_.isEqual(this.mainInfo, _.cloneDeep(this.backup?.mainInfo)) ||
+			!isEqual(this.mainInfo, cloneDeep(this.backup?.mainInfo)) ||
 			this.rules.some((x) => x.isChange()) ||
 			this.rules.length !== this.backup?.rules.length
 		);
@@ -168,6 +168,7 @@ export const defaultPattern = new Pattern({
 					'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]',
 				infoType: "attribute",
 				name: "content|href|srcset|data-src|src",
+				fix: [],
 			},
 			preview: {
 				enable: false,
@@ -175,6 +176,7 @@ export const defaultPattern = new Pattern({
 				selector: "",
 				infoType: "property",
 				name: "src",
+				fix: [],
 			},
 			description: {
 				enable: false,
@@ -182,6 +184,7 @@ export const defaultPattern = new Pattern({
 				selector: "",
 				infoType: "property",
 				name: "src",
+				fix: [],
 			},
 			filter: {
 				formats: [],

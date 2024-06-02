@@ -1,36 +1,31 @@
 <template>
 	<!-- 视口区域 -->
 	<div
-		ref="viewportDOM"
-		class="base-virtual-scrollbar"
+		ref="containerDOM"
+		class="base-scrollbar_container"
 		@mouseover="scrollbar.show = true"
 		@mouseleave="scrollbar.show = false">
 		<!-- 内容区域 -->
-		<div
-			ref="wrapperDOM"
-			class="base-virtual-scrollbar-wrapper"
-			@wheel.stop
-			@scroll.stop>
+		<div ref="wrapDOM" class="base-scrollbar__wrap" @wheel.stop @scroll.stop>
 			<!-- 内容内部区域 -->
-			<div ref="contentDOM" class="base-virtual-scrollbar-content">
+			<div ref="viewDOM" class="base-scrollbar__view">
 				<!-- 调试区域 -->
 				<div v-if="false" class="debug">
-					{{ viewportInfo.height }} ,{{ viewportInfo.width }}<br />
-					{{ contentInfo.height }},{{ contentInfo.width }}<br />
-					{{ wrapperDOM ? wrapperDOM!.scrollHeight : 0 }} ,{{
-						wrapperDOM ? wrapperDOM!.scrollWidth : 0
+					{{ viewInfo.height }},{{ viewInfo.width }}<br />
+					{{ wrapInfo.height }},{{ wrapInfo.width }}<br />
+					{{ wrapDOM ? wrapDOM!.scrollHeight : 0 }} ,{{
+						wrapDOM ? wrapDOM!.scrollWidth : 0
 					}}<br />
-					{{ wrapperInfo }}<br />
+					{{ wrapInfo }}<br />
 				</div>
 				<!-- 插槽出口 -->
 				<slot></slot>
 			</div>
-			<!-- 虚拟滚动条 -->
 			<!-- 垂直滚动条 -->
 			<transition name="scrollbar">
 				<div
 					ref="verticalBar"
-					class="custom-virtual-scrollbar custom-virtual-scrollbar-vertical"
+					class="base-scrollbar__bar bar__is-vertical"
 					:class="{ 'is-dragging': scrollbar.vertical.isDragging }"
 					v-show="verticalScrollbarVisible"
 					@wheel.prevent
@@ -46,18 +41,18 @@
 			<transition name="scrollbar">
 				<div
 					ref="horizontalBar"
-					class="custom-virtual-scrollbar custom-virtual-scrollbar-horizontal"
+					class="base-scrollbar__bar bar__is-horizontal"
 					:class="{ 'is-dragging': scrollbar.horizontal.isDragging }"
 					v-show="horizontalScrollbarVisible"
 					:style="horizontalStyle"></div>
 			</transition>
 			<!-- 回到顶部按钮 -->
-			<transition name="backTop">
+			<transition name="back-top">
 				<div
-					class="base-virtual-scrollbar-backTop"
-					v-show="bakctopShow"
+					class="base-scrollbar__back-top"
+					v-show="bakctopShow && showBakctopButton"
 					@click="backToTop">
-					<i class="backTop-icon">
+					<i class="back-top__icon">
 						<svg
 							data-v-e6ff9537=""
 							viewBox="0 0 1024 1024"
@@ -88,45 +83,69 @@
 	import { useScroll, useElementBounding, useDraggable } from "@vueuse/core";
 
 	// 定义props
-	const props = withDefaults(defineProps<{ showScrollbar: boolean }>(), {
-		showScrollbar: true,
-	});
+	const props = withDefaults(
+		defineProps<{ showScrollbar?: boolean; showBakctopButton?: boolean }>(),
+		{
+			showScrollbar: true,
+			showBakctopButton: false,
+		}
+	);
 
-	// 视口DOM
-	const viewportDOM = ref<HTMLElement | null>(null);
-	const viewportInfo = reactive({
-		...useElementBounding(viewportDOM),
-	});
+	// 组件容器DOM
+	const containerDOM = ref<HTMLElement | null>(null);
 	// 滚动容器
-	const wrapperDOM = ref<HTMLElement | null>(null);
-	const wrapperInfo = reactive({
-		...useElementBounding(wrapperDOM),
+	const wrapDOM = ref<HTMLElement | null>(null);
+	const wrapInfo = reactive({
+		...useElementBounding(wrapDOM),
 	});
 	// 内容区DOM
-	const contentDOM = ref<HTMLElement | null>(null);
-	const contentInfo = reactive({
-		...useElementBounding(contentDOM),
+	const viewDOM = ref<HTMLElement | null>(null);
+	const viewInfo = reactive({
+		...useElementBounding(viewDOM),
 	});
 
 	watch(
-		() => [
-			viewportInfo.width,
-			viewportInfo.height,
-			contentInfo.width,
-			contentInfo.height,
-		],
+		() => [wrapInfo.width, wrapInfo.height, viewInfo.width, viewInfo.height],
 		() => {
-			calculateScrollbarSize(); //计算滚动条尺寸
-			setScrollbarPosition(); //计算滚动条位置
+			handleUpdate();
 		}
 	);
 
 	onUpdated(() => {
-		// console.log("更新,onUpdated");
+		handleUpdate();
+	});
 
+	// 更新
+	let timer: number | null = null; // 计时器
+	// 更新函数
+	function update() {
 		calculateScrollbarSize(); //计算滚动条尺寸
 		setScrollbarPosition(); //计算滚动条位置
-	});
+	}
+	interface UpdateOptions {
+		delay: number;
+	}
+	function handleUpdate(
+		options?: UpdateOptions // 配置选项,可用于临时调整时间间隔
+	) {
+		// 默认配置项
+		const defaultOptions: UpdateOptions = {
+			delay: 300,
+		};
+
+		// 如果计时器还没结束就又出触发该函数就清除计时器(重置计时)
+		if (timer) {
+			clearTimeout(timer);
+			timer = null;
+		}
+		// 获取配置参数
+		const { delay } = { ...defaultOptions, ...options };
+		// 设置计时器等待时间到达执行重新布局
+		timer = window.setTimeout(() => {
+			console.log("触发 scrollbar 更新");
+			update(); // 执行任务
+		}, delay);
+	}
 
 	// 状态数据
 	const scrollbar = reactive({
@@ -152,22 +171,21 @@
 	onMounted(() => {
 		const { y, isDragging } = useDraggable(verticalBar, {
 			axis: "y", // 限制垂直拖拽
-			containerElement: viewportDOM.value, // 设置父容器
+			containerElement: containerDOM.value, // 设置父容器
 		});
 		watchEffect(() => {
 			scrollbar.vertical.y = y.value;
 		});
 		// 监听拖拽参数变化
 		watch([() => scrollbar.vertical.y, isDragging], ([sy, isDragging]) => {
-			if (!wrapperDOM.value) return;
+			if (!wrapDOM.value) return;
 			scrollbar.vertical.top = sy; // 更新滚动条位置
 			scrollbar.vertical.isDragging = isDragging;
 			if (isScrolling.value) return; //如果此时页面正在滚动则不进行下面的操作
 			// 计算滚动距离
-			const { scrollWidth, scrollHeight } = wrapperDOM.value; // 提取滚动容器内容区宽高
-			const top = (scrollHeight / viewportInfo.height) * scrollbar.vertical.top;
-			const left =
-				(scrollWidth / viewportInfo.width) * scrollbar.horizontal.left;
+			const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
+			const top = (scrollHeight / wrapInfo.height) * scrollbar.vertical.top;
+			const left = (scrollWidth / wrapInfo.width) * scrollbar.horizontal.left;
 			// 更新滚动距离
 			updateScrollPosition({ y: top, x: left, behavior: "instant" });
 		});
@@ -196,7 +214,7 @@
 	onMounted(() => {
 		const { x, isDragging } = useDraggable(horizontalBar, {
 			axis: "x", // 限制水平拖拽
-			containerElement: viewportDOM.value, // 设置父容器
+			containerElement: containerDOM.value, // 设置父容器
 		});
 		// 同步数据
 		watchEffect(() => {
@@ -204,15 +222,14 @@
 		});
 		// 监听拖拽参数变化
 		watch([() => scrollbar.horizontal.x, isDragging], ([sx, isDragging]) => {
-			if (!wrapperDOM.value) return;
+			if (!wrapDOM.value) return;
 			scrollbar.horizontal.left = sx; // 更新滚动条位置
 			scrollbar.horizontal.isDragging = isDragging;
 			if (isScrolling.value) return; //如果此时页面正在滚动则不进行下面的操作
-			const { scrollWidth, scrollHeight } = wrapperDOM.value; // 提取滚动容器内容区宽高
+			const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
 			// 计算滚动距离
-			const top = (scrollHeight / viewportInfo.height) * scrollbar.vertical.top;
-			const left =
-				(scrollWidth / viewportInfo.width) * scrollbar.horizontal.left;
+			const top = (scrollHeight / wrapInfo.height) * scrollbar.vertical.top;
+			const left = (scrollWidth / wrapInfo.width) * scrollbar.horizontal.left;
 			// 更新滚动距离
 			updateScrollPosition({ y: top, x: left, behavior: "instant" });
 		});
@@ -238,9 +255,9 @@
 
 	// 计算滚动条尺寸
 	function calculateScrollbarSize() {
-		if (!wrapperDOM.value) return;
-		const { width, height } = viewportInfo; // 提取出视口宽高
-		const { scrollWidth, scrollHeight } = wrapperDOM.value; // 提取滚动容器内容区宽高
+		if (!wrapDOM.value) return;
+		const { width, height } = wrapInfo; // 提滚动容器视口宽高
+		const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
 		// console.log("当前视口宽度", width, "当前wrapper宽度", scrollWidth);
 		// 计算垂直滚动条长度
 		scrollbar.vertical.length =
@@ -250,7 +267,7 @@
 			scrollWidth > Math.ceil(width) ? (width / scrollWidth) * width : -1;
 	}
 
-	const { x: wrapperX, y: wrapperY, isScrolling } = useScroll(wrapperDOM);
+	const { x: wrapperX, y: wrapperY, isScrolling } = useScroll(wrapDOM);
 	// 监听wrapper滚动
 	watch([wrapperX, wrapperY], ([x, y]) => {
 		// console.log("wrapper滚动", x, y);
@@ -262,13 +279,13 @@
 
 	// 设置滚动条位置
 	function setScrollbarPosition() {
-		if (wrapperDOM.value) {
-			// console.log("内容滚动", viewportInfo.width, wrapperDOM.value.scrollWidth);
+		if (wrapDOM.value) {
+			// console.log("内容滚动", wrapInfo.width, wrapperDOM.value.scrollWidth);
 			// 更新滚动条位置
 			scrollbar.vertical.y =
-				(viewportInfo.height / wrapperDOM.value.scrollHeight) * wrapperY.value;
+				(wrapInfo.height / wrapDOM.value.scrollHeight) * wrapperY.value;
 			scrollbar.horizontal.x =
-				(viewportInfo.width / wrapperDOM.value.scrollWidth) * wrapperX.value;
+				(wrapInfo.width / wrapDOM.value.scrollWidth) * wrapperX.value;
 			// console.log("滚动事件", scrollTop);
 		}
 	}
@@ -280,9 +297,9 @@
 		behavior?: ScrollBehavior;
 	}) {
 		const { x, y, behavior } = options;
-		if (wrapperDOM.value) {
+		if (wrapDOM.value) {
 			if (behavior !== undefined) {
-				wrapperDOM.value.scrollTo({ top: y, left: x, behavior });
+				wrapDOM.value.scrollTo({ top: y, left: x, behavior });
 			} else {
 				if (x !== undefined) {
 					wrapperX.value = x;
@@ -308,43 +325,44 @@
 
 <script lang="ts">
 	export default {
-		name: "BaseVirtualScrollbar", // 组件名，用于调试和注册组件时使用
+		name: "BaseScrollbar", // 组件名，用于调试和注册组件时使用
 	};
 </script>
 
 <style lang="scss" scoped>
 	// 视口容器
-	.base-virtual-scrollbar {
+	.base-scrollbar_container {
 		position: relative;
 		width: 100%;
 		height: 100%;
-		// padding: 10px;
+		// border: 1px solid black;
 	}
 
 	// 内容容器
-	.base-virtual-scrollbar-wrapper {
+	.base-scrollbar__wrap {
 		width: 100%;
 		height: 100%;
 		scroll-behavior: smooth;
 		overflow: auto;
 	}
 
-	// .base-virtual-scrollbar-content {
+	// .base-scrollbar__view {
 	// 	background: wheat;
 	// }
 
 	/* 去除原生滚动条样式 */
-	.base-virtual-scrollbar-wrapper::-webkit-scrollbar {
+	.base-scrollbar__wrap::-webkit-scrollbar {
 		display: none !important;
 		width: 0px !important;
 		height: 0px !important;
 	}
 
 	// 虚拟滚动条(共通)
-	.custom-virtual-scrollbar {
+	.base-scrollbar__bar {
 		position: absolute;
 
 		border-radius: 10px;
+		box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
 		-webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
 		background: #fefefeaa;
 		opacity: 1;
@@ -367,7 +385,7 @@
 		}
 	}
 	// 虚拟滚动条(垂直)
-	.custom-virtual-scrollbar-vertical {
+	.bar__is-vertical {
 		top: 0;
 		right: 0px;
 		width: 8px;
@@ -377,7 +395,7 @@
 		}
 	}
 	// 虚拟滚动条(水平)
-	.custom-virtual-scrollbar-horizontal {
+	.bar__is-horizontal {
 		bottom: 0;
 		left: 0px;
 		height: 8px;
@@ -404,7 +422,7 @@
 	}
 
 	//s 返回顶部按钮样式
-	.base-virtual-scrollbar-backTop {
+	.base-scrollbar__back-top {
 		position: absolute;
 		width: 40px;
 		height: 40px;
@@ -429,7 +447,7 @@
 			background-color: #d0e3ff;
 		}
 
-		.backTop-icon {
+		.back-top__icon {
 			--color: inherit;
 			height: 1em;
 			width: 1em;
@@ -444,13 +462,13 @@
 		}
 	}
 
-	.backTop-enter-active,
-	.backTop-leave-active {
+	.back-top-enter-active,
+	.back-top-leave-active {
 		transition: opacity 0.5s ease;
 	}
 
-	.backTop-enter-from,
-	.backTop-leave-to {
+	.back-top-enter-from,
+	.back-top-leave-to {
 		opacity: 0;
 	}
 </style>

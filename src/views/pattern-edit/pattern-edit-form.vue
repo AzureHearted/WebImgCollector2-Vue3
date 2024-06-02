@@ -11,6 +11,15 @@
 							:src="editingPattern?.mainInfo.icon"
 							style="width: 16px; height: 16px"></BaseImg>
 						<span>{{ editingPattern?.mainInfo?.name }}</span>
+						<!-- 在新窗口打开 -->
+						<el-button
+							v-if="!editingPattern?.id.includes('#')"
+							type="success"
+							circle
+							text
+							@click="open()">
+							<i-material-symbols-open-in-new />
+						</el-button>
 					</div>
 					<div class="form-card-header-right">
 						<!-- 下载方案 -->
@@ -67,17 +76,16 @@
 								multiple
 								collapse-tags
 								collapse-tags-tooltip
-								:multiple-limit="1"
 								clearable
 								v-model="editingPattern!.mainInfo.filter.flags"
 								placeholder="修饰符">
-								<el-tooltip
+								<!-- <el-tooltip
 									:show-after="500"
 									effect="dark"
 									content="global - 全局匹配"
 									placement="top">
 									<el-option :value="'g'" label="g" />
-								</el-tooltip>
+								</el-tooltip> -->
 								<el-tooltip
 									:show-after="500"
 									effect="dark"
@@ -242,6 +250,15 @@
 		} else {
 			saveAs(blob, `WebImgCollector2 规则-${obj.name}.txt`);
 		}
+	}
+
+	// 打开对应网站
+	async function open() {
+		if (!editingPattern.value) return;
+		let { host: url } = editingPattern.value.mainInfo;
+		if (!url.trim()) return;
+		url = "https://" + url.trim();
+		window.open(url, "_blank");
 	}
 </script>
 

@@ -63,7 +63,10 @@ export default defineStore("patternStore", () => {
 				if (pattern.mainInfo.filter.expression.trim().length > 0) {
 					// 如果过滤器表达式不为空则进行匹配判断
 					const expression = pattern.mainInfo.filter.expression;
-					const flags = pattern.mainInfo.filter.flags.join("");
+					const flags = [
+						...new Set(["g", ...pattern.mainInfo.filter.flags]),
+					].join("");
+
 					let regex: RegExp;
 
 					try {
