@@ -142,7 +142,7 @@
 		const { delay } = { ...defaultOptions, ...options };
 		// 设置计时器等待时间到达执行重新布局
 		timer = window.setTimeout(() => {
-			console.log("触发 scrollbar 更新");
+			// console.log("触发 scrollbar 更新");
 			update(); // 执行任务
 		}, delay);
 	}

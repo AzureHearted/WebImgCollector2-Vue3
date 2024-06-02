@@ -1,8 +1,11 @@
 <template>
-	<div class="img-wrapper" :class="{ loading: !state.loaded }">
+	<div
+		ref="imgContainer"
+		class="img__container"
+		:class="{ loading: !state.loaded }">
 		<!-- 图片主体 -->
 		<div
-			class="img-container"
+			class="img__wrap"
 			:class="{
 				loading: !state.loaded,
 				show: state.show,
@@ -29,11 +32,11 @@
 		withDefaults,
 		defineEmits,
 		watch,
+		nextTick,
 	} from "vue";
 	// 导入加载错误时的图片
-	import errorImg from "@/assets/svg/error-img.svg";
-	import { nextTick } from "vue";
-
+	const errorImg =
+		"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxZW0iIGhlaWdodD0iMWVtIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGZpbGw9ImN1cnJlbnRDb2xvciIgZD0iTTIgMmgyMHYxMGgtMlY0SDR2OS41ODZsNS01TDE0LjQxNCAxNEwxMyAxNS40MTRsLTQtNGwtNSA1VjIwaDh2Mkgyem0xMy41NDcgNWExIDEgMCAxIDAgMCAyYTEgMSAwIDAgMCAwLTJtLTMgMWEzIDMgMCAxIDEgNiAwYTMgMyAwIDAgMS02IDBtMy42MjUgNi43NTdMMTkgMTcuNTg2bDIuODI4LTIuODI5bDEuNDE1IDEuNDE1TDIwLjQxNCAxOWwyLjgyOSAyLjgyOGwtMS40MTUgMS40MTVMMTkgMjAuNDE0bC0yLjgyOCAyLjgyOWwtMS40MTUtMS40MTVMMTcuNTg2IDE5bC0yLjgyOS0yLjgyOHoiLz48L3N2Zz4=";
 	// 定义props
 	const props = withDefaults(
 		defineProps<{
@@ -58,13 +61,15 @@
 			thumb: "",
 			thumbMaxSize: 400,
 			viewportSelector: "",
-			viewRootMargin: "0px 0px 0px 0px",
+			viewRootMargin: "0%",
 			observerOnce: true,
 			manualControl: false,
 			draggable: true, // 默认允许拖拽图片
 			initShow: false,
 		}
 	);
+
+	const imgContainer = ref<HTMLElement | null>(null);
 	const viewportDom = computed<IntersectionObserverInit["root"]>(() => {
 		if (props.viewportSelector.trim()) {
 			return document.querySelector(props.viewportSelector);
@@ -298,6 +303,7 @@
 			const handleIntersection = async (
 				entries: IntersectionObserverEntry[]
 			) => {
+				// console.log(entries[0].isIntersecting);
 				if (entries[0].isIntersecting) {
 					// 判断是否只监听一次
 					if (props.observerOnce) {
@@ -342,35 +348,40 @@
 				root: viewportDom.value,
 				rootMargin: props.viewRootMargin,
 			};
+			// console.log(viewportDom.value);
 			const observer = new IntersectionObserver(handleIntersection, options);
 			// 开始监听
-			observer.observe(el);
+			if (imgContainer.value) {
+				observer.observe(imgContainer.value);
+			} else {
+				console.log("图片监听失效,可能未找到imgContainer");
+			}
 		},
 	};
 </script>
 
 <style lang="scss" scoped>
-	.img-wrapper {
+	.img__container {
 		position: relative;
 		box-sizing: border-box; // 盒子模型，确保边框不会影响内容的大小。
 		* {
 			box-sizing: border-box;
 		}
 	}
-	.img-container {
+	.img__wrap {
 		opacity: 0; //默认不显示
 		transition: 0.5s ease-in-out; // 添加过渡效果
 	}
 	// 加载中的样式
-	.img-container.loading {
+	.img__wrap.loading {
 		opacity: 0;
 	}
 	// 加载完成且可见的样式
-	.img-container.show {
+	.img__wrap.show {
 		opacity: 1;
 	}
 	// 加载错误的样式
-	.img-container.error {
+	.img__wrap.error {
 		transform: scale(0.5);
 		opacity: 0.5;
 		object-fit: contain;
@@ -390,7 +401,7 @@
 	}
 
 	/* 图片加载动画 */
-	.img-wrapper.loading::before {
+	.img__container.loading::before {
 		content: "";
 		position: absolute;
 		top: 50%;

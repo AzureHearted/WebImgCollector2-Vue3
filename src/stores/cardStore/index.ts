@@ -227,6 +227,7 @@ export default defineStore("cardStore", () => {
 					// 当获得卡片时的回调
 					onCardGet: async (card, index, dom, addCard) => {
 						loadingStore.current++;
+						// console.log("当前进度", loadingStore.current, loadingStore.total);
 						const sourceMeta = card.source.meta;
 						// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
 						if (sourceMeta.valid && !data.urlSet.has(card.source.url)) {
@@ -436,34 +437,36 @@ export default defineStore("cardStore", () => {
 			// 添加任务
 			taskQueue.addTask(
 				cards.map((card, i) => {
-					return () =>
-						new Promise<void | JSZip>((resolve) => {
-							(async () => {
-								if (!card.source.blob) {
-									// 如果没有blob先获取
-									const blob = await getBlobByUrlAuto(card.source.url);
-									if (blob) {
-										card.source.blob = blob;
-									} else {
-										// 如果获取失败就跳过
-										resolve();
-										return;
+					return {
+						handle: () =>
+							new Promise<void | JSZip>((resolve) => {
+								(async () => {
+									if (!card.source.blob) {
+										// 如果没有blob先获取
+										const blob = await getBlobByUrlAuto(card.source.url);
+										if (blob) {
+											card.source.blob = blob;
+										} else {
+											// 如果获取失败就跳过
+											resolve();
+											return;
+										}
+										card.source.meta.type = getBlobType(card.source.blob);
+										card.source.meta.ext = getExtByBlob(card.source.blob);
 									}
-									card.source.meta.type = getBlobType(card.source.blob);
-									card.source.meta.ext = getExtByBlob(card.source.blob);
-								}
-								let name = card.description.title.trim();
-								if (!name) {
-									name = getNameByUrl(card.source.url);
-								}
-								if (card.source.meta.type !== "html") {
-									name = name + `.${card.source.meta.ext}`;
-								}
-								// 将blob存入zip容器
-								zipContainer.file(`${i} - ${name}`, card.source.blob);
-								resolve(zipContainer);
-							})();
-						});
+									let name = card.description.title.trim();
+									if (!name) {
+										name = getNameByUrl(card.source.url);
+									}
+									if (card.source.meta.type !== "html") {
+										name = name + `.${card.source.meta.ext}`;
+									}
+									// 将blob存入zip容器
+									zipContainer.file(`${i} - ${name}`, card.source.blob);
+									resolve(zipContainer);
+								})();
+							}),
+					};
 				})
 			);
 			// 运行队列

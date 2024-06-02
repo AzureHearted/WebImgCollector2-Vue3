@@ -91,7 +91,7 @@
 					v-if="data.source.meta.type === 'image'"
 					:src="data.source.url"
 					use-thumb
-					viewport-dom=".waterfall-wrapper"
+					viewport-selector=".web-img-collector-container .waterfall-wrapper"
 					:thumb="data.preview.url"
 					:init-width="data.source.meta.width"
 					:init-height="data.source.meta.height"
@@ -102,7 +102,7 @@
 						data.source.meta.type === 'html' &&
 						data.preview.meta.type === 'image'
 					"
-					viewport-dom=".waterfall-wrapper"
+					viewport-selector=".web-img-collector-container .waterfall-wrapper"
 					:src="data.preview.url"
 					:init-width="data.preview.meta.width"
 					:init-height="data.preview.meta.height"

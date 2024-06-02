@@ -16,6 +16,7 @@ import Card from "../class/Card";
 import { getBlobByUrlAuto } from "@/utils/http";
 import { getExtByUrl, getNameByUrl, isUrl } from "@/utils/common";
 import { TaskQueue } from "@/utils/taskQueue";
+import type { Task } from "@/utils/taskQueue";
 
 // 配置接口
 interface Options {
@@ -52,9 +53,12 @@ export default async function getCard(
 		options as Options;
 
 	// 卡片列表
-	const cardList = [] as Card[];
+	const cardList: Card[] = [];
 	// 任务列表
-	const taskList = [] as Function[];
+	const taskList: Task[] = [];
+
+	// dom列表
+	const domList: HTMLElement[] = [];
 
 	// 判断是否开启区域匹配
 	if (rule.region.enable) {
@@ -67,129 +71,158 @@ export default async function getCard(
 		// 触发回调(进行dom过滤)
 		regionDOMs = await onAllDOMGet(regionDOMs);
 
+		// * 记录dom列表
+		domList.push(...regionDOMs);
+
 		// 遍历所有区域dom，获取卡片dom列表
 		for (let i = 0; i < regionDOMs.length; i++) {
+			const regionDOM = regionDOMs[i]; // 拿到当前区域DOM
 			// 定义任务
-			const task = async () => {
-				const regionDOM = regionDOMs[i]; // 拿到当前区域DOM
-				// s source的匹配
-				const source = await handleRegionGetInfo<CardSource>({
-					type: "source",
-					rule: rule.source,
-					regionDOM,
-					callback: async (value, dom) => {
-						dom = dom || regionDOM;
-						// 元信息获取
-						let meta = await getMeta(dom); // 获取元信息(通过dom)
-						if (!meta.valid) {
-							meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
-						}
-						meta.ext = getExtByUrl(value);
-						return {
-							url: value,
-							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-							dom,
-							meta,
-						};
-					},
-				});
-				// s preview的匹配
-				let preview: CardPreview;
-				// 判断是否启用匹配preview
-				if (rule.preview.enable) {
-					// 判断是否指定了来源DOM
-					let targetDOM: HTMLElement | null | false = false; //默认不指定
-					if (rule.preview.origin === "region") {
-						targetDOM = regionDOM;
-					} else if (rule.preview.origin === "source") {
-						targetDOM = source.dom;
-					}
-					// 获取preview
-					preview = await handleRegionGetInfo<CardPreview>({
-						type: "preview",
-						rule: rule.preview,
+			const task: Task = {
+				dom: regionDOM,
+				handle: async () => {
+					// s source的匹配
+					const source = await handleRegionGetInfo<CardSource>({
+						type: "source",
+						rule: rule.source,
 						regionDOM,
-						targetDOM,
 						callback: async (value, dom) => {
-							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-							dom = dom || source.dom || regionDOM;
-							// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
-							value = value || source.url;
+							dom = dom || regionDOM;
 							// 元信息获取
 							let meta = await getMeta(dom); // 获取元信息(通过dom)
 							if (!meta.valid) {
 								meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 							}
 							meta.ext = getExtByUrl(value);
-
 							return {
 								url: value,
+								// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 								dom,
 								meta,
 							};
 						},
 					});
-				} else {
-					// 如果不匹配就直接使用source
-					preview = {
-						url: source.url,
-						dom: source.dom,
-						meta: {
-							...source.meta!,
-						},
-					};
-				}
+					// s preview的匹配
+					let preview: CardPreview;
+					// 判断是否启用匹配preview
+					if (rule.preview.enable) {
+						// 判断是否指定了来源DOM
+						let targetDOM: HTMLElement | null | false = false; //默认不指定
+						if (rule.preview.origin === "region") {
+							targetDOM = regionDOM;
+						} else if (rule.preview.origin === "source") {
+							targetDOM = source.dom;
+						}
+						// 获取preview
+						preview = await handleRegionGetInfo<CardPreview>({
+							type: "preview",
+							rule: rule.preview,
+							regionDOM,
+							targetDOM,
+							callback: async (value, dom) => {
+								// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
+								dom = dom || source.dom || regionDOM;
+								// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
+								value = value || source.url;
+								// 元信息获取
+								let meta = await getMeta(dom); // 获取元信息(通过dom)
+								if (!meta.valid) {
+									meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
+								}
+								meta.ext = getExtByUrl(value);
 
-				// s description的匹配
-				let description: CardDescription;
-				if (rule.description.enable) {
-					// 判断是否指定了来源DOM
-					let targetDOM: HTMLElement | null | false = false; //默认不指定
-					if (rule.description.origin === "region") {
-						targetDOM = regionDOM;
-					} else if (rule.description.origin === "source") {
-						targetDOM = source.dom;
-					} else if (
-						rule.description.origin === "preview" &&
-						rule.preview.enable
-					) {
-						targetDOM = preview.dom;
+								return {
+									url: value,
+									dom,
+									meta,
+								};
+							},
+						});
+					} else {
+						// 如果不匹配就直接使用source
+						preview = {
+							url: source.url,
+							dom: source.dom,
+							meta: {
+								...source.meta!,
+							},
+						};
+						// 对preview进行进一步处理
+						preview.url = fixResult(preview.url, rule.preview.fix);
+						// 获取preview.meta
+						// 先使用dom进行判断
+						preview.meta = await getMeta(preview.dom as HTMLElement);
+						preview.meta.ext = getExtByUrl(preview.url);
+						if (!preview.meta.valid) {
+							// 如果无效在使用匹配到的内容判断
+							preview.meta = await getMeta(preview.url);
+						}
 					}
-					// 匹配描述信息
-					description = await handleRegionGetInfo<CardDescription>({
-						type: "description",
-						rule: rule.description,
-						regionDOM,
-						targetDOM,
-						callback: async (value, dom) => {
-							// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-							dom = dom || source.dom || regionDOM || preview.dom;
-							// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
-							value = value || source.url || preview.url;
-							return {
-								title: getNameByUrl(value),
-								dom,
-							};
-						},
+
+					// s description的匹配
+					let description: CardDescription;
+					if (rule.description.enable) {
+						// 判断是否指定了来源DOM
+						let targetDOM: HTMLElement | null | false = false; //默认不指定
+						if (rule.description.origin === "region") {
+							targetDOM = regionDOM;
+						} else if (rule.description.origin === "source") {
+							targetDOM = source.dom;
+						} else if (
+							rule.description.origin === "preview" &&
+							rule.preview.enable
+						) {
+							targetDOM = preview.dom;
+						}
+						// 匹配描述信息
+						description = await handleRegionGetInfo<CardDescription>({
+							type: "description",
+							rule: rule.description,
+							regionDOM,
+							targetDOM,
+							callback: async (value, dom) => {
+								// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
+								dom = dom || source.dom || regionDOM || preview.dom;
+								// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
+								value = value || source.url || preview.url;
+								if (isUrl(value)) {
+									value = getNameByUrl(value);
+								}
+								return {
+									title: value,
+									dom,
+								};
+							},
+						});
+					} else {
+						// 如果不匹配就直接使用source
+						description = {
+							title: source.url,
+							dom: source.dom,
+						};
+
+						// 对description进行进一步处理
+						description.title = fixResult(
+							description.title,
+							rule.description.fix
+						);
+						// 最后判断是否是链接，如果是链接则进行名称提取
+						if (isUrl(description.title)) {
+							description.title = getNameByUrl(description.title);
+						}
+					}
+
+					// f 创建卡片
+					const card = new Card(source, preview, description);
+
+					// 触发回调
+					onCardGet(card, i, regionDOM, async () => {
+						// 传出函数用给外部判断是否要添加该卡片
+						cardList.push(card);
 					});
-				} else {
-					// 如果不匹配就直接使用source
-					description = {
-						title: getNameByUrl(source.url),
-						dom: source.dom,
-					};
-				}
 
-				// f 创建卡片
-				const card = new Card(source, preview, description);
-
-				// 触发回调
-				onCardGet(card, i, regionDOM, async () => {
-					// 传出函数用给外部判断是否要添加该卡片
-					cardList.push(card);
-				});
-
-				return card;
+					return card;
+				},
 			};
 			// 存入任务
 			taskList.push(task);
@@ -203,6 +236,9 @@ export default async function getCard(
 		sourceDOMs = sourceDOMs.filter((x) => x) as HTMLElement[]; //过滤无效值
 		// 触发回调(进行dom过滤)
 		sourceDOMs = await onAllDOMGet(sourceDOMs);
+
+		// * 记录dom列表
+		domList.push(...sourceDOMs);
 
 		// 获取所有 previewDOMs
 		let previewDOMs = (
@@ -233,55 +269,76 @@ export default async function getCard(
 
 		// 遍历所有sourceDOMs，获取卡片信息。
 		for (let i = 0; i < sourceDOMs.length; i++) {
+			const sourceDOM = sourceDOMs[i];
 			// 定义任务
-			const task = async () => {
-				const sourceDOM = sourceDOMs[i];
-				// s 直接获取source信息
-				const source: CardSource = {
-					url: await getDOMInfo(
-						sourceDOM,
-						rule.source.infoType,
-						rule.source.name
-					),
-					dom: sourceDOM,
-					meta: { valid: false, width: 0, height: 0, type: false, ext: false }, // 初始化meta未一个无效值
-				};
-				// 对source进行进一步处理
-				source.url = fixResult(source.url, rule.source.fix);
-				// 获取source.meta
-				// 先使用dom进行判断
-				source.meta = await getMeta(source.dom as HTMLElement);
-				source.meta.ext = getExtByUrl(source.url);
-				if (!source.meta.valid) {
-					// 如果无效在使用匹配到的内容判断
-					source.meta = await getMeta(source.url);
-				}
-
-				// s 获取preview信息
-				let preview: CardPreview;
-				if (rule.preview.enable) {
-					let previewDOM: HTMLElement | null;
-					if (rule.preview.origin === "source") previewDOM = source.dom;
-					else previewDOM = previewDOMs[i];
-
-					// 获取到基础信息
-					preview = {
-						url: previewDOM
-							? await getDOMInfo(
-									previewDOM,
-									rule.preview.infoType,
-									rule.preview.name
-							  )
-							: "",
-						dom: previewDOM,
+			const task: Task = {
+				dom: sourceDOM,
+				handle: async () => {
+					// s 直接获取source信息
+					const source: CardSource = {
+						url: await getDOMInfo(
+							sourceDOM,
+							rule.source.infoType,
+							rule.source.name
+						),
+						dom: sourceDOM,
 						meta: {
 							valid: false,
 							width: 0,
 							height: 0,
-							type: "image",
+							type: false,
 							ext: false,
 						}, // 初始化meta未一个无效值
 					};
+					// 对source进行进一步处理
+					source.url = fixResult(source.url, rule.source.fix);
+					// 获取source.meta
+					// 先使用dom进行判断
+					// console.log("开始获取meta");
+					source.meta = await getMeta(source.dom as HTMLElement);
+					// console.log("获取到meta", source.meta);
+
+					source.meta.ext = getExtByUrl(source.url);
+					if (!source.meta.valid) {
+						// 如果无效在使用匹配到的内容判断
+						source.meta = await getMeta(source.url);
+					}
+
+					// s 获取preview信息
+					let preview: CardPreview;
+					if (rule.preview.enable) {
+						let previewDOM: HTMLElement | null;
+						if (rule.preview.origin === "source") previewDOM = source.dom;
+						else previewDOM = previewDOMs[i];
+
+						// 获取到基础信息
+						preview = {
+							url: previewDOM
+								? await getDOMInfo(
+										previewDOM,
+										rule.preview.infoType,
+										rule.preview.name
+								  )
+								: "",
+							dom: previewDOM,
+							meta: {
+								valid: false,
+								width: 0,
+								height: 0,
+								type: "image",
+								ext: false,
+							}, // 初始化meta未一个无效值
+						};
+					} else {
+						preview = {
+							url: source.url,
+							dom: source.dom,
+							meta: {
+								...source.meta,
+							},
+							blob: source.blob,
+						};
+					}
 					// 对preview进行进一步处理
 					preview.url = fixResult(preview.url, rule.preview.fix);
 
@@ -293,60 +350,54 @@ export default async function getCard(
 						// 如果无效在使用匹配到的内容判断
 						preview.meta = await getMeta(preview.url);
 					}
-				} else {
-					preview = {
-						url: source.url,
-						dom: source.dom,
-						meta: {
-							...source.meta,
-						},
-						blob: source.blob,
-					};
-				}
 
-				// s 获取description信息
-				let description: CardDescription;
-				if (rule.description.enable) {
-					let descriptionDOM: HTMLElement | null;
-					if (rule.description.origin === "preview")
-						descriptionDOM = preview.dom;
-					else if (rule.description.origin === "source")
-						descriptionDOM = source.dom;
-					else descriptionDOM = descriptionDOMs[i];
-					// 获取描述信息
-					description = {
-						title: descriptionDOM
-							? await getDOMInfo(
-									descriptionDOM,
-									rule.description.infoType,
-									rule.description.name
-							  )
-							: "",
-						dom: descriptionDOM,
-					};
-				} else {
-					description = {
-						title: source.url,
-						dom: source.dom,
-					};
-				}
-				// 对description进行进一步处理
-				description.title = fixResult(description.title, rule.description.fix);
-				// 最后判断是否是链接，如果是链接则进行名称提取
-				if (isUrl(description.title)) {
-					description.title = getNameByUrl(description.title);
-				}
+					// s 获取description信息
+					let description: CardDescription;
+					if (rule.description.enable) {
+						let descriptionDOM: HTMLElement | null;
+						if (rule.description.origin === "preview")
+							descriptionDOM = preview.dom;
+						else if (rule.description.origin === "source")
+							descriptionDOM = source.dom;
+						else descriptionDOM = descriptionDOMs[i];
+						// 获取描述信息
+						description = {
+							title: descriptionDOM
+								? await getDOMInfo(
+										descriptionDOM,
+										rule.description.infoType,
+										rule.description.name
+								  )
+								: "",
+							dom: descriptionDOM,
+						};
+					} else {
+						description = {
+							title: source.url,
+							dom: source.dom,
+						};
+					}
+					// 对description进行进一步处理
+					description.title = fixResult(
+						description.title,
+						rule.description.fix
+					);
+					// 最后判断是否是链接，如果是链接则进行名称提取
+					if (isUrl(description.title)) {
+						description.title = getNameByUrl(description.title);
+					}
 
-				// 创建卡片
-				const card = new Card(source, preview, description);
+					// 创建卡片
+					const card = new Card(source, preview, description);
 
-				// 触发回调
-				onCardGet(card, i, source.dom, async () => {
-					// 传出函数用给外部判断是否要添加该卡片
-					cardList.push(card);
-				});
+					// 触发回调
+					onCardGet(card, i, source.dom, async () => {
+						// 传出函数用给外部判断是否要添加该卡片
+						cardList.push(card);
+					});
 
-				return card;
+					return card;
+				},
 			};
 			// 存入任务
 			taskList.push(task);
@@ -365,6 +416,11 @@ export default async function getCard(
 			onAllTasksComplete: () => {
 				onFinished();
 				resolve();
+			},
+			onTaskOvertime(task, overtimeTasks) {
+				// const index = taskList.findIndex(task);
+				// const dom = domList[index];
+				console.log("任务超时", task.dom);
 			},
 		});
 		// 添加任务
@@ -512,13 +568,13 @@ async function getMeta(
 		type: "image",
 		ext: false,
 	}; //设置一个初始空值
-	// console.log("Meta获取 target:", target);
+	// console.log("开始Meta获取 target:", target);
 	if (method === "auto") {
 		// s 安装优先级顺序一次尝试各种方式获取meta
 		if (typeof target === "object" && target instanceof HTMLElement) {
 			// console.log("获取元信息(类型:DOM元素)", target);
 			// 如果只能是一个HTML元素
-			const { width, height } = getDOMNaturalSize(target);
+			const { width, height } = await getDOMNaturalSize(target);
 			meta = {
 				...meta,
 				...{ valid: width > 0 && height > 0, width, height, type: "image" },
@@ -527,18 +583,20 @@ async function getMeta(
 			// console.count('通过HTML获取元信息')
 		}
 		if (!meta.valid && typeof target === "string" && isUrl(target)) {
+			// console.log("开始获取元信息(类型:链接)", target);
 			const url = new URL(target);
-			// console.log("获取元信息(类型:链接)", url);
 			// 如果是一个链接
+			// console.log("通过Url获取元信息(开始)");
 			meta = await getMetaByUrl(url, { type: "html" });
+			// console.log("通过Url获取元信息(成功)");
 			// console.log("getMetaByUrl 获取结果", target, meta);
-			console.count("通过Url获取元信息");
 		}
 		if (!meta.valid && typeof target === "object" && target instanceof Blob) {
+			// console.log("开始通过Blob获取元信息", target);
 			// 如果是一个Blob
 			meta = await getMetaByBlob(target);
 			// console.log("getMetaByBlob 获取结果", target, meta);
-			console.count("通过Blob获取元信息");
+			// console.log("通过Blob获取元信息");
 		}
 	} else {
 		// s 指定方式
@@ -548,7 +606,7 @@ async function getMeta(
 			target instanceof HTMLElement
 		) {
 			// 如果只能是一个HTML元素
-			const { width, height } = getDOMNaturalSize(target);
+			const { width, height } = await getDOMNaturalSize(target);
 			meta = { ...meta, ...{ valid: width > 0 && height > 0, width, height } };
 		} else if (
 			method === "byUrl" &&
@@ -684,21 +742,20 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 				},
 				{ once: true }
 			);
-			img.addEventListener(
-				"error",
-				() => {
-					// console.log("图片信息获取-->失败!");
-					meta = {
-						valid: false,
-						width: 0,
-						height: 0,
-						type: false,
-						ext: getExtByUrl(url),
-					};
-					resolve(meta);
-				},
-				{ once: true }
-			);
+			const error = () => {
+				// console.log("图片信息获取-->失败!");
+				meta = {
+					valid: false,
+					width: 0,
+					height: 0,
+					type: false,
+					ext: getExtByUrl(url),
+				};
+				resolve(meta);
+			};
+			img.addEventListener("error", error, { once: true });
+			img.addEventListener("abort", error, { once: true });
+			img.addEventListener("cancel", error, { once: true });
 		}
 	});
 }
@@ -755,16 +812,44 @@ export function getImgMetaByBlob(blob: Blob) {
 }
 
 // 获取DOM的natural尺寸
-function getDOMNaturalSize(dom: HTMLElement): {
+async function getDOMNaturalSize(dom: HTMLElement): Promise<{
 	width: number;
 	height: number;
-} {
+}> {
 	let [width, height] = [0, 0]; // 初始化宽高为0
 	// 判断是否是img、video或canvas,如果是就获取自然宽高
 	if (dom instanceof HTMLImageElement) {
-		const { naturalWidth, naturalHeight } = dom;
-		width = naturalWidth;
-		height = naturalHeight;
+		// 如果是img元素则等待img元素对应url的图片加载完毕后再获取
+		if (dom.complete && dom.naturalWidth && dom.naturalHeight) {
+			const { naturalWidth, naturalHeight } = dom;
+			width = naturalWidth;
+			height = naturalHeight;
+			// console.log("原有img元素加载成功", dom.src, width, height);
+		} else {
+			// console.log("等待原有img元素加载……", dom.src);
+			await new Promise((resolve) => {
+				dom.onload = () => {
+					const { naturalWidth, naturalHeight } = dom;
+					width = naturalWidth;
+					height = naturalHeight;
+					// console.log("原有img元素加载成功", dom.src, width, height);
+					resolve(true);
+				};
+				dom.onabort = () => {
+					// console.log("原有img元素加载失败(中断)", dom.src);
+					resolve(false);
+				};
+				dom.onerror = () => {
+					// console.log("原有img元素加载失败", dom.src);
+					resolve(false);
+				};
+				// 超时处理 5s
+				setTimeout(() => {
+					// console.log("原有img元素加载失败(超时)", dom.src);
+					resolve(false);
+				}, 5000);
+			});
+		}
 	} else if (dom instanceof HTMLVideoElement) {
 		const { videoWidth, videoHeight } = dom;
 		width = videoWidth;

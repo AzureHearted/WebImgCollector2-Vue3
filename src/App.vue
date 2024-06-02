@@ -1,6 +1,6 @@
 <template>
 	<!-- 脚本应用容器 -->
-	<div ref="appContainer" class="web-img-collector-container">
+	<div ref="appContainer" :data-host="host" class="web-img-collector-container">
 		<!-- 消息通知类信息容器 -->
 		<el-config-provider namespace="el">
 			<div class="web-img-collector-notification-container"></div>
@@ -22,13 +22,12 @@
 	import { ref, onMounted, defineAsyncComponent } from "vue";
 	import { useGlobalStore, usePatternStore } from "@/stores";
 
-	// 导入样式动态修复模块
-	import { fixStyle } from "@/styles/website";
-
 	// import Layout from "./views/layout/layout-index.vue";
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")
 	);
+
+	const host = ref(location.host);
 
 	const globalStore = useGlobalStore();
 	const patternStore = usePatternStore();
@@ -43,7 +42,7 @@
 
 	onMounted(() => {
 		// 导入修复样式
-		fixStyle(location.hostname);
+		// fixStyle(location.hostname);
 
 		// 配置信息获取
 		patternStore.getUserPatternInfo(); //获取本地方案信息
@@ -110,4 +109,8 @@
 			pointer-events: auto;
 		}
 	}
+</style>
+
+<style lang="scss">
+	@import "./styles/website/index.scss";
 </style>
