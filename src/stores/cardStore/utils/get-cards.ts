@@ -404,6 +404,8 @@ export default async function getCard(
 		}
 	}
 
+	// console.log(domList, taskList);
+
 	return new Promise<void>((resolve) => {
 		// 创建任务队列
 		const taskQueue = new TaskQueue({

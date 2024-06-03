@@ -41,10 +41,10 @@
 					</div>
 				</div>
 			</template>
+			<!-- 方案表单 -->
 			<el-form
 				v-if="editingPattern"
 				ref="form"
-				label-width="auto"
 				label-position="left"
 				:disabled="editingPattern!.id.includes('#')">
 				<el-form-item label="方案名称">
@@ -204,7 +204,7 @@
 	function save() {
 		// console.log(editingPattern.value?.getJson());
 		editingPattern.value?.backupData(); //先进行备份
-		saveUserPatternInfo();
+		saveUserPatternInfo(); // 备份后进行数据存储
 	}
 	// 重置表单
 	function reset() {
@@ -264,14 +264,22 @@
 
 <style lang="scss" scoped>
 	.form-container {
-		max-width: 800px;
+		// max-width: 800px;
 	}
 	.form-card {
 		margin-bottom: 8px;
 	}
+	:deep(.wic2-card__header),
+	:deep(.wic2-card__footer) {
+		padding: 8px 20px;
+	}
+	:deep(.wic2-card__body) {
+		padding-bottom: 0;
+	}
 	.form-card-header {
 		display: flex;
 		justify-content: space-between;
+		font-size: 14px;
 
 		.form-card-header-left {
 			display: flex;

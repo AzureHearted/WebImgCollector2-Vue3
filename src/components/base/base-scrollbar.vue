@@ -335,6 +335,11 @@
 		position: relative;
 		width: 100%;
 		height: 100%;
+		max-width: 100%;
+		max-height: 100%;
+		overflow: hidden;
+		display: flex;
+		flex-flow: column nowrap;
 		// border: 1px solid black;
 	}
 
@@ -362,9 +367,12 @@
 		position: absolute;
 
 		border-radius: 10px;
-		box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
-		-webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
-		background: #fefefeaa;
+		box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5),
+			0 0 5px rgb(0, 0, 0, 0.5);
+		-webkit-box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5),
+			0 0 5px rgb(0, 0, 0, 0.5);
+
+		background: rgba(255, 255, 255, 0.6);
 		opacity: 1;
 
 		// background: orange;
@@ -378,7 +386,7 @@
 
 		&:hover,
 		&.is-dragging {
-			background: rgb(208, 208, 208);
+			background: rgba(255, 255, 255);
 		}
 		&:active {
 			background: #40a0ff;
@@ -418,7 +426,7 @@
 	}
 	// 离开的过程中
 	.scrollbar-leave-active {
-		transition: 0.5s 1s;
+		transition: 1s;
 	}
 
 	//s 返回顶部按钮样式

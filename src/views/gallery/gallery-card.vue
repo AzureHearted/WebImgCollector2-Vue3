@@ -75,16 +75,6 @@
 				:href="data.source.url"
 				:data-type="showType"
 				:data-preload="showType === 'iframe' ? false : true"
-				:data-width="
-					data.source.meta.width && showType !== 'iframe'
-						? data.source.meta.width
-						: false
-				"
-				:data-height="
-					data.source.meta.height && showType !== 'iframe'
-						? data.source.meta.height
-						: false
-				"
 				:data-thumb="data.preview.url"
 				:data-download-src="data.source.url">
 				<BaseImg
@@ -265,6 +255,7 @@
 				cardStore.info.size.height[1],
 				card.source.meta.height
 			);
+			// 同步更新仓库尺寸过滤器的最高值
 		}
 	}
 

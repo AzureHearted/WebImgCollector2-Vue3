@@ -29,7 +29,10 @@ export default defineStore("patternStore", () => {
 	}
 	// 保存(设置)用户方案信息
 	function saveUserPatternInfo() {
-		const rowDataList = list.value.slice(1).map((p) => p.getRowData());
+		// 使用备份数据进行存储
+		const rowDataList = list.value
+			.slice(1)
+			.map((p) => p.getRowData({ type: "backup" }));
 		console.log(
 			"%c[日志]%cWebImgCollector2:",
 			"color: #800080; background: #FFFF00; font-size: 14px;font-weight: bold; padding: 0 5px;",

@@ -88,21 +88,41 @@ export class Rule implements BaseRule {
 	}
 
 	// 获取纯数据对象
-	public getRowData(options?: { includeId: boolean }): BaseRuleRowData {
-		const defaultOptions: { includeId: boolean } = {
+	public getRowData(options?: {
+		type?: "now" | "backup";
+		includeId?: boolean;
+	}): BaseRuleRowData {
+		const defaultOptions: {
+			type: "now" | "backup";
+			includeId: boolean;
+		} = {
+			type: "now",
 			includeId: true,
 		};
-		const { includeId } = { ...defaultOptions, ...options };
-		return cloneDeep({
-			id: includeId ? this.id : undefined,
-			enable: this.enable,
-			name: this.name,
-			region: this.region,
-			source: this.source,
-			preview: this.preview,
-			description: this.description,
-			filter: this.filter,
-		});
+		const { includeId, type } = { ...defaultOptions, ...options };
+		if (type === "now") {
+			return cloneDeep({
+				id: includeId ? this.id : undefined,
+				enable: this.enable,
+				name: this.name,
+				region: this.region,
+				source: this.source,
+				preview: this.preview,
+				description: this.description,
+				filter: this.filter,
+			});
+		} else {
+			return cloneDeep({
+				id: includeId ? this.backup?.id || this.id : undefined,
+				enable: this.backup?.enable || this.enable,
+				name: this.backup?.name || this.name,
+				region: this.backup?.region || this.region,
+				source: this.backup?.source || this.source,
+				preview: this.backup?.preview || this.preview,
+				description: this.backup?.description || this.description,
+				filter: this.backup?.filter || this.filter,
+			});
+		}
 	}
 
 	// 数据备份
@@ -126,5 +146,28 @@ export class Rule implements BaseRule {
 	// 判断是否发生更改
 	public isChange() {
 		return !isEqual(this.backup, this.getRowData());
+	}
+
+	// 添加修正方法
+	public addFixItem(
+		matchItem: "source" | "preview" | "description",
+		type: BaseFix["type"]
+	) {
+		let fixItem: BaseFix;
+		if (type === "regex-extract") {
+			fixItem = {
+				type,
+				expression: "",
+				flags: [],
+			};
+		} else {
+			fixItem = {
+				type,
+				expression: "",
+				flags: [],
+				replaceTo: "",
+			};
+		}
+		this[matchItem].fix.push(fixItem);
 	}
 }

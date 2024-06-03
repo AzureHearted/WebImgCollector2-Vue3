@@ -109,51 +109,8 @@ export class TaskQueue {
 		while (this.currentConcurrent < this.maxConcurrent) {
 			// 如果队列并发数<最大并发数就执行
 			this.currentConcurrent++; // 执行前++当前并发数
-			// console.log("准备执行任务");
-			// let isOvertime = false;
-			// let complete = false;
-			// const p = this.executeTask();
+
 			this.executeTask();
-
-			// 处理完成事件
-			// const accomplish = () => {
-			// 	// 如果队列中已经没有任务就执行回调并且返回
-			// 	if (!this.tasks.length) {
-			// 		this.stop(); // 先停止队列循环(清除定时器)
-			// 		// 等待正在执行的任务完成
-			// 		Promise.all(this.runningTasks).then(() => {
-			// 			this.handleComplete(); // 如果没有任务了就停止循环
-			// 		});
-			// 	} else {
-			// 		this.run(); // 递归执行;
-			// 	}
-			// };
-
-			// p.then(() => {
-			// 	// 如果没有超时才腾出空间(因为如果超时必定腾出空间,防止重复腾出空间)
-			// 	if (!isOvertime) {
-			// 		this.currentConcurrent--; // 执行完成后--当前并发数
-			// 	}
-			// 	// 标记为完成
-			// 	complete = true;
-			// 	// 执行完成事件
-			// 	accomplish();
-			// });
-
-			// if (this.overtime) {
-			// 	// 超时处理
-			// 	setTimeout(() => {
-			// 		// 若超时还未完成任务则腾出一个队列空间
-			// 		if (!complete) {
-			// 			// console.log("任务超时");
-			// 			// 标记为超时
-			// 			isOvertime = true;
-			// 			this.currentConcurrent--; // 执行完成后--当前并发数
-			// 			// 同时立即执行完成事件
-			// 			accomplish();
-			// 		}
-			// 	}, this.overtime);
-			// }
 		}
 	}
 	// 停止运行
@@ -168,8 +125,16 @@ export class TaskQueue {
 
 	// 执行队列中的任务
 	private async executeTask(): Promise<void> {
-		// 判断队列里面是否还有任务
-		if (!this.tasks.length) return; // 没有任务就直接返回
+		// 判断是否还有任务
+		if (!this.tasks.length) {
+			this.stop(); // 先停止队列循环(清除定时器)
+			// 等待正在执行的任务完成
+			Promise.all(this.runningTasks).finally(() => {
+				this.handleComplete(); // 如果没有任务了就停止循环
+			});
+			return;
+		}
+
 		// 取出首个任务
 		const task = this.tasks.shift()!;
 		task.complete = false;
@@ -180,10 +145,6 @@ export class TaskQueue {
 			// 如果队列中已经没有任务就执行回调并且返回
 			if (!this.tasks.length) {
 				this.stop(); // 先停止队列循环(清除定时器)
-				// console.log(
-				// 	"队列完成->未完成的超时队列",
-				// 	this.overtimeTasks.filter((t) => t.complete === false)
-				// );
 				// 等待正在执行的任务完成
 				Promise.all(this.runningTasks).finally(() => {
 					this.handleComplete(); // 如果没有任务了就停止循环

@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 
 export default defineStore("global", () => {
 	const openWindow = ref(false); // 窗口打开状态
+	const appBarIsCollapse = ref(false); // 导航可见状态
 	const tab = ref("Gallery"); // 当前标签页
 	//给滚动条注入样式
 	visibleScrollbar(true);
@@ -23,5 +24,5 @@ export default defineStore("global", () => {
 		document.documentElement.dataset.showScrollbar = value ? "true" : "false";
 	}
 
-	return { openWindow, tab, visibleScrollbar };
+	return { openWindow, tab, appBarIsCollapse, visibleScrollbar };
 });

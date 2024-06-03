@@ -16,7 +16,6 @@ import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现�
 import { useLoadingStore, usePatternStore } from "@/stores";
 
 import { ElNotification } from "@/plugin/element-plus";
-import type { BaseRule } from "../patternStore/interface/Pattern";
 
 export default defineStore("cardStore", () => {
 	const loadingStore = useLoadingStore();
@@ -120,6 +119,7 @@ export default defineStore("cardStore", () => {
 	const filteredCardList = computed(() => {
 		// 后续添加处理逻辑，例如过滤、排序等操作。
 		return data.cardList.filter((x) => {
+			// * 暂时取消最大尺寸限制的过滤
 			const isMatch =
 				!!x && // 过滤排除
 				!data.excludeIdSet.has(x.id) && // 过滤被排除的项
@@ -131,9 +131,7 @@ export default defineStore("cardStore", () => {
 					: true) &&
 				(x.source.meta.type === "image"
 					? x.source.meta.width! >= filters.size.width[0] &&
-					  x.source.meta.width! <= filters.size.width[1] &&
-					  x.source.meta.height! >= filters.size.height[0] &&
-					  x.source.meta.height! <= filters.size.height[1]
+					  x.source.meta.height! >= filters.size.height[0]
 					: true);
 			if (!isMatch) {
 				// 如果不匹配的需要将选中状态设置为false
@@ -196,7 +194,7 @@ export default defineStore("cardStore", () => {
 		const patternId = patternStore.used.id;
 		const patternNow =
 			patternStore.findPattern(patternId) || patternStore.list[0];
-		// console.log("当前方案", patternNow);
+		console.log("当前方案", patternNow);
 		if (!patternNow.rules.length) {
 			ElNotification({
 				title: "提示",

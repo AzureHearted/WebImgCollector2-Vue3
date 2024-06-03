@@ -284,7 +284,7 @@
 
 	// 过滤器改变
 	function filterChange(key: "width" | "height", value: [number, number]) {
-		console.log("过滤器变化", key, value);
+		// console.log("过滤器变化", key, value);
 		cardStore.filters.size[key] = value; // 更新仓库过滤器
 	}
 

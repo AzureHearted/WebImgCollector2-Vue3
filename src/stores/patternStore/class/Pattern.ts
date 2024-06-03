@@ -71,20 +71,36 @@ export class Pattern implements BasePattern {
 
 	// 获取纯数据对象
 
-	public getRowData(options?: { includeId: boolean }): BasePatternRowData {
-		const defaultOptions: { includeId: boolean } = {
+	public getRowData(options?: {
+		type?: "now" | "backup";
+		includeId?: boolean;
+	}): BasePatternRowData {
+		const defaultOptions: { type: "now" | "backup"; includeId: boolean } = {
+			type: "now",
 			includeId: true,
 		};
-		const { includeId } = { ...defaultOptions, ...options };
-		return cloneDeep({
-			id: includeId ? this.id : undefined,
-			mainInfo: this.mainInfo,
-			rules: this.rules.map((r) =>
-				r.getRowData({
-					includeId,
-				})
-			),
-		});
+		const { includeId, type } = { ...defaultOptions, ...options };
+		if (type === "now") {
+			return cloneDeep({
+				id: includeId ? this.id : undefined,
+				mainInfo: this.mainInfo,
+				rules: this.rules.map((r) =>
+					r.getRowData({
+						includeId,
+					})
+				),
+			});
+		} else {
+			return cloneDeep({
+				id: includeId ? this.backup?.id || this.id : undefined,
+				mainInfo: this.backup?.mainInfo || this.mainInfo,
+				rules: this.rules.map((r) =>
+					r.getRowData({
+						includeId,
+					})
+				),
+			});
+		}
 	}
 
 	// 数据备份

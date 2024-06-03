@@ -1,15 +1,15 @@
 <template>
 	<div class="rule-edit-container">
 		<!-- 规则侧栏 -->
-		<!-- <aside class="rule-tree-container">
-			
-		</aside> -->
-		<el-card class="rule-tree-container">
+		<aside class="rule-tree-container">
 			<Tree />
-		</el-card>
+		</aside>
+
 		<!-- 规则表单 -->
 		<main class="rule-form-container">
-			<Form />
+			<BaseScrollbar>
+				<Form />
+			</BaseScrollbar>
 		</main>
 	</div>
 </template>
@@ -17,32 +17,41 @@
 <script setup lang="ts">
 	import Tree from "./pattern-edit-tree.vue";
 	import Form from "./pattern-edit-form.vue";
+	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 </script>
 
 <style lang="scss" scoped>
 	.rule-edit-container {
+		position: relative;
 		display: flex;
-		flex-flow: row wrap;
+		flex-flow: row nowrap;
 		gap: 8px;
 		height: 100%;
 		padding: 4px;
+		overflow-y: hidden;
+		overflow-x: auto;
+
 		.rule-tree-container {
+			position: relative;
 			width: 225px;
 			// padding: 4px;
 			height: 100%;
-			// max-height: 100%;
+
+			// background-color: wheat;
+			// border-radius: 4px;
 
 			z-index: 1;
-
-			:deep(.wic2-card__body) {
-				padding: 4px;
-				height: 100%;
-			}
 		}
+
 		.rule-form-container {
-			flex: 1;
+			flex: auto;
 			// background-color: orange;
 			min-width: 425px;
+			max-width: 800px;
+
+			height: 100%;
+			overflow: auto;
+			// padding: 4px;
 		}
 	}
 
