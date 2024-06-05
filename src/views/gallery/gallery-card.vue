@@ -22,23 +22,63 @@
 					<!-- 卡片按钮组 -->
 					<div class="card-button-group">
 						<!-- 删除 -->
-						<var-button-group type="primary" size="mini">
+						<el-button-group size="small">
+							<el-button type="danger" @click="toRemove(data)" v-ripple>
+								<template #icon>
+									<i-material-symbols-delete />
+								</template>
+							</el-button>
+						</el-button-group>
+						<!-- <var-button-group type="primary" size="mini">
 							<var-button type="danger" @click="toRemove(data)">
 								<i-material-symbols-delete
 									width="20"
 									height="20"
 									style="fill: white" />
 							</var-button>
-						</var-button-group>
-						<var-button-group size="mini">
+						</var-button-group> -->
+						<el-button-group size="small">
 							<!-- 在页面中定位 -->
+							<el-button type="primary" @click="toLocate(data)" v-ripple>
+								<template #icon>
+									<i-material-symbols-location-on-outline />
+								</template>
+							</el-button>
+							<!-- 下载(图片类) -->
+							<el-button
+								v-if="
+									data.source.meta.type === 'image' ||
+									data.preview.meta.type === 'image'
+								"
+								:loading="downloading"
+								type="default"
+								@click="toDownload(data)"
+								v-ripple>
+								<template #icon>
+									<i-material-symbols-download />
+								</template>
+							</el-button>
+							<!-- 打开(网址类) -->
+							<el-button
+								v-if="data.source.meta.type === 'html'"
+								type="default"
+								@click="openUrl(data.source.url)"
+								v-ripple>
+								<template #icon>
+									<i-material-symbols-open-in-new-rounded />
+								</template>
+							</el-button>
+						</el-button-group>
+
+						<!--	<var-button-group size="mini">
+							<!~~ 在页面中定位 ~~>
 							<var-button type="primary" @click="toLocate(data)">
 								<i-material-symbols-location-on-outline
 									width="20"
 									height="20"
 									style="fill: white" />
 							</var-button>
-							<!-- 下载(图片类) -->
+							<!~~ 下载(图片类) ~~>
 							<var-button
 								v-if="
 									data.source.meta.type === 'image' ||
@@ -52,7 +92,7 @@
 									height="20"
 									style="fill: #333" />
 							</var-button>
-							<!-- 打开(网址类) -->
+							<!~~ 打开(网址类) ~~>
 							<var-button
 								v-if="data.source.meta.type === 'html'"
 								type="default"
@@ -62,7 +102,7 @@
 									height="20"
 									style="fill: #333" />
 							</var-button>
-						</var-button-group>
+						</var-button-group>-->
 					</div>
 				</div>
 			</div>
@@ -302,10 +342,18 @@
 		}
 	}
 
+	:deep(.wic2-button) {
+		padding: 2px 4px;
+		border: unset;
+		box-shadow: var(--el-box-shadow);
+		.wic2-icon {
+			font-size: 16px;
+		}
+	}
+
 	// header左侧
 	.gallery-card-header-left {
 		flex: 0;
-		align-items: center;
 		transform: translateY(-150%);
 		transition: transform 0.3s;
 	}
@@ -313,11 +361,11 @@
 	.gallery-card:hover .gallery-card-header-left,
 	.gallery-card[data-checked="true"] .gallery-card-header-left {
 		transform: translateY(0);
+		transition: transform 0.3s;
 	}
 
 	// header右侧
 	.gallery-card-header-right {
-		flex: 0;
 		display: flex;
 		flex-flow: row-reverse;
 		align-items: center;
@@ -328,23 +376,19 @@
 	.gallery-card[data-show="true"] .gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);
+		transition: transform 0.3s;
 	}
 
 	.card-button-group {
 		height: fit-content;
 		display: flex;
 		gap: 4px;
-
-		// 修正样式
-		:deep(.var-button-group) {
-			overflow: hidden;
-		}
 	}
 
 	.card-checkbox {
-		position: absolute;
-		top: -2px;
-		left: -2px;
+		// position: absolute;
+		// top: -2px;
+		// left: -2px;
 		display: flex;
 		align-items: center;
 		justify-content: center;

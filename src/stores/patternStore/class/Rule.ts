@@ -59,7 +59,6 @@ export class Rule implements BaseRule {
 			this.enable = options?.enable;
 		}
 		this.name = options?.name || this.name;
-		this.name = options?.name || this.name;
 		this.region = {
 			...this.region,
 			...options?.region,

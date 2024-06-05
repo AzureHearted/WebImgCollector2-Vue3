@@ -1,27 +1,28 @@
 <template>
 	<div class="layout-app-bar">
 		<!-- 菜单折叠按钮 -->
-		<var-button
+		<el-button
 			class="layout-app-bar__menu-button"
 			text
-			round
-			icon-container
+			circle
 			@click="appBarIsCollapse = !appBarIsCollapse">
-			<i-ant-design-menu-outlined width="20" height="20" style="color: black" />
-		</var-button>
+			<template #icon>
+				<i-ant-design-menu-outlined />
+			</template>
+		</el-button>
 		<!-- 标题 -->
 		<div class="layout-app-bar__title">Web Img Collector 2</div>
-		<var-button
+		<el-button
 			class="layout-app-bar__close-button"
+			type="danger"
 			text
-			round
-			icon-container
+			circle
+			v-ripple
 			@click="globalStore.openWindow = false">
-			<i-ant-design-close-circle-filled
-				width="24"
-				height="24"
-				style="color: red" />
-		</var-button>
+			<template #icon>
+				<i-ant-design-close-circle-filled />
+			</template>
+		</el-button>
 	</div>
 </template>
 
@@ -48,6 +49,10 @@
 	.layout-app-bar__menu-button {
 		aspect-ratio: 1;
 		margin-left: 6px;
+		font-size: 20px;
+		svg {
+			color: black;
+		}
 	}
 
 	.layout-app-bar__title {
@@ -59,5 +64,6 @@
 
 	.layout-app-bar__close-button {
 		aspect-ratio: 1;
+		font-size: 24px;
 	}
 </style>

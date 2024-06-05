@@ -33,10 +33,10 @@
 			<!-- 操作栏 -->
 			<div class="toolbar-control-panel">
 				<!-- 控制按钮组 -->
-				<var-badge
-					:offset-y="0"
-					:offset-x="-8"
+				<el-badge
+					:offset="[-8, 0]"
 					style="z-index: 2"
+					type="info"
 					:hidden="!cardStore.validCardList.length"
 					:value="cardStore.validCardList.length">
 					<var-menu
@@ -69,15 +69,14 @@
 							</var-button-group>
 						</template>
 					</var-menu>
-				</var-badge>
+				</el-badge>
 			</div>
-
 			<!-- 选择器 -->
 			<div class="toolbar-control-panel">
-				<var-badge
-					:offset-y="0"
-					:offset-x="-115"
+				<el-badge
+					:offset="[-115, 0]"
 					style="z-index: 2"
+					type="primary"
 					:hidden="!cardStore.filteredCardList.length"
 					:value="cardStore.filteredCardList.length">
 					<!-- 选择器按钮组 -->
@@ -86,14 +85,13 @@
 						<var-button type="info" @click="inverseAll"> 反选 </var-button>
 						<var-button @click="cancel"> 取消 </var-button>
 					</var-button-group>
-				</var-badge>
+				</el-badge>
 			</div>
 			<!-- 下载控制 -->
 			<div class="toolbar-control-panel">
 				<!-- 下载按钮 -->
-				<var-badge
-					type="info"
-					:offset-y="0"
+				<el-badge
+					type="success"
 					style="z-index: 1"
 					:hidden="!checkedCardList.length"
 					:value="`${checkedCardList.length} (${checkedTotalSize})`">
@@ -126,7 +124,7 @@
 							</var-button-group>
 						</template>
 					</var-menu>
-				</var-badge>
+				</el-badge>
 			</div>
 
 			<!-- 其他过滤器 -->

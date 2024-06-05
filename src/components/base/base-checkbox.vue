@@ -1,21 +1,17 @@
 <template>
-	<div @click="isChecked = !isChecked">
-		<Transition appear>
-			<var-button
-				v-if="!isChecked"
-				:type="isChecked ? 'success' : 'default'"
-				icon-container
-				round>
-				<i-material-symbols-check-box-outline-blank />
-			</var-button>
-			<var-button
-				v-else
-				:type="isChecked ? 'success' : 'default'"
-				icon-container
-				round>
-				<i-material-symbols-check-box-rounded />
-			</var-button>
-		</Transition>
+	<div class="base-checkbox__container" @click="isChecked = !isChecked">
+		<el-button
+			size="small"
+			:type="isChecked ? 'success' : 'default'"
+			circle
+			v-ripple>
+			<template #icon>
+				<Transition appear>
+					<i-material-symbols-check-box-outline-blank v-if="!isChecked" />
+					<i-material-symbols-check-box-rounded v-else />
+				</Transition>
+			</template>
+		</el-button>
 	</div>
 </template>
 
@@ -46,9 +42,15 @@
 </script>
 
 <style scoped lang="scss">
-	// 进入动画的结束状态,进入动画的起始状态
-	.v-leave-to,
-	.v-enter-from {
+	.base-checkbox__container {
+		height: 24px;
+		aspect-ratio: 1;
+		display: flex;
+	}
+
+	// 进场过渡,退场过渡
+	.v-enter-from,
+	.v-leave-to {
 		position: absolute;
 		opacity: 0;
 		transform: scale(0);
@@ -61,10 +63,5 @@
 	// 离开的过程中
 	.v-leave-active {
 		transition: 0.5s;
-	}
-
-	:deep(.var-button--round) {
-		width: 26px;
-		height: 26px;
 	}
 </style>

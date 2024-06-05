@@ -7,7 +7,7 @@ import type {
 	BasePatternRowData,
 } from "../interface/Pattern";
 import { Rule } from "./Rule";
-import { buildUUID } from "@/utils/common";
+import { buildUUID, getFavicon } from "@/utils/common";
 
 // 匹配方案
 export class Pattern implements BasePattern {
@@ -136,25 +136,6 @@ export class Pattern implements BasePattern {
 	public getJson() {
 		return JSON.stringify(this.getRowData());
 	}
-}
-
-//f 获取站点Favicon图标
-export function getFavicon(): string {
-	let iconUrl: string;
-	//s [1]通过link标签查找
-	const urls = (
-		[...document.querySelectorAll("link[rel=icon]")] as HTMLLinkElement[]
-	)
-		.map((item: HTMLLinkElement) => item.href)
-		.filter((url) => /\.(png|svg|jpg|jpeg|webp|icon?)$/i.test(url));
-
-	if (urls.length > 0) {
-		iconUrl = urls[0];
-	} else {
-		//s [2]若没找到直接使用域名拼接
-		iconUrl = `${location.origin}/favicon.ico`;
-	}
-	return iconUrl;
 }
 
 // 默认方案

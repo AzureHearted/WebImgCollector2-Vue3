@@ -44,7 +44,7 @@ export class TaskQueue {
 		// 默认配置
 		const defaultOptions: Options = {
 			interval: 300,
-			overtime: 2000,
+			overtime: 5000,
 			maxConcurrent: 1,
 			onTaskComplete: () => {},
 			onTaskError: () => {},

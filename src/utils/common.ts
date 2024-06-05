@@ -55,8 +55,27 @@ export function getExtByBlob(blob: Blob) {
 	return ext;
 }
 
+// //f 获取站点Favicon图标
+// export async function getFavicon(): Promise<string> {
+// 	let iconUrl: string;
+// 	//s [1]通过link标签查找
+// 	const urls = (
+// 		[...document.querySelectorAll("link[rel=icon]")] as HTMLLinkElement[]
+// 	)
+// 		.map((item: HTMLLinkElement) => item.href)
+// 		.filter((url) => /\.(png|svg|jpg|jpeg|webp|icon?)$/i.test(url));
+
+// 	if (urls.length > 0) {
+// 		iconUrl = urls[0];
+// 	} else {
+// 		//s [2]若没找到直接使用域名拼接
+// 		iconUrl = `${location.origin}/favicon.ico`;
+// 	}
+// 	return iconUrl;
+// }
+
 //f 获取站点Favicon图标
-export async function getFavicon(): Promise<string> {
+export function getFavicon(): string {
 	let iconUrl: string;
 	//s [1]通过link标签查找
 	const urls = (

@@ -124,14 +124,14 @@
 	// f 数据改变(带防抖)
 	let timer: number | null = null; // 计时器
 	let handleTask: Function = () => {}; // 任务
+	// 默认配置项
+	const defaultOptions = {
+		delay: 300,
+	};
 	function handleResetPosition(
 		task?: (() => void) | any,
 		options?: { delay: number } // 配置选项,可用于临时调整时间间隔
 	) {
-		// 默认配置项
-		const defaultOptions = {
-			delay: 300,
-		};
 		// 先记录任务
 		if (task instanceof Function) {
 			handleTask = task;
@@ -145,20 +145,19 @@
 		const { delay } = { ...defaultOptions, ...options };
 		// 设置计时器等待时间到达执行重新布局
 		timer = window.setTimeout(() => {
-			// 时间到达则先将之前队列中存入的任务取出全部执行
-			handleTask(); // 执行任务
-			handleTask = () => {}; // 重置任务
 			// 最后布局
 			// console.time("布局");
+			handleTask(); // 执行任务
 			nextTick(() => {
 				if (!resetPosition()) {
 					// setTimeout(() => {
 					// 	handleResetPosition();
 					// }, 100);
-					console.log("布局失败！");
+					// console.log("布局失败！");
 				}
 			});
 			// console.timeEnd("布局");
+			handleTask = () => {}; // 重置任务
 		}, delay);
 	}
 
@@ -177,7 +176,7 @@
 		// 创建时如果数据不为空则进行进行一次布局
 		if (props.data.length && !dataInfo.list.length) {
 			dataInfo.list = props.data;
-			nextTick(() => {
+			requestAnimationFrame(() => {
 				resetPosition();
 			});
 		}
@@ -186,7 +185,7 @@
 	// 当组件被激活时执行
 	onActivated(() => {
 		// console.log("组件==>被激活");
-		nextTick(() => {
+		requestAnimationFrame(() => {
 			resetPosition();
 		});
 	});
