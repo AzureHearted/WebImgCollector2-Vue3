@@ -1,173 +1,171 @@
 <template>
-	<div class="gallery-toolbar-container">
-		<!-- 工具栏 -->
-		<div class="gallery-toolbar">
-			<!-- 进度条 -->
-			<el-progress
-				class="gallery-toolbar-loading"
-				striped
-				striped-flow
-				:class="{ 'loading-active': loadingStore.loading }"
-				:status="loadingStore.percentage === 100 ? 'success' : ''"
-				:stroke-width="12"
-				:show-text="false"
-				:text-inside="true"
-				:percentage="loadingStore.percentage">
-				<span style="font-size: 12px">
-					{{ loadingStore.percentage.toFixed(2) }}%
-				</span>
-			</el-progress>
-			<!-- 方案选择器 -->
-			<div class="pattern-input-select">
-				<el-select
-					v-model="patternStore.used.id"
-					:teleported="false"
-					:fallback-placements="['bottom-start']"
-					placeholder="请选择一个方案">
-					<el-option
-						v-for="item in patternStore.list"
-						:key="item.id"
-						:label="item.backup?.mainInfo.name"
-						:value="item.id">
-						<div style="display: flex; align-items: center; gap: 4px">
-							<BaseImg
-								:src="item.backup?.mainInfo.icon"
-								style="width: 24px; aspect-ratio: 1" />
-							<span>{{ item.backup?.mainInfo.name }} </span>
-						</div>
-					</el-option>
-				</el-select>
-			</div>
-			<!-- 操作栏 -->
-			<div class="toolbar-control-panel">
-				<!-- 控制按钮组 -->
-				<el-badge
-					:offset="[-8, 0]"
-					style="z-index: 3"
-					type="info"
-					:max="999"
-					:hidden="!cardStore.validCardList.length"
-					:value="cardStore.validCardList.length">
-					<var-menu
-						placement="bottom-start"
-						:default-style="false"
-						:trigger="isMobile() ? 'click' : 'hover'"
-						:teleport="false">
-						<var-button-group type="success">
-							<!-- 加载按钮 -->
-							<var-button
-								@click.stop="getCards"
-								:loading="loadingStore.loading"
-								block
-								icon-container>
-								加载
-							</var-button>
-							<var-button style="padding: 0 4px">
-								<i-material-symbols-arrow-drop-down-rounded
-									style="fill: white"
-									width="24"
-									height="24" />
-							</var-button>
-						</var-button-group>
-						<template #menu>
-							<var-button-group vertical>
-								<!-- 清空按钮 -->
-								<var-button type="danger" icon-container block @click="clear">
-									所有清空
-								</var-button>
-							</var-button-group>
-						</template>
-					</var-menu>
-				</el-badge>
-				<!-- 排序方式 -->
-				<div class="sort-method-input-select">
-					<el-select
-						v-model="cardStore.sort.method"
-						:fallback-placements="['bottom-start']"
-						placeholder="请选择一个排序方式">
-						<template v-for="group in cardStore.sort.groups" :key="group.label">
-							<!-- 默认排序 -->
-							<template v-if="group.label === '#'">
-								<el-option
-									v-for="item in group.options"
-									:key="item.value"
-									:label="item.label"
-									:value="item.value">
-								</el-option>
-							</template>
-							<!-- 其他排序 -->
-							<el-option-group v-else :label="group.label">
-								<el-option
-									v-for="item in group.options"
-									:key="item.value"
-									:label="item.label"
-									:value="item.value">
-								</el-option>
-							</el-option-group>
-						</template>
-					</el-select>
-				</div>
-			</div>
-			<!-- 选择器 -->
-			<div class="toolbar-control-panel">
-				<el-badge
-					:offset="[-115, 0]"
-					style="z-index: 2"
-					type="primary"
-					:max="999"
-					:hidden="!cardStore.filteredCardList.length"
-					:value="cardStore.filteredCardList.length">
-					<!-- 选择器按钮组 -->
-					<var-button-group class="control-button-group">
-						<var-button type="primary" @click="checkAll"> 全选 </var-button>
-						<var-button type="info" @click="inverseAll"> 反选 </var-button>
-						<var-button @click="cancel"> 取消 </var-button>
+	<div class="gallery-toolbar">
+		<!-- 进度条 -->
+		<el-progress
+			class="toolbar-loading"
+			striped
+			striped-flow
+			:class="{ 'loading-active': loadingStore.loading }"
+			:status="loadingStore.percentage === 100 ? 'success' : ''"
+			:stroke-width="12"
+			:show-text="false"
+			:text-inside="true"
+			:percentage="loadingStore.percentage">
+			<span style="font-size: 12px">
+				{{ loadingStore.percentage.toFixed(2) }}%
+			</span>
+		</el-progress>
+		<!-- 方案选择器 -->
+		<div class="pattern-select">
+			<el-select
+				v-model="patternStore.used.id"
+				:teleported="false"
+				:fallback-placements="['bottom-start']"
+				placeholder="请选择一个方案">
+				<el-option
+					v-for="item in patternStore.list"
+					:key="item.id"
+					:label="item.backup?.mainInfo.name"
+					:value="item.id">
+					<div style="display: flex; align-items: center; gap: 4px">
+						<BaseImg
+							:src="item.backup?.mainInfo.icon"
+							style="width: 24px; aspect-ratio: 1" />
+						<span>{{ item.backup?.mainInfo.name }} </span>
+					</div>
+				</el-option>
+			</el-select>
+		</div>
+		<!-- 操作栏 -->
+		<div class="control-group-button">
+			<!-- 控制按钮组 -->
+			<el-badge
+				:offset="[-8, 0]"
+				style="z-index: 3"
+				type="info"
+				:max="999"
+				:hidden="!cardStore.validCardList.length"
+				:value="cardStore.validCardList.length">
+				<var-menu
+					placement="bottom-start"
+					:default-style="false"
+					:trigger="isMobile() ? 'click' : 'hover'"
+					:teleport="false">
+					<var-button-group type="success">
+						<!-- 加载按钮 -->
+						<var-button
+							@click.stop="getCards"
+							:loading="loadingStore.loading"
+							block
+							icon-container>
+							加载
+						</var-button>
+						<var-button style="padding: 0 4px">
+							<i-material-symbols-arrow-drop-down-rounded
+								style="fill: white"
+								width="24"
+								height="24" />
+						</var-button>
 					</var-button-group>
-				</el-badge>
-			</div>
-			<!-- 下载控制 -->
-			<div class="toolbar-control-panel">
-				<!-- 下载按钮 -->
-				<el-badge
-					type="success"
-					style="z-index: 2"
-					:max="999"
-					:hidden="!checkedCardList.length"
-					:value="`${checkedCardList.length} (${checkedTotalSize})`">
-					<var-menu
-						placement="bottom-start"
-						:default-style="false"
-						:trigger="isMobile() ? 'click' : 'hover'"
-						:teleport="false">
-						<var-button-group type="primary">
-							<var-button
-								:disabled="!checkedCardList.length"
-								@click.stop="downloadSelected">
-								下载
-							</var-button>
-							<var-button
-								:disabled="!cardStore.validCardList.length"
-								style="padding: 0 4px">
-								<i-material-symbols-arrow-drop-down-rounded
-									style="fill: white"
-									width="24"
-									height="24" />
+					<template #menu>
+						<var-button-group vertical>
+							<!-- 清空按钮 -->
+							<var-button type="danger" icon-container block @click="clear">
+								所有清空
 							</var-button>
 						</var-button-group>
-						<template #menu>
-							<var-button-group vertical>
-								<var-button @click="downloadAll"> 全部下载 </var-button>
-								<var-button type="danger" @click="deleteSelected">
-									删除选中项
-								</var-button>
-							</var-button-group>
-						</template>
-					</var-menu>
-				</el-badge>
-			</div>
-			<!-- 其他过滤器 -->
-			<div class="filter-control-panel other-filter">
-				<!-- 类型过滤器 -->
+					</template>
+				</var-menu>
+			</el-badge>
+		</div>
+		<!-- 排序方式 -->
+		<div class="sort-method-select">
+			<el-select
+				v-model="cardStore.sort.method"
+				:fallback-placements="['bottom-start']"
+				placeholder="请选择一个排序方式">
+				<template v-for="group in cardStore.sort.groups" :key="group.label">
+					<!-- 默认排序 -->
+					<template v-if="group.label === '#'">
+						<el-option
+							v-for="item in group.options"
+							:key="item.value"
+							:label="item.label"
+							:value="item.value">
+						</el-option>
+					</template>
+					<!-- 其他排序 -->
+					<el-option-group v-else :label="group.label">
+						<el-option
+							v-for="item in group.options"
+							:key="item.value"
+							:label="item.label"
+							:value="item.value">
+						</el-option>
+					</el-option-group>
+				</template>
+			</el-select>
+		</div>
+		<!-- 选择器 -->
+		<div class="control-group-button">
+			<el-badge
+				:offset="[-118, 0]"
+				style="z-index: 2"
+				type="primary"
+				:max="999"
+				:hidden="!cardStore.filteredCardList.length"
+				:value="cardStore.filteredCardList.length">
+				<!-- 选择器按钮组 -->
+				<var-button-group class="control-button-group">
+					<var-button type="primary" @click="checkAll"> 全选 </var-button>
+					<var-button type="info" @click="inverseAll"> 反选 </var-button>
+					<var-button @click="cancel"> 取消 </var-button>
+				</var-button-group>
+			</el-badge>
+		</div>
+		<!-- 下载控制 -->
+		<div class="control-group-button">
+			<!-- 下载按钮 -->
+			<el-badge
+				type="success"
+				style="z-index: 2"
+				:max="999"
+				:hidden="!checkedCardList.length"
+				:value="`${checkedCardList.length} (${checkedTotalSize})`">
+				<var-menu
+					placement="bottom-start"
+					:default-style="false"
+					:trigger="isMobile() ? 'click' : 'hover'"
+					:teleport="false">
+					<var-button-group type="primary">
+						<var-button
+							:disabled="!checkedCardList.length"
+							@click.stop="downloadSelected">
+							下载
+						</var-button>
+						<var-button
+							:disabled="!cardStore.validCardList.length"
+							style="padding: 0 4px">
+							<i-material-symbols-arrow-drop-down-rounded
+								style="fill: white"
+								width="24"
+								height="24" />
+						</var-button>
+					</var-button-group>
+					<template #menu>
+						<var-button-group vertical>
+							<var-button @click="downloadAll"> 全部下载 </var-button>
+							<var-button type="danger" @click="deleteSelected">
+								删除选中项
+							</var-button>
+						</var-button-group>
+					</template>
+				</var-menu>
+			</el-badge>
+		</div>
+		<div class="control-group">
+			<!-- 类型过滤器 -->
+			<div class="type-select">
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.type"
@@ -191,8 +189,9 @@
 						</span>
 					</el-option>
 				</el-select>
-
-				<!-- 扩展名过滤器 -->
+			</div>
+			<!-- 扩展名过滤器 -->
+			<div class="ext-select">
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.extension"
@@ -218,36 +217,35 @@
 					</el-option>
 				</el-select>
 			</div>
-			<!-- 尺寸过滤器 -->
-			<div class="filter-control-panel size-filter">
-				<!-- 宽度过滤器 -->
-				<div class="filter-input">
-					<el-text type="primary" class="input-slider-label">宽度</el-text>
-					<el-slider
-						class="filter-input-slider"
-						:size="isMobile() ? 'small' : 'default'"
-						v-model="filters.size.width"
-						range
-						:step="1"
-						:max="cardStore.info.size.width[1]"
-						:min="cardStore.info.size.width[0]"
-						:marks="cardStore.filters.size.marks"
-						@change="filterChange('width', $event as [number, number])" />
-				</div>
-				<!-- 高度过滤器 -->
-				<div class="filter-input">
-					<el-text type="primary" class="input-slider-label">高度</el-text>
-					<el-slider
-						class="filter-input-slider"
-						:size="isMobile() ? 'small' : 'default'"
-						v-model="filters.size.height"
-						range
-						:step="1"
-						:max="cardStore.info.size.height[1]"
-						:min="cardStore.info.size.height[0]"
-						:marks="cardStore.filters.size.marks"
-						@change="filterChange('height', $event as [number, number])" />
-				</div>
+		</div>
+
+		<!-- 尺寸过滤器 -->
+		<div class="size-filter">
+			<!-- 宽度过滤器 -->
+			<div class="width-filter">
+				<el-text type="primary">宽度</el-text>
+				<el-slider
+					:size="isMobile() ? 'small' : 'default'"
+					v-model="filters.size.width"
+					range
+					:step="1"
+					:max="cardStore.info.size.width[1]"
+					:min="cardStore.info.size.width[0]"
+					:marks="cardStore.filters.size.marks"
+					@change="filterChange('width', $event as [number, number])" />
+			</div>
+			<!-- 高度过滤器 -->
+			<div class="height-filter">
+				<el-text type="primary">高度</el-text>
+				<el-slider
+					:size="isMobile() ? 'small' : 'default'"
+					v-model="filters.size.height"
+					range
+					:step="1"
+					:max="cardStore.info.size.height[1]"
+					:min="cardStore.info.size.height[0]"
+					:marks="cardStore.filters.size.marks"
+					@change="filterChange('height', $event as [number, number])" />
 			</div>
 		</div>
 	</div>
@@ -373,12 +371,12 @@
 <style lang="scss" scoped>
 	@use "@/styles/shadow.scss" as shadow;
 	// 工具栏容器
-	.gallery-toolbar-container {
+	.gallery-toolbar {
 		position: relative;
 	}
 
-	.gallery-toolbar-loading {
-		// margin: 2px 0;
+	// loading样式
+	.toolbar-loading {
 		margin-bottom: 4px;
 		width: 100%;
 		transform: translateY(-20px);
@@ -403,123 +401,69 @@
 		flex-flow: row wrap;
 		// padding: 4px 4px 2px 4px;
 		padding: 2px;
-		gap: 4px;
+		gap: 2px;
 		background: rgba(255, 255, 255, 0.2);
-		align-content: center;
+		align-items: center;
 		box-shadow: shadow.$elevation;
 	}
 
-	// 控制面板样式
-	.toolbar-control-panel {
-		display: flex;
-		align-items: center;
-		gap: 4px;
-
-		.sort-method-input-select {
-			width: 130px;
-			margin-right: 2px;
-			display: flex;
-			align-items: center;
-		}
-	}
 	// 方案选择器样式
-	.pattern-input-select {
+	.pattern-select {
 		width: 130px;
-		margin-right: 2px;
-		display: flex;
-		align-items: center;
+	}
+
+	// 排序方式选择器
+	.sort-method-select {
+		width: 130px;
 	}
 	// 控制按钮组样式
 	.control-button-group {
 		height: fit-content;
 	}
-	// 过滤器面板样式
-	.filter-control-panel {
+
+	// 控制组样式
+	.control-group {
+		flex: 0;
+		display: flex;
+		flex-flow: row nowrap;
+		gap: 2px;
+	}
+
+	// 类型、扩展名选择器样式
+	.type-select,
+	.ext-select {
+		width: 150px;
+	}
+
+	// 尺寸过滤器样式
+	.size-filter {
+		flex: auto;
 		display: flex;
 		flex-flow: row wrap;
-		gap: 4px;
-		// background: wheat;
-		// margin: 0 2px 2px 0;
-
-		// 尺寸过滤器
-		&.size-filter {
-			flex: 1;
-			flex-wrap: wrap;
-
-			.filter-input {
-				flex: 1 0;
-				min-width: 320px;
-				max-width: 600px;
-				font-size: 12px;
-				display: flex;
-				align-items: center;
-				margin: 0 3px;
-				// padding: 6px 0;
-
-				.filter-input-slider {
-					margin: 0 8px;
-				}
-				:deep(.wic2-input__wrapper) {
-					padding-left: 0;
-					padding-right: 26px;
-					.wic2-input__inner {
-						text-align: start;
-					}
-				}
-				:deep(.wic2-slider__button-wrapper) {
-					width: unset;
-				}
-			}
+		gap: 8px;
+		margin-top: 4px;
+		// 宽度和高度过滤器的通用样式
+		.width-filter,
+		.height-filter {
+			flex: 1 0;
+			min-width: 200px;
+			max-width: 400px;
+			display: flex;
+			flex-flow: row nowrap;
+			padding-right: 10px;
+			font-size: 12px;
 
 			// 标签样式
-			.filter-input .input-slider-label {
-				display: flex;
-				align-items: center;
-				width: 40px;
-				font-size: 14px;
-				overflow: hidden;
-				text-overflow: ellipsis;
+			& > span {
+				width: fit-content;
+				margin-right: 12px;
 				white-space: nowrap;
-				margin-bottom: 0;
-				user-select: none;
 			}
-		}
-
-		// 其他选择器
-		&.other-filter {
-			flex: 0;
-			flex-wrap: nowrap;
-			align-items: center;
-			// 选择器样式
-			.filter-input-select {
-				flex: 1;
-				width: 150px;
-				min-width: 150px;
-				max-width: 200px;
-				// margin: 0 2px;
-			}
-
-			:deep(.v-field),
-			:deep(.v-input) {
-				height: fit-content;
-			}
-		}
-
-		:deep(input) {
-			padding: 0 4px;
-			background-color: unset;
 		}
 	}
 
-	:deep(.v-slider) input {
-		background: unset;
-		border: unset;
-		box-shadow: unset;
-		margin: unset;
-		padding: unset;
-		border-radius: unset;
-		border: unset;
-		font-size: unset;
-		color: unset;
+	// 样式修复
+	:deep(.wic2-badge) {
+		display: block;
 	}
 </style>

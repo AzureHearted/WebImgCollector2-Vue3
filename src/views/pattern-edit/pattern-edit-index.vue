@@ -33,7 +33,7 @@
 
 		.rule-tree-container {
 			position: relative;
-			flex: 0 0 225px;
+			flex: 0 0 230px;
 			// padding: 4px;
 			height: 100%;
 
