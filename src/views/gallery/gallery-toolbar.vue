@@ -5,6 +5,8 @@
 			<!-- 进度条 -->
 			<el-progress
 				class="gallery-toolbar-loading"
+				striped
+				striped-flow
 				:class="{ 'loading-active': loadingStore.loading }"
 				:status="loadingStore.percentage === 100 ? 'success' : ''"
 				:stroke-width="12"
@@ -19,6 +21,7 @@
 			<div class="pattern-input-select">
 				<el-select
 					v-model="patternStore.used.id"
+					:teleported="false"
 					:fallback-placements="['bottom-start']"
 					placeholder="请选择一个方案">
 					<el-option
@@ -76,6 +79,34 @@
 						</template>
 					</var-menu>
 				</el-badge>
+				<!-- 排序方式 -->
+				<div class="sort-method-input-select">
+					<el-select
+						v-model="cardStore.sort.method"
+						:fallback-placements="['bottom-start']"
+						placeholder="请选择一个排序方式">
+						<template v-for="group in cardStore.sort.groups" :key="group.label">
+							<!-- 默认排序 -->
+							<template v-if="group.label === '#'">
+								<el-option
+									v-for="item in group.options"
+									:key="item.value"
+									:label="item.label"
+									:value="item.value">
+								</el-option>
+							</template>
+							<!-- 其他排序 -->
+							<el-option-group v-else :label="group.label">
+								<el-option
+									v-for="item in group.options"
+									:key="item.value"
+									:label="item.label"
+									:value="item.value">
+								</el-option>
+							</el-option-group>
+						</template>
+					</el-select>
+				</div>
 			</div>
 			<!-- 选择器 -->
 			<div class="toolbar-control-panel">
@@ -134,17 +165,19 @@
 					</var-menu>
 				</el-badge>
 			</div>
-
 			<!-- 其他过滤器 -->
 			<div class="filter-control-panel other-filter">
 				<!-- 类型过滤器 -->
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.type"
+					:teleported="false"
 					multiple
 					clearable
 					collapse-tags
 					:max-collapse-tags="1"
+					tag-type="primary"
+					:fallback-placements="['bottom-start']"
 					collapse-tags-tooltip
 					placeholder="类型过滤">
 					<el-option
@@ -163,10 +196,14 @@
 				<el-select
 					class="filter-input-select"
 					v-model="cardStore.filters.extension"
+					:teleported="false"
 					multiple
 					clearable
 					collapse-tags
 					:max-collapse-tags="1"
+					tag-type="primary"
+					placement="bottom-start"
+					:fallback-placements="['bottom-start']"
 					collapse-tags-tooltip
 					placeholder="扩展名过滤">
 					<el-option
@@ -186,7 +223,6 @@
 				<!-- 宽度过滤器 -->
 				<div class="filter-input">
 					<el-text type="primary" class="input-slider-label">宽度</el-text>
-					<el-text>{{ filters.size.width[0] }}px</el-text>
 					<el-slider
 						class="filter-input-slider"
 						:size="isMobile() ? 'small' : 'default'"
@@ -197,14 +233,10 @@
 						:min="cardStore.info.size.width[0]"
 						:marks="cardStore.filters.size.marks"
 						@change="filterChange('width', $event as [number, number])" />
-					<el-text style="margin-left: 8px">
-						{{ filters.size.width[1] }}px
-					</el-text>
 				</div>
 				<!-- 高度过滤器 -->
 				<div class="filter-input">
 					<el-text type="primary" class="input-slider-label">高度</el-text>
-					<el-text>{{ filters.size.height[0] }}px</el-text>
 					<el-slider
 						class="filter-input-slider"
 						:size="isMobile() ? 'small' : 'default'"
@@ -215,9 +247,6 @@
 						:min="cardStore.info.size.height[0]"
 						:marks="cardStore.filters.size.marks"
 						@change="filterChange('height', $event as [number, number])" />
-					<el-text style="margin-left: 8px">
-						{{ filters.size.height[1] }}px
-					</el-text>
 				</div>
 			</div>
 		</div>
@@ -372,8 +401,9 @@
 		flex: 0;
 		display: flex;
 		flex-flow: row wrap;
-		padding: 4px 4px 2px 4px;
-		gap: 2px;
+		// padding: 4px 4px 2px 4px;
+		padding: 2px;
+		gap: 4px;
 		background: rgba(255, 255, 255, 0.2);
 		align-content: center;
 		box-shadow: shadow.$elevation;
@@ -381,12 +411,16 @@
 
 	// 控制面板样式
 	.toolbar-control-panel {
-		// flex: 1;
-		// padding: 2px;
-		// margin-right: 2px;
-		// margin-bottom: 2px;
 		display: flex;
 		align-items: center;
+		gap: 4px;
+
+		.sort-method-input-select {
+			width: 130px;
+			margin-right: 2px;
+			display: flex;
+			align-items: center;
+		}
 	}
 	// 方案选择器样式
 	.pattern-input-select {
@@ -403,8 +437,9 @@
 	.filter-control-panel {
 		display: flex;
 		flex-flow: row wrap;
+		gap: 4px;
 		// background: wheat;
-		margin: 0 2px 2px 0;
+		// margin: 0 2px 2px 0;
 
 		// 尺寸过滤器
 		&.size-filter {
@@ -440,7 +475,7 @@
 			.filter-input .input-slider-label {
 				display: flex;
 				align-items: center;
-				width: 60px;
+				width: 40px;
 				font-size: 14px;
 				overflow: hidden;
 				text-overflow: ellipsis;
@@ -461,7 +496,7 @@
 				width: 150px;
 				min-width: 150px;
 				max-width: 200px;
-				margin: 0 2px;
+				// margin: 0 2px;
 			}
 
 			:deep(.v-field),

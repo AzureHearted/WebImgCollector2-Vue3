@@ -5,7 +5,12 @@ import Card from "./class/Card";
 import { TaskQueue } from "@/utils/taskQueue"; // 任务队列
 // 导入工具
 import getCard from "./utils/get-cards";
-import { getBlobType, getExtByBlob, getNameByUrl } from "@/utils/common";
+import {
+	getBlobType,
+	getExtByBlob,
+	getNameByUrl,
+	mixSort,
+} from "@/utils/common";
 // 导入网络工具请求
 import { getBlobByUrlAuto } from "@/utils/http";
 // 导入打包和保存工具
@@ -110,6 +115,39 @@ export default defineStore("cardStore", () => {
 		extension: ref<string[]>([]), //扩展名过滤器
 	});
 
+	// 排序相关
+	const sortOptions = [
+		{ value: "#", label: "默认排序", group: "#" },
+		{ value: "name-asc", label: "名称-升序", group: "名称" },
+		{ value: "name-desc", label: "名称-降序", group: "名称" },
+		{ value: "width-asc", label: "宽度-升序", group: "尺寸" },
+		{ value: "width-desc", label: "宽度-降序", group: "尺寸" },
+		{ value: "height-asc", label: "高度-升序", group: "尺寸" },
+		{ value: "height-desc", label: "高度-降序", group: "尺寸" },
+	] as const; // 这里断言数组中的所有属性值为只读(为了能正确进行类型提示)
+	type sortGroup = { label: string; options: (typeof sortOptions)[number][] };
+	// 排序对象
+	const sort = reactive({
+		method: "#" as (typeof sortOptions)[number]["value"],
+		options: sortOptions,
+		// (访问器)获取分组数组
+		get groups(): sortGroup[] {
+			return Object.values(
+				this.options.reduce((prev, curr) => {
+					if (prev[curr.group]) {
+						prev[curr.group].options.push(curr);
+					} else {
+						prev[curr.group] = {
+							label: curr.group,
+							options: [curr],
+						};
+					}
+					return prev;
+				}, <{ [key: string]: sortGroup }>{})
+			);
+		},
+	});
+
 	// j 有效的卡片
 	const validCardList = computed(() => {
 		return data.cardList.filter((x) => !!x);
@@ -118,7 +156,7 @@ export default defineStore("cardStore", () => {
 	// j 过滤后的卡片
 	const filteredCardList = computed(() => {
 		// 后续添加处理逻辑，例如过滤、排序等操作。
-		return data.cardList.filter((x) => {
+		let matchList = data.cardList.filter((x) => {
 			// * 暂时取消最大尺寸限制的过滤
 			const isMatch =
 				!!x && // 过滤排除
@@ -140,6 +178,34 @@ export default defineStore("cardStore", () => {
 			}
 			return isMatch;
 		});
+		// 排序
+		if (sort.method === "#") return matchList;
+		if (sort.method === "name-asc") {
+			matchList = matchList.sort((a, b) =>
+				mixSort(a.description.title, b.description.title)
+			);
+		} else if (sort.method === "name-desc") {
+			matchList = matchList.sort((a, b) =>
+				mixSort(b.description.title, a.description.title)
+			);
+		} else if (sort.method === "width-asc") {
+			matchList = matchList.sort(
+				(a, b) => a.source.meta.width - b.source.meta.width
+			);
+		} else if (sort.method === "width-desc") {
+			matchList = matchList.sort(
+				(a, b) => b.source.meta.width - a.source.meta.width
+			);
+		} else if (sort.method === "height-asc") {
+			matchList = matchList.sort(
+				(a, b) => a.source.meta.height - b.source.meta.height
+			);
+		} else if (sort.method === "height-desc") {
+			matchList = matchList.sort(
+				(a, b) => b.source.meta.height - a.source.meta.height
+			);
+		}
+		return matchList;
 	});
 
 	// j 类型列表
@@ -475,6 +541,7 @@ export default defineStore("cardStore", () => {
 	return {
 		data,
 		info,
+		sort,
 		filters,
 		validCardList,
 		filteredCardList,

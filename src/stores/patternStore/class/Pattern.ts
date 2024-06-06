@@ -1,4 +1,4 @@
-import { cloneDeep, flatten, isEqual } from "@/plugin/lodash";
+import { cloneDeep, isEqual } from "@/plugin/lodash";
 import type {
 	BasePattern,
 	BaseStatus,

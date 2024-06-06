@@ -46,30 +46,25 @@
 				v-if="editingPattern"
 				ref="form"
 				label-position="left"
-				:disabled="editingPattern!.id.includes('#')">
+				:disabled="editingPattern.id.includes('#')">
 				<el-form-item label="方案名称">
 					<el-input
-						v-model="editingPattern!.mainInfo.name"
+						v-model="editingPattern.mainInfo.name"
 						placeholder=""
 						clearable></el-input>
 				</el-form-item>
 				<el-form-item label="域名">
 					<el-input
-						v-model="editingPattern!.mainInfo.host"
+						v-model="editingPattern.mainInfo.host"
 						placeholder=""
 						clearable></el-input>
 				</el-form-item>
 				<el-form-item label="过滤器">
 					<el-input
-						v-model="editingPattern!.mainInfo.filter.expression"
+						v-model="editingPattern.mainInfo.filter.expression"
 						placeholder="输入正则表达式">
-						<!-- s输入框前置内容 -->
-						<!-- <template #prepend> 正则 </template> -->
-						<!-- s输入框头部内容 -->
 						<template #prefix> / </template>
-						<!-- s输入框尾部内容 -->
 						<template #suffix> / </template>
-						<!-- s输入框后置内容 -->
 						<template #append>
 							<el-select
 								style="width: 120px"
@@ -77,7 +72,7 @@
 								collapse-tags
 								collapse-tags-tooltip
 								clearable
-								v-model="editingPattern!.mainInfo.filter.flags"
+								v-model="editingPattern.mainInfo.filter.flags"
 								placeholder="修饰符">
 								<el-tooltip
 									:show-after="500"
@@ -99,13 +94,13 @@
 				</el-form-item>
 				<el-form-item label="图标">
 					<el-input
-						v-model="editingPattern!.mainInfo.icon"
+						v-model="editingPattern.mainInfo.icon"
 						placeholder="输入图标地址"
 						clearable>
-						<template v-if="editingPattern!.mainInfo.icon.length" #append>
+						<template v-if="editingPattern.mainInfo.icon.length" #append>
 							<el-image
 								style="aspect-ratio: 1; height: 24px"
-								:src="editingPattern!.mainInfo.icon">
+								:src="editingPattern.mainInfo.icon">
 								<template #error>
 									<span></span>
 								</template>
@@ -115,12 +110,12 @@
 				</el-form-item>
 				<el-form-item label="标题选择器">
 					<el-input
-						v-model="editingPattern!.mainInfo.titleSelector"
+						v-model="editingPattern.mainInfo.titleSelector"
 						placeholder=""
 						clearable></el-input>
 				</el-form-item>
 			</el-form>
-			<template #footer>
+			<template v-if="!editingPattern.id.includes('#')" #footer>
 				<el-button type="success" @click="save">
 					<template #icon>
 						<i-material-symbols-save />
@@ -138,15 +133,34 @@
 					</template>
 					重置
 				</el-button>
+				<el-button
+					style="margin-left: auto"
+					v-if="!editingPattern.id.includes('#')"
+					type="primary"
+					@click="pasteRule">
+					<template #icon>
+						<i-material-symbols-markdown-paste-rounded />
+					</template>
+					粘贴规则
+				</el-button>
 			</template>
 		</el-card>
 		<!-- 规则表单 -->
 		<el-card v-if="editingRule">
+			<!-- 卡片头 -->
 			<template #header>
 				<div class="form-card-header">
 					<div class="form-card-header-left">
-						<i-material-symbols-regular-expression-rounded />
-						{{ editingRule?.name }}
+						<!-- {{ editingRule.name }} -->
+						<el-input
+							placeholder="规则名"
+							:disabled="editingRule.id.includes('#')"
+							name="ruleName"
+							v-model="editingRule.name">
+							<template #prepend>
+								<i-material-symbols-regular-expression-rounded />
+							</template>
+						</el-input>
 					</div>
 					<div class="form-card-header-right">
 						<!-- 下载规则 -->
@@ -170,9 +184,10 @@
 			</template>
 			<el-switch
 				v-model="editingRule.enable"
-				:disabled="editingRule!.id.includes('#')"
+				:disabled="editingRule.id.includes('#')"
 				active-text="启用"
 				inactive-text="禁用" />
+			<!-- 表单Tabs -->
 			<FormTabs />
 		</el-card>
 	</div>
@@ -186,7 +201,7 @@
 	import { storeToRefs } from "pinia";
 	import { usePatternStore } from "@/stores";
 	import { Pattern } from "@/stores/patternStore/class/Pattern";
-	import type { Rule } from "@/stores/patternStore/class/Rule";
+	import { Rule } from "@/stores/patternStore/class/Rule";
 	import { useClipboard } from "@vueuse/core";
 	import { saveAs } from "file-saver";
 	const patternStore = usePatternStore();
@@ -253,6 +268,71 @@
 		url = "https://" + url.trim();
 		window.open(url, "_blank");
 	}
+
+	// 粘贴规则
+	function pasteRule() {
+		navigator.clipboard
+			.readText()
+			.then((dataStr) => {
+				console.log("剪贴板文本：", dataStr);
+				// 先尝试解析成一个对象
+				let obj: any;
+				try {
+					obj = JSON.parse(dataStr);
+				} catch (e) {
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容解析失败",
+						appendTo: ".web-img-collector-notification-container",
+					});
+					return;
+				}
+				// 如果方案解析失败,则进一步尝试解析为规则
+				let rule: Rule | false = false;
+				try {
+					rule = new Rule(obj);
+					// 将解析出来的规则添加到当前编辑中的方案中
+					if (
+						!patternStore.editingPattern ||
+						patternStore.editingPattern.id.includes("#")
+					) {
+						ElNotification({
+							type: "error",
+							title: "失败",
+							message: "请在方案中进行此操作",
+							appendTo: ".web-img-collector-notification-container",
+						});
+						return;
+					}
+					patternStore.editingPattern.rules.push(rule);
+					// 设置编辑规则为当前规则
+					patternStore.editing.rid = rule.id;
+					ElNotification({
+						type: "success",
+						title: "成功",
+						message: "成功解析为规则",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				} catch (e) {
+					// 如果解析失败则提示错误
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容不符合规则的数据格式",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				}
+			})
+			.catch(() => {
+				ElNotification({
+					type: "error",
+					title: "失败",
+					message: "剪贴板内容读取失败",
+					appendTo: ".web-img-collector-notification-container",
+				});
+			});
+	}
 </script>
 
 <style lang="scss" scoped>
@@ -264,6 +344,7 @@
 	}
 	:deep(.wic2-card__header),
 	:deep(.wic2-card__footer) {
+		display: flex;
 		padding: 8px 20px;
 	}
 	:deep(.wic2-card__body) {
@@ -273,11 +354,15 @@
 		display: flex;
 		justify-content: space-between;
 		font-size: 14px;
+		width: 100%;
 
 		.form-card-header-left {
 			display: flex;
 			align-items: center;
 			gap: 8px;
+		}
+		.form-card-header-right {
+			margin-left: auto;
 		}
 	}
 	.form-container :deep(.wic2-form-item__label) {

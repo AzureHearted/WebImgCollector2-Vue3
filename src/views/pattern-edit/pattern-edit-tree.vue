@@ -9,31 +9,11 @@
 						</template>
 						新建方案
 					</el-button>
-					<el-button type="danger">
-						<template #icon>
-							<i-material-symbols-delete-rounded />
-						</template>
-						删除
-					</el-button>
-				</el-button-group>
-				<el-button-group class="pattern-tree__button-group">
 					<el-button type="success" @click="pastePattern">
 						<template #icon>
 							<i-material-symbols-content-paste-search-rounded />
 						</template>
 						粘贴方案
-					</el-button>
-					<el-button
-						v-if="
-							patternStore.editingPattern &&
-							!patternStore.editingPattern.id.includes('#')
-						"
-						type="warning"
-						@click="pasteRule">
-						<template #icon>
-							<i-material-symbols-markdown-paste-rounded />
-						</template>
-						粘贴规则
 					</el-button>
 				</el-button-group>
 			</div>
@@ -96,35 +76,7 @@
 										is-dot
 										:offset="[-4, 4]"
 										:hidden="!(data.rowData as Pattern|Rule).isChange()">
-										<span v-if="data.id.includes('#')">
-											{{ node.label }}
-										</span>
-										<span v-else>
-											<!-- 方案类型 -->
-											<span v-if="data.type === 'pattern'">
-												<!-- {{ (data.rowData as Pattern).backup?.mainInfo.name }} -->
-												{{ node.label }}
-											</span>
-											<!-- 规则类型 -->
-											<span v-if="data.type === 'rule'">
-												<span v-if="(data.rowData as Rule).state.editing">
-													<el-input
-														size="small"
-														@drag.stop.prevent
-														@dragstart.stop.prevent
-														@blur="(data.rowData as Rule).state.editing = false"
-														v-model="(data.rowData as Rule).name">
-													</el-input>
-												</span>
-												<span
-													v-else
-													@dblclick="
-														(data.rowData as Rule).state.editing = true
-													">
-													{{ node.label }}
-												</span>
-											</span>
-										</span>
+										{{ node.label }}
 									</el-badge>
 								</el-tooltip>
 							</div>
@@ -139,23 +91,6 @@
 									@click.stop="addRule(node, data)">
 									<template #icon>
 										<i-ep-circle-plus />
-									</template>
-								</el-button>
-								<!-- 重命名(规则) -->
-								<el-button
-									v-if="data.type === 'rule'"
-									:type="(data.rowData as Rule).state.editing ? 'success' : 'primary'"
-									size="small"
-									circle
-									@click.stop="
-										(data.rowData as Rule).state.editing = !(
-											data.rowData as Rule
-										).state.editing
-									">
-									<template #icon>
-										<i-ant-design-edit-outlined
-											v-if="!(data.rowData as Rule).state.editing" />
-										<i-ant-design-check-circle-filled v-else />
 									</template>
 								</el-button>
 								<!-- 删除按钮 -->
@@ -187,15 +122,7 @@
 </template>
 
 <script setup lang="ts">
-	import {
-		ref,
-		watch,
-		computed,
-		nextTick,
-		onBeforeUpdate,
-		onMounted,
-		onUpdated,
-	} from "vue";
+	import { ref, watch, computed } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import type { ComputedRef } from "vue";
 	import { storeToRefs } from "pinia";
@@ -506,70 +433,7 @@
 			});
 	}
 
-	// 粘贴规则
-	function pasteRule() {
-		navigator.clipboard
-			.readText()
-			.then((dataStr) => {
-				console.log("剪贴板文本：", dataStr);
-				// 先尝试解析成一个对象
-				let obj: any;
-				try {
-					obj = JSON.parse(dataStr);
-				} catch (e) {
-					ElNotification({
-						type: "error",
-						title: "失败",
-						message: "剪贴板内容解析失败",
-						appendTo: ".web-img-collector-notification-container",
-					});
-					return;
-				}
-				// 如果方案解析失败,则进一步尝试解析为规则
-				let rule: Rule | false = false;
-				try {
-					rule = new Rule(obj);
-					// 将解析出来的规则添加到当前编辑中的方案中
-					if (
-						!patternStore.editingPattern ||
-						patternStore.editingPattern.id.includes("#")
-					) {
-						ElNotification({
-							type: "error",
-							title: "失败",
-							message: "请在方案中进行此操作",
-							appendTo: ".web-img-collector-notification-container",
-						});
-						return;
-					}
-					patternStore.editingPattern.rules.push(rule);
-					patternStore.saveUserPatternInfo();
-					ElNotification({
-						type: "success",
-						title: "成功",
-						message: "成功解析为规则",
-						appendTo: ".web-img-collector-notification-container",
-					});
-				} catch (e) {
-					// 如果解析失败则提示错误
-					ElNotification({
-						type: "error",
-						title: "失败",
-						message: "剪贴板内容不符合规则的数据格式",
-						appendTo: ".web-img-collector-notification-container",
-					});
-				}
-			})
-			.catch(() => {
-				ElNotification({
-					type: "error",
-					title: "失败",
-					message: "剪贴板内容读取失败",
-					appendTo: ".web-img-collector-notification-container",
-				});
-			});
-	}
-
+	
 	// 添加规则
 	function addRule(node: Node, data: Tree) {
 		// console.log("添加规则", node, data);

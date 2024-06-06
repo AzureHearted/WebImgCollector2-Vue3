@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     BaseCheckbox: typeof import('./../src/components/base/base-checkbox.vue')['default']
+    BaseDock: typeof import('./../src/components/base/base-dock.vue')['default']
     BaseImg: typeof import('./../src/components/base/base-img.vue')['default']
     BaseImgCard: typeof import('./../src/components/base/base-img-card.vue')['default']
     BaseScrollbar: typeof import('./../src/components/base/base-scrollbar.vue')['default']
@@ -29,6 +30,7 @@ declare module 'vue' {
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElOption: typeof import('element-plus/es')['ElOption']
+    ElOptionGroup: typeof import('element-plus/es')['ElOptionGroup']
     ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
     ElProgress: typeof import('element-plus/es')['ElProgress']
     ElSelect: typeof import('element-plus/es')['ElSelect']
@@ -39,9 +41,7 @@ declare module 'vue' {
     ElText: typeof import('element-plus/es')['ElText']
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElTree: typeof import('element-plus/es')['ElTree']
-    IAntDesignCheckCircleFilled: typeof import('~icons/ant-design/check-circle-filled')['default']
     IAntDesignCloseCircleFilled: typeof import('~icons/ant-design/close-circle-filled')['default']
-    IAntDesignEditOutlined: typeof import('~icons/ant-design/edit-outlined')['default']
     IAntDesignMenuOutlined: typeof import('~icons/ant-design/menu-outlined')['default']
     IEpArrowDownBold: typeof import('~icons/ep/arrow-down-bold')['default']
     IEpArrowUpBold: typeof import('~icons/ep/arrow-up-bold')['default']

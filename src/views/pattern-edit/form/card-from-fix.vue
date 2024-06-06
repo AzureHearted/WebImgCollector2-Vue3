@@ -5,7 +5,9 @@
 				<!-- 修正项目添加 -->
 				<el-form-item>
 					<el-dropdown trigger="click" placement="bottom">
-						<el-button type="success">添加修正规则</el-button>
+						<el-button :disabled="disable" type="success">
+							添加修正规则
+						</el-button>
 						<template #dropdown>
 							<el-dropdown-menu>
 								<el-dropdown-item
@@ -126,14 +128,21 @@
 </template>
 
 <script setup lang="ts">
-	import { computed, toRefs, defineProps, defineModel } from "vue";
+	import { computed, defineProps, defineModel, withDefaults } from "vue";
 	import { Rule } from "@/stores/patternStore/class/Rule";
 
 	const rule = defineModel("rule", { type: Rule, required: true });
-	const props = defineProps<{
-		type: "source" | "preview" | "description";
-	}>();
+	const props = withDefaults(
+		defineProps<{
+			type: "source" | "preview" | "description";
+			disable?: boolean;
+		}>(),
+		{
+			disable: false,
+		}
+	);
 
+	// 修正项
 	const fixList = computed(() => {
 		return rule.value[props.type].fix;
 	});
@@ -175,11 +184,16 @@
 	.form-card-header {
 		display: flex;
 		justify-content: space-between;
+		font-size: 14px;
+		width: 100%;
 
 		.form-card-header-left {
 			display: flex;
 			align-items: center;
 			gap: 8px;
+		}
+		.form-card-header-right {
+			margin-left: auto;
 		}
 	}
 

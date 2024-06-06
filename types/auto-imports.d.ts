@@ -32,4 +32,8 @@ declare global {
   const GM_xmlhttpRequest: typeof import('vite-plugin-monkey/dist/client')['GM_xmlhttpRequest']
   const monkeyWindow: typeof import('vite-plugin-monkey/dist/client')['monkeyWindow']
   const unsafeWindow: typeof import('vite-plugin-monkey/dist/client')['unsafeWindow']
+  const useDialog: typeof import('naive-ui')['useDialog']
+  const useLoadingBar: typeof import('naive-ui')['useLoadingBar']
+  const useMessage: typeof import('naive-ui')['useMessage']
+  const useNotification: typeof import('naive-ui')['useNotification']
 }

@@ -1,4 +1,4 @@
-import { ref, reactive, computed } from "vue";
+import { ref, toRefs, reactive, computed } from "vue";
 import type { ComputedRef } from "vue";
 import { defineStore } from "pinia";
 import { Pattern, defaultPattern } from "./class/Pattern";
@@ -160,7 +160,12 @@ export default defineStore("patternStore", () => {
 
 	// 当前编辑的规则
 	const editingRule: ComputedRef<Rule | undefined> = computed(() => {
-		const rule = findRule(editing.rid, editing.pid);
+		const pattern = editingPattern.value; // 获取当前正则编辑的方案
+		let rule = findRule(editing.rid, editing.pid); //根据id获取当前正在编辑的规则
+		if (!rule && pattern && pattern.rules.length) {
+			// 如果通过id未找到规则,但是方案存在且含有规则,则默认使用首个规则
+			rule = pattern.rules[0];
+		}
 		return rule;
 	});
 

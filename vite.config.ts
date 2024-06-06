@@ -29,6 +29,9 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 import vuetify from "vite-plugin-vuetify";
 
+// NaiveUi配置
+import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
+
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [
@@ -36,20 +39,6 @@ export default defineConfig({
 		// VueDevTools(),
 		//f 用于在vue项目中使用svg文件
 		svgLoader(),
-		components({
-			resolvers: [
-				VarletImportResolver(),
-				ElementPlusResolver({
-					importStyle: "sass",
-				}),
-				// 自动注册图标组件
-				IconsResolver({
-					// prefix: "Icon", //图标组件前缀,默认是“i”
-					enabledCollections: ["ep", "ant-design", "material-symbols"],
-				}),
-			],
-			dts: "./types/components.d.ts",
-		}),
 		autoImport({
 			resolvers: [
 				VarletImportResolver({ autoImport: true }),
@@ -57,8 +46,34 @@ export default defineConfig({
 					importStyle: "sass",
 				}),
 			],
-			imports: [util.unimportPreset],
+			imports: [
+				util.unimportPreset,
+				{
+					"naive-ui": [
+						"useDialog",
+						"useMessage",
+						"useNotification",
+						"useLoadingBar",
+					],
+				},
+			],
 			dts: "./types/auto-imports.d.ts",
+		}),
+		components({
+			resolvers: [
+				VarletImportResolver(),
+				ElementPlusResolver({
+					importStyle: "sass",
+				}),
+				NaiveUiResolver(),
+
+				// 自动注册图标组件
+				IconsResolver({
+					// prefix: "Icon", //图标组件前缀,默认是“i”
+					enabledCollections: ["ep", "ant-design", "material-symbols"],
+				}),
+			],
+			dts: "./types/components.d.ts",
 		}),
 		Icons({
 			autoInstall: true,
