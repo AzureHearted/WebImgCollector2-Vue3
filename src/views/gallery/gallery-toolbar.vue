@@ -130,7 +130,7 @@
 				<!-- 下载按钮 -->
 				<el-badge
 					type="success"
-					style="z-index: 1"
+					style="z-index: 2"
 					:max="999"
 					:hidden="!checkedCardList.length"
 					:value="`${checkedCardList.length} (${checkedTotalSize})`">
