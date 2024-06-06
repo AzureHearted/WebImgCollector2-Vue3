@@ -26,7 +26,12 @@
 						:key="item.id"
 						:label="item.backup?.mainInfo.name"
 						:value="item.id">
-						<span style="float: left">{{ item.backup?.mainInfo.name }} </span>
+						<div style="display: flex; align-items: center; gap: 4px">
+							<BaseImg
+								:src="item.backup?.mainInfo.icon"
+								style="width: 24px; aspect-ratio: 1" />
+							<span>{{ item.backup?.mainInfo.name }} </span>
+						</div>
 					</el-option>
 				</el-select>
 			</div>
@@ -35,8 +40,9 @@
 				<!-- 控制按钮组 -->
 				<el-badge
 					:offset="[-8, 0]"
-					style="z-index: 2"
+					style="z-index: 3"
 					type="info"
+					:max="999"
 					:hidden="!cardStore.validCardList.length"
 					:value="cardStore.validCardList.length">
 					<var-menu
@@ -77,6 +83,7 @@
 					:offset="[-115, 0]"
 					style="z-index: 2"
 					type="primary"
+					:max="999"
 					:hidden="!cardStore.filteredCardList.length"
 					:value="cardStore.filteredCardList.length">
 					<!-- 选择器按钮组 -->
@@ -93,6 +100,7 @@
 				<el-badge
 					type="success"
 					style="z-index: 1"
+					:max="999"
 					:hidden="!checkedCardList.length"
 					:value="`${checkedCardList.length} (${checkedTotalSize})`">
 					<var-menu
@@ -220,6 +228,7 @@
 	import { ref, reactive, computed, watch, onMounted } from "vue";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
+	import BaseImg from "@/components/base/base-img.vue";
 
 	// 导入公用ts库
 	import { byteAutoUnit, isMobile } from "@/utils/common";

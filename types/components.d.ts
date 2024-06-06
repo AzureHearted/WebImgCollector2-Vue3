@@ -43,6 +43,8 @@ declare module 'vue' {
     IAntDesignCloseCircleFilled: typeof import('~icons/ant-design/close-circle-filled')['default']
     IAntDesignEditOutlined: typeof import('~icons/ant-design/edit-outlined')['default']
     IAntDesignMenuOutlined: typeof import('~icons/ant-design/menu-outlined')['default']
+    IEpArrowDownBold: typeof import('~icons/ep/arrow-down-bold')['default']
+    IEpArrowUpBold: typeof import('~icons/ep/arrow-up-bold')['default']
     IEpCirclePlus: typeof import('~icons/ep/circle-plus')['default']
     IEpDocumentCopy: typeof import('~icons/ep/document-copy')['default']
     IMaterialSymbolsArrowDropDownRounded: typeof import('~icons/material-symbols/arrow-drop-down-rounded')['default']

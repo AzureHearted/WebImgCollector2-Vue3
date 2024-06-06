@@ -1,4 +1,4 @@
-import { cloneDeep, isEqual } from "@/plugin/lodash";
+import { cloneDeep, flatten, isEqual } from "@/plugin/lodash";
 import type {
 	BasePattern,
 	BaseStatus,
@@ -21,6 +21,7 @@ export class Pattern implements BasePattern {
 			expression: "",
 			flags: [],
 		},
+		note: "",
 	};
 	public rules: Rule[]; // 规则列表
 	public state: BaseStatus = {
@@ -150,6 +151,7 @@ export const defaultPattern = new Pattern({
 			expression: "",
 			flags: [],
 		},
+		note: "",
 	},
 	rules: [
 		new Rule({

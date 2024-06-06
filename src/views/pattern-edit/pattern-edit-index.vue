@@ -4,7 +4,6 @@
 		<aside class="rule-tree-container">
 			<Tree />
 		</aside>
-
 		<!-- 规则表单 -->
 		<main class="rule-form-container">
 			<BaseScrollbar>
@@ -22,6 +21,7 @@
 
 <style lang="scss" scoped>
 	.rule-edit-container {
+		box-sizing: border-box;
 		position: relative;
 		display: flex;
 		flex-flow: row nowrap;
@@ -33,12 +33,13 @@
 
 		.rule-tree-container {
 			position: relative;
-			width: 225px;
+			flex: 0 0 225px;
 			// padding: 4px;
 			height: 100%;
 
 			// background-color: wheat;
 			// border-radius: 4px;
+			overflow: hidden;
 
 			z-index: 1;
 		}

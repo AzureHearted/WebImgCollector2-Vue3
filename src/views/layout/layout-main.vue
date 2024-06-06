@@ -1,9 +1,7 @@
 <template>
 	<main class="main__container">
 		<!-- 内容区 -->
-		<keep-alive :exclude="['gallery-index']">
-			<component :is="nowPage"></component>
-		</keep-alive>
+		<component :is="nowPage" ></component>
 	</main>
 </template>
 

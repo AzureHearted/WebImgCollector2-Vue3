@@ -25,6 +25,7 @@
 	import type { BaseCard } from "@/stores/cardStore/interface";
 
 	import WaterFallList from "@/components/base/waterfall-list.vue"; // 瀑布流组件
+
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import GalleryCard from "./gallery-card.vue";
 

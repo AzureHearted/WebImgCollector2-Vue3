@@ -50,7 +50,11 @@
 			<BaseScrollbar :show-bakctop-button="false">
 				<el-tree
 					ref="treeRef"
-					:data="data"
+					:data="treeData"
+					:props="defaultProps"
+					:allow-drop="allowDrop"
+					:allow-drag="allowDrag"
+					draggable
 					node-key="id"
 					:indent="14"
 					show-checkbox
@@ -59,9 +63,14 @@
 					highlight-current
 					:current-node-key="currentNodeKey"
 					default-expand-all
-					:props="defaultProps"
 					:filter-node-method="filterNode"
-					@node-click="handleNodeClick">
+					@node-click="handleNodeClick"
+					@node-drag-start="handleDragStart"
+					@node-drag-enter="handleDragEnter"
+					@node-drag-leave="handleDragLeave"
+					@node-drag-over="handleDragOver"
+					@node-drag-end="handleDragEnd"
+					@node-drop="handleDrop">
 					<template #default="{ node, data }">
 						<span class="custom-tree-node">
 							<!-- 节点名称区域 -->
@@ -80,7 +89,7 @@
 								<!-- 节点名称 -->
 								<el-tooltip
 									:content="node.label"
-									placement="top-start"
+									placement="right"
 									:enterable="false">
 									<el-badge
 										class="custom-tree-node-name"
@@ -101,6 +110,8 @@
 												<span v-if="(data.rowData as Rule).state.editing">
 													<el-input
 														size="small"
+														@drag.stop.prevent
+														@dragstart.stop.prevent
 														@blur="(data.rowData as Rule).state.editing = false"
 														v-model="(data.rowData as Rule).name">
 													</el-input>
@@ -176,21 +187,32 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, watch, computed, nextTick, onBeforeUpdate } from "vue";
+	import {
+		ref,
+		watch,
+		computed,
+		nextTick,
+		onBeforeUpdate,
+		onMounted,
+		onUpdated,
+	} from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import type { ComputedRef } from "vue";
+	import { storeToRefs } from "pinia";
 	import type { ElTree } from "element-plus";
 	import type Node from "element-plus/es/components/tree/src/model/node";
+	import type { DragEvents } from "element-plus/es/components/tree/src/model/useDragNode";
+	import type {
+		AllowDropType,
+		NodeDropType,
+	} from "element-plus/es/components/tree/src/tree.type";
 	import BaseImg from "@/components/base/base-img.vue";
 	import { ElNotification } from "@/plugin/element-plus";
-
-	import { storeToRefs } from "pinia";
 	import { usePatternStore } from "@/stores";
 	import { Pattern } from "@/stores/patternStore/class/Pattern";
 	import { Rule } from "@/stores/patternStore/class/Rule";
 
 	const patternStore = usePatternStore();
-	const { list } = storeToRefs(patternStore);
 	const { createPattern, deletePattern, findPattern } = patternStore;
 
 	// 定义Tree节点结构
@@ -210,8 +232,9 @@
 	};
 
 	// 列表数据
-	const data: ComputedRef<Tree[]> = computed(() => {
-		return list.value.map((p) => {
+	// const treeData = ref<Tree[]>([]);
+	const treeData = computed<Tree[]>(() => {
+		return patternStore.list.map((p) => {
 			return {
 				id: p.id,
 				label: p.mainInfo.name,
@@ -235,29 +258,21 @@
 	const filterText = ref("");
 	// tree组件的DOM
 	const treeRef = ref<InstanceType<typeof ElTree>>();
-
-	const currentNodeKey = ref("#"); //当前选中的节点
-	const defaultExpandedKeys = ref<string[]>([]); //默认展开的节点Key数组
-
-	// 在组件更新前记录默认要展开的节点(防止el-tree组件自动展开或收起)
-	onBeforeUpdate(() => {
-		// console.log("准备更新");
-		defaultExpandedKeys.value = setDefaultExpandedKeys();
-	});
-
-	// 获取默认展开的节点key
-	const setDefaultExpandedKeys = () => {
-		// 获取树形组件实例
-		const nodes = treeRef.value?.store._getAllNodes();
-		let expandedKeys: string[] = [];
-		if (nodes) {
-			// 记录所有展开的节点id
-			expandedKeys = nodes
-				.filter((n) => n.expanded || (n.data as Tree).rowData.state.editing)
-				.map((x) => x.data.id as string);
+	//当前选中的节点
+	const currentNodeKey = computed<string>(() => {
+		const { editingPattern, editingRule } = storeToRefs(patternStore);
+		if (editingPattern.value) {
+			if (editingPattern.value.rules.length) {
+				return editingPattern.value.rules[0].id;
+			} else {
+				return editingPattern.value.id;
+			}
+		} else if (editingRule.value) {
+			return editingRule.value.id;
+		} else {
+			return "#";
 		}
-		return expandedKeys;
-	};
+	});
 
 	// 监听过滤关键词变化
 	watch(filterText, (val) => {
@@ -270,6 +285,135 @@
 		return data.label.includes(value);
 	};
 
+	// 拖拽相关
+	// 判断是否允许拖拽
+	const allowDrag = (draggingNode: Node): boolean => {
+		const data = draggingNode.data.rowData as Pattern | Rule;
+		return !data.id.includes("#") && !data.state.editing;
+	};
+	// 判断是否允许放置
+	const allowDrop = (
+		draggingNode: Node, // 拖拽中的节点
+		dropNode: Node, // 放置节点
+		type: AllowDropType // 放置位置
+	): boolean => {
+		// console.log("type", type);
+		if (
+			draggingNode.id === dropNode.id ||
+			dropNode.data.rowData.id.includes("#")
+		)
+			return false; // 不允许放置到内部
+		// console.log(draggingNode, dropNode, type);
+		// return false;
+		if (type === "inner") {
+			// 只能允许"规则节点"拖动到"方案节点"内部
+			return (
+				draggingNode.data.type === "rule" && dropNode.data.type === "pattern"
+			);
+		} else {
+			return dropNode.data.type === draggingNode.data.type;
+		}
+	};
+
+	// 处理拖拽开始事件
+	const handleDragStart = (node: Node, ev: DragEvents) => {
+		// console.log("drag start", node.data.rowData);
+	};
+
+	// 处理拖拽进入事件
+	const handleDragEnter = (
+		draggingNode: Node,
+		dropNode: Node,
+		ev: DragEvents
+	) => {
+		// console.log("tree drag enter:", dropNode.label);
+	};
+
+	// 处理拖拽离开事件
+	const handleDragLeave = (
+		draggingNode: Node,
+		dropNode: Node,
+		ev: DragEvents
+	) => {
+		// console.log("tree drag leave:", dropNode.label);
+	};
+
+	// 处理拖拽悬停事件
+	const handleDragOver = (
+		draggingNode: Node,
+		dropNode: Node,
+		ev: DragEvents
+	) => {
+		// console.log("tree drag over:", dropNode.label);
+	};
+
+	// 处理拖拽结束事件
+	const handleDragEnd = (
+		draggingNode: Node,
+		dropNode: Node,
+		dropType: NodeDropType,
+		ev: DragEvents
+	) => {
+		// console.log("tree drag end:", dropNode.label, dropType);
+	};
+
+	// 处理拖拽放置事件
+	const handleDrop = (
+		draggingNode: Node,
+		dropNode: Node,
+		dropType: NodeDropType,
+		ev: DragEvents
+	) => {
+		if (dropType === "none") return;
+		// console.log("tree drop:", dropNode.label, dropType);
+		console.log(
+			"tree drop:",
+			"\n被拖拽对象:",
+			draggingNode.data.type === "pattern"
+				? draggingNode.data.rowData.mainInfo.name
+				: draggingNode.data.rowData.name,
+			"\n放置目标对象:",
+			dropNode.data.type === "pattern"
+				? dropNode.data.rowData.mainInfo.name
+				: dropNode.data.rowData.name,
+			"\n位置:",
+			dropType
+		);
+
+		// 将"规则"拖拽到指定"方案"中
+		if (
+			dropType === "inner" &&
+			draggingNode.data.type === "rule" &&
+			dropNode.data.type === "pattern"
+		) {
+			const draggingRule = draggingNode.data.rowData as Rule;
+			const dropPattern = dropNode.data.rowData as Pattern;
+			patternStore.moveRuleToPattern(draggingRule.id, dropPattern.id);
+		}
+
+		// 将规则间拖拽(可能跨方案)
+		if (draggingNode.data.type === "rule" && dropNode.data.type === "rule") {
+			const draggingRule = draggingNode.data.rowData as Rule;
+			const dropRule = dropNode.data.rowData as Rule;
+			patternStore.adjustRulePosition(draggingRule.id, dropRule.id, dropType);
+		}
+
+		// 方案间拖拽
+		if (
+			draggingNode.data.type === "pattern" &&
+			dropNode.data.type === "pattern"
+		) {
+			// 方案排序
+			const draggingPattern = draggingNode.data.rowData as Pattern;
+			const dropPattern = dropNode.data.rowData as Pattern;
+			patternStore.adjustPatternPosition(
+				draggingPattern.id,
+				dropPattern.id,
+				dropType as any
+			);
+		}
+	};
+
 	// 节点点击时的回调
 	const handleNodeClick = (data: Tree, node: Node) => {
 		// console.log("点击Tree节点", data, data.type);
@@ -279,21 +423,21 @@
 			const parent = node.parent.data as Tree;
 			const patternId = parent.id;
 			// emits("node-click", patternId, data.id);
-			patternStore.editing.id = patternId;
-			patternStore.editing.ruleId = data.id;
-			currentNodeKey.value = data.id;
+			patternStore.editing.pid = patternId;
+			patternStore.editing.rid = data.id;
+			// currentNodeKey.value = data.id;
 		} else {
 			// 如果点击的是"方案"节点
 			const patternId = data.id;
-			patternStore.editing.id = patternId;
-			patternStore.editing.ruleId = "";
+			patternStore.editing.pid = patternId;
+			patternStore.editing.rid = "";
 			// 查询是否含义“规则”节点
 			const pattern = findPattern(patternId);
 			if (pattern?.rules.length) {
-				patternStore.editing.ruleId = pattern.rules[0].id;
-				currentNodeKey.value = pattern.rules[0].id;
+				patternStore.editing.rid = pattern.rules[0].id;
+				// currentNodeKey.value = pattern.rules[0].id;
 			} else {
-				currentNodeKey.value = patternId;
+				// currentNodeKey.value = patternId;
 			}
 			// emits("node-click", patternId);
 		}
@@ -430,16 +574,12 @@
 	function addRule(node: Node, data: Tree) {
 		// console.log("添加规则", node, data);
 		// 获取方案index
-		const index = list.value.findIndex((p) => p.id === data.id);
+		const index = patternStore.list.findIndex((p) => p.id === data.id);
 		// 找到方案
-		const pattern = list.value[index];
+		const pattern = patternStore.list[index];
 		// 如果成功找到方案就调用该方案的创建规则方法
 		if (pattern) {
-			const id = pattern.createRule();
-			nextTick(() => {
-				defaultExpandedKeys.value = [id]; // 暂存
-				treeRef.value?.$forceUpdate();
-			});
+			pattern.createRule();
 		}
 	}
 
@@ -448,16 +588,12 @@
 		// console.log("删除规则节点", node, data);
 		const parent = node.parent.data;
 		// 获取方案index
-		const patternIndex = list.value.findIndex((p) => p.id === parent.id);
+		const patternIndex = patternStore.list.findIndex((p) => p.id === parent.id);
 		// 找到方案
-		const pattern = list.value[patternIndex];
+		const pattern = patternStore.list[patternIndex];
 		if (!pattern) return;
 		// 调用方案中的删除规则方法删除规则
 		pattern.deleteRule(data.id);
-		nextTick(() => {
-			defaultExpandedKeys.value = [pattern.id]; // 暂存
-			treeRef.value?.$forceUpdate();
-		});
 	}
 </script>
 

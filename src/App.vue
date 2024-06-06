@@ -46,7 +46,7 @@
 
 		// 配置信息获取
 		patternStore.getUserPatternInfo(); //获取本地方案信息
-		patternStore.getInitPattern(); // 获取初始方案
+		patternStore.setInitPattern(); // 获取初始方案
 		// console.log('object');
 	});
 </script>

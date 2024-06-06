@@ -158,6 +158,7 @@
 			});
 			// console.timeEnd("布局");
 			handleTask = () => {}; // 重置任务
+			// console.timeEnd("布局");
 		}, delay);
 	}
 
@@ -166,17 +167,15 @@
 		useResizeObserver(containerDom.value!.$el, () => {
 			// 如果是窗口变化则将执行间隔调低至250ms
 			// console.time("容器尺寸变化");
-			// nextTick(() => {
-			// 	handleResetPosition(null, { delay: 200 });
-			// });
 			handleResetPosition(null, { delay: 200 });
-
 			// console.timeEnd("容器尺寸变化");
 		});
 		// 创建时如果数据不为空则进行进行一次布局
 		if (props.data.length && !dataInfo.list.length) {
 			dataInfo.list = props.data;
-			requestAnimationFrame(() => {
+			console.time("等待nextTick");
+			nextTick(() => {
+				console.timeEnd("等待nextTick");
 				resetPosition();
 			});
 		}
@@ -185,7 +184,7 @@
 	// 当组件被激活时执行
 	onActivated(() => {
 		// console.log("组件==>被激活");
-		requestAnimationFrame(() => {
+		nextTick(() => {
 			resetPosition();
 		});
 	});

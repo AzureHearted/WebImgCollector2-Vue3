@@ -49,7 +49,7 @@ export default defineStore("patternStore", () => {
 	});
 
 	// 获取初始方案id
-	function getInitPattern() {
+	function setInitPattern() {
 		let targetPattern: Pattern | null = null;
 
 		const matchedPatterns: Pattern[] = list.value.filter((p) => {
@@ -120,35 +120,115 @@ export default defineStore("patternStore", () => {
 
 	// 当前编辑中的方案信息
 	const editing = reactive({
-		id: "#", // 方案id
-		ruleId: "", // 规则id (默认为空)
+		pid: "#", // 方案id
+		rid: "", // 规则id (默认为空)
 	});
 
 	// 当前编辑的方案
-	const editingPattern: ComputedRef<Pattern | null> = computed(() => {
-		return findPattern(editing.id);
+	const editingPattern: ComputedRef<Pattern | undefined> = computed(() => {
+		return findPattern(editing.pid);
 	});
 
 	// 查询方案
-	function findPattern(id: string): Pattern | null {
+	function findPattern(id: string): Pattern | undefined {
 		const pattern = list.value.find((pattern) => pattern.id === id);
-		if (!pattern) return null;
+		if (!pattern) return undefined;
 		return pattern;
 	}
 
+	// 查询方案下标
+	function findPatternIndex(id: string): number {
+		const index = list.value.findIndex((pattern) => pattern.id === id);
+		return index;
+	}
+
+	// 放置方案到指定位置
+	function adjustPatternPosition(
+		id: string,
+		tid: string,
+		position: "before" | "after" | "inner"
+	) {
+		const index = findPatternIndex(id);
+		// 先取出要调整的方案
+		const pattern = list.value.splice(index, 1)[0];
+		// 再查询要放置的位置下标
+		const dropIndex = findPatternIndex(tid);
+		// 最后执行放置
+		list.value.splice(dropIndex + (position === "after" ? 1 : 0), 0, pattern);
+		saveUserPatternInfo();
+	}
+
 	// 当前编辑的规则
-	const editingRule: ComputedRef<Rule | null> = computed(() => {
-		const rule = findRule(editing.ruleId, editing.id);
+	const editingRule: ComputedRef<Rule | undefined> = computed(() => {
+		const rule = findRule(editing.rid, editing.pid);
 		return rule;
 	});
 
 	// 查询规则
-	function findRule(ruleId: string, patternId: string): Rule | null {
+	function findRule(ruleId: string, patternId: string): Rule | undefined {
 		const pattern = findPattern(patternId);
-		if (!pattern) return null;
+		if (!pattern) return undefined;
 		const rule = pattern.rules.find((rule) => rule.id === ruleId);
-		if (!rule) return null;
+		if (!rule) return undefined;
 		return rule;
+	}
+
+	// 查询规则下标
+	function findRuleIndex(ruleId: string, patternId: string): number {
+		const pattern = findPattern(patternId);
+		if (!pattern) return -1;
+		const index = pattern.rules.findIndex((rule) => rule.id === ruleId);
+		return index;
+	}
+
+	// 查询规则所属的方案
+	function findRulePattern(ruleId: string): Pattern | undefined {
+		return list.value.find((pattern) => {
+			return pattern.rules.find((rule) => rule.id === ruleId);
+		});
+	}
+
+	// 放置规则到指定位置
+	function adjustRulePosition(
+		id: string,
+		tid: string,
+		position: "before" | "after" | "inner"
+	) {
+		const pattern = findRulePattern(id);
+		const targetPattern = findRulePattern(tid);
+		if (!pattern || !targetPattern) throw "方案不存在";
+		// 找出规则在原方案中的下标位置
+		const index = findRuleIndex(id, pattern.id);
+		// 先从原先方案中取出方案
+		const rule = pattern.rules.splice(index, 1)[0];
+		// 后查询要放入目标方案中的下标位置
+		const dropIndex = findRuleIndex(tid, targetPattern.id);
+		// console.log("dropIndex", dropIndex);
+		// 插入到指定方案的相应下标中
+		targetPattern.rules.splice(
+			dropIndex + (position === "after" ? 1 : 0),
+			0,
+			rule
+		);
+		// 先备份数据
+		pattern.backupData();
+		targetPattern.backupData();
+		// 最后进行数据保存
+		saveUserPatternInfo();
+	}
+
+	// 将当前规则放入指定方案中(末尾插入)
+	function moveRuleToPattern(ruleId: string, patternId: string) {
+		const nowPattern = findRulePattern(ruleId);
+		const targetPattern = findPattern(patternId);
+		if (!nowPattern || !targetPattern) throw "方案不存在";
+		// 找出规则在原方案中的下标位置
+		const index = findRuleIndex(ruleId, nowPattern.id);
+		// 先从原先方案中取出方案
+		const rule = nowPattern.rules.splice(index, 1)[0];
+		// 插入到指定方案的相应下标中
+		targetPattern.rules.push(rule);
+		saveUserPatternInfo();
 	}
 
 	// 获取当前方案
@@ -162,13 +242,18 @@ export default defineStore("patternStore", () => {
 		saveUserPatternInfo();
 		// console.log(JSON.stringify(list.value));
 	}
+
 	// 删除方案
 	function deletePattern(id: string) {
 		// 获取按方案下标
 		const index = list.value.findIndex((pattern) => pattern.id === id);
 		// console.log(index);
 		if (index >= 0) {
-			list.value.splice(index, 1);
+			const pattern = list.value.splice(index, 1)[0];
+			// 如果被删除的方案是正在使用的方案则重新设置初始方案
+			if (used.id === pattern.id) {
+				setInitPattern();
+			}
 			saveUserPatternInfo();
 		}
 	}
@@ -182,11 +267,17 @@ export default defineStore("patternStore", () => {
 		editingRule,
 		getUserPatternInfo,
 		saveUserPatternInfo,
-		getInitPattern,
+		setInitPattern,
 		createPattern,
 		deletePattern,
 		findPattern,
+		findPatternIndex,
 		getCurrentPattern,
+		adjustPatternPosition,
+		adjustRulePosition,
 		findRule,
+		findRuleIndex,
+		findRulePattern,
+		moveRuleToPattern,
 	};
 });

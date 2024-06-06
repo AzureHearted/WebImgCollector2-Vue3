@@ -21,6 +21,7 @@ export interface BaseMainInfo {
 	filter: Pick<BaseRegex, "expression" | "flags">;
 	icon: string; //s 站点图标链接
 	titleSelector: string; //s 标题选择器
+	note: string; //方案备注
 }
 
 // 匹配规则

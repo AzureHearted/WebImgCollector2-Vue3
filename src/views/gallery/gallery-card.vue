@@ -29,14 +29,6 @@
 								</template>
 							</el-button>
 						</el-button-group>
-						<!-- <var-button-group type="primary" size="mini">
-							<var-button type="danger" @click="toRemove(data)">
-								<i-material-symbols-delete
-									width="20"
-									height="20"
-									style="fill: white" />
-							</var-button>
-						</var-button-group> -->
 						<el-button-group size="small">
 							<!-- 在页面中定位 -->
 							<el-button type="primary" @click="toLocate(data)" v-ripple>
@@ -69,40 +61,6 @@
 								</template>
 							</el-button>
 						</el-button-group>
-
-						<!--	<var-button-group size="mini">
-							<!~~ 在页面中定位 ~~>
-							<var-button type="primary" @click="toLocate(data)">
-								<i-material-symbols-location-on-outline
-									width="20"
-									height="20"
-									style="fill: white" />
-							</var-button>
-							<!~~ 下载(图片类) ~~>
-							<var-button
-								v-if="
-									data.source.meta.type === 'image' ||
-									data.preview.meta.type === 'image'
-								"
-								:loading="downloading"
-								type="default"
-								@click="toDownload(data)">
-								<i-material-symbols-download
-									width="20"
-									height="20"
-									style="fill: #333" />
-							</var-button>
-							<!~~ 打开(网址类) ~~>
-							<var-button
-								v-if="data.source.meta.type === 'html'"
-								type="default"
-								@click="openUrl(data.source.url)">
-								<i-material-symbols-open-in-new-rounded
-									width="20"
-									height="20"
-									style="fill: #333" />
-							</var-button>
-						</var-button-group>-->
 					</div>
 				</div>
 			</div>
@@ -123,8 +81,8 @@
 					use-thumb
 					viewport-selector=".web-img-collector-container .waterfall-wrapper"
 					:thumb="data.preview.url"
-					:init-width="data.source.meta.width"
-					:init-height="data.source.meta.height"
+					:init-width="data.preview.meta.width"
+					:init-height="data.preview.meta.height"
 					@loaded="handleCardLoaded(data, $event)"
 					:draggable="false"></BaseImg>
 				<BaseImg
@@ -142,8 +100,6 @@
 					v-else
 					src=""
 					:init-show="true"
-					:init-width="data.source.meta.width"
-					:init-height="data.source.meta.height"
 					@loaded="handleCardLoaded(data, $event)"
 					:draggable="false">
 					<htmlTypeImg

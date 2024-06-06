@@ -382,7 +382,7 @@
 	}
 	// 加载错误的样式
 	.img__wrap.error {
-		transform: scale(0.5);
+		transform: scale(0.8);
 		opacity: 0.5;
 		object-fit: contain;
 	}
@@ -407,8 +407,9 @@
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		width: 50px;
-		height: 50px;
+		width: 30%;
+		// height: 50%;
+		aspect-ratio: 1;
 		max-width: 80%;
 		max-height: 80%;
 		border: 5px solid #ccc;

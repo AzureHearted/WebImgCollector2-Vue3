@@ -143,8 +143,16 @@ export class Rule implements BaseRule {
 	}
 
 	// 判断是否发生更改
-	public isChange() {
-		return !isEqual(this.backup, this.getRowData());
+	public isChange(key?: keyof BaseRuleRowData): boolean {
+		if (key) {
+			if (this.backup) {
+				return !isEqual(this[key], this.backup[key]);
+			} else {
+				return false;
+			}
+		} else {
+			return !isEqual(this.getRowData(), this.backup);
+		}
 	}
 
 	// 添加修正方法

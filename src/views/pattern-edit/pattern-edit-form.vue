@@ -79,13 +79,6 @@
 								clearable
 								v-model="editingPattern!.mainInfo.filter.flags"
 								placeholder="修饰符">
-								<!-- <el-tooltip
-									:show-after="500"
-									effect="dark"
-									content="global - 全局匹配"
-									placement="top">
-									<el-option :value="'g'" label="g" />
-								</el-tooltip> -->
 								<el-tooltip
 									:show-after="500"
 									effect="dark"
@@ -109,7 +102,7 @@
 						v-model="editingPattern!.mainInfo.icon"
 						placeholder="输入图标地址"
 						clearable>
-						<template #append>
+						<template v-if="editingPattern!.mainInfo.icon.length" #append>
 							<el-image
 								style="aspect-ratio: 1; height: 24px"
 								:src="editingPattern!.mainInfo.icon">
@@ -287,7 +280,10 @@
 			gap: 8px;
 		}
 	}
-	:deep(.wic2-form-item__label) {
+	.form-container :deep(.wic2-form-item__label) {
 		color: black;
+	}
+	.form-container :deep(.wic2-input-group__append .wic2-select__wrapper) {
+		box-shadow: unset;
 	}
 </style>

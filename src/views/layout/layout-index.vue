@@ -81,9 +81,9 @@
 			top: 0;
 		}
 	}
-	// .layout-app-bar {
-
-	// }
+	.layout-app-bar {
+		flex: 0 0; 
+	}
 	.layout-main {
 		flex: auto; // 设置为auto用于自动占满剩余空间
 		overflow: auto; // 设置hidden用于确保内容溢出可以隐藏

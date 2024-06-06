@@ -1,10 +1,9 @@
 <template>
 	<div>
-		<el-tabs v-model="activeName" class="demo-tabs" @tab-click="handleClick">
+		<el-tabs v-model="activeName" class="demo-tabs">
 			<el-tab-pane
-				:label="`约束区域${
-					!isEqual(editingRule?.region, editingRule?.backup?.region) ? '*' : ''
-				}`"
+				:label="`约束区域${editingRule?.isChange('region') ? '*' : ''}`"
+				lazy
 				name="region">
 				<el-form
 					v-if="editingRule"
@@ -29,27 +28,20 @@
 				</el-form>
 			</el-tab-pane>
 			<el-tab-pane
-				:label="`匹配：源(必填)${
-					!isEqual(editingRule?.source, editingRule?.backup?.source) ? '*' : ''
-				}`"
+				:label="`匹配：源(必填)${editingRule?.isChange('source') ? '*' : ''}`"
+				lazy
 				name="source">
 				<FormSource v-if="editingRule" v-model:rule="editingRule" />
 			</el-tab-pane>
 			<el-tab-pane
-				:label="`匹配：预览源${
-					!isEqual(editingRule?.preview, editingRule?.backup?.preview)
-						? '*'
-						: ''
-				}`"
+				:label="`匹配：预览源${editingRule?.isChange('preview') ? '*' : ''}`"
+				lazy
 				name="preview">
 				<FormPreview v-if="editingRule" v-model:rule="editingRule" />
 			</el-tab-pane>
 			<el-tab-pane
-				:label="`匹配：描述${
-					!isEqual(editingRule?.description, editingRule?.backup?.description)
-						? '*'
-						: ''
-				}`"
+				:label="`匹配：描述${editingRule?.isChange('description') ? '*' : ''}`"
+				lazy
 				name="description">
 				<FormDescription v-if="editingRule" v-model:rule="editingRule" />
 			</el-tab-pane>
@@ -59,12 +51,8 @@
 
 <script lang="ts" setup>
 	import { ref } from "vue";
-	import { isEqual } from "@/plugin/lodash";
 	import type { TabsPaneContext } from "element-plus";
-	import type { Rule } from "@/stores/patternStore/class/Rule";
-	import type { BaseFix } from "@/stores/patternStore/interface/Pattern";
 
-	import FixFrom from "./form/card-from-fix.vue";
 	import FormSource from "./form/form-source.vue";
 	import FormPreview from "./form/form-preview.vue";
 	import FormDescription from "./form/form-description.vue";
@@ -76,34 +64,6 @@
 	const { editingRule } = storeToRefs(patternStore);
 
 	const activeName = ref("region");
-
-	function handleClick(tab: TabsPaneContext, event: Event) {
-		// console.log(tab, event);
-	}
-
-	// 添加修正方法
-	function addFixItem(
-		matchItem: "source" | "preview" | "description",
-		type: BaseFix["type"]
-	) {
-		if (!editingRule.value) return;
-		let fixItem: BaseFix;
-		if (type === "regex-extract") {
-			fixItem = {
-				type,
-				expression: "",
-				flags: [],
-			};
-		} else {
-			fixItem = {
-				type,
-				expression: "",
-				flags: [],
-				replaceTo: "",
-			};
-		}
-		editingRule.value[matchItem].fix.push(fixItem);
-	}
 </script>
 
 <style lang="scss" scoped>
