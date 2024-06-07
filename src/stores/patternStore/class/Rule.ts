@@ -42,7 +42,6 @@ export class Rule implements BaseRule {
 		name: "",
 		fix: [],
 	};
-	public fix: BaseFix[] = [];
 	public filter: BaseFilter = {
 		formats: [],
 		width: [0, -1],

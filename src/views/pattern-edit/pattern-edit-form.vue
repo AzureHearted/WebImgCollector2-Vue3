@@ -151,7 +151,6 @@
 			<template #header>
 				<div class="form-card-header">
 					<div class="form-card-header-left">
-						<!-- {{ editingRule.name }} -->
 						<el-input
 							placeholder="规则名"
 							:disabled="editingRule.id.includes('#')"
@@ -161,6 +160,11 @@
 								<i-material-symbols-regular-expression-rounded />
 							</template>
 						</el-input>
+						<el-switch
+							v-model="editingRule.enable"
+							:disabled="editingRule.id.includes('#')"
+							active-text="启用"
+							inactive-text="禁用" />
 					</div>
 					<div class="form-card-header-right">
 						<!-- 下载规则 -->
@@ -182,11 +186,6 @@
 					</div>
 				</div>
 			</template>
-			<el-switch
-				v-model="editingRule.enable"
-				:disabled="editingRule.id.includes('#')"
-				active-text="启用"
-				inactive-text="禁用" />
 			<!-- 表单Tabs -->
 			<FormTabs />
 		</el-card>
@@ -342,6 +341,9 @@
 	.form-card {
 		margin-bottom: 8px;
 	}
+	:deep(.wic2-card) {
+		overflow: visible;
+	}
 	:deep(.wic2-card__header),
 	:deep(.wic2-card__footer) {
 		display: flex;
@@ -360,6 +362,10 @@
 			display: flex;
 			align-items: center;
 			gap: 8px;
+
+			:deep(span) {
+				white-space: nowrap;
+			}
 		}
 		.form-card-header-right {
 			margin-left: auto;

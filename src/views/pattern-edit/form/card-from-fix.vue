@@ -1,135 +1,136 @@
 <template>
 	<div>
-		<el-form-item label="结果修正">
-			<el-form>
-				<!-- 修正项目添加 -->
-				<el-form-item>
-					<el-dropdown trigger="click" placement="bottom">
-						<el-button :disabled="disable" type="success">
-							添加修正规则
-						</el-button>
-						<template #dropdown>
-							<el-dropdown-menu>
-								<el-dropdown-item
-									@click="rule.addFixItem(type, 'regex-extract')">
-									正则提取
-								</el-dropdown-item>
-								<el-dropdown-item
-									@click="rule.addFixItem(type, 'regex-replace')">
-									正则替换
-								</el-dropdown-item>
-							</el-dropdown-menu>
+		<el-divider content-position="left">结果修正</el-divider>
+		<el-form>
+			<transition-group name="list-complete" appear>
+				<el-form-item v-for="(item, index) in fixList" :key="index">
+					<el-card class="fix-item-card" shadow="hover">
+						<template #header>
+							<div class="form-card-header">
+								<div class="form-card-header-left">
+									<span>
+										<span v-if="fixList.length > 1"> {{ index + 1 }} - </span>
+										{{
+											item.type === "regex-extract" ? "正则提取" : "正则替换"
+										}}
+									</span>
+								</div>
+								<div class="form-card-header-right">
+									<!-- 上移 -->
+									<el-button
+										:disabled="!index"
+										:type="!index ? '' : 'primary'"
+										:text="!index"
+										circle
+										@click.stop="upItem(index)">
+										<template #icon>
+											<i-ep-arrow-up-bold />
+										</template>
+									</el-button>
+									<!-- 下移 -->
+									<el-button
+										:disabled="!(index < fixList.length - 1)"
+										:type="!(index < fixList.length - 1) ? '' : 'primary'"
+										circle
+										:text="!(index < fixList.length - 1)"
+										@click.stop="downItem(index)">
+										<template #icon>
+											<i-ep-arrow-down-bold />
+										</template>
+									</el-button>
+									<!-- 删除 -->
+									<el-popconfirm
+										title="确定删除?"
+										:hide-after="0"
+										confirm-button-text="是"
+										cancel-button-text="否"
+										@confirm="fixList.splice(index, 1)">
+										<template #reference>
+											<el-button type="danger" circle plain @click.stop>
+												<template #icon>
+													<i-material-symbols-delete-rounded />
+												</template>
+											</el-button>
+										</template>
+									</el-popconfirm>
+								</div>
+							</div>
 						</template>
-					</el-dropdown>
+						<el-form label-position="left">
+							<el-form-item
+								:label="
+									item.type === 'regex-extract' ? '提取表达式' : '匹配表达式'
+								">
+								<el-input
+									v-model="item.expression"
+									placeholder="输入正则表达式">
+									<template #prefix> / </template>
+									<template #suffix> / </template>
+									<template #append>
+										<el-select
+											style="width: 120px"
+											multiple
+											collapse-tags
+											collapse-tags-tooltip
+											clearable
+											v-model="item.flags"
+											placeholder="修饰符">
+											<el-tooltip
+												:show-after="500"
+												effect="dark"
+												content="ignore - 不区分大小写"
+												placement="top">
+												<el-option :value="'i'" label="i" />
+											</el-tooltip>
+											<el-tooltip
+												:show-after="500"
+												effect="dark"
+												content="特殊字符圆点 . 中包含换行符 \n"
+												placement="top">
+												<el-option :value="'s'" label="s" />
+											</el-tooltip>
+										</el-select>
+									</template>
+								</el-input>
+							</el-form-item>
+							<el-form-item
+								v-if="item.type === 'regex-replace'"
+								label="替换表达式">
+								<el-input
+									v-model="item.replaceTo"
+									placeholder="输入正则替换表达式" />
+							</el-form-item>
+						</el-form>
+					</el-card>
 				</el-form-item>
-			</el-form>
-		</el-form-item>
-		<transition-group name="list-complete" appear>
-			<el-form-item
-				v-for="(item, index) in fixList"
-				:key="item.expression + item.flags + item.type">
-				<el-card class="fix-item-card" shadow="hover">
-					<template #header>
-						<div class="form-card-header">
-							<div class="form-card-header-left">
-								<span>
-									<span v-if="fixList.length > 1"> {{ index + 1 }} - </span>
-									{{ item.type === "regex-extract" ? "正则提取" : "正则替换" }}
-								</span>
-							</div>
-							<div class="form-card-header-right">
-								<!-- 上移 -->
-								<el-button
-									:disabled="!index"
-									:type="!index ? '' : 'primary'"
-									:text="!index"
-									circle
-									@click.stop="upItem(index)">
-									<template #icon>
-										<i-ep-arrow-up-bold />
-									</template>
-								</el-button>
-								<!-- 下移 -->
-								<el-button
-									:disabled="!(index < fixList.length - 1)"
-									:type="!(index < fixList.length - 1) ? '' : 'primary'"
-									circle
-									:text="!(index < fixList.length - 1)"
-									@click.stop="downItem(index)">
-									<template #icon>
-										<i-ep-arrow-down-bold />
-									</template>
-								</el-button>
-								<!-- 删除 -->
-								<el-popconfirm
-									title="确定删除?"
-									:hide-after="0"
-									confirm-button-text="是"
-									cancel-button-text="否"
-									@confirm="fixList.splice(index, 1)">
-									<template #reference>
-										<el-button type="danger" circle plain @click.stop>
-											<template #icon>
-												<i-material-symbols-delete-rounded />
-											</template>
-										</el-button>
-									</template>
-								</el-popconfirm>
-							</div>
-						</div>
-					</template>
-					<el-form label-position="left">
-						<el-form-item
-							:label="
-								item.type === 'regex-extract' ? '提取表达式' : '匹配表达式'
-							">
-							<el-input v-model="item.expression" placeholder="输入正则表达式">
-								<template #prefix> / </template>
-								<template #suffix> / </template>
-								<template #append>
-									<el-select
-										style="width: 120px"
-										multiple
-										collapse-tags
-										collapse-tags-tooltip
-										clearable
-										v-model="item.flags"
-										placeholder="修饰符">
-										<el-tooltip
-											:show-after="500"
-											effect="dark"
-											content="ignore - 不区分大小写"
-											placement="top">
-											<el-option :value="'i'" label="i" />
-										</el-tooltip>
-										<el-tooltip
-											:show-after="500"
-											effect="dark"
-											content="特殊字符圆点 . 中包含换行符 \n"
-											placement="top">
-											<el-option :value="'s'" label="s" />
-										</el-tooltip>
-									</el-select>
-								</template>
-							</el-input>
-						</el-form-item>
-						<el-form-item
-							v-if="item.type === 'regex-replace'"
-							label="替换表达式">
-							<el-input
-								v-model="item.replaceTo"
-								placeholder="输入正则替换表达式" />
-						</el-form-item>
-					</el-form>
-				</el-card>
+			</transition-group>
+			<!-- 添加按钮 -->
+			<el-form-item>
+				<n-config-provider cls-prefix="wic2-n" abstract>
+					<n-dropdown
+						:disabled="rule.id.includes('#')"
+						trigger="hover"
+						:to="false"
+						:options="options"
+						@select="handleSelect">
+						<n-button
+							type="info"
+							dashed
+							block
+							:disabled="rule.id.includes('#')">
+							添加
+						</n-button>
+					</n-dropdown>
+				</n-config-provider>
 			</el-form-item>
-		</transition-group>
+		</el-form>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { computed, defineProps, defineModel, withDefaults } from "vue";
 	import { Rule } from "@/stores/patternStore/class/Rule";
+	import type { BaseFix } from "@/stores/patternStore/interface/Pattern";
 
 	const rule = defineModel("rule", { type: Rule, required: true });
 	const props = withDefaults(
@@ -141,6 +142,23 @@
 			disable: false,
 		}
 	);
+
+	// 类型选项
+	const options: { label: string; key: BaseFix["type"] }[] = [
+		{
+			label: "正则提取",
+			key: "regex-extract",
+		},
+		{
+			label: "正则替换",
+			key: "regex-replace",
+		},
+	];
+
+	// 选项事件
+	function handleSelect(type: BaseFix["type"]) {
+		rule.value.addFixItem(props.type, type);
+	}
 
 	// 修正项
 	const fixList = computed(() => {
@@ -208,7 +226,7 @@
 	.list-complete-enter-from {
 		position: absolute;
 		opacity: 0;
-		transform: translateY(200px);
+		transform: translateY(40px);
 	}
 	// 退场过渡
 	.list-complete-leave-to {

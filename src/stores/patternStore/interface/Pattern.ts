@@ -4,10 +4,10 @@ export interface BasePattern {
 	mainInfo: BaseMainInfo; // 方案信息
 	rules: BaseRule[]; // 可以有多条匹配规则
 	state: BaseStatus; // 状态
-	backup: BasePatternRowData | null;
+	backup: PatternRowData | null;
 }
 
-export interface BasePatternRowData {
+export interface PatternRowData {
 	id?: string; // 方案id
 	mainInfo: BaseMainInfo; // 方案信息
 	rules: BaseRuleRowData[]; // 可以有多条匹配规则
@@ -92,7 +92,7 @@ interface BaseRegex {
 }
 
 //s 正则提取修正类型的接口
-interface BaseMatchRegExtract extends Pick<BaseRegex, "expression" | "flags"> {
+interface BaseMatchRegExtract extends Omit<BaseRegex, "replaceTo"> {
 	type: "regex-extract";
 }
 

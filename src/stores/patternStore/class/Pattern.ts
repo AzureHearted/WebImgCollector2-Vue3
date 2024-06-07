@@ -4,7 +4,7 @@ import type {
 	BaseStatus,
 	BaseMainInfo,
 	BaseRule,
-	BasePatternRowData,
+	PatternRowData,
 } from "../interface/Pattern";
 import { Rule } from "./Rule";
 import { buildUUID, getFavicon } from "@/utils/common";
@@ -75,7 +75,7 @@ export class Pattern implements BasePattern {
 	public getRowData(options?: {
 		type?: "now" | "backup";
 		includeId?: boolean;
-	}): BasePatternRowData {
+	}): PatternRowData {
 		const defaultOptions: { type: "now" | "backup"; includeId: boolean } = {
 			type: "now",
 			includeId: true,

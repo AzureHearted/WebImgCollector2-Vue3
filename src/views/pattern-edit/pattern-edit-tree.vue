@@ -85,12 +85,12 @@
 								<!-- 添加规则 -->
 								<el-button
 									v-if="data.type === 'pattern'"
-									type="primary"
+									type="success"
 									size="small"
 									circle
 									@click.stop="addRule(node, data)">
 									<template #icon>
-										<i-ep-circle-plus />
+										<i-ep-plus />
 									</template>
 								</el-button>
 								<!-- 删除按钮 -->
@@ -433,7 +433,6 @@
 			});
 	}
 
-	
 	// 添加规则
 	function addRule(node: Node, data: Tree) {
 		// console.log("添加规则", node, data);
@@ -539,6 +538,11 @@
 		.custom-tree-node-right {
 			flex: 0 0;
 			padding: 0 4px;
+			display: flex;
+
+			:deep(.wic2-button) {
+				font-size: 16px;
+			}
 		}
 	}
 

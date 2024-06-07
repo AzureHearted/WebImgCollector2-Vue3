@@ -367,12 +367,12 @@
 		position: absolute;
 
 		border-radius: 10px;
-		box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5),
-			0 0 5px rgb(0, 0, 0, 0.5);
-		-webkit-box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.5),
-			0 0 5px rgb(0, 0, 0, 0.5);
+		box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.5),
+			0 0 2px rgb(0, 0, 0, 0.5);
+		-webkit-box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.5),
+			0 0 2px rgb(0, 0, 0, 0.5);
 
-		background: rgba(255, 255, 255, 0.6);
+		background: rgba(64, 160, 255, 0.5);
 		opacity: 1;
 
 		// background: orange;
@@ -386,16 +386,16 @@
 
 		&:hover,
 		&.is-dragging {
-			background: rgba(255, 255, 255);
+			background: rgba(64, 160, 255, 0.7);
 		}
 		&:active {
-			background: #40a0ff;
+			background: rgb(64, 160, 255);
 		}
 	}
 	// 虚拟滚动条(垂直)
 	.bar__is-vertical {
 		top: 0;
-		right: 0px;
+		right: 1px;
 		width: 8px;
 		&:hover,
 		&.is-dragging {
@@ -404,8 +404,8 @@
 	}
 	// 虚拟滚动条(水平)
 	.bar__is-horizontal {
-		bottom: 0;
-		left: 0px;
+		left: 0;
+		bottom: 1px;
 		height: 8px;
 		&:hover,
 		&.is-dragging {

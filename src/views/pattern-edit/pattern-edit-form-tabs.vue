@@ -1,52 +1,50 @@
 <template>
-	<div>
-		<el-tabs v-model="activeName" class="demo-tabs">
-			<el-tab-pane
-				:label="`约束区域${editingRule?.isChange('region') ? '*' : ''}`"
-				lazy
-				name="region">
-				<el-form
-					v-if="editingRule"
-					ref="form"
-					label-position="left"
-					:disabled="editingRule!.id.includes('#')">
-					<el-form-item label="开启区域约束" label-width="auto">
-						<el-checkbox
-							label="开启"
-							v-model="editingRule!.region.enable"
-							:indeterminate="false" />
-					</el-form-item>
-					<el-form-item
-						v-show="editingRule!.region.enable"
-						label="选择器"
-						label-width="54px">
-						<el-input
-							v-model="editingRule!.region.selector"
-							placeholder="请输入css选择器"
-							clearable></el-input>
-					</el-form-item>
-				</el-form>
-			</el-tab-pane>
-			<el-tab-pane
-				:label="`匹配：源(必填)${editingRule?.isChange('source') ? '*' : ''}`"
-				lazy
-				name="source">
-				<FormSource v-if="editingRule" v-model:rule="editingRule" />
-			</el-tab-pane>
-			<el-tab-pane
-				:label="`匹配：预览源${editingRule?.isChange('preview') ? '*' : ''}`"
-				lazy
-				name="preview">
-				<FormPreview v-if="editingRule" v-model:rule="editingRule" />
-			</el-tab-pane>
-			<el-tab-pane
-				:label="`匹配：描述${editingRule?.isChange('description') ? '*' : ''}`"
-				lazy
-				name="description">
-				<FormDescription v-if="editingRule" v-model:rule="editingRule" />
-			</el-tab-pane>
-		</el-tabs>
-	</div>
+	<el-tabs v-model="activeName" class="demo-tabs">
+		<el-tab-pane
+			:label="`约束区域${editingRule?.isChange('region') ? '*' : ''}`"
+			lazy
+			name="region">
+			<el-form
+				v-if="editingRule"
+				ref="form"
+				label-position="left"
+				:disabled="editingRule!.id.includes('#')">
+				<el-form-item label="开启区域约束" label-width="auto">
+					<el-checkbox
+						label="开启"
+						v-model="editingRule!.region.enable"
+						:indeterminate="false" />
+				</el-form-item>
+				<el-form-item
+					v-show="editingRule!.region.enable"
+					label="选择器"
+					label-width="54px">
+					<el-input
+						v-model="editingRule!.region.selector"
+						placeholder="请输入css选择器"
+						clearable></el-input>
+				</el-form-item>
+			</el-form>
+		</el-tab-pane>
+		<el-tab-pane
+			:label="`匹配：源(必填)${editingRule?.isChange('source') ? '*' : ''}`"
+			lazy
+			name="source">
+			<FormSource v-if="editingRule" v-model:rule="editingRule" />
+		</el-tab-pane>
+		<el-tab-pane
+			:label="`匹配：预览源${editingRule?.isChange('preview') ? '*' : ''}`"
+			lazy
+			name="preview">
+			<FormPreview v-if="editingRule" v-model:rule="editingRule" />
+		</el-tab-pane>
+		<el-tab-pane
+			:label="`匹配：描述${editingRule?.isChange('description') ? '*' : ''}`"
+			lazy
+			name="description">
+			<FormDescription v-if="editingRule" v-model:rule="editingRule" />
+		</el-tab-pane>
+	</el-tabs>
 </template>
 
 <script lang="ts" setup>
@@ -67,6 +65,9 @@
 </script>
 
 <style lang="scss" scoped>
+	:deep(.wic2-tabs__content) {
+		overflow: visible;
+	}
 	.fix-item-card {
 		flex: 1;
 		margin: 0 6px;

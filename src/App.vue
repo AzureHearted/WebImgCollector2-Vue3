@@ -1,6 +1,6 @@
 <template>
 	<!-- 脚本应用容器 -->
-	<div ref="appContainer" :data-host="host" class="web-img-collector-container">
+	<div :data-host="host" class="web-img-collector-container">
 		<!-- 消息通知类信息容器 -->
 		<el-config-provider namespace="el">
 			<div class="web-img-collector-notification-container"></div>
@@ -22,32 +22,29 @@
 	import { ref, onMounted, defineAsyncComponent } from "vue";
 	import { useGlobalStore, usePatternStore } from "@/stores";
 
-	// import Layout from "./views/layout/layout-index.vue";
+	// 异步导入Layout组件
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")
 	);
-
-	const host = ref(location.host);
-
-	const globalStore = useGlobalStore();
-	const patternStore = usePatternStore();
-
-	const appContainer = ref<HTMLElement | null>(null);
-	const windowContainer = ref<HTMLElement | null>(null);
 
 	// 异步导入HoverButton组件
 	const HoverButton = defineAsyncComponent(
 		() => import("@/views/hover-button.vue")
 	);
 
-	onMounted(() => {
-		// 导入修复样式
-		// fixStyle(location.hostname);
+	const globalStore = useGlobalStore();
+	const patternStore = usePatternStore();
 
+	// 子窗口容器
+	const windowContainer = ref<HTMLElement | null>(null);
+
+	// 当前站点host
+	const host = ref(location.host);
+
+	onMounted(() => {
 		// 配置信息获取
 		patternStore.getUserPatternInfo(); //获取本地方案信息
 		patternStore.setInitPattern(); // 获取初始方案
-		// console.log('object');
 	});
 </script>
 
@@ -67,6 +64,11 @@
 		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
+		:deep(*) {
+			// 子元素默认还能响应
+			pointer-events: auto;
+		}
+
 		body,
 		div,
 		h1,
@@ -82,18 +84,6 @@
 		dt {
 			color: initial;
 		}
-
-		:deep(*) {
-			// 子元素默认还能响应
-			pointer-events: auto;
-		}
-
-		// :deep(input) {
-		// 	margin: unset;
-		// }
-		// :deep(button) {
-		// 	margin: unset;
-		// }
 	}
 
 	//! 子窗口容器样式(主要作为弹窗的容器)
@@ -112,5 +102,6 @@
 </style>
 
 <style lang="scss">
+	// 导入修复样式
 	@import "./styles/website/index.scss";
 </style>

@@ -1,9 +1,9 @@
 <template>
 	<BaseImgCard
+		class="gallery-card"
 		:data-show="isMobile()"
 		style="overflow: hidden; border: unset"
 		:data-checked="data.isSelected"
-		class="gallery-card"
 		:data="data"
 		:img-url="data.source.url"
 		:img-thumb="data.preview.url">
