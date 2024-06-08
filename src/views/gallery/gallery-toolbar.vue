@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-	import { h, ref, reactive, computed, watch, onMounted } from "vue";
+	import { h, ref, reactive, computed, watch } from "vue";
 	import type { VNodeChild } from "vue";
 	import { NEllipsis, NTag } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
@@ -281,7 +281,7 @@
 				option && !(option.key as string).includes("#")
 					? h(BaseImg, {
 							src: (option.rowData as Pattern).mainInfo.icon,
-							style: "width: 16px; height: 16px",
+							style: "width: 16px; height: 16px;margin-right:4px;",
 					  })
 					: null,
 				h(

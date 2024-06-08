@@ -1,11 +1,11 @@
 <template>
-	<div class="rule-edit-container">
+	<div class="pattern-edit__container">
 		<!-- 规则侧栏 -->
-		<aside class="rule-tree-container">
+		<aside class="pattern-tree">
 			<Tree />
 		</aside>
 		<!-- 规则表单 -->
-		<main class="rule-form-container">
+		<main class="pattern-form">
 			<BaseScrollbar>
 				<Form />
 			</BaseScrollbar>
@@ -20,7 +20,7 @@
 </script>
 
 <style lang="scss" scoped>
-	.rule-edit-container {
+	.pattern-edit__container {
 		box-sizing: border-box;
 		position: relative;
 		display: flex;
@@ -31,11 +31,11 @@
 		overflow-y: hidden;
 		overflow-x: auto;
 
-		.rule-tree-container {
+		.pattern-tree {
 			position: relative;
 			box-sizing: border-box;
-			min-width: 220px;
-			max-width: 232px;
+			min-width: 230px;
+			max-width: 235px;
 			// padding: 4px;
 			height: 100%;
 
@@ -46,7 +46,7 @@
 			z-index: 1;
 		}
 
-		.rule-form-container {
+		.pattern-form {
 			flex: auto;
 			// background-color: orange;
 			min-width: 425px;
@@ -61,6 +61,8 @@
 	:deep(input) {
 		background: white;
 		box-shadow: unset;
-		color: #606266;
+		&[type="text"] {
+			color: #606266 !important;
+		}
 	}
 </style>

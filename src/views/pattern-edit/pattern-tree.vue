@@ -199,10 +199,18 @@
 
 	// 节点内容渲染
 	const renderLabel: TreeProps["renderLabel"] = ({ option }) => {
+		const node = option as PatternNode | RuleNode;
 		return h(
 			NEllipsis,
-			{},
-			{ default: () => (option as PatternNode | RuleNode).label }
+			{
+				style:
+					node.type === "pattern" &&
+					!node.id.includes("#") &&
+					new RegExp(`${node.rowData.mainInfo.host}`).test(location.origin)
+						? "color:red;"
+						: null,
+			},
+			{ default: () => node.label }
 		);
 	};
 
@@ -334,7 +342,7 @@
 		position: relative;
 		display: flex;
 		flex-flow: column nowrap;
-		padding: 4px;
+		// padding: 4px;
 		gap: 6px;
 		height: 100%;
 

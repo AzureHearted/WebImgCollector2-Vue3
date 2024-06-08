@@ -26,7 +26,7 @@
 				placeholder="输入关键词">
 			</el-input>
 		</el-card>
-		<div class="pattern-tree">
+		<div class="pattern-tree__tree">
 			<BaseScrollbar :show-bakctop-button="false">
 				<el-tree
 					ref="treeRef"
@@ -244,21 +244,6 @@
 		ev: DragEvents
 	) => {
 		if (dropType === "none") return;
-		// console.log("tree drop:", dropNode.label, dropType);
-		// console.log(
-		// 	"tree drop:",
-		// 	"\n被拖拽对象:",
-		// 	draggingNode.data.type === "pattern"
-		// 		? draggingNode.data.rowData.mainInfo.name
-		// 		: draggingNode.data.rowData.name,
-		// 	"\n放置目标对象:",
-		// 	dropNode.data.type === "pattern"
-		// 		? dropNode.data.rowData.mainInfo.name
-		// 		: dropNode.data.rowData.name,
-		// 	"\n位置:",
-		// 	dropType
-		// );
-
 		// 将"规则"拖拽到指定"方案"中
 		if (
 			dropType === "inner" &&
@@ -364,13 +349,14 @@
 		:deep(.wic2-card__body) {
 			padding: 4px;
 		}
+
 		.pattern-tree__button-group-list {
 			display: flex;
 			flex-flow: row wrap;
 			gap: 4px;
 		}
 
-		.pattern-tree {
+		.pattern-tree__tree {
 			flex: 1;
 			overflow: hidden;
 			display: flex;
@@ -395,6 +381,7 @@
 			}
 		}
 	}
+
 	// 自定义节点样式
 	.custom-tree-node {
 		position: relative;

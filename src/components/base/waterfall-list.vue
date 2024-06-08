@@ -173,9 +173,9 @@
 		// 创建时如果数据不为空则进行进行一次布局
 		if (props.data.length && !dataInfo.list.length) {
 			dataInfo.list = props.data;
-			console.time("等待nextTick");
+			// console.time("等待nextTick");
 			nextTick(() => {
-				console.timeEnd("等待nextTick");
+				// console.timeEnd("等待nextTick");
 				resetPosition();
 			});
 		}

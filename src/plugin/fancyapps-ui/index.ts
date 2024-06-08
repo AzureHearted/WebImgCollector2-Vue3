@@ -8,6 +8,7 @@ import Toolbar from "./toolbar"; //导入工具配置
 import Images from "./images"; //导入图像配置
 import Thumbs from "./thumbs"; // 缩略图配置
 import Carousel from "./carousel"; // 导航配置
+import on from "./event"; // 事件配置
 
 export const configFancybox: Partial<OptionsType> = {
 	l10n,
@@ -17,21 +18,7 @@ export const configFancybox: Partial<OptionsType> = {
 	Thumbs,
 	autoFocus: true,
 	Hash: false,
-	on: {
-		done: (fancybox, slide) => {
-			// console.log(slide);
-			if (
-				slide.contentEl.style.width == "0px" ||
-				slide.contentEl.style.height == "0px"
-			) {
-				const aspectRatio = Number(slide.width) / Number(slide.height);
-				slide.contentEl.style.width =
-					(slide.el as HTMLElement).clientHeight * 0.9 * aspectRatio + "px";
-				slide.contentEl.style.height =
-					(slide.el as HTMLElement).clientHeight * 0.9 + "px";
-			}
-		},
-	},
+	on,
 };
 
 export const Fancybox = _Fancybox;

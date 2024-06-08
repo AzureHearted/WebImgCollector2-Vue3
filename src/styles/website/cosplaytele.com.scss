@@ -21,6 +21,6 @@ img.fancybox-image {
 	border-radius: unset;
 }
 
-.f-thumbs__track {
-	--progress: 1;
+.f-thumbs__slide__button {
+	--clip-path: none !important;
 }

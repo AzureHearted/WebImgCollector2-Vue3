@@ -136,10 +136,6 @@
 				</var-chip>
 				<!-- 描述标签 -->
 				<el-tooltip
-					v-if="
-						data.description.title.trim().length > 0 &&
-						data.description.title.trim().length < 20
-					"
 					:content="data.description.title.trim()"
 					placement="top-start">
 					<var-chip

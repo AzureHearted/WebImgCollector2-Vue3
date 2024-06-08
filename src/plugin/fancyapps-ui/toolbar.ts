@@ -3,6 +3,8 @@ import type {
 	ToolbarItemsType,
 } from "@fancyapps/ui/types/Fancybox/plugins";
 import type { Fancybox } from "@fancyapps/ui";
+import { useCardStore } from "@/stores";
+const cardStore = useCardStore();
 // import type { Fancybox } from "@fancyapps/ui/types";
 
 export default {
@@ -31,6 +33,27 @@ export default {
 				window.open(url, "_blank");
 			},
 		},
+		// 下载按钮
+		download: {
+			tpl: /*html*/ `
+      <button class="f-button" title="{{DOWNLOAD}}">
+			<svg tabindex="-1" width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M7 11l5 5 5-5M12 4v12"></path></svg>
+			</button>
+      `,
+			// 点击事件定义
+			click: (instance) => {
+				const carousel = instance.instance.carousel;
+				const index = carousel!.page;
+				const triggerEl = carousel?.slides[index].triggerEl;
+				if (!triggerEl) return;
+				const url = triggerEl.dataset.downloadSrc;
+				const cid = triggerEl.dataset.id;
+				console.log("下载", cid, url);
+				cardStore.downloadCards([cid as string]);
+				// window.open(url, "_blank");
+			},
+		},
+		// 定位按钮
 		toLocate: {
 			tpl: /*html*/ `
       <button class="f-button" title="{{TO_LOCATE}}">
