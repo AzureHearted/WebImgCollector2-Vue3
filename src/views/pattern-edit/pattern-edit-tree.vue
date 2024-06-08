@@ -3,7 +3,7 @@
 		<el-card>
 			<div class="pattern-tree__button-group-list">
 				<el-button-group class="pattern-tree__button-group">
-					<el-button type="primary" @click="addPattern">
+					<el-button type="primary" @click="createPattern">
 						<template #icon>
 							<i-material-symbols-list-alt-add />
 						</template>
@@ -45,11 +45,6 @@
 					default-expand-all
 					:filter-node-method="filterNode"
 					@node-click="handleNodeClick"
-					@node-drag-start="handleDragStart"
-					@node-drag-enter="handleDragEnter"
-					@node-drag-leave="handleDragLeave"
-					@node-drag-over="handleDragOver"
-					@node-drag-end="handleDragEnd"
 					@node-drop="handleDrop">
 					<template #default="{ node, data }">
 						<span class="custom-tree-node">
@@ -124,7 +119,6 @@
 <script setup lang="ts">
 	import { ref, watch, computed } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
-	import type { ComputedRef } from "vue";
 	import { storeToRefs } from "pinia";
 	import type { ElTree } from "element-plus";
 	import type Node from "element-plus/es/components/tree/src/model/node";
@@ -134,13 +128,13 @@
 		NodeDropType,
 	} from "element-plus/es/components/tree/src/tree.type";
 	import BaseImg from "@/components/base/base-img.vue";
-	import { ElNotification } from "@/plugin/element-plus";
 	import { usePatternStore } from "@/stores";
 	import { Pattern } from "@/stores/patternStore/class/Pattern";
 	import { Rule } from "@/stores/patternStore/class/Rule";
 
 	const patternStore = usePatternStore();
-	const { createPattern, deletePattern, findPattern } = patternStore;
+	const { createPattern, deletePattern, findPattern, pastePattern } =
+		patternStore;
 
 	// 定义Tree节点结构
 	interface Tree {
@@ -242,48 +236,6 @@
 		}
 	};
 
-	// 处理拖拽开始事件
-	const handleDragStart = (node: Node, ev: DragEvents) => {
-		// console.log("drag start", node.data.rowData);
-	};
-
-	// 处理拖拽进入事件
-	const handleDragEnter = (
-		draggingNode: Node,
-		dropNode: Node,
-		ev: DragEvents
-	) => {
-		// console.log("tree drag enter:", dropNode.label);
-	};
-
-	// 处理拖拽离开事件
-	const handleDragLeave = (
-		draggingNode: Node,
-		dropNode: Node,
-		ev: DragEvents
-	) => {
-		// console.log("tree drag leave:", dropNode.label);
-	};
-
-	// 处理拖拽悬停事件
-	const handleDragOver = (
-		draggingNode: Node,
-		dropNode: Node,
-		ev: DragEvents
-	) => {
-		// console.log("tree drag over:", dropNode.label);
-	};
-
-	// 处理拖拽结束事件
-	const handleDragEnd = (
-		draggingNode: Node,
-		dropNode: Node,
-		dropType: NodeDropType,
-		ev: DragEvents
-	) => {
-		// console.log("tree drag end:", dropNode.label, dropType);
-	};
-
 	// 处理拖拽放置事件
 	const handleDrop = (
 		draggingNode: Node,
@@ -293,19 +245,19 @@
 	) => {
 		if (dropType === "none") return;
 		// console.log("tree drop:", dropNode.label, dropType);
-		console.log(
-			"tree drop:",
-			"\n被拖拽对象:",
-			draggingNode.data.type === "pattern"
-				? draggingNode.data.rowData.mainInfo.name
-				: draggingNode.data.rowData.name,
-			"\n放置目标对象:",
-			dropNode.data.type === "pattern"
-				? dropNode.data.rowData.mainInfo.name
-				: dropNode.data.rowData.name,
-			"\n位置:",
-			dropType
-		);
+		// console.log(
+		// 	"tree drop:",
+		// 	"\n被拖拽对象:",
+		// 	draggingNode.data.type === "pattern"
+		// 		? draggingNode.data.rowData.mainInfo.name
+		// 		: draggingNode.data.rowData.name,
+		// 	"\n放置目标对象:",
+		// 	dropNode.data.type === "pattern"
+		// 		? dropNode.data.rowData.mainInfo.name
+		// 		: dropNode.data.rowData.name,
+		// 	"\n位置:",
+		// 	dropType
+		// );
 
 		// 将"规则"拖拽到指定"方案"中
 		if (
@@ -370,67 +322,10 @@
 		}
 	};
 
-	// 创建方案
-	function addPattern() {
-		createPattern();
-	}
-
 	// 删除方案
 	function removePattern(node: Node, data: Tree) {
 		// console.log("删除方案节点", node, data);
 		deletePattern(data.id);
-	}
-
-	// 粘贴方案
-	function pastePattern() {
-		navigator.clipboard
-			.readText()
-			.then((dataStr) => {
-				console.log("剪贴板文本：", dataStr);
-				// 先尝试解析成一个对象
-				let obj: any;
-				try {
-					obj = JSON.parse(dataStr);
-				} catch (e) {
-					ElNotification({
-						type: "error",
-						title: "失败",
-						message: "剪贴板内容解析失败",
-						appendTo: ".web-img-collector-notification-container",
-					});
-					return;
-				}
-				// 如果成功解析成对象,则进一步尝试解析为方案
-				let pattern: Pattern | false = false;
-				try {
-					pattern = new Pattern(obj);
-					// 如果成功解析为方案则添加为方案
-					patternStore.list.push(pattern);
-					patternStore.saveUserPatternInfo();
-					ElNotification({
-						type: "success",
-						title: "成功",
-						message: "成功解析为方案",
-						appendTo: ".web-img-collector-notification-container",
-					});
-				} catch (e) {
-					// 如果解析失败则提示错误
-					ElNotification({
-						type: "error",
-						title: "失败",
-						message: "剪贴板内容不符合方案的数据格式",
-						appendTo: ".web-img-collector-notification-container",
-					});
-				}
-			})
-			.catch(() => {
-				ElNotification({
-					type: "error",
-					title: "失败",
-					message: "剪贴板内容读取失败",
-					appendTo: ".web-img-collector-notification-container",
-				});
-			});
 	}
 
 	// 添加规则

@@ -69,7 +69,7 @@
 		display: flex;
 		flex-flow: column nowrap;
 
-		background: rgba(255, 255, 255, 0.304);
+		background: rgba(255, 255, 255, 0.3);
 		backdrop-filter: blur(10px);
 
 		transition: top 0.5s ease-in-out;

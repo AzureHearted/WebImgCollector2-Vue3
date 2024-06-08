@@ -12,6 +12,9 @@ import App from "./App.vue";
 // Varlet组件库(配置)
 import "@/plugin/varlet";
 
+//naive-ui组件库(相关)
+import "@/plugin/naive-ui";
+
 // 导入样式动态修复模块
 // import { fixStyle } from "@/styles/website";
 

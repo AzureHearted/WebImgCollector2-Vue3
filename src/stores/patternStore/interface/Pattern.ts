@@ -30,8 +30,8 @@ export interface BaseRule {
 	enable: boolean; //是否启用
 	name: string; // 规则名称
 	region: BaseMatchRegion; // 区域匹配
-	preview: BaseMatchPreview; // 预览源匹配
 	source: BaseMatchSource; // 源匹配
+	preview: BaseMatchPreview; // 预览源匹配
 	description: BaseMatchDescription; // 描述匹配
 	filter: BaseFilter; // 过滤器
 	state: BaseStatus; // 状态

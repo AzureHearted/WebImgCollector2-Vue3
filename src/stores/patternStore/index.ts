@@ -7,6 +7,8 @@ import {
 	getUserPatternList,
 	setUserPatternList,
 } from "./utils/handle-user-data";
+import { ElNotification } from "@/plugin/element-plus";
+
 // import { GM_getValue, GM_setValue } from "$";
 
 export default defineStore("patternStore", () => {
@@ -155,6 +157,9 @@ export default defineStore("patternStore", () => {
 		const dropIndex = findPatternIndex(tid);
 		// 最后执行放置
 		list.value.splice(dropIndex + (position === "after" ? 1 : 0), 0, pattern);
+		// 先备份数据
+		pattern.backupData();
+		// 在存储数据
 		saveUserPatternInfo();
 	}
 
@@ -233,6 +238,9 @@ export default defineStore("patternStore", () => {
 		const rule = nowPattern.rules.splice(index, 1)[0];
 		// 插入到指定方案的相应下标中
 		targetPattern.rules.push(rule);
+		// 先备份数据
+		nowPattern.backupData();
+		targetPattern.backupData();
 		saveUserPatternInfo();
 	}
 
@@ -263,6 +271,58 @@ export default defineStore("patternStore", () => {
 		}
 	}
 
+	// 粘贴方案
+	function pastePattern() {
+		navigator.clipboard
+			.readText()
+			.then((dataStr) => {
+				console.log("剪贴板文本：", dataStr);
+				// 先尝试解析成一个对象
+				let obj: any;
+				try {
+					obj = JSON.parse(dataStr);
+				} catch (e) {
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容解析失败",
+						appendTo: ".web-img-collector-notification-container",
+					});
+					return;
+				}
+				// 如果成功解析成对象,则进一步尝试解析为方案
+				let pattern: Pattern | false = false;
+				try {
+					pattern = new Pattern(obj);
+					// 如果成功解析为方案则添加为方案
+					list.value.push(pattern);
+					saveUserPatternInfo();
+					ElNotification({
+						type: "success",
+						title: "成功",
+						message: "成功解析为方案",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				} catch (e) {
+					// 如果解析失败则提示错误
+					ElNotification({
+						type: "error",
+						title: "失败",
+						message: "剪贴板内容不符合方案的数据格式",
+						appendTo: ".web-img-collector-notification-container",
+					});
+				}
+			})
+			.catch(() => {
+				ElNotification({
+					type: "error",
+					title: "失败",
+					message: "剪贴板内容读取失败",
+					appendTo: ".web-img-collector-notification-container",
+				});
+			});
+	}
+
 	return {
 		list,
 		used,
@@ -275,6 +335,7 @@ export default defineStore("patternStore", () => {
 		setInitPattern,
 		createPattern,
 		deletePattern,
+		pastePattern,
 		findPattern,
 		findPatternIndex,
 		getCurrentPattern,

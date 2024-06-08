@@ -7,13 +7,17 @@
 		</el-config-provider>
 		<!-- 内容区 -->
 		<el-config-provider namespace="wic2">
-			<!-- 路由出口 -->
-			<!-- <RouterView /> -->
-			<Layout />
-			<!-- 悬浮按钮 -->
-			<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
-			<!-- 顶层元素的承载容器 -->
-			<div ref="windowContainer" class="web-img-collector-top-container"></div>
+			<n-config-provider cls-prefix="wic2-n" abstract>
+				<!-- 路由出口 -->
+				<!-- <RouterView /> -->
+				<Layout />
+				<!-- 悬浮按钮 -->
+				<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
+				<!-- 顶层元素的承载容器 -->
+				<div
+					ref="windowContainer"
+					class="web-img-collector-top-container"></div>
+			</n-config-provider>
 		</el-config-provider>
 	</div>
 </template>

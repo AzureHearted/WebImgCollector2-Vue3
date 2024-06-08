@@ -25,7 +25,7 @@
 					:loading="loading"
 					@dblclick="toggleWindow()">
 					<!-- 图标 -->
-					<IconGridRound style="width: 40px" />
+					<i-mdi-dots-grid style="font-size: 30px" color="black" />
 				</var-button>
 				<!-- 底部悬浮按钮 -->
 				<div class="bottom-fab" :data-active="active || state.scrolling">
@@ -35,7 +35,9 @@
 						round
 						:loading="state.scrollingToDown"
 						@click="scrollTo('down')">
-						<IconArrowheadDown style="width: 24px" />
+						<i-material-symbols-keyboard-double-arrow-down-rounded
+							style="font-size: 24px"
+							color="black" />
 					</var-button>
 					<!-- 页面上滚按钮 -->
 					<var-button
@@ -43,7 +45,9 @@
 						round
 						:loading="state.scrollingToUp"
 						@click="scrollTo('up')">
-						<IconArrowheadUp style="width: 24px" />
+						<i-material-symbols-keyboard-double-arrow-up-rounded
+							style="font-size: 24px"
+							color="black" />
 					</var-button>
 				</div>
 			</var-badge>
@@ -55,52 +59,42 @@
 				type="danger"
 				:max-value="999"
 				:hidden="true">
-				<var-button type="success" round @click="toggleWindow('Gallery')">
-					<IconDashboard />
+				<var-button
+					type="success"
+					round
+					icon-container
+					@click="toggleWindow('Gallery')">
+					<i-material-symbols-team-dashboard
+						color="black"
+						style="font-size: 20px" />
 				</var-button>
 			</var-badge>
 			<!-- 方案管理 -->
 			<var-button type="info" round @click="toggleWindow('PatternEdit')">
-				<IconBxsBookBookmark />
+				<i-material-symbols-box-edit color="black" style="font-size: 20px" />
 			</var-button>
 			<!-- 设置 -->
 			<var-button color="rgb(217, 121, 252)" round>
-				<IconToolsFill />
+				<i-ant-design-setting-twotone color="black" style="font-size: 20px" />
 			</var-button>
 			<!-- 测试窗口 -->
-			<var-button color="rgb(117, 121, 252)" round>
-				<IconTestTube />
+			<var-button
+				color="rgb(117, 121, 252)"
+				round
+				@click="toggleWindow('Test')">
+				<i-material-symbols-experiment-outline
+					color="black"
+					style="font-size: 20px" />
 			</var-button>
 		</template>
 	</var-fab>
 </template>
 
 <script setup lang="ts">
-	import { defineProps, ref, reactive } from "vue";
-
-	// import { useRoute, useRouter } from "vue-router";
-	// const route = useRoute();
-	// const router = useRouter();
-
-	// console.log(
-	// 	"路由信息",
-	// 	route,
-	// 	router.getRoutes().map((x) => x.name)
-	// );
-
-	// 引入公共方法
+	import { defineProps, ref, reactive, onMounted } from "vue";
 	import { isMobile } from "@/utils/common";
-	// 引入图标
-	import IconGridRound from "@/assets/svg/dots-grid.svg";
-	import IconDashboard from "@/assets/svg/dashboard.svg";
-	import IconBxsBookBookmark from "@/assets/svg/bxs-book-bookmark.svg";
-	import IconToolsFill from "@/assets/svg/tools-fill.svg";
-	import IconTestTube from "@/assets/svg/bx-test-tube.svg";
-	import IconArrowheadDown from "@svg/arrowhead-down.svg";
-	import IconArrowheadUp from "@svg/arrowhead-up.svg";
 
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
-	import { onMounted } from "vue";
 	const globalStore = useGlobalStore();
 
 	const active = ref(false); // 控制悬浮按钮的显示状态
@@ -136,26 +130,9 @@
 	function toggleWindow(name?: string) {
 		active.value = false;
 		if (name) {
-			// if (name === route.name) {
-			// 	// console.log(name, route.name);
-			// 	globalStore.openWindow = !globalStore.openWindow;
-			// } else {
-			// 	router.push({ name });
-			// 	globalStore.openWindow = true;
-			// }
 			globalStore.tab = name;
 			globalStore.openWindow = true;
 		} else {
-			// console.log("切换显示");
-			// 判断当前路由是否属于该应用定义了路由,不属于的话就重定向到gallery路由
-			// if (
-			// 	!router
-			// 		.getRoutes()
-			// 		.map((x) => x.name)
-			// 		.includes(route.name || "")
-			// ) {
-			// 	router.push({ name: "Gallery" });
-			// }
 			globalStore.tab = "Gallery";
 			globalStore.openWindow = !globalStore.openWindow;
 		}

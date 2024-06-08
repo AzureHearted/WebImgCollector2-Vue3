@@ -25,6 +25,12 @@
 				</el-icon>
 				<span>方案管理</span>
 			</el-menu-item>
+			<el-menu-item index="Test" @click="globalStore.tab = 'Test'" v-ripple>
+				<el-icon>
+					<i-material-symbols-experiment-outline />
+				</el-icon>
+				<span>测试页面</span>
+			</el-menu-item>
 		</el-menu>
 	</el-drawer>
 </template>

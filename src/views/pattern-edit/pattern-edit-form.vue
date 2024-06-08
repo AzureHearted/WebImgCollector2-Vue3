@@ -1,6 +1,6 @@
 <template>
-	<div class="form-container">
-		<el-card v-if="editingPattern" class="form-card">
+	<div class="pattern-form__container">
+		<el-card v-if="editingPattern" class="pattern-form__card">
 			<template #header>
 				<div class="form-card-header">
 					<div class="form-card-header-left">
@@ -146,23 +146,29 @@
 			</template>
 		</el-card>
 		<!-- 规则表单 -->
-		<el-card v-if="editingRule">
+		<el-card v-if="editingRule" class="rule-form__card">
 			<!-- 卡片头 -->
 			<template #header>
 				<div class="form-card-header">
 					<div class="form-card-header-left">
 						<el-input
 							placeholder="规则名"
+							:maxlength="30"
+							show-word-limit
 							:disabled="editingRule.id.includes('#')"
 							name="ruleName"
 							v-model="editingRule.name">
-							<template #prepend>
-								<i-material-symbols-regular-expression-rounded />
+							<template #prefix>
+								<el-icon color="black">
+									<i-material-symbols-regular-expression-rounded />
+								</el-icon>
 							</template>
 						</el-input>
 						<el-switch
 							v-model="editingRule.enable"
 							:disabled="editingRule.id.includes('#')"
+							style="--wic2-switch-off-color: #ff9f00"
+							inline-prompt
 							active-text="启用"
 							inactive-text="禁用" />
 					</div>
@@ -335,14 +341,19 @@
 </script>
 
 <style lang="scss" scoped>
-	.form-container {
-		// max-width: 800px;
+	.pattern-form__container {
+		& > * {
+			margin-bottom: 8px;
+		}
+		& > :last-child {
+			margin-bottom: 0px;
+		}
 	}
-	.form-card {
-		margin-bottom: 8px;
-	}
+
 	:deep(.wic2-card) {
 		overflow: visible;
+		background: rgba(255, 255, 255, 0.3);
+		backdrop-filter: blur(10px);
 	}
 	:deep(.wic2-card__header),
 	:deep(.wic2-card__footer) {
@@ -362,19 +373,24 @@
 			display: flex;
 			align-items: center;
 			gap: 8px;
-
+			:deep(.wic2-input) {
+				width: 180px;
+			}
 			:deep(span) {
 				white-space: nowrap;
 			}
 		}
 		.form-card-header-right {
+			display: flex;
 			margin-left: auto;
 		}
 	}
-	.form-container :deep(.wic2-form-item__label) {
+
+	.pattern-form__container :deep(.wic2-form-item__label) {
 		color: black;
 	}
-	.form-container :deep(.wic2-input-group__append .wic2-select__wrapper) {
+	.pattern-form__container
+		:deep(.wic2-input-group__append .wic2-select__wrapper) {
 		box-shadow: unset;
 	}
 </style>

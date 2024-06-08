@@ -106,22 +106,16 @@
 			</transition-group>
 			<!-- 添加按钮 -->
 			<el-form-item>
-				<n-config-provider cls-prefix="wic2-n" abstract>
-					<n-dropdown
-						:disabled="rule.id.includes('#')"
-						trigger="hover"
-						:to="false"
-						:options="options"
-						@select="handleSelect">
-						<n-button
-							type="info"
-							dashed
-							block
-							:disabled="rule.id.includes('#')">
-							添加
-						</n-button>
-					</n-dropdown>
-				</n-config-provider>
+				<n-dropdown
+					:disabled="rule.id.includes('#')"
+					trigger="hover"
+					:to="false"
+					:options="options"
+					@select="handleSelect">
+					<n-button type="info" dashed block :disabled="rule.id.includes('#')">
+						添加
+					</n-button>
+				</n-dropdown>
 			</el-form-item>
 		</el-form>
 	</div>

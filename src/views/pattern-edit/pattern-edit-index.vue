@@ -2,7 +2,8 @@
 	<div class="rule-edit-container">
 		<!-- 规则侧栏 -->
 		<aside class="rule-tree-container">
-			<Tree />
+			<!-- <Tree /> -->
+			<NewTree />
 		</aside>
 		<!-- 规则表单 -->
 		<main class="rule-form-container">
@@ -15,6 +16,7 @@
 
 <script setup lang="ts">
 	import Tree from "./pattern-edit-tree.vue";
+	import NewTree from "./pattern-tree.vue";
 	import Form from "./pattern-edit-form.vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 </script>
@@ -33,7 +35,9 @@
 
 		.rule-tree-container {
 			position: relative;
-			flex: 0 0 230px;
+			box-sizing: border-box;
+			min-width: 220px;
+			max-width: 232px;
 			// padding: 4px;
 			height: 100%;
 
