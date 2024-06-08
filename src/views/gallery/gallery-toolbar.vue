@@ -17,24 +17,11 @@
 		</el-progress>
 		<!-- 方案选择器 -->
 		<div class="pattern-select">
-			<el-select
-				v-model="patternStore.used.id"
-				:teleported="false"
-				:fallback-placements="['bottom-start']"
-				placeholder="请选择一个方案">
-				<el-option
-					v-for="item in patternStore.list"
-					:key="item.id"
-					:label="item.backup?.mainInfo.name"
-					:value="item.id">
-					<div style="display: flex; align-items: center; gap: 4px">
-						<BaseImg
-							:src="item.backup?.mainInfo.icon"
-							style="width: 24px; aspect-ratio: 1" />
-						<span>{{ item.backup?.mainInfo.name }} </span>
-					</div>
-				</el-option>
-			</el-select>
+			<n-select
+				v-model:value="patternStore.used.id"
+				placeholder="请选择一个方案"
+				:render-label="patternSelectOptionsRenderLabel"
+				:options="patternSelectOptions" />
 		</div>
 		<!-- 操作栏 -->
 		<div class="control-group-button">
@@ -252,7 +239,10 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, computed, watch, onMounted } from "vue";
+	import { h, ref, reactive, computed, watch, onMounted } from "vue";
+	import type { VNodeChild } from "vue";
+	import { NEllipsis } from "naive-ui";
+	import type { SelectOption } from "naive-ui";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 	import BaseImg from "@/components/base/base-img.vue";
@@ -262,6 +252,7 @@
 
 	// 导入仓库
 	import { useCardStore, useLoadingStore, usePatternStore } from "@/stores";
+	import { Pattern } from "@/stores/patternStore/class/Pattern";
 
 	const cardStore = useCardStore();
 	const loadingStore = useLoadingStore();
@@ -310,6 +301,38 @@
 		);
 		return byteAutoUnit(totalByte);
 	});
+
+	// 方案选项
+	const patternSelectOptions = computed<SelectOption[]>(() => {
+		return patternStore.list.map((p) => {
+			return {
+				key: p.id,
+				label: p.mainInfo.name,
+				value: p.id,
+				rowData: p,
+			};
+		});
+	});
+	// 方案选项标签渲染函数
+	const patternSelectOptionsRenderLabel = (
+		option: SelectOption
+	): VNodeChild => {
+		return h(
+			"div",
+			{
+				style: "display:flex; align-items: center;",
+			},
+			[
+				option && !(option.key as string).includes("#")
+					? h(BaseImg, {
+							src: (option.rowData as Pattern).mainInfo.icon,
+							style: "width: 16px; height: 16px",
+					  })
+					: null,
+				h(NEllipsis, {}, [option.label as string]),
+			]
+		);
+	};
 
 	// 获取卡片
 	async function getCards() {
