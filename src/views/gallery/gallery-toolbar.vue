@@ -20,7 +20,8 @@
 			<n-select
 				v-model:value="patternStore.used.id"
 				placeholder="请选择一个方案"
-				:render-label="patternSelectOptionsRenderLabel"
+				:to="false"
+				:render-label="renderPatternSelectOptionsLabel"
 				:options="patternSelectOptions" />
 		</div>
 		<!-- 操作栏 -->
@@ -67,31 +68,11 @@
 		</div>
 		<!-- 排序方式 -->
 		<div class="sort-method-select">
-			<el-select
-				v-model="cardStore.sort.method"
-				:fallback-placements="['bottom-start']"
-				placeholder="请选择一个排序方式">
-				<template v-for="group in cardStore.sort.groups" :key="group.label">
-					<!-- 默认排序 -->
-					<template v-if="group.label === '#'">
-						<el-option
-							v-for="item in group.options"
-							:key="item.value"
-							:label="item.label"
-							:value="item.value">
-						</el-option>
-					</template>
-					<!-- 其他排序 -->
-					<el-option-group v-else :label="group.label">
-						<el-option
-							v-for="item in group.options"
-							:key="item.value"
-							:label="item.label"
-							:value="item.value">
-						</el-option>
-					</el-option-group>
-				</template>
-			</el-select>
+			<n-select
+				v-model:value="cardStore.sort.method"
+				placeholder="请选择一个排序方式"
+				:to="false"
+				:options="cardStore.sort.groups" />
 		</div>
 		<!-- 选择器 -->
 		<div class="control-group-button">
@@ -150,62 +131,35 @@
 				</var-menu>
 			</el-badge>
 		</div>
+		<!-- 过滤控制器 -->
 		<div class="control-group">
 			<!-- 类型过滤器 -->
 			<div class="type-select">
-				<el-select
-					class="filter-input-select"
-					v-model="cardStore.filters.type"
-					:teleported="false"
+				<n-select
+					v-model:value="cardStore.filters.type"
+					placeholder="类型过滤"
 					multiple
 					clearable
-					collapse-tags
-					:max-collapse-tags="1"
-					tag-type="primary"
-					:fallback-placements="['bottom-start']"
-					collapse-tags-tooltip
-					placeholder="类型过滤">
-					<el-option
-						v-for="item in cardStore.typeOptions"
-						:key="item.value"
-						:label="item.label"
-						:value="item.value">
-						<span style="float: left">{{ item.label }} </span>
-						<span style="float: right; font-size: 12px">
-							({{ item.count }}个)
-						</span>
-					</el-option>
-				</el-select>
+					:to="false"
+					:render-tag="renderTag"
+					:render-label="renderOptionLabelWithCount"
+					:options="cardStore.typeOptions"
+					max-tag-count="responsive" />
 			</div>
 			<!-- 扩展名过滤器 -->
 			<div class="ext-select">
-				<el-select
-					class="filter-input-select"
-					v-model="cardStore.filters.extension"
-					:teleported="false"
+				<n-select
+					v-model:value="cardStore.filters.extension"
+					placeholder="扩展名过滤"
 					multiple
 					clearable
-					collapse-tags
-					:max-collapse-tags="1"
-					tag-type="primary"
-					placement="bottom-start"
-					:fallback-placements="['bottom-start']"
-					collapse-tags-tooltip
-					placeholder="扩展名过滤">
-					<el-option
-						v-for="item in cardStore.extensionOptions"
-						:key="item.value"
-						:label="item.label"
-						:value="item.value">
-						<span style="float: left">{{ item.label }} </span>
-						<span style="float: right; font-size: 12px">
-							({{ item.count }}个)
-						</span>
-					</el-option>
-				</el-select>
+					:to="false"
+					:render-tag="renderTag"
+					:render-label="renderOptionLabelWithCount"
+					:options="cardStore.extensionOptions"
+					max-tag-count="responsive" />
 			</div>
 		</div>
-
 		<!-- 尺寸过滤器 -->
 		<div class="size-filter">
 			<!-- 宽度过滤器 -->
@@ -241,8 +195,8 @@
 <script setup lang="ts">
 	import { h, ref, reactive, computed, watch, onMounted } from "vue";
 	import type { VNodeChild } from "vue";
-	import { NEllipsis } from "naive-ui";
-	import type { SelectOption } from "naive-ui";
+	import { NEllipsis, NTag } from "naive-ui";
+	import type { SelectOption, SelectRenderTag } from "naive-ui";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 	import BaseImg from "@/components/base/base-img.vue";
@@ -302,6 +256,7 @@
 		return byteAutoUnit(totalByte);
 	});
 
+	// f控制相关
 	// 方案选项
 	const patternSelectOptions = computed<SelectOption[]>(() => {
 		return patternStore.list.map((p) => {
@@ -310,11 +265,11 @@
 				label: p.mainInfo.name,
 				value: p.id,
 				rowData: p,
-			};
+			} as SelectOption;
 		});
 	});
 	// 方案选项标签渲染函数
-	const patternSelectOptionsRenderLabel = (
+	const renderPatternSelectOptionsLabel = (
 		option: SelectOption
 	): VNodeChild => {
 		return h(
@@ -329,7 +284,52 @@
 							style: "width: 16px; height: 16px",
 					  })
 					: null,
-				h(NEllipsis, {}, [option.label as string]),
+				h(
+					NEllipsis,
+					{ style: "user-select: none;" },
+					{ default: () => option.label as string }
+				),
+			]
+		);
+	};
+
+	// 选择器多选Tag渲染函数
+	const renderTag: SelectRenderTag = ({ option, handleClose }) => {
+		return h(
+			NTag,
+			{
+				type: "info",
+				closable: true,
+				onMousedown: (e: FocusEvent) => {
+					e.preventDefault();
+				},
+				onClose: (e: MouseEvent) => {
+					e.stopPropagation();
+					handleClose();
+				},
+			},
+			{ default: () => option.label }
+		);
+	};
+
+	// 带数量的选项标签渲染函数
+	const renderOptionLabelWithCount = (option: SelectOption): VNodeChild => {
+		return h(
+			"div",
+			{
+				style: "display:flex; align-items: center;width:100%;",
+			},
+			[
+				h(NEllipsis, {}, { default: () => option.label as string }),
+				h(
+					NTag,
+					{
+						type: "info",
+						size: "small",
+						style: "margin-left:auto;",
+					},
+					{ default: () => option.count + "个" }
+				),
 			]
 		);
 	};
@@ -362,7 +362,6 @@
 
 	// 清空
 	function clear() {
-		// data.cardList = [];
 		cardStore.clearCardList();
 		filters.size.width = cardStore.filters.size.width;
 		filters.size.height = cardStore.filters.size.height;
@@ -438,6 +437,9 @@
 	// 排序方式选择器
 	.sort-method-select {
 		width: 130px;
+		:deep(.wic2-n-base-selection-input__content) {
+			user-select: none;
+		}
 	}
 	// 控制按钮组样式
 	.control-button-group {
@@ -488,5 +490,9 @@
 	// 样式修复
 	:deep(.wic2-badge) {
 		display: block;
+	}
+
+	:deep(.wic2-n-base-select-option__content) {
+		flex: 1;
 	}
 </style>

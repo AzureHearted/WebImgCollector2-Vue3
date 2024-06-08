@@ -1,15 +1,5 @@
 <template>
 	<div class="layout-app-bar">
-		<!-- 菜单折叠按钮 -->
-		<el-button
-			class="layout-app-bar__menu-button"
-			text
-			circle
-			@click="appBarIsCollapse = !appBarIsCollapse">
-			<template #icon>
-				<i-ant-design-menu-outlined />
-			</template>
-		</el-button>
 		<!-- 标题 -->
 		<div class="layout-app-bar__title">Web Img Collector 2</div>
 		<el-button
@@ -30,7 +20,6 @@
 	import { storeToRefs } from "pinia";
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
-	const { appBarIsCollapse } = storeToRefs(globalStore);
 </script>
 
 <style lang="scss" scoped>

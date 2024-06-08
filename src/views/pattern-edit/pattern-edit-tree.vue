@@ -1,5 +1,5 @@
 <template>
-	<div class="pattern-tree-container">
+	<div class="pattern-tree__container">
 		<el-card>
 			<div class="pattern-tree__button-group-list">
 				<el-button-group class="pattern-tree__button-group">
@@ -356,7 +356,7 @@
 </script>
 
 <style lang="scss" scoped>
-	.pattern-tree-container {
+	.pattern-tree__container {
 		display: flex;
 		flex-flow: column;
 		gap: 6px;

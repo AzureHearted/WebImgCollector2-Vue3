@@ -6,7 +6,6 @@
 		@wheel.stop.passive>
 		<AppBar class="layout-app-bar" />
 		<Main class="layout-main" />
-		<Menu />
 	</section>
 </template>
 
@@ -19,7 +18,6 @@
 	// 导入组件
 	import AppBar from "./layout-app-bar.vue";
 	import Main from "./layout-main.vue";
-	import Menu from "./layout-menu.vue";
 
 	let containerDOM = ref<HTMLElement | null>(null);
 
@@ -82,7 +80,7 @@
 		}
 	}
 	.layout-app-bar {
-		flex: 0 0; 
+		flex: 0 0;
 	}
 	.layout-main {
 		flex: auto; // 设置为auto用于自动占满剩余空间

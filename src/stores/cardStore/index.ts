@@ -125,7 +125,12 @@ export default defineStore("cardStore", () => {
 		{ value: "height-asc", label: "高度-升序", group: "尺寸" },
 		{ value: "height-desc", label: "高度-降序", group: "尺寸" },
 	] as const; // 这里断言数组中的所有属性值为只读(为了能正确进行类型提示)
-	type sortGroup = { label: string; options: (typeof sortOptions)[number][] };
+	type sortGroup = {
+		type: "group";
+		label: string;
+		key: string;
+		children: ((typeof sortOptions)[number] & { key: string })[];
+	};
 	// 排序对象
 	const sort = reactive({
 		method: "#" as (typeof sortOptions)[number]["value"],
@@ -134,14 +139,18 @@ export default defineStore("cardStore", () => {
 		get groups(): sortGroup[] {
 			return Object.values(
 				this.options.reduce((prev, curr) => {
-					if (prev[curr.group]) {
-						prev[curr.group].options.push(curr);
-					} else {
+					if (!prev[curr.group]) {
 						prev[curr.group] = {
+							type: "group",
+							key: curr.group,
 							label: curr.group,
-							options: [curr],
+							children: [],
 						};
 					}
+					prev[curr.group].children.push({
+						...curr,
+						key: curr.value,
+					});
 					return prev;
 				}, <{ [key: string]: sortGroup }>{})
 			);

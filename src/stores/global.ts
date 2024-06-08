@@ -1,10 +1,10 @@
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
 import { defineStore } from "pinia";
 // import views from "@/views/index";
 
 export default defineStore("global", () => {
 	const openWindow = ref(false); // 窗口打开状态
-	const appBarIsCollapse = ref(false); // 导航可见状态
+	const navCollapse = ref(true); // 是否折叠
 	const tab = ref("Gallery"); // 当前标签页
 	//给滚动条注入样式
 	visibleScrollbar(true);
@@ -24,5 +24,5 @@ export default defineStore("global", () => {
 		document.documentElement.dataset.showScrollbar = value ? "true" : "false";
 	}
 
-	return { openWindow, tab, appBarIsCollapse, visibleScrollbar };
+	return { openWindow, tab, navCollapse, visibleScrollbar };
 });

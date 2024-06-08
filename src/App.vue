@@ -68,7 +68,7 @@
 		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
-		:deep(*) {
+		& > :deep(*) {
 			// 子元素默认还能响应
 			pointer-events: auto;
 		}

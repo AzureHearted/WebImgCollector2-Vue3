@@ -330,6 +330,7 @@
 
 <style lang="scss" scoped>
 	.pattern-tree__container {
+		box-sizing: border-box;
 		position: relative;
 		display: flex;
 		flex-flow: column nowrap;
@@ -346,6 +347,9 @@
 	:deep(.wic2-n-input) {
 		background: rgba(255, 255, 255, 0.3);
 		backdrop-filter: blur(10px);
+	}
+	.pattern-tree__tree {
+		border-radius: 4px;
 	}
 	:deep(.wic2-n-tree) {
 		border-radius: 4px;
