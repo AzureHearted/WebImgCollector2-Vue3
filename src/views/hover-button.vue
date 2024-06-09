@@ -74,7 +74,10 @@
 				<i-material-symbols-box-edit color="black" style="font-size: 20px" />
 			</var-button>
 			<!-- 设置 -->
-			<var-button color="rgb(217, 121, 252)" round>
+			<var-button
+				color="rgb(217, 121, 252)"
+				round
+				@click="toggleWindow('Setting')">
 				<i-ant-design-setting-twotone color="black" style="font-size: 20px" />
 			</var-button>
 			<!-- 测试窗口 -->

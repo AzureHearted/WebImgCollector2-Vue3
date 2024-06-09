@@ -1,17 +1,22 @@
 <template>
-	<div class="test__container">
+	<div class="setting__container">
+		<Scrollbar>
+			<StyleSheetManage />
+		</Scrollbar>
 	</div>
 </template>
 
 <script setup lang="ts">
+	import Scrollbar from "@/components/base/base-scrollbar.vue";
+	import StyleSheetManage from "@/components/style-sheet-manage.vue";
 	// import { onMounted } from "vue";
 	// onMounted(() => {
-	// 	console.log("测试页面挂载！");
+	// 	console.log("设置页面挂载！");
 	// });
 </script>
 
 <style lang="scss" scoped>
-	.test__container {
+	.setting__container {
 		position: relative;
 		box-sizing: border-box;
 		width: 100%;

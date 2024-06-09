@@ -17,6 +17,10 @@
 	import Tree from "./pattern-tree.vue";
 	import Form from "./pattern-edit-form.vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
+	// import { onMounted } from "vue";
+	// onMounted(() => {
+	// 	console.log("pattern-edit挂载！");
+	// });
 </script>
 
 <style lang="scss" scoped>

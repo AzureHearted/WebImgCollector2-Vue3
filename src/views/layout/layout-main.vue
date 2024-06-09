@@ -25,7 +25,7 @@
 			</n-layout-sider>
 			<n-layout class="main__content">
 				<transition appear>
-					<keep-alive>
+					<keep-alive :include="/gallery|pattern|setting/i" :max="10">
 						<component :is="nowPage" />
 					</keep-alive>
 				</transition>
@@ -36,12 +36,14 @@
 
 <script setup lang="ts">
 	import { h, computed } from "vue";
+	import type { Component } from "vue";
 	import { Icon } from "@iconify/vue";
 	import { NIcon, NEllipsis } from "naive-ui";
 	import type { MenuOption, MenuProps } from "naive-ui";
 
 	import Gallery from "@/views/gallery/gallery-index.vue";
 	import PatternEdit from "@/views/pattern-edit/pattern-edit-index.vue";
+	import Setting from "@/views/setting/setting-index.vue";
 	import Test from "@/views/test/test-index.vue";
 
 	import { storeToRefs } from "pinia";
@@ -51,7 +53,12 @@
 	const { tab: activeKey, navCollapse: collapsed } = storeToRefs(globalStore);
 
 	// 组件键值对
-	const views: { [key: string]: any } = { Gallery, PatternEdit, Test };
+	const views: { [key: string]: Component } = {
+		Gallery,
+		PatternEdit,
+		Test,
+		Setting,
+	};
 	// 动态组件
 	const nowPage = computed(() => {
 		return views[activeKey.value];
@@ -68,6 +75,11 @@
 			label: "方案管理",
 			key: "PatternEdit",
 			icon: renderIcon("material-symbols:box-edit"),
+		},
+		{
+			label: "设置",
+			key: "Setting",
+			icon: renderIcon("ant-design:setting-twotone"),
 		},
 		{
 			label: "测试页面",

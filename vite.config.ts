@@ -66,7 +66,6 @@ export default defineConfig({
 					importStyle: "sass",
 				}),
 				NaiveUiResolver(),
-
 				// 自动注册图标组件
 				IconsResolver({
 					// prefix: "Icon", //图标组件前缀,默认是“i”
@@ -78,12 +77,12 @@ export default defineConfig({
 		Icons({
 			autoInstall: true,
 		}),
-		vuetify({
-			autoImport: {
-				ignore: ["Ripple"], // vuetify的ripple组件有bug进行排除
-				// labs: true,
-			},
-		}),
+		// vuetify({
+		// 	autoImport: {
+		// 		ignore: ["Ripple"], // vuetify的ripple组件有bug进行排除
+		// 		// labs: true,
+		// 	},
+		// }),
 		visualizer({
 			open: true, //注意这里要设置为true，否则无效
 			// gzipSize: true,

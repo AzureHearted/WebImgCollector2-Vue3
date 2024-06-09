@@ -8,7 +8,10 @@
 		<!-- 内容区域 -->
 		<div ref="wrapDOM" class="base-scrollbar__wrap" @wheel.stop @scroll.stop>
 			<!-- 内容内部区域 -->
-			<div ref="viewDOM" class="base-scrollbar__view">
+			<div
+				ref="viewDOM"
+				class="base-scrollbar__view"
+				@transitionend="handleUpdate()">
 				<!-- 调试区域 -->
 				<div v-if="false" class="debug">
 					{{ viewInfo.height }},{{ viewInfo.width }}<br />
@@ -132,19 +135,28 @@
 		const defaultOptions: UpdateOptions = {
 			delay: 300,
 		};
-
-		// 如果计时器还没结束就又出触发该函数就清除计时器(重置计时)
-		if (timer) {
-			clearTimeout(timer);
-			timer = null;
-		}
 		// 获取配置参数
 		const { delay } = { ...defaultOptions, ...options };
-		// 设置计时器等待时间到达执行重新布局
-		timer = window.setTimeout(() => {
-			// console.log("触发 scrollbar 更新");
-			update(); // 执行任务
-		}, delay);
+		// // 如果计时器还没结束就又出触发该函数就清除计时器(重置计时)
+		// if (timer) {
+		// 	clearTimeout(timer);
+		// 	timer = null;
+		// }
+
+		// // 设置计时器等待时间到达执行重新布局
+		// timer = window.setTimeout(() => {
+		// 	// console.log("触发 scrollbar 更新");
+		// 	update(); // 执行任务
+		// }, delay);
+
+		// 节流写法
+		if (!timer) {
+			timer = window.setTimeout(() => {
+				// console.log("触发 scrollbar 更新");
+				update(); // 执行任务
+				timer = null;
+			}, delay);
+		}
 	}
 
 	// 状态数据
@@ -332,6 +344,7 @@
 <style lang="scss" scoped>
 	// 视口容器
 	.base-scrollbar_container {
+		box-sizing: border-box;
 		position: relative;
 		width: 100%;
 		height: 100%;
@@ -345,15 +358,17 @@
 
 	// 内容容器
 	.base-scrollbar__wrap {
+		box-sizing: border-box;
 		width: 100%;
 		height: 100%;
 		scroll-behavior: smooth;
 		overflow: auto;
 	}
 
-	// .base-scrollbar__view {
-	// 	background: wheat;
-	// }
+	.base-scrollbar__view {
+		// background: wheat;
+		transition: opacity 0.5s, width 0.5s, height 0.5s;
+	}
 
 	/* 去除原生滚动条样式 */
 	.base-scrollbar__wrap::-webkit-scrollbar {

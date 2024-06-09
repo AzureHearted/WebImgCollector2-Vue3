@@ -7,7 +7,7 @@
 		</el-config-provider>
 		<!-- 内容区 -->
 		<el-config-provider namespace="wic2">
-			<n-config-provider cls-prefix="wic2-n" abstract>
+			<n-config-provider namespace="wic2-n" cls-prefix="wic2-n" abstract>
 				<!-- 路由出口 -->
 				<!-- <RouterView /> -->
 				<Layout />
