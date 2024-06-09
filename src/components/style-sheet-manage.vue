@@ -146,7 +146,11 @@
 					isMatch =
 						isMatch &&
 						!!content &&
-						content.toLocaleLowerCase().includes(keyword.value);
+						(content.toLocaleLowerCase().includes(keyword.value) ||
+							(!!dom &&
+								dom.tagName
+									.toLocaleLowerCase()
+									.includes(keyword.value.toLocaleLowerCase())));
 				}
 			}
 			return isMatch;
