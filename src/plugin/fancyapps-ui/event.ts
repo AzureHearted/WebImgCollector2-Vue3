@@ -2,7 +2,7 @@ import type { OptionsType } from "@fancyapps/ui/types/Fancybox/options";
 import type { slideType } from "@fancyapps/ui/types/Carousel/types";
 import type { Carousel } from "@fancyapps/ui/types/Carousel/Carousel";
 
-// 修复函数
+// 图片显示修复函数
 const fixShowSize = (slide: slideType) => {
 	// console.log(slide);
 	setTimeout(() => {
@@ -22,8 +22,6 @@ const fixShowSize = (slide: slideType) => {
 			if (!slide.contentEl || !slide.panzoom) return;
 			slide.contentEl.style.width = width + "px";
 			slide.contentEl.style.height = height + "px";
-			// slide.panzoom.contentRect.width = width;
-			// slide.panzoom.contentRect.height = height;
 			slide.panzoom.contentRect.fitWidth = width;
 			slide.panzoom.contentRect.fitHeight = height;
 			// console.log("done-->fixed", slide);
@@ -32,9 +30,11 @@ const fixShowSize = (slide: slideType) => {
 };
 
 export default {
-	"*": (_, type: string, ...args: any[]) => {
-		// console.log(type, args);
-	},
+	// 所有事件的回调(测试用)
+	// "*": (_, type: string, ...args: any[]) => {
+	// 	console.log(type, args);
+	// },
+	// Carousel进行slide创建时的回调
 	"Carousel.createSlide": (_, carousel: Carousel) => {
 		const slides = carousel.slides.filter((x) => x.contentEl);
 		// console.log("Carousel.createSlide", slides);
@@ -42,6 +42,7 @@ export default {
 			fixShowSize(slide);
 		});
 	},
+	// Carousel进行更新时的回调
 	"Carousel.refresh": (_, carousel: Carousel) => {
 		const slides = carousel.slides.filter((x) => x.contentEl);
 		// console.log("Carousel.refresh", slides);
