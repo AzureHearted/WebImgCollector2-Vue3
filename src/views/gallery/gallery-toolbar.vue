@@ -424,7 +424,7 @@
 		// padding: 4px 4px 2px 4px;
 		padding: 2px;
 		gap: 2px;
-		background: rgba(255, 255, 255, 0.2);
+		// background: rgba(255, 255, 255, 0.2);
 		align-items: center;
 		box-shadow: shadow.$elevation;
 	}

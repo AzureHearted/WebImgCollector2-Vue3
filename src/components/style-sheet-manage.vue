@@ -1,84 +1,92 @@
 <template>
 	<div class="style-sheet-manage__container">
 		<!-- 获取当前页面样式表 -->
-		<n-card embedded class="style-sheet-manage__toolbar">
-			<n-flex :size="8" align="center">
-				<n-button type="primary" @click="getStyleSheets">
-					获取页面样式表
-				</n-button>
-				<n-switch
-					v-model:value="filterThisScriptStyle"
-					@change="getStyleSheets">
-					<template #checked> 已过滤当前脚本样式 </template>
-					<template #unchecked> 未过滤当前脚本样式 </template>
-				</n-switch>
-				<n-form-item :show-label="false" :show-feedback="false">
-					<n-input
-						v-model:value="keyword"
-						type="text"
-						placeholder="关键词检索"
-						clearable />
-				</n-form-item>
-			</n-flex>
-		</n-card>
 		<n-config-provider
 			:hljs="hljs"
 			namespace="wic2-n"
 			cls-prefix="wic2-n"
 			abstract>
+			<n-card embedded class="style-sheet-manage__toolbar">
+				<n-flex :size="8" align="center">
+					<n-button type="primary" @click="getStyleSheets">
+						获取页面样式表
+					</n-button>
+					<n-badge
+						:value="filteredStyleSheetList.length"
+						:max="999"
+						type="info">
+						<n-switch
+							v-model:value="filterThisScriptStyle"
+							@change="getStyleSheets">
+							<template #checked> 已过滤当前脚本样式 </template>
+							<template #unchecked> 未过滤当前脚本样式 </template>
+						</n-switch>
+					</n-badge>
+
+					<n-form-item :show-label="false" :show-feedback="false">
+						<n-input
+							v-model:value="keyword"
+							type="text"
+							placeholder="关键词检索"
+							clearable />
+					</n-form-item>
+				</n-flex>
+			</n-card>
 			<n-collapse accordion>
-				<transition-group name="list" appear>
-					<template
-						v-for="(item, index) in filteredStyleSheetList"
-						:key="item.ownerNode">
-						<n-collapse-item :name="index">
-							<template #header>
+				<transition-group name="fade">
+					<n-collapse-item
+						v-for="item in filteredStyleSheetList"
+						:key="item.index">
+						<template #header>
+							<n-flex :size="8" align="center">
+								<span>
+									{{ item.index }}
+								</span>
 								<n-flex vertical :size="4">
-									<span>
-										{{ item.index }}
-									</span>
 									<div v-for="key in Object.keys(item.attributes)" :key="key">
 										<n-tag type="info">{{ key }}:</n-tag>
 										{{ item.attributes[key] }}
 									</div>
 								</n-flex>
-							</template>
-							<template #header-extra>
-								<n-flex :size="8" align="center" @click.stop>
-									<n-switch
-										v-model:value="item.disabled"
-										:checked-value="false"
-										:unchecked-value="true"
-										:rail-style="railStyle"
-										@change="getStyleSheets">
-										<template #checked> 已启用 </template>
-										<template #unchecked> 已禁用 </template>
-									</n-switch>
-									<n-tag
-										:type="item.dom?.tagName === 'STYLE' ? 'info' : 'error'">
-										{{ item.dom?.tagName.toLocaleLowerCase() }}
-									</n-tag>
-								</n-flex>
-							</template>
-							<div v-if="item.dom?.tagName === 'STYLE'">
-								<div v-for="(rule, rIndex) in item.cssRules" :key="rIndex">
-									{{ (rule as CSSStyleRule).selectorText }}
-								</div>
-								<n-code
-									:code="item.dom.textContent || ''"
-									language="css"
-									show-line-numbers />
-								<n-divider />
+							</n-flex>
+						</template>
+						<template #header-extra>
+							<n-flex :size="8" align="center" @click.stop>
+								<n-button
+									type="error"
+									@click="styleSheetList.splice(item.index, 1)">
+									删除
+								</n-button>
+								<n-switch
+									v-model:value="item.disabled"
+									:checked-value="false"
+									:unchecked-value="true"
+									:rail-style="railStyle"
+									@change="getStyleSheets">
+									<template #checked> 已启用 </template>
+									<template #unchecked> 已禁用 </template>
+								</n-switch>
+								<n-tag :type="item.dom?.tagName === 'STYLE' ? 'info' : 'error'">
+									{{ item.dom?.tagName.toLocaleLowerCase() }}
+								</n-tag>
+							</n-flex>
+						</template>
+						<div v-if="item.dom?.tagName === 'STYLE'">
+							<div v-for="(rule, rIndex) in item.cssRules" :key="rIndex">
+								{{ (rule as CSSStyleRule).selectorText }}
 							</div>
-							<div v-if="item.ownerNode?.nodeName === 'LINK'">
-								<n-code
-									:code="item.href || ''"
-									language="css"
-									show-line-numbers />
-								<n-divider />
-							</div>
-						</n-collapse-item>
-					</template>
+							<n-code
+								:code="item.dom.textContent || ''"
+								language="css"
+								show-line-numbers />
+						</div>
+						<div v-if="item.ownerNode?.nodeName === 'LINK'">
+							<n-code
+								:code="item.href || ''"
+								language="css"
+								show-line-numbers />
+						</div>
+					</n-collapse-item>
 				</transition-group>
 			</n-collapse>
 		</n-config-provider>
@@ -207,28 +215,38 @@
 		box-sizing: border-box;
 		position: sticky;
 		top: 0;
-		z-index: 1;
+		z-index: 2;
 		background: white;
 		:deep(.wic2-n-card__content) {
 			padding: 4px;
 		}
 	}
 
-	.list-move,/* 对移动中的元素应用的过渡 */
-	.list-enter-active,
-	.list-leave-active {
-		transition: all 0.5s ease;
+	/* 1. 声明过渡效果 */
+	.fade-move,
+	.fade-enter-active,
+	.fade-leave-active {
+		transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+		* {
+			transition: unset !important;
+			animation: unset !important;
+		}
 	}
 
-	.list-enter-from,
-	.list-leave-to {
+	/* 2. 声明进入和离开的状态 */
+	.fade-enter-from,
+	.fade-leave-to {
 		opacity: 0;
-		transform: translateX(30px);
+		transform: scaleY(0.01) translate(30px, 0);
 	}
 
-	/* 确保将离开的元素从布局流中删除
-  以便能够正确地计算移动的动画。 */
-	// .list-leave-active {
-	// 	position: absolute;
-	// }
+	/* 3. 确保离开的项目被移除出了布局流
+      以便正确地计算移动时的动画效果。 */
+	.fade-leave-active {
+		position: absolute;
+		* {
+			transition: unset !important;
+			animation: unset !important;
+		}
+	}
 </style>

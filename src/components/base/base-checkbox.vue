@@ -1,17 +1,13 @@
 <template>
 	<div class="base-checkbox__container" @click="isChecked = !isChecked">
-		<el-button
-			size="small"
-			:type="isChecked ? 'success' : 'default'"
-			circle
-			v-ripple>
+		<n-button :type="isChecked ? 'success' : 'default'" text block v-ripple>
 			<template #icon>
-				<Transition appear>
+				<transition appear>
 					<i-material-symbols-check-box-outline-blank v-if="!isChecked" />
 					<i-material-symbols-check-box-rounded v-else />
-				</Transition>
+				</transition>
 			</template>
-		</el-button>
+		</n-button>
 	</div>
 </template>
 
@@ -43,8 +39,8 @@
 
 <style scoped lang="scss">
 	.base-checkbox__container {
-		height: 24px;
 		aspect-ratio: 1;
+		height: 24px;
 		display: flex;
 	}
 

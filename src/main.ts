@@ -28,7 +28,11 @@ app.use(createPinia());
 // app.use(vuetify);
 
 app.mount(appContainer); // 挂载app
-document.body.appendChild(appContainer);
+// document.body.appendChild(appContainer);
+document.documentElement.appendChild(appContainer);
 
 // 为止bug临时修复
 // document.body.classList.remove("tag");
+
+import { monitorWindowOpen } from "./utils/common";
+monitorWindowOpen();

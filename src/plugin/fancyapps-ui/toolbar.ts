@@ -50,7 +50,6 @@ export default {
 				const cid = triggerEl.dataset.id;
 				console.log("下载", cid, url);
 				cardStore.downloadCards([cid as string]);
-				// window.open(url, "_blank");
 			},
 		},
 		// 定位按钮

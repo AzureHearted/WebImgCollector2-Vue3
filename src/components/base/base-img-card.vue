@@ -81,7 +81,7 @@
 		}
 	}
 	.img-card-container:hover {
-		box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); // 阴影效果，根据需要自行调整。
+		box-shadow: 0 0 10px 0 rgba(0, 0, 0, 1); // 阴影效果，根据需要自行调整。
 	}
 	.base-card-header {
 		position: relative;

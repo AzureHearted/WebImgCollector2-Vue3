@@ -7,7 +7,12 @@
 		</el-config-provider>
 		<!-- 内容区 -->
 		<el-config-provider namespace="wic2">
-			<n-config-provider namespace="wic2-n" cls-prefix="wic2-n" abstract>
+			<n-config-provider
+				namespace="wic2-n"
+				cls-prefix="wic2-n"
+				inline-theme-disabled
+				preflight-style-disabled
+				abstract>
 				<!-- 路由出口 -->
 				<!-- <RouterView /> -->
 				<Layout />
@@ -61,6 +66,7 @@
 		width: unset;
 		height: unset;
 		inset: 0;
+		text-align: left;
 		background-color: transparent;
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值

@@ -59,7 +59,7 @@ export default defineStore("patternStore", () => {
 			// 先过滤域名
 			return new RegExp(`${p.mainInfo.host}`).test(location.origin);
 		});
-		console.log("matchedPatterns", matchedPatterns, matchedPatterns.length);
+		// console.log("matchedPatterns", matchedPatterns, matchedPatterns.length);
 		if (matchedPatterns.length) {
 			// 路径过滤
 			for (let i = 0; i < matchedPatterns.length; i++) {
@@ -97,7 +97,7 @@ export default defineStore("patternStore", () => {
 					break;
 				}
 			}
-			console.log(targetPattern);
+			// console.log(targetPattern);
 			if (!targetPattern) {
 				targetPattern = defaultPattern;
 			}

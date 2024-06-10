@@ -146,7 +146,6 @@
 						{{ data.description.title.trim() }}
 					</var-chip>
 				</el-tooltip>
-
 				<!-- 文件大小信息 -->
 				<var-chip
 					v-if="!!data.source.blob && !!data.source.blob.size"
@@ -286,7 +285,6 @@
 		position: relative;
 		display: flex;
 		padding: 4px;
-		justify-content: space-between;
 
 		pointer-events: none;
 		* {
@@ -306,7 +304,7 @@
 	// header左侧
 	.gallery-card-header-left {
 		flex: 0;
-		transform: translateY(-150%);
+		// transform: translateY(-150%);
 		transition: transform 0.3s;
 	}
 	.gallery-card[data-show="true"] .gallery-card-header-left,
@@ -318,17 +316,18 @@
 
 	// header右侧
 	.gallery-card-header-right {
+		margin-left: auto;
 		display: flex;
 		flex-flow: row-reverse;
 		align-items: center;
 
 		transform: translateY(-150%);
-		transition: transform 0.3s;
+		transition: transform 0.2s;
 	}
 	.gallery-card[data-show="true"] .gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);
-		transition: transform 0.3s;
+		transition: transform 0.2s;
 	}
 
 	.card-button-group {
@@ -338,13 +337,10 @@
 	}
 
 	.card-checkbox {
-		// position: absolute;
+		position: absolute;
 		// top: -2px;
 		// left: -2px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		aspect-ratio: 1;
+		transform: translate(-2px, -2px);
 		filter: drop-shadow(0 0 1px #ffffff);
 	}
 
@@ -374,7 +370,6 @@
 			&.title-chip {
 				max-width: 25%;
 			}
-			// white-space: nowrap;
 			& > span {
 				overflow: hidden;
 				text-overflow: ellipsis;
