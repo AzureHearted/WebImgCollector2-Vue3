@@ -21,11 +21,19 @@
 				<div class="gallery-card-header-right">
 					<!-- 卡片按钮组 -->
 					<div class="card-button-group">
-						<!-- 删除 -->
 						<el-button-group size="small">
+							<!-- 删除 -->
 							<el-button type="danger" @click="toRemove(data)" v-ripple>
 								<template #icon>
 									<i-material-symbols-delete />
+								</template>
+							</el-button>
+						</el-button-group>
+						<el-button-group size="small">
+							<!-- 重命名 -->
+							<el-button type="primary" @click="rename(data)" v-ripple>
+								<template #icon>
+									<i-ep-edit />
 								</template>
 							</el-button>
 						</el-button-group>
@@ -160,13 +168,15 @@
 </template>
 
 <script setup lang="ts">
-	import { computed, defineProps, withDefaults } from "vue";
+	import { computed, defineProps, withDefaults, getCurrentInstance } from "vue";
 	import type { ComputedRef } from "vue";
 	import BaseImgCard from "@/components/base/base-img-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 	import type { returnInfo } from "@/components/base/base-img.vue";
+
+	const { appContext } = getCurrentInstance()!;
 
 	// 导入公用TS库
 	import { byteAutoUnit, isMobile } from "@/utils/common";
@@ -177,6 +187,8 @@
 	// 导入仓库
 	import { useGlobalStore, useCardStore } from "@/stores";
 	import { ref } from "vue";
+	import { GM_openInTab } from "$";
+	import { ElMessageBox } from "@/plugin/element-plus";
 	const globalStore = useGlobalStore();
 	const cardStore = useCardStore();
 
@@ -260,6 +272,32 @@
 		}); // 滚动到指定元素位置，平滑滚动，并居中显示。
 		globalStore.openWindow = false;
 	}
+	// 重命名
+	function rename(item: BaseCard) {
+		// 删除卡片数据模型中的卡片。
+		ElMessageBox.prompt(
+			`重命名卡片"${item.description.title}"为……`,
+			"重命名",
+			{
+				appendTo: ".web-img-collector-notification-container",
+				confirmButtonText: "确认",
+				cancelButtonText: "取消",
+				inputPlaceholder: "请输入新卡片名称",
+				inputPattern: /^[^\\/:*?"<>|]+$/,
+				inputErrorMessage: '文件名不合法(文件名不能出现字符:\\/:*?"<>|)',
+				inputValue: item.description.title,
+				draggable: true,
+			},
+			appContext
+		)
+			.then(({ value: newName }) => {
+				// 确认
+				item.description.title = newName;
+			})
+			.catch(() => {
+				// 取消
+			});
+	}
 	// 删除卡片
 	function toRemove(item: Pick<BaseCard, "id">) {
 		// 删除卡片数据模型中的卡片。
@@ -275,7 +313,9 @@
 	}
 	// 打开网址
 	async function openUrl(url: string) {
-		window.open(url, "_blank");
+		// window.open(url, "_blank");
+		// open(url, "_blank");
+		GM_openInTab(url, { active: true, insert: true, setParent: true });
 	}
 </script>
 

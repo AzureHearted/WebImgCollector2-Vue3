@@ -348,23 +348,3 @@ export function GM_storage(
 		return GM_getValue(options.name, options.default);
 	}
 }
-
-// 监控window.open方法(可能会被站点篡改, 在其被篡改时阻止)
-export function monitorWindowOpen() {
-	console.log("window.open 保护器开启");
-	const iframe = document.createElement("iframe");
-	iframe.style.display = "none";
-	document.body.appendChild(iframe);
-	const originalWindowOpen = iframe.contentWindow?.open;
-
-	Object.defineProperty(window, "open", {
-		set(value) {
-			console.log("成功阻止 window.open 方法被篡改", value);
-			return;
-		},
-		get() {
-			console.log("正在:读取/使用 window.open");
-			return originalWindowOpen;
-		},
-	});
-}

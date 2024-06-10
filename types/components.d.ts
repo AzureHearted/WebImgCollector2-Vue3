@@ -39,6 +39,7 @@ declare module 'vue' {
     IEpArrowDownBold: typeof import('~icons/ep/arrow-down-bold')['default']
     IEpArrowUpBold: typeof import('~icons/ep/arrow-up-bold')['default']
     IEpDocumentCopy: typeof import('~icons/ep/document-copy')['default']
+    IEpEdit: typeof import('~icons/ep/edit')['default']
     IMaterialSymbolsArrowDropDownRounded: typeof import('~icons/material-symbols/arrow-drop-down-rounded')['default']
     IMaterialSymbolsBoxEdit: typeof import('~icons/material-symbols/box-edit')['default']
     IMaterialSymbolsCheckBoxOutlineBlank: typeof import('~icons/material-symbols/check-box-outline-blank')['default']

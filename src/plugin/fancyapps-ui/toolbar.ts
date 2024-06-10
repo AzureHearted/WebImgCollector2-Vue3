@@ -4,6 +4,7 @@ import type {
 } from "@fancyapps/ui/types/Fancybox/plugins";
 import type { Fancybox } from "@fancyapps/ui";
 import { useCardStore } from "@/stores";
+import { GM_openInTab } from "$";
 const cardStore = useCardStore();
 // import type { Fancybox } from "@fancyapps/ui/types";
 
@@ -30,7 +31,11 @@ export default {
 				const triggerEl = carousel?.slides[index].triggerEl;
 				if (!triggerEl) return;
 				const url = triggerEl.dataset.downloadSrc;
-				window.open(url, "_blank");
+				// window.open(url, "_blank");
+				// open(url, "_blank");
+				if (url) {
+					GM_openInTab(url, { active: true, insert: true, setParent: true });
+				}
 			},
 		},
 		// 下载按钮

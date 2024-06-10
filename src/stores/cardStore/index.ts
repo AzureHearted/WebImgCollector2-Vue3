@@ -20,7 +20,7 @@ import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现�
 // 导入其他仓库
 import { useLoadingStore, usePatternStore } from "@/stores";
 
-import { ElNotification } from "@/plugin/element-plus";
+import { ElNotification, ElMessageBox } from "@/plugin/element-plus";
 
 export default defineStore("cardStore", () => {
 	const loadingStore = useLoadingStore();
@@ -419,16 +419,36 @@ export default defineStore("cardStore", () => {
 					card.source.blob = blob;
 				}
 			}
-			let name = card.description.title.trim();
-			if (!name) {
-				name = getNameByUrl(card.source.url);
+			let initName = card.description.title.trim();
+			if (!initName) {
+				initName = getNameByUrl(card.source.url);
 			}
-			if (card.source.meta.type !== "html") {
-				name = name + `.${card.source.meta.ext}`;
-			}
-			console.log(name);
-			// 保存
-			saveAs(card.source.blob!, name);
+			// console.log(name);
+			// 下载完成后让用户进行文件名确认
+			ElMessageBox.prompt("文件已准备完成,请确认文件名", "提示", {
+				appendTo: ".web-img-collector-notification-container",
+				confirmButtonText: "确认",
+				cancelButtonText: "取消",
+				inputPlaceholder: "请输入要保存的文件名称",
+				inputPattern: /^[^\\/:*?"<>|]+$/,
+				inputErrorMessage: '文件名不合法(文件名不能出现字符:\\/:*?"<>|)',
+				inputValue: initName,
+				draggable: true,
+			})
+				.then(({ value: name }) => {
+					console.log("保存文件名称:", name);
+					// 添加后缀名
+					name =
+						card.source.meta.type !== "html"
+							? name + `.${card.source.meta.ext}`
+							: name + ".html";
+					// 保存
+
+					saveAs(card.source.blob!, name);
+				})
+				.catch(() => {
+					console.log("取消操作");
+				});
 		} else {
 			loadingStore.start(ids.length); // 开启进度条
 
@@ -478,7 +498,7 @@ export default defineStore("cardStore", () => {
 
 					// 下载压缩包
 					// 获取标题
-					let zipName: string;
+					let initZipName: string;
 					const titles = [
 						document.title,
 						...[...document.querySelectorAll("h1")].map((dom) => dom.innerText),
@@ -489,20 +509,37 @@ export default defineStore("cardStore", () => {
 						.filter((title) => !!title && !!title.trim().length)
 						.map((title) => title.replace("\\", "-").replace(",", "_"));
 					if (titles.length) {
-						zipName = titles[0]; // 如果标题获取成功就使用首个标题
+						initZipName = titles[0]; // 如果标题获取成功就使用首个标题
 					} else {
-						zipName = getNameByUrl(decodeURI(location.href)); // 如果标题获取失败就直接使用href提取标题
+						initZipName = getNameByUrl(decodeURI(location.href)); // 如果标题获取失败就直接使用href提取标题
 					}
 
-					// console.log("压缩包名称:", zipName);
-					saveAs(zip, `${zipName}.zip`);
-
-					ElNotification({
-						title: "成功",
-						message: "开始下载压缩包……",
-						type: "success",
+					// 下载完成后让用户进行文件名确认
+					ElMessageBox.prompt("压缩包已准备完成,请确认文件名", "提示", {
 						appendTo: ".web-img-collector-notification-container",
-					});
+						confirmButtonText: "确认",
+						cancelButtonText: "取消",
+						inputPlaceholder: "请输入要保存的压缩包名称",
+						inputPattern: /^[^\\/:*?"<>|]+$/,
+						inputErrorMessage: '文件名不合法(文件名不能出现字符:\\/:*?"<>|)',
+						inputValue: initZipName,
+						draggable: true,
+					})
+						.then(({ value: zipName }) => {
+							console.log("保存压缩包名称:", zipName);
+							saveAs(zip, `${zipName}.zip`);
+
+							ElNotification({
+								title: "成功",
+								message: "开始下载压缩包……",
+								type: "success",
+								appendTo: ".web-img-collector-notification-container",
+							});
+						})
+						.catch(() => {
+							console.log("取消操作");
+						});
+
 					loadingStore.end(); // 结束进度条
 					// console.groupEnd();
 				},
