@@ -1,32 +1,18 @@
 <template>
-	<div @click="isChecked = !isChecked">
-		<Transition appear>
-			<var-button
-				v-if="!isChecked"
-				:type="isChecked ? 'success' : 'default'"
-				icon-container
-				round>
-				<IconCheckboxBlank
-					class="card-checkbox-icon"
-					style="width: 20px; fill: #333" />
-			</var-button>
-			<var-button
-				v-else
-				:type="isChecked ? 'success' : 'default'"
-				icon-container
-				round>
-				<IconCheckboxChecked
-					class="card-checkbox-icon"
-					style="width: 20px; fill: white" />
-			</var-button>
-		</Transition>
+	<div class="base-checkbox__container" @click="isChecked = !isChecked">
+		<n-button :type="isChecked ? 'success' : 'default'" text block v-ripple>
+			<template #icon>
+				<transition appear>
+					<i-material-symbols-check-box-outline-blank v-if="!isChecked" />
+					<i-material-symbols-check-box-rounded v-else />
+				</transition>
+			</template>
+		</n-button>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { defineProps, withDefaults, computed, defineEmits } from "vue";
-	import IconCheckboxBlank from "@svg/checkbox-blank-circle-outline.svg";
-	import IconCheckboxChecked from "@svg/check-circle.svg";
 
 	const props = withDefaults(
 		defineProps<{
@@ -51,30 +37,27 @@
 	});
 </script>
 
-<style scoped lang="less">
-	// 进入动画的结束状态,进入动画的起始状态
-	.v-leave-to,
-	.v-enter-from {
+<style scoped lang="scss">
+	.base-checkbox__container {
+		aspect-ratio: 1;
+		height: 24px;
+		display: flex;
+	}
+
+	// 进场过渡,退场过渡
+	.v-enter-from,
+	.v-leave-to {
 		position: absolute;
 		opacity: 0;
-		transform: translateY(-100%);
+		transform: scale(0);
 	}
-	// 进入动画的结束状态,离开动画的起始状态
-	.v-enter-to,
-	.v-leave-from {
-		// position: absolute;
-	}
+
 	// 进入的过程中
 	.v-enter-active {
-		transition: all 0.5s;
+		transition: 0.5s;
 	}
 	// 离开的过程中
 	.v-leave-active {
-		transition: all 0.5s;
-	}
-
-	:deep(.var-button--round) {
-		width: 26px;
-		height: 26px;
+		transition: 0.5s;
 	}
 </style>

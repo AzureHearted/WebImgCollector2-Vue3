@@ -1,3 +1,5 @@
+import { GM_getValue, GM_setValue } from "$";
+
 //f [功能封装]生成uuid
 export function buildUUID(): string {
 	const hexList: string[] = [];
@@ -19,7 +21,7 @@ export function buildUUID(): string {
 	return uuid.replace(/-/g, "");
 }
 
-//f 字符串混合排序
+// 字符串混合排序比较器
 export function mixSort(_a: string, _b: string) {
 	const reg = /[a-zA-Z0-9]/;
 	// 比对仅针对字符串，数字参与对比会导致对比的字符串转为number类型，变成NaN
@@ -48,11 +50,13 @@ export function getExtByBlob(blob: Blob) {
 			ext = match[0].trim().length > 0 ? match[0] : "";
 		}
 	}
+	// 特殊情况处理
+	if (ext === "jpeg") ext = "jpg";
 	return ext;
 }
 
 //f 获取站点Favicon图标
-export async function getFavicon(): Promise<string> {
+export function getFavicon(): string {
 	let iconUrl: string;
 	//s [1]通过link标签查找
 	const urls = (
@@ -117,6 +121,8 @@ export function getExtByUrl(url: string): string {
 	if (match) {
 		ext = match[0];
 	}
+	// 特殊情况处理
+	if (ext === "jpeg") ext = "jpg";
 	return ext;
 }
 
@@ -242,22 +248,6 @@ export function isMobile(): boolean {
 	return regex.test(sUserAgent);
 }
 
-//f 链接类型判断
-export function getUrlType(url: string): "image" | "video" | "html" {
-	let urlType: "image" | "video" | "html" = "html";
-	const isImg = /\.(jpg|jpeg|png|gif|webp|bmp|icon|svg)$/i;
-	const isVideo =
-		/\.(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)$/i;
-
-	if (isImg.test(url)) {
-		urlType = "image";
-	} else if (isVideo.test(url)) {
-		urlType = "video";
-	}
-
-	return urlType;
-}
-
 //f blob类型判断
 export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
 	const blobTypeRegex = {
@@ -280,20 +270,6 @@ export function getBlobType(blob: Blob): "image" | "video" | "html" | "audio" {
 	}
 
 	return blobType;
-}
-
-//f 通过链接"推测"链接类型
-export function guessUrlType(url: string): "image" | "video" | "html" {
-	let urlType: "image" | "video" | "html" = "html";
-	const isImg = /(jpg|jpeg|png|gif|webp|bmp|icon|svg)/i;
-	const isVideo =
-		/(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)/i;
-	if (isImg.test(url)) {
-		urlType = "image";
-	} else if (isVideo.test(url)) {
-		urlType = "video";
-	}
-	return urlType;
 }
 
 //f 获取剪切板文本
@@ -329,4 +305,66 @@ export function byteAutoUnit(byteSize: number, decimal: number = 2): string {
 		}
 	}
 	return `${num.toFixed(decimal)}${unitMap.get(unit)}`;
+}
+
+// 推断字符串是否是链接
+export function isUrl(str: string) {
+	const regex = /^([^/]+?:)?\/\/[\w.,@?^=%&:/~+#-]+/i;
+	let isUrl = false;
+	if (regex.test(str)) {
+		try {
+			new URL(str);
+			isUrl = true;
+		} catch {
+			isUrl = false;
+		}
+	}
+	return isUrl;
+}
+
+// 封装油猴存储GM_getValue和GM_setValue
+interface GM_storageOptions {
+	method: "set" | "get";
+	name: string;
+	value: string;
+	default: any;
+}
+export function GM_storage(
+	options: Partial<GM_storageOptions> & {
+		method: "set" | "get";
+		name: string;
+	}
+) {
+	const defaultOptions: GM_storageOptions = {
+		method: "get",
+		name: "",
+		value: "",
+		default: "",
+	};
+	options = Object.assign(defaultOptions, options);
+	if (options.method === "set") {
+		GM_setValue(options.name, options.value);
+	} else {
+		return GM_getValue(options.name, options.default);
+	}
+}
+
+// 监控window.open方法(可能会被站点篡改, 在其被篡改时阻止)
+export function monitorWindowOpen() {
+	console.log("window.open 保护器开启");
+	const iframe = document.createElement("iframe");
+	iframe.style.display = "none";
+	document.body.appendChild(iframe);
+	const originalWindowOpen = iframe.contentWindow?.open;
+
+	Object.defineProperty(window, "open", {
+		set(value) {
+			console.log("成功阻止 window.open 方法被篡改", value);
+			return;
+		},
+		get() {
+			console.log("正在:读取/使用 window.open");
+			return originalWindowOpen;
+		},
+	});
 }

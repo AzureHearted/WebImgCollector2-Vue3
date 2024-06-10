@@ -1,23 +1,34 @@
 <template>
-	<div class="img-wrapper" :class="{ loading: !state.loaded }">
+	<div
+		ref="imgContainer"
+		class="img__container"
+		:class="{ loading: !state.loaded }">
 		<!-- 图片主体 -->
-		<img
-			ref="imgDom"
+		<div
+			class="img__wrap"
 			:class="{
 				loading: !state.loaded,
 				show: state.show,
 				error: state.isError,
 			}"
-			v-lazy.src="src"
-			:style="{ aspectRatio: aspectRatio }"
-			:draggable="draggable" />
+			:style="{ aspectRatio: aspectRatio }">
+			<slot>
+				<img
+					v-if="mounted"
+					ref="imgDom"
+					v-lazy.src="src"
+					:draggable="draggable" />
+			</slot>
+		</div>
+
 		<!-- 其他内容(插槽) -->
-		<slot></slot>
+		<slot name="other"></slot>
 	</div>
 </template>
 
 <script setup lang="ts">
 	// 导入工具函数
+	import { onMounted } from "vue";
 	import {
 		ref,
 		reactive,
@@ -25,11 +36,13 @@
 		defineProps,
 		withDefaults,
 		defineEmits,
+		watch,
+		nextTick,
 	} from "vue";
+	import type { Directive } from "vue";
 	// 导入加载错误时的图片
-	import errorImg from "@/assets/svg/error-img.svg";
-	import { nextTick } from "vue";
-
+	const errorImg =
+		"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxZW0iIGhlaWdodD0iMWVtIiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGZpbGw9ImN1cnJlbnRDb2xvciIgZD0iTTIgMmgyMHYxMGgtMlY0SDR2OS41ODZsNS01TDE0LjQxNCAxNEwxMyAxNS40MTRsLTQtNGwtNSA1VjIwaDh2Mkgyem0xMy41NDcgNWExIDEgMCAxIDAgMCAyYTEgMSAwIDAgMCAwLTJtLTMgMWEzIDMgMCAxIDEgNiAwYTMgMyAwIDAgMS02IDBtMy42MjUgNi43NTdMMTkgMTcuNTg2bDIuODI4LTIuODI5bDEuNDE1IDEuNDE1TDIwLjQxNCAxOWwyLjgyOSAyLjgyOGwtMS40MTUgMS40MTVMMTkgMjAuNDE0bC0yLjgyOCAyLjgyOWwtMS40MTUtMS40MTVMMTcuNTg2IDE5bC0yLjgyOS0yLjgyOHoiLz48L3N2Zz4=";
 	// 定义props
 	const props = withDefaults(
 		defineProps<{
@@ -39,11 +52,12 @@
 			useThumb?: boolean;
 			thumb?: string;
 			thumbMaxSize?: number;
-			viewportDom?: IntersectionObserverInit["root"];
+			viewportSelector?: string;
 			viewRootMargin?: IntersectionObserverInit["rootMargin"];
 			observerOnce?: boolean;
 			manualControl?: boolean;
 			draggable?: boolean; // 是否允许拖拽图片
+			initShow?: boolean;
 		}>(),
 		{
 			src: "",
@@ -52,11 +66,36 @@
 			useThumb: false,
 			thumb: "",
 			thumbMaxSize: 400,
-			viewportDom: null,
-			viewRootMargin: "0px 0px 0px 0px",
+			viewportSelector: "",
+			viewRootMargin: "0%",
 			observerOnce: true,
 			manualControl: false,
 			draggable: true, // 默认允许拖拽图片
+			initShow: false,
+		}
+	);
+
+	const mounted = ref(false);
+	onMounted(() => {
+		nextTick(() => {
+			mounted.value = true;
+		});
+	});
+
+	const imgContainer = ref<HTMLElement | null>(null);
+	const viewportDom = computed<IntersectionObserverInit["root"]>(() => {
+		if (props.viewportSelector.trim()) {
+			return document.querySelector(props.viewportSelector);
+		} else {
+			return null;
+		}
+	});
+
+	watch(
+		() => props.src,
+		(newSrc, oldSrc) => {
+			// console.log("src变化", newSrc, oldSrc);
+			loadImage(newSrc);
 		}
 	);
 
@@ -65,9 +104,9 @@
 		errorImg: errorImg,
 		width: props.initWidth,
 		height: props.initHeight,
-		loaded: ref(false),
 		isError: ref(false),
-		show: ref(false),
+		loaded: ref(props.initShow),
+		show: ref(props.initShow),
 	});
 
 	// 定义宽高比
@@ -268,77 +307,104 @@
 	}
 
 	// 自定义指令
-	const vLazy = {
-		mounted(el: HTMLImageElement) {
+	const vLazy: Directive = {
+		mounted: () => {
 			// console.log("图片挂载", el.src, el);
-			let src: string = props.src; // 默认使用原图
+			// 将任务放入宏队列(防止有些时候交叉检测失败的bug)
+			setTimeout(() => {
+				let src: string = props.src; // 默认使用原图
+				const handleIntersection = async (
+					entries: IntersectionObserverEntry[]
+				) => {
+					// console.log(entries[0].isIntersecting);
+					if (entries[0].isIntersecting) {
+						// 判断是否只监听一次
+						if (props.observerOnce) {
+							// 停止监听
+							observer.disconnect();
+						}
+						// 判断是否已经被加载过了
+						if (state.loaded) {
+							// 如果已经被加载就让其显示
+							state.show = true;
+							return;
+						}
 
-			const handleIntersection = async (
-				entries: IntersectionObserverEntry[]
-			) => {
-				if (entries[0].isIntersecting) {
-					// 判断是否只监听一次
-					if (props.observerOnce) {
-						// 停止监听
-						observer.disconnect();
-					}
-					// 判断是否已经被加载过了
-					if (state.loaded) {
-						// 如果已经被加载就让其显示
-						state.show = true;
-						return;
-					}
-
-					// 这里判断是否使用缩略图
-					if (props.useThumb) {
-						// s 使用缩略图
-						if (props.thumb) {
-							// console.log("存在缩略图", props.thumb);
-							// 如果缩略图存在,就使用缩略图
-							src = props.thumb;
-						} else {
-							// 如果没有缩略图,就使用原图生成
-							const res = await generateThumbnail(
-								props.src,
-								props.thumbMaxSize,
-								props.thumbMaxSize
-							);
-							if (res) {
-								src = res;
+						// 这里判断是否使用缩略图
+						if (props.useThumb) {
+							// s 使用缩略图
+							if (props.thumb) {
+								// console.log("存在缩略图", props.thumb);
+								// 如果缩略图存在,就使用缩略图
+								src = props.thumb;
+							} else {
+								// 如果没有缩略图,就使用原图生成
+								const res = await generateThumbnail(
+									props.src,
+									props.thumbMaxSize,
+									props.thumbMaxSize
+								);
+								if (res) {
+									src = res;
+								}
 							}
 						}
+						// 执行加载函数
+						loadImage(src);
+					} else {
+						state.show = false; // 标记为不可见
 					}
-					// 执行加载函数
-					loadImage(src);
-				} else {
-					state.show = false; // 标记为不可见
-				}
-			};
+				};
 
-			// 创建 IntersectionObserver
-			const options: IntersectionObserverInit = {
-				root: props.viewportDom,
-				rootMargin: props.viewRootMargin,
-			};
-			const observer = new IntersectionObserver(handleIntersection, options);
-			// 开始监听
-			observer.observe(el);
+				// 创建 IntersectionObserver
+				const options: IntersectionObserverInit = {
+					root: viewportDom.value,
+					rootMargin: props.viewRootMargin,
+				};
+				// console.log(viewportDom.value);
+				const observer = new IntersectionObserver(handleIntersection, options);
+				// 开始监听
+				if (imgContainer.value) {
+					observer.observe(imgContainer.value);
+				} else {
+					console.log("图片监听失效,可能未找到imgContainer");
+				}
+			});
 		},
 	};
 </script>
 
-<style lang="less" scoped>
-	.img-wrapper {
+<style lang="scss" scoped>
+	.img__container {
 		position: relative;
 		box-sizing: border-box; // 盒子模型，确保边框不会影响内容的大小。
+		* {
+			box-sizing: border-box;
+		}
 	}
-
+	.img__wrap {
+		opacity: 0; //默认不显示
+		transition: 0.5s ease-in-out; // 添加过渡效果
+	}
+	// 加载中的样式
+	.img__wrap.loading {
+		opacity: 0;
+	}
+	// 加载完成且可见的样式
+	.img__wrap.show {
+		opacity: 1;
+	}
+	// 加载错误的样式
+	.img__wrap.error {
+		transform: scale(0.8);
+		opacity: 0.5;
+		object-fit: contain;
+	}
 	img {
 		display: block;
 		width: 100%;
 		height: auto;
 		padding: 0;
-		opacity: 0; //默认不显示
 		object-fit: cover;
 		background: transparent;
 		/* 禁止选中文字 */
@@ -347,33 +413,24 @@
 		-webkit-user-drag: none;
 		transition: 0.5s ease-in-out; // 添加过渡效果
 	}
-	// 加载错误的样式
-	img.error {
-		transform: scale(0.5);
-		object-fit: contain;
-	}
-	// 加载中的样式
-	img.loading {
-		opacity: 0;
-	}
-	// 加载完成且可见的样式
-	img.show {
-		opacity: 1;
-	}
 
 	/* 图片加载动画 */
-	.img-wrapper.loading::before {
+	.img__container.loading::before {
 		content: "";
 		position: absolute;
 		top: 50%;
 		left: 50%;
 		transform: translate(-50%, -50%);
-		width: 50px;
-		height: 50px;
+		width: 30%;
+		// height: 50%;
+		aspect-ratio: 1;
+		max-width: 80%;
+		max-height: 80%;
 		border: 5px solid #ccc;
 		border-radius: 50%;
 		border-top-color: #007bff;
 		animation: spin 1s linear infinite; /* 旋转动画 */
+		z-index: 100;
 	}
 	/* 图片加载动画定义 */
 	@keyframes spin {

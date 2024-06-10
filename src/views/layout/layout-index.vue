@@ -1,99 +1,51 @@
 <template>
-	<div
+	<section
 		class="layout-container"
-		ref="layoutContainer"
+		ref="containerDOM"
 		:class="{ open: globalStore.openWindow }"
 		@wheel.stop.passive>
-		<v-app class="layout-app-container">
-			<v-layout>
-				<!-- 应用栏 -->
-				<v-app-bar
-					:elevation="1"
-					density="compact"
-					style="height: 50px">
-					<template v-slot:prepend>
-						<v-app-bar-nav-icon
-							density="compact"
-							v-ripple
-							@click="appBarIsCollapse = !appBarIsCollapse">
-						</v-app-bar-nav-icon>
-					</template>
-					<v-app-bar-title>图片收集器</v-app-bar-title>
-					<template v-slot:append>
-						<v-btn
-							color="red"
-							density="compact"
-							icon="$closeCircle"
-							v-ripple
-							@click="globalStore.openWindow = false">
-						</v-btn>
-					</template>
-				</v-app-bar>
-				<!-- 抽屉导航 -->
-				<v-navigation-drawer
-					temporary
-					touchless
-					width="fit-content"
-					v-model="appBarIsCollapse">
-					<v-list density="compact" nav>
-						<v-list-item
-							prepend-icon="$viewGallery"
-							title="图库"
-							value="Gallery"
-							:to="{ name: 'Gallery' }"
-							v-ripple></v-list-item>
-						<v-list-item
-							prepend-icon="$bookCog"
-							title="规则管理"
-							value="RuleEdit"
-							:to="{ name: 'RuleEdit' }"
-							v-ripple></v-list-item>
-					</v-list>
-				</v-navigation-drawer>
-				<!-- 内容区 -->
-				<v-main>
-					<!-- 容器 -->
-					<RouterView />
-				</v-main>
-			</v-layout>
-		</v-app>
-	</div>
+		<AppBar class="layout-app-bar" />
+		<Main class="layout-main" />
+	</section>
 </template>
 
 <script setup lang="ts">
 	import { ref, onMounted, watch, onUnmounted, onUpdated } from "vue";
-	import { RouterView } from "vue-router";
+
 	import useGlobalStore from "@/stores/global"; //导入全局仓库
 	const globalStore = useGlobalStore();
 
-	let layoutContainer = ref<HTMLElement | null>(null);
+	// 导入组件
+	import AppBar from "./layout-app-bar.vue";
+	import Main from "./layout-main.vue";
 
-	let appBarIsCollapse = ref(false); // 应用栏是否折叠的标志位
+	let containerDOM = ref<HTMLElement | null>(null);
 
 	watch(
 		() => globalStore.openWindow,
 		(val) => {
 			if (val) {
-				layoutContainer.value?.focus();
+				// 每当窗口打开后都自动聚焦到该容器
+				containerDOM.value?.focus();
 			}
 		}
 	);
 
 	// 导入Fancybox和相关配置
 	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
-	import type cardStore from "@/stores/cardStore";
 	onMounted(() => {
-		FancyboxBind(layoutContainer.value, "[data-fancybox]");
+		FancyboxBind(containerDOM.value, "[data-fancybox]");
 	});
 	onUpdated(() => {
-		Fancybox.unbind(layoutContainer.value);
+		Fancybox.unbind(containerDOM.value);
 		Fancybox.close();
-		FancyboxBind(layoutContainer.value, "[data-fancybox]");
+		FancyboxBind(containerDOM.value, "[data-fancybox]");
 	});
 	onUnmounted(() => {
 		Fancybox.destroy();
 	});
 
+	// 执行FancyBox绑定
 	function FancyboxBind(
 		listContainerDOM: HTMLElement | null,
 		itemSelector: string = "[data-fancybox]",
@@ -106,25 +58,32 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 布局容器样式
 	.layout-container {
 		position: absolute;
 		width: 100%;
 		height: 100%;
-		top: -100%;
+		display: flex;
+		flex-flow: column nowrap;
 
-		background: rgba(255, 255, 255, 0.304);
+		background: rgba(255, 255, 255, 0.3);
 		backdrop-filter: blur(10px);
 
 		transition: top 0.5s ease-in-out;
+
+		// 未打开时的样式
+		top: -100%;
+		// 打开时的样式
 		&.open {
 			top: 0;
 		}
 	}
-
-	.layout-app-container {
-		background: unset;
-		height: 100%;
+	.layout-app-bar {
+		flex: 0 0;
+	}
+	.layout-main {
+		flex: auto; // 设置为auto用于自动占满剩余空间
+		overflow: auto; // 设置hidden用于确保内容溢出可以隐藏
 	}
 </style>

@@ -1,9 +1,9 @@
 <template>
 	<BaseImgCard
+		class="gallery-card"
 		:data-show="isMobile()"
 		style="overflow: hidden; border: unset"
 		:data-checked="data.isSelected"
-		class="gallery-card"
 		:data="data"
 		:img-url="data.source.url"
 		:img-thumb="data.preview.url">
@@ -22,43 +22,90 @@
 					<!-- 卡片按钮组 -->
 					<div class="card-button-group">
 						<!-- 删除 -->
-						<var-button-group type="primary" size="mini">
-							<var-button type="danger" @click="toRemove(data)">
-								<IconTrashCan style="width: 20px; fill: white" />
-							</var-button>
-						</var-button-group>
-						<var-button-group size="mini">
+						<el-button-group size="small">
+							<el-button type="danger" @click="toRemove(data)" v-ripple>
+								<template #icon>
+									<i-material-symbols-delete />
+								</template>
+							</el-button>
+						</el-button-group>
+						<el-button-group size="small">
 							<!-- 在页面中定位 -->
-							<var-button type="primary" @click="toLocate(data)">
-								<IconMapMarker style="width: 20px; fill: white" />
-							</var-button>
-							<!-- 下载 -->
-							<var-button type="default" @click="toDownload(data)">
-								<IconDownload style="width: 20px; fill: #333" />
-							</var-button>
-						</var-button-group>
+							<el-button type="primary" @click="toLocate(data)" v-ripple>
+								<template #icon>
+									<i-material-symbols-location-on-outline />
+								</template>
+							</el-button>
+							<!-- 下载(图片类) -->
+							<el-button
+								v-if="
+									data.source.meta.type === 'image' ||
+									data.preview.meta.type === 'image'
+								"
+								:loading="downloading"
+								type="default"
+								@click="toDownload(data)"
+								v-ripple>
+								<template #icon>
+									<i-material-symbols-download />
+								</template>
+							</el-button>
+							<!-- 打开(网址类) -->
+							<el-button
+								v-if="data.source.meta.type === 'html'"
+								type="default"
+								@click="openUrl(data.source.url)"
+								v-ripple>
+								<template #icon>
+									<i-material-symbols-open-in-new-rounded />
+								</template>
+							</el-button>
+						</el-button-group>
 					</div>
 				</div>
 			</div>
 		</template>
 		<!-- 卡片主体(图片) -->
 		<template #default>
-			<BaseImg
-				:src="data.source.url"
-				use-thumb
+			<div
+				data-fancybox="web-img-collector"
 				:data-id="data.id"
 				:href="data.source.url"
-				:thumb="data.preview.url"
 				:data-type="showType"
-				:init-width="data.source.meta.width"
-				:init-height="data.source.meta.height"
-				:data-width="data.source.meta.width ? data.source.meta.width : false"
-				:data-height="data.source.meta.height ? data.source.meta.height : false"
-				data-fancybox="web-img-collector"
+				:data-preload="showType === 'iframe' ? false : true"
 				:data-thumb="data.preview.url"
-				:data-download-src="data.source.url"
-				@loaded="handleCardLoaded(data, $event)"
-				:draggable="false"></BaseImg>
+				:data-download-src="data.source.url">
+				<BaseImg
+					v-if="data.source.meta.type === 'image'"
+					:src="data.source.url"
+					use-thumb
+					viewport-selector=".web-img-collector-container .waterfall-wrapper"
+					:thumb="data.preview.url"
+					:init-width="data.preview.meta.width"
+					:init-height="data.preview.meta.height"
+					@loaded="handleCardLoaded(data, $event)"
+					:draggable="false"></BaseImg>
+				<BaseImg
+					v-else-if="
+						data.source.meta.type === 'html' &&
+						data.preview.meta.type === 'image'
+					"
+					viewport-selector=".web-img-collector-container .waterfall-wrapper"
+					:src="data.preview.url"
+					:init-width="data.preview.meta.width"
+					:init-height="data.preview.meta.height"
+					@loaded="handleCardLoaded(data, $event)"
+					:draggable="false"></BaseImg>
+				<BaseImg
+					v-else
+					src=""
+					:init-show="true"
+					@loaded="handleCardLoaded(data, $event)"
+					:draggable="false">
+					<htmlTypeImg
+						style="width: 100%; height: auto; transform: scale(0.5)" />
+				</BaseImg>
+			</div>
 		</template>
 		<!-- 卡片底部 -->
 		<template #footer>
@@ -67,7 +114,7 @@
 				<var-chip
 					v-if="data.source.meta.type === 'image'"
 					type="primary"
-					:size="isMobile() ? 'mini' : 'small'"
+					size="mini"
 					:round="false">
 					{{ data.source.meta.width }}x{{ data.source.meta.height }}
 				</var-chip>
@@ -75,15 +122,35 @@
 				<var-chip
 					v-if="!!data.source.meta.ext"
 					type="success"
-					:size="isMobile() ? 'mini' : 'small'"
+					size="mini"
 					:round="false">
 					{{ data.source.meta.ext }}
 				</var-chip>
-				<!-- 扩展名信息 -->
+				<!-- 网页标签 -->
+				<var-chip
+					v-if="data.source.meta.type === 'html'"
+					type="info"
+					size="mini"
+					:round="false">
+					网页
+				</var-chip>
+				<!-- 描述标签 -->
+				<el-tooltip
+					:content="data.description.title.trim()"
+					placement="top-start">
+					<var-chip
+						class="title-chip"
+						type="primary"
+						size="mini"
+						:round="false">
+						{{ data.description.title.trim() }}
+					</var-chip>
+				</el-tooltip>
+				<!-- 文件大小信息 -->
 				<var-chip
 					v-if="!!data.source.blob && !!data.source.blob.size"
 					type="info"
-					:size="isMobile() ? 'mini' : 'small'"
+					size="mini"
 					:round="false">
 					{{ size }}
 				</var-chip>
@@ -97,6 +164,7 @@
 	import type { ComputedRef } from "vue";
 	import BaseImgCard from "@/components/base/base-img-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
+	import BaseCheckbox from "@/components/base/base-checkbox.vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 
@@ -104,12 +172,11 @@
 	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入svg
-	import IconDownload from "@svg/download-2.svg";
-	import IconMapMarker from "@svg/map-marker-outline.svg";
-	import IconTrashCan from "@svg/trash-can.svg";
+	import htmlTypeImg from "@svg/html.svg";
 
 	// 导入仓库
 	import { useGlobalStore, useCardStore } from "@/stores";
+	import { ref } from "vue";
 	const globalStore = useGlobalStore();
 	const cardStore = useCardStore();
 
@@ -179,6 +246,7 @@
 				cardStore.info.size.height[1],
 				card.source.meta.height
 			);
+			// 同步更新仓库尺寸过滤器的最高值
 		}
 	}
 
@@ -195,87 +263,119 @@
 	// 删除卡片
 	function toRemove(item: Pick<BaseCard, "id">) {
 		// 删除卡片数据模型中的卡片。
-		cardStore.removeCard(item.id!); // 删除卡片数据模型中的卡片。
+		cardStore.removeCard([item.id!]); // 删除卡片数据模型中的卡片。
 	}
 	// 下载
-	function toDownload(item: Pick<BaseCard, "id">) {
+	const downloading = ref(false);
+	async function toDownload(item: Pick<BaseCard, "id">) {
+		downloading.value = true;
 		console.log("下载", item);
-		cardStore.downloadCards([item.id!]);
+		await cardStore.downloadCards([item.id!]);
+		downloading.value = false;
+	}
+	// 打开网址
+	async function openUrl(url: string) {
+		window.open(url, "_blank");
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 卡片顶部
 	.gallery-card-header {
 		position: relative;
 		display: flex;
-		padding: 2px 4px;
-		justify-content: space-between;
+		padding: 4px;
 
 		pointer-events: none;
 		* {
 			pointer-events: auto;
+		}
+	}
+
+	:deep(.wic2-button) {
+		padding: 2px 4px;
+		border: unset;
+		box-shadow: var(--el-box-shadow);
+		.wic2-icon {
+			font-size: 16px;
 		}
 	}
 
 	// header左侧
 	.gallery-card-header-left {
 		flex: 0;
-		align-items: center;
-		transform: translateY(-150%);
+		// transform: translateY(-150%);
 		transition: transform 0.3s;
 	}
 	.gallery-card[data-show="true"] .gallery-card-header-left,
 	.gallery-card:hover .gallery-card-header-left,
 	.gallery-card[data-checked="true"] .gallery-card-header-left {
 		transform: translateY(0);
+		transition: transform 0.3s;
 	}
 
 	// header右侧
 	.gallery-card-header-right {
-		flex: 0;
+		margin-left: auto;
 		display: flex;
 		flex-flow: row-reverse;
 		align-items: center;
 
-		transform: translateY(-100%);
-		transition: transform 0.3s;
+		transform: translateY(-150%);
+		transition: transform 0.2s;
 	}
 	.gallery-card[data-show="true"] .gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);
+		transition: transform 0.2s;
 	}
 
 	.card-button-group {
 		height: fit-content;
 		display: flex;
 		gap: 4px;
-
-		// 修正样式
-		:deep(.var-button-group) {
-			overflow: hidden;
-		}
 	}
 
 	.card-checkbox {
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		position: absolute;
+		// top: -2px;
+		// left: -2px;
+		transform: translate(-2px, -2px);
 		filter: drop-shadow(0 0 1px #ffffff);
 	}
 
 	// 卡片底部
 	.gallery-card-footer {
 		padding: 4px;
+		// margin: 2px;
 		display: flex;
+		flex-flow: row wrap;
+		overflow: hidden;
 		gap: 4px;
+		// background-color: wheat;
 
-		transform: translateY(100%);
+		// transform: translateY(100%);
 		transition: transform 0.3s;
 
 		pointer-events: none;
 		* {
 			pointer-events: auto;
+		}
+
+		:deep(.var-chip) {
+			justify-content: start;
+			max-width: 50%;
+			// overflow: hidden;
+			// text-overflow: ellipsis;
+			&.title-chip {
+				max-width: 25%;
+			}
+			& > span {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				text-align: left;
+			}
 		}
 	}
 

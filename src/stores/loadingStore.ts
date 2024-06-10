@@ -1,13 +1,21 @@
-import { nextTick, ref } from "vue";
+import { computed, nextTick, ref } from "vue";
 import { defineStore } from "pinia";
 
 export default defineStore("loadingStore", () => {
 	const loading = ref(false);
 	const total = ref(1);
 	const current = ref(0);
+	const percentage = computed(() => {
+		if (total.value <= 0) return 0;
+		if (current.value >= total.value) {
+			return 100;
+		}
+		return (current.value / total.value) * 100;
+	});
 
 	// 开始
 	function start(_total: number = 1) {
+		current.value = 0;
 		total.value = _total;
 		loading.value = true;
 	}
@@ -29,12 +37,21 @@ export default defineStore("loadingStore", () => {
 	function end() {
 		loading.value = false;
 		current.value = total.value;
-		setTimeout(() => {
-			nextTick(() => {
-				current.value = 0;
-			});
-		}, 100);
+		// setTimeout(() => {
+		// 	nextTick(() => {
+		// 		current.value = 0;
+		// 	});
+		// }, 500);
 	}
 
-	return { loading, current, total, start, update, updatePercent, end };
+	return {
+		loading,
+		current,
+		total,
+		percentage,
+		start,
+		update,
+		updatePercent,
+		end,
+	};
 });

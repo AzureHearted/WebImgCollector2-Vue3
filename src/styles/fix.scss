@@ -1,0 +1,41 @@
+@import "./element/fix";
+@import "./fancybox/fix";
+@import "./varlet-ui/fix";
+@import "./naive-ui/fix";
+
+.v-overlay-container {
+	z-index: 2147483647;
+	* {
+		z-index: inherit !important;
+	}
+}
+
+.web-img-collector-container {
+	button,
+	[type="button"] {
+		all: auto;
+	}
+	.f-button {
+		background: unset;
+	}
+}
+
+.var-checkbox__icon {
+	display: flex !important;
+}
+.var-select__chip {
+	margin: 0 !important;
+}
+
+div[data-v-app]:has(.var-transition-group .var-snackbar) {
+	position: relative;
+	z-index: 2147483647;
+}
+
+svg {
+	vertical-align: initial;
+}
+
+body {
+	line-height: initial;
+}

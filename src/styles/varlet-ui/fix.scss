@@ -1,0 +1,22 @@
+.web-img-collector-container {
+	--button-mini-height: 20px;
+	--button-small-height: 28px;
+	--button-normal-height: 32px;
+	--button-large-height: 44px;
+
+	--button-mini-padding: 0 9px;
+	--button-small-padding: 0 11px;
+	--button-normal-padding: 0 15px;
+	--button-large-padding: 0 22px;
+	--button-round-padding: 6px;
+
+	--button-border-radius: 4px;
+
+	--badge-content-padding: 0px 6px;
+}
+
+.web-img-collector-container {
+	button {
+		margin: unset;
+	}
+}

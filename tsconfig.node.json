@@ -5,15 +5,16 @@
 		"vitest.config.*",
 		"cypress.config.*",
 		"nightwatch.conf.*",
-		"playwright.config.*"
+		"playwright.config.*",
+		"*.config.*"
 	],
 	"compilerOptions": {
-		"declaration": true,
-		"declarationDir": "./types",
 		"composite": true,
-		"noEmit": false,
+		"declarationDir": "./types",
+		"noEmit": true,
 		"outDir": "./temp", // TS的编译结果js文件的输出路径
 		"tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
 		"types": ["node"]

@@ -1,5 +1,5 @@
 <template>
-	<div class="waterfall-container" @transitionend.self="handleTransitionend">
+	<div class="waterfall-container" @transitionend="handleTransitionend">
 		<transition-group
 			name="list-complete"
 			appear
@@ -44,19 +44,16 @@
 		computed,
 		nextTick,
 		onMounted,
-		onUpdated,
 		watch,
 		onActivated,
 	} from "vue";
 	import BaseImgCard from "./base-img-card.vue";
 	import type { CSSProperties, ComputedRef } from "vue";
 
-	import type { BaseCard } from "@/stores/cardStore/interface/base-card";
-
-	interface IData extends BaseCard {
+	export interface IData {
 		url: string; // 图片URL
 		thumb: string; // 缩略图URL
-		[K: keyof BaseCard]: any; // 继承BaseCard的属性，确保类型安全。
+		[key: string]: any;
 	}
 
 	// props定义
@@ -74,7 +71,7 @@
 		{
 			data: () => [] as IData[], // 默认值为空数组。
 			keyProp: "id", // 默认值为"id"。
-			itemPadding: "", // 默认值为
+			itemPadding: "2px", // 默认值为
 			itemBaseWidth: 220, // 默认值为220。
 			// 响应式瀑布流的映射配置
 			sizeMap: () => {
@@ -92,7 +89,7 @@
 
 	// 数据信息
 	const dataInfo = reactive({
-		list: [] as BaseCard[],
+		list: [] as IData[],
 	});
 
 	// 状态信息
@@ -125,16 +122,16 @@
 	});
 
 	// f 数据改变(带防抖)
-	let timer: NodeJS.Timeout | null = null; // 计时器
+	let timer: number | null = null; // 计时器
 	let handleTask: Function = () => {}; // 任务
+	// 默认配置项
+	const defaultOptions = {
+		delay: 300,
+	};
 	function handleResetPosition(
 		task?: (() => void) | any,
 		options?: { delay: number } // 配置选项,可用于临时调整时间间隔
 	) {
-		// 默认配置项
-		const defaultOptions = {
-			delay: 300,
-		};
 		// 先记录任务
 		if (task instanceof Function) {
 			handleTask = task;
@@ -147,20 +144,20 @@
 		// 获取配置参数
 		const { delay } = { ...defaultOptions, ...options };
 		// 设置计时器等待时间到达执行重新布局
-		timer = setTimeout(() => {
-			// 时间到达则先将之前队列中存入的任务取出全部执行
-			handleTask(); // 执行任务
-			handleTask = () => {}; // 重置任务
+		timer = window.setTimeout(() => {
 			// 最后布局
 			// console.time("布局");
+			handleTask(); // 执行任务
 			nextTick(() => {
 				if (!resetPosition()) {
 					// setTimeout(() => {
 					// 	handleResetPosition();
 					// }, 100);
-					console.log("布局失败！");
+					// console.log("布局失败！");
 				}
 			});
+			// console.timeEnd("布局");
+			handleTask = () => {}; // 重置任务
 			// console.timeEnd("布局");
 		}, delay);
 	}
@@ -170,17 +167,15 @@
 		useResizeObserver(containerDom.value!.$el, () => {
 			// 如果是窗口变化则将执行间隔调低至250ms
 			// console.time("容器尺寸变化");
-			// nextTick(() => {
-			// 	handleResetPosition(null, { delay: 200 });
-			// });
 			handleResetPosition(null, { delay: 200 });
-
 			// console.timeEnd("容器尺寸变化");
 		});
 		// 创建时如果数据不为空则进行进行一次布局
 		if (props.data.length && !dataInfo.list.length) {
 			dataInfo.list = props.data;
+			// console.time("等待nextTick");
 			nextTick(() => {
+				// console.timeEnd("等待nextTick");
 				resetPosition();
 			});
 		}
@@ -188,7 +183,10 @@
 
 	// 当组件被激活时执行
 	onActivated(() => {
-		console.log("组件==>被激活");
+		// console.log("组件==>被激活");
+		nextTick(() => {
+			resetPosition();
+		});
 	});
 
 	// 元素离开前
@@ -201,6 +199,7 @@
 		() => props.data,
 		(newList) => {
 			// console.log("数组变化", newList, oldList);
+			// if (newList.length < oldList.length) console.log("waterfall-list 数组减少");
 			handleResetPosition(() => {
 				dataInfo.list = newList;
 			});
@@ -222,7 +221,7 @@
 			// 查询当前窗口宽度
 			let ww = window.innerWidth;
 			// 找到对应的预设
-			let sizeSet = null;
+			let sizeSet: { columns: number } | null = null;
 			for (const key in sizeMap) {
 				if (ww > Number(key)) {
 					// console.log(ww, Number(key));
@@ -341,7 +340,7 @@
 
 	// 容器内有元素过渡结束时的回调
 	function handleTransitionend(e: TransitionEvent) {
-		console.log("元素过渡结束");
+		// console.log("元素过渡结束");
 		// const propertyNames = ["width", "height", "top", "left", "aspect-ratio"];
 		const propertyNames = ["height", "aspect-ratio"];
 		if (propertyNames.includes(e.propertyName)) {
@@ -370,11 +369,15 @@
 	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 瀑布流组件外侧容器
 	.waterfall-container {
 		// background: orange;
 		transition: 0.3s;
+		box-sizing: border-box;
+		* {
+			box-sizing: border-box;
+		}
 	}
 	// 瀑布流列表容器
 	.waterfall-list-container {
@@ -402,23 +405,6 @@
 		transition: 0.3s;
 	}
 
-	/* 确保将离开的元素从布局流中删除
-	 以便能够正确地计算移动的动画。 */
-	// .list-complete-leave-active {
-	// 	position: absolute;
-	// }
-
-	// 进场过渡
-	// .list-complete-enter-from {
-	// 	opacity: 0;
-	// 	transform: translateY(200px);
-	// }
-	// 退场过渡
-	// .list-complete-leave-to {
-	// 	opacity: 0;
-	// 	transform: scale(0.1);
-	// }
-
 	/* 对移动中的元素应用的过渡 */
 	.list-complete-move,
 	.list-complete-enter-active,
@@ -439,11 +425,6 @@
 		transform: scale(0.1);
 	}
 
-	// 进入动画的结束状态,离开动画的起始状态
-	.list-complete-enter-to,
-	.list-complete-leave-from {
-		// position: absolute;
-	}
 	// 进入的过程中
 	.list-complete-enter-active {
 		transition: all 0.5s;

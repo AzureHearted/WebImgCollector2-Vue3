@@ -1,340 +1,216 @@
 <template>
-	<div class="gallery-toolbar-container">
-		<!-- 工具栏 -->
-		<v-sheet
-			class="gallery-toolbar"
-			width="100%"
-			color="transparent"
-			:elevation="4">
-			<!-- 进度条 -->
-			<v-progress-linear
-				class="gallery-toolbar-loading"
-				color="primary"
-				:active="loadingStore.loading"
-				:max="loadingStore.total"
-				:model-value="loadingStore.current"
-				height="14"
-				rounded
-				rounded-bar>
-				<template #default="{ value }">
-					<strong> {{ value.toFixed(2) }}% </strong>
-				</template>
-			</v-progress-linear>
-			<!-- 操作栏 -->
-			<v-sheet
-				class="gallery-container-control-panel"
-				:elevation="0"
-				color="transparent"
-				width="fit-content">
-				<!-- 控制按钮组 -->
-				<var-badge
-					:offset-y="-4"
-					:offset-x="-8"
-					style="z-index: 2"
-					:hidden="!cardStore.validCardList.length"
-					:value="cardStore.validCardList.length">
-					<var-menu
-						placement="bottom"
-						:default-style="false"
-						same-width
-						:trigger="isMobile() ? 'click' : 'hover'"
-						:teleport="false">
-						<var-button-group
-							:size="isMobile() ? 'small' : 'normal'"
-							type="success">
-							<!-- 加载按钮 -->
-							<var-button
-								@click.stop="getCards"
-								:loading="loadingStore.loading"
-								block
-								icon-container>
-								加载
-							</var-button>
-							<var-button style="padding: 0 4px">
-								<IconArrowDown style="width: 24px; fill: white" />
+	<div class="gallery-toolbar">
+		<!-- 进度条 -->
+		<el-progress
+			class="toolbar-loading"
+			striped
+			striped-flow
+			:class="{ 'loading-active': loadingStore.loading }"
+			:status="loadingStore.percentage === 100 ? 'success' : ''"
+			:stroke-width="12"
+			:show-text="false"
+			:text-inside="true"
+			:percentage="loadingStore.percentage">
+			<span style="font-size: 12px">
+				{{ loadingStore.percentage.toFixed(2) }}%
+			</span>
+		</el-progress>
+		<!-- 方案选择器 -->
+		<div class="pattern-select">
+			<n-select
+				v-model:value="patternStore.used.id"
+				placeholder="请选择一个方案"
+				:to="false"
+				:render-label="renderPatternSelectOptionsLabel"
+				:options="patternSelectOptions" />
+		</div>
+		<!-- 操作栏 -->
+		<div class="control-group-button">
+			<!-- 控制按钮组 -->
+			<el-badge
+				:offset="[-8, 0]"
+				style="z-index: 3"
+				type="info"
+				:max="999"
+				:hidden="!cardStore.validCardList.length"
+				:value="cardStore.validCardList.length">
+				<var-menu
+					placement="bottom-start"
+					:default-style="false"
+					:trigger="isMobile() ? 'click' : 'hover'"
+					:teleport="false">
+					<var-button-group type="success">
+						<!-- 加载按钮 -->
+						<var-button
+							@click.stop="getCards"
+							:loading="loadingStore.loading"
+							block
+							icon-container>
+							加载
+						</var-button>
+						<var-button style="padding: 0 4px">
+							<i-material-symbols-arrow-drop-down-rounded
+								style="fill: white"
+								width="24"
+								height="24" />
+						</var-button>
+					</var-button-group>
+					<template #menu>
+						<var-button-group vertical>
+							<!-- 清空按钮 -->
+							<var-button type="danger" icon-container block @click="clear">
+								所有清空
 							</var-button>
 						</var-button-group>
-						<template #menu>
-							<var-button-group
-								:size="isMobile() ? 'small' : 'normal'"
-								vertical>
-								<!-- 清空按钮 -->
-								<var-button type="danger" icon-container block @click="clear">
-									<IconCloseCircleMultiple
-										class="gallery-toolbar-icon"
-										style="margin: 0 12px 0 0; fill: white" />
-									清空
-								</var-button>
-							</var-button-group>
-						</template>
-					</var-menu>
-				</var-badge>
-			</v-sheet>
-			<!-- 选择器 -->
-			<v-sheet
-				class="gallery-container-control-panel"
-				:elevation="0"
-				color="transparent"
-				width="fit-content">
+					</template>
+				</var-menu>
+			</el-badge>
+		</div>
+		<!-- 排序方式 -->
+		<div class="sort-method-select">
+			<n-select
+				v-model:value="cardStore.sort.method"
+				placeholder="请选择一个排序方式"
+				:to="false"
+				:options="cardStore.sort.groups" />
+		</div>
+		<!-- 选择器 -->
+		<div class="control-group-button">
+			<el-badge
+				:offset="[-118, 0]"
+				style="z-index: 2"
+				type="primary"
+				:max="999"
+				:hidden="!cardStore.filteredCardList.length"
+				:value="cardStore.filteredCardList.length">
 				<!-- 选择器按钮组 -->
-				<var-button-group
-					class="control-button-group"
-					:size="isMobile() ? 'small' : 'normal'">
+				<var-button-group class="control-button-group">
 					<var-button type="primary" @click="checkAll"> 全选 </var-button>
 					<var-button type="info" @click="inverseAll"> 反选 </var-button>
 					<var-button @click="cancel"> 取消 </var-button>
 				</var-button-group>
-			</v-sheet>
-			<!-- 下载控制 -->
-			<v-sheet
-				class="gallery-container-control-panel"
-				:elevation="0"
-				color="transparent"
-				width="fit-content">
-				<!-- 下载按钮 -->
-				<var-badge
-					type="info"
-					:offset-y="-4"
-					style="z-index: 1"
-					:hidden="!checkedCardList.length"
-					:value="`${checkedCardList.length} (${checkedTotalSize})`">
-					<var-menu
-						placement="bottom"
-						:default-style="false"
-						:trigger="isMobile() ? 'click' : 'hover'"
-						:teleport="false">
-						<var-button-group
-							:size="isMobile() ? 'small' : 'normal'"
-							type="primary">
-							<var-button
-								:disabled="!checkedCardList.length"
-								@click.stop="downloadSelected">
-								选中下载
-							</var-button>
-							<var-button
-								:disabled="!checkedCardList.length"
-								style="padding: 0 4px">
-								<IconArrowDown style="width: 24px; fill: white" />
+			</el-badge>
+		</div>
+		<!-- 下载控制 -->
+		<div class="control-group-button">
+			<!-- 下载按钮 -->
+			<el-badge
+				type="success"
+				style="z-index: 2"
+				:max="999"
+				:hidden="!checkedCardList.length"
+				:value="`${checkedCardList.length} (${checkedTotalSize})`">
+				<var-menu
+					placement="bottom-start"
+					:default-style="false"
+					:trigger="isMobile() ? 'click' : 'hover'"
+					:teleport="false">
+					<var-button-group type="primary">
+						<var-button
+							:disabled="!checkedCardList.length"
+							@click.stop="downloadSelected">
+							下载
+						</var-button>
+						<var-button
+							:disabled="!cardStore.validCardList.length"
+							style="padding: 0 4px">
+							<i-material-symbols-arrow-drop-down-rounded
+								style="fill: white"
+								width="24"
+								height="24" />
+						</var-button>
+					</var-button-group>
+					<template #menu>
+						<var-button-group vertical>
+							<var-button @click="downloadAll"> 全部下载 </var-button>
+							<var-button type="danger" @click="deleteSelected">
+								删除选中项
 							</var-button>
 						</var-button-group>
-						<template #menu>
-							<var-button-group
-								:size="isMobile() ? 'small' : 'normal'"
-								vertical>
-								<var-button
-									icon-container
-									block
-									@click="downloadAll"
-									:elevation="false">
-									<IconDownload
-										class="gallery-toolbar-icon"
-										style="margin: 0 8px 0 0" />
-									全部下载
-								</var-button>
-							</var-button-group>
-						</template>
-					</var-menu>
-				</var-badge>
-			</v-sheet>
-			<!-- 其他过滤器 -->
-			<v-sheet
-				class="filter-control-panel other-filter"
-				width="fit-content"
-				color="transparent"
-				:elevation="0">
-				<!-- 类型过滤器 -->
-				<v-select
-					class="filter-input-select select-type"
-					v-model="cardStore.filters.type"
-					:items="cardStore.typeOptions"
-					variant="solo"
-					label="类型过滤"
-					item-title="label"
-					item-value="value"
-					density="compact"
-					chips
-					hide-details
-					multiple>
-					<template #chip="{ item, index }">
-						<v-chip v-if="index < 2" density="compact">
-							<span>{{ item.title }}</span>
-						</v-chip>
-						<span
-							v-if="index === 2"
-							class="text-grey text-caption align-self-center">
-							+ {{ cardStore.filters.type.length - 2 }}
-						</span>
 					</template>
-					<template #item="{ item, props }">
-						<v-list-item
-							v-bind="props"
-							density="compact"
-							:subtitle="`${item.raw.count}个`">
-							<template #prepend="{ isActive }">
-								<v-checkbox
-									density="compact"
-									:model-value="isActive"
-									hide-details></v-checkbox>
-							</template>
-							<template #title="{ title }">
-								<span style="font-size: 14px">
-									{{ title }}
-								</span>
-							</template>
-							<template #subtitle="{ subtitle }">
-								<span style="font-size: 12px">
-									{{ subtitle }}
-								</span>
-							</template>
-						</v-list-item>
-					</template>
-				</v-select>
-				<!-- 扩展名过滤器 -->
-				<v-select
-					class="filter-input-select select-type"
-					v-model="cardStore.filters.extension"
-					:items="cardStore.extensionOptions"
-					variant="solo"
-					label="扩展名过滤"
-					item-title="label"
-					item-value="value"
-					density="compact"
-					chips
-					hide-details
-					multiple>
-					<template #chip="{ item, index }">
-						<v-chip v-if="index < 2" density="compact">
-							<span>{{ item.title }}</span>
-						</v-chip>
-						<span
-							v-if="index === 2"
-							class="text-grey text-caption align-self-center">
-							+ {{ cardStore.filters.extension.length - 2 }}
-						</span>
-					</template>
-					<template #item="{ item, props }">
-						<v-list-item
-							v-bind="props"
-							density="compact"
-							:subtitle="`${item.raw.count}个`">
-							<template #prepend="{ isActive }">
-								<v-checkbox
-									density="compact"
-									:model-value="isActive"
-									hide-details></v-checkbox>
-							</template>
-							<template #title="{ title }">
-								<span style="font-size: 14px">
-									{{ title }}
-								</span>
-							</template>
-							<template #subtitle="{ subtitle }">
-								<span style="font-size: 12px">
-									{{ subtitle }}
-								</span>
-							</template>
-						</v-list-item>
-					</template>
-				</v-select>
-			</v-sheet>
-			<!-- 尺寸过滤器 -->
-			<v-sheet
-				class="filter-control-panel size-filter"
-				color="transparent"
-				:elevation="0">
-				<!-- 宽度过滤器 -->
-				<v-range-slider
-					class="filter-input-slider"
-					label="宽度"
+				</var-menu>
+			</el-badge>
+		</div>
+		<!-- 过滤控制器 -->
+		<div class="control-group">
+			<!-- 类型过滤器 -->
+			<div class="type-select">
+				<n-select
+					v-model:value="cardStore.filters.type"
+					placeholder="类型过滤"
+					multiple
+					clearable
+					:to="false"
+					:render-tag="renderTag"
+					:render-label="renderOptionLabelWithCount"
+					:options="cardStore.typeOptions"
+					max-tag-count="responsive" />
+			</div>
+			<!-- 扩展名过滤器 -->
+			<div class="ext-select">
+				<n-select
+					v-model:value="cardStore.filters.extension"
+					placeholder="扩展名过滤"
+					multiple
+					clearable
+					:to="false"
+					:render-tag="renderTag"
+					:render-label="renderOptionLabelWithCount"
+					:options="cardStore.extensionOptions"
+					max-tag-count="responsive" />
+			</div>
+		</div>
+		<!-- 尺寸过滤器 -->
+		<div class="size-filter">
+			<!-- 宽度过滤器 -->
+			<div class="width-filter">
+				<el-text type="primary">宽度</el-text>
+				<el-slider
+					:size="isMobile() ? 'small' : 'default'"
 					v-model="filters.size.width"
-					color="primary"
-					density="compact"
-					rounded
-					hide-details
-					step="1"
+					range
+					:step="1"
 					:max="cardStore.info.size.width[1]"
 					:min="cardStore.info.size.width[0]"
-					@end="filterChange('width', $event)">
-					<template #label>
-						<v-label class="input-slider-label">宽度</v-label>
-					</template>
-					<template #prepend>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.width[0]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details>
-						</v-text-field>
-					</template>
-					<template #append>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.width[1]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details></v-text-field>
-					</template>
-				</v-range-slider>
-				<!-- 高度过滤器 -->
-				<v-range-slider
-					class="filter-input-slider"
-					label="高度"
+					:marks="cardStore.filters.size.marks"
+					@change="filterChange('width', $event as [number, number])" />
+			</div>
+			<!-- 高度过滤器 -->
+			<div class="height-filter">
+				<el-text type="primary">高度</el-text>
+				<el-slider
+					:size="isMobile() ? 'small' : 'default'"
 					v-model="filters.size.height"
-					color="primary"
-					density="comfortable"
-					rounded
-					hide-details
-					step="1"
+					range
+					:step="1"
 					:max="cardStore.info.size.height[1]"
 					:min="cardStore.info.size.height[0]"
-					@end="filterChange('height', $event)">
-					<template #label>
-						<v-label class="input-slider-label">高度</v-label>
-					</template>
-					<template #prepend>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.height[0]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details></v-text-field>
-					</template>
-					<template #append>
-						<v-text-field
-							class="filter-input-number"
-							v-model="filters.size.height[1]"
-							type="number"
-							variant="plain"
-							disabled
-							hide-details></v-text-field>
-					</template>
-				</v-range-slider>
-			</v-sheet>
-		</v-sheet>
+					:marks="cardStore.filters.size.marks"
+					@change="filterChange('height', $event as [number, number])" />
+			</div>
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, computed, watch } from "vue";
+	import { h, ref, reactive, computed, watch } from "vue";
+	import type { VNodeChild } from "vue";
+	import { NEllipsis, NTag } from "naive-ui";
+	import type { SelectOption, SelectRenderTag } from "naive-ui";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
-	// 导入svg
-	import IconDownload from "@svg/download.svg";
-	import IconArrowDown from "@svg/arrow-down.svg";
-	import IconCloseCircleMultiple from "@svg/close-circle-multiple.svg";
+	import BaseImg from "@/components/base/base-img.vue";
 
 	// 导入公用ts库
 	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入仓库
-	import { useCardStore, useLoadingStore } from "@/stores";
-	import { Snackbar } from "@varlet/ui";
+	import { useCardStore, useLoadingStore, usePatternStore } from "@/stores";
+	import { Pattern } from "@/stores/patternStore/class/Pattern";
+
 	const cardStore = useCardStore();
 	const loadingStore = useLoadingStore();
+	const patternStore = usePatternStore();
 
 	// 过滤器定义
 	const filters = reactive({
@@ -380,6 +256,84 @@
 		return byteAutoUnit(totalByte);
 	});
 
+	// f控制相关
+	// 方案选项
+	const patternSelectOptions = computed<SelectOption[]>(() => {
+		return patternStore.list.map((p) => {
+			return {
+				key: p.id,
+				label: p.mainInfo.name,
+				value: p.id,
+				rowData: p,
+			} as SelectOption;
+		});
+	});
+	// 方案选项标签渲染函数
+	const renderPatternSelectOptionsLabel = (
+		option: SelectOption
+	): VNodeChild => {
+		return h(
+			"div",
+			{
+				style: "display:flex; align-items: center;",
+			},
+			[
+				option && !(option.key as string).includes("#")
+					? h(BaseImg, {
+							src: (option.rowData as Pattern).mainInfo.icon,
+							style: "width: 16px; height: 16px;margin-right:4px;",
+					  })
+					: null,
+				h(
+					NEllipsis,
+					{ style: "user-select: none;" },
+					{ default: () => option.label as string }
+				),
+			]
+		);
+	};
+
+	// 选择器多选Tag渲染函数
+	const renderTag: SelectRenderTag = ({ option, handleClose }) => {
+		return h(
+			NTag,
+			{
+				type: "info",
+				closable: true,
+				onMousedown: (e: FocusEvent) => {
+					e.preventDefault();
+				},
+				onClose: (e: MouseEvent) => {
+					e.stopPropagation();
+					handleClose();
+				},
+			},
+			{ default: () => option.label }
+		);
+	};
+
+	// 带数量的选项标签渲染函数
+	const renderOptionLabelWithCount = (option: SelectOption): VNodeChild => {
+		return h(
+			"div",
+			{
+				style: "display:flex; align-items: center;width:100%;",
+			},
+			[
+				h(NEllipsis, {}, { default: () => option.label as string }),
+				h(
+					NTag,
+					{
+						type: "info",
+						size: "small",
+						style: "margin-left:auto;",
+					},
+					{ default: () => option.count + "个" }
+				),
+			]
+		);
+	};
+
 	// 获取卡片
 	async function getCards() {
 		await cardStore.getPageCard();
@@ -408,7 +362,6 @@
 
 	// 清空
 	function clear() {
-		// data.cardList = [];
 		cardStore.clearCardList();
 		filters.size.width = cardStore.filters.size.width;
 		filters.size.height = cardStore.filters.size.height;
@@ -427,16 +380,40 @@
 		const ids = cardStore.filteredCardList.map((x) => x.id);
 		cardStore.downloadCards(ids);
 	}
+
+	// 删除选中项
+	function deleteSelected() {
+		const ids = cardStore.validCardList
+			.filter((x) => x.isSelected)
+			.map((x) => x.id);
+		cardStore.removeCard(ids);
+	}
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
+	@use "@/styles/shadow.scss" as shadow;
 	// 工具栏容器
-	.gallery-toolbar-container {
+	.gallery-toolbar {
 		position: relative;
 	}
 
-	.gallery-toolbar-loading {
-		margin: 4px 0;
+	// loading样式
+	.toolbar-loading {
+		margin-bottom: 4px;
+		width: 100%;
+		transform: translateY(-20px);
+		height: 0;
+		// transform: scaleY(0);
+		transition: 0.5s 1s;
+		&.loading-active {
+			transform: translateY(0);
+			height: 20px;
+			// transform: scaleY(1);
+			transition: 0.3s;
+		}
+		:deep(.wic2-progress-bar__inner) {
+			line-height: 0;
+		}
 	}
 
 	// 工具栏样式
@@ -444,86 +421,78 @@
 		flex: 0;
 		display: flex;
 		flex-flow: row wrap;
-		padding: 4px 4px 0 4px;
-		background: transparent;
-		align-content: center;
-	}
-	// 控制面板样式
-	.gallery-container-control-panel {
-		flex: 0;
-		// padding: 2px;
-		margin-right: 2px;
-		margin-bottom: 2px;
-		display: flex;
+		// padding: 4px 4px 2px 4px;
+		padding: 2px;
+		gap: 2px;
+		// background: rgba(255, 255, 255, 0.2);
 		align-items: center;
-		background: inherit;
+		box-shadow: shadow.$elevation;
 	}
-	// 图标样式
-	.gallery-toolbar-icon {
-		width: 20px;
+
+	// 方案选择器样式
+	.pattern-select {
+		width: 130px;
 	}
-	// menu选项样式
-	.gallery-toolbar-menu-cell {
-		cursor: pointer;
+
+	// 排序方式选择器
+	.sort-method-select {
+		width: 130px;
+		:deep(.wic2-n-base-selection-input__content) {
+			user-select: none;
+		}
 	}
 	// 控制按钮组样式
 	.control-button-group {
 		height: fit-content;
 	}
-	// 过滤器面板样式
-	.filter-control-panel {
+
+	// 控制组样式
+	.control-group {
+		flex: 0;
+		display: flex;
+		flex-flow: row nowrap;
+		gap: 2px;
+	}
+
+	// 类型、扩展名选择器样式
+	.type-select,
+	.ext-select {
+		width: 150px;
+	}
+
+	// 尺寸过滤器样式
+	.size-filter {
+		flex: auto;
 		display: flex;
 		flex-flow: row wrap;
-		// background: wheat;
-		padding: 4px 0;
-
-		// 尺寸过滤器
-		&.size-filter {
-			flex: 1;
-			flex-wrap: wrap;
-
-			.filter-input-slider {
-				flex: 1;
-				min-width: 320px;
-				max-width: 600px;
-				font-size: 12px;
-			}
+		gap: 8px;
+		margin-top: 4px;
+		// 宽度和高度过滤器的通用样式
+		.width-filter,
+		.height-filter {
+			flex: 1 0;
+			min-width: 200px;
+			max-width: 400px;
+			display: flex;
+			flex-flow: row nowrap;
+			padding-right: 10px;
+			font-size: 12px;
 
 			// 标签样式
-			.filter-input-slider .input-slider-label {
-				margin: 0 10px 2px 0;
-				font-size: 14px;
-			}
-			.filter-input-number {
-				flex: 0 1 auto;
-				position: relative;
-				width: 70px;
-				border: 0;
+			& > span {
+				width: fit-content;
+				margin-right: 12px;
+				white-space: nowrap;
 			}
 		}
+	}
 
-		// 其他选择器
-		&.other-filter {
-			flex: 0 content;
-			flex-wrap: wrap;
-			align-items: center;
-			// 选择器样式
-			.filter-input-select {
-				flex: 1;
-				width: 200px;
-				min-width: 150px;
-				max-width: 200px;
-				margin: 0 2px;
-			}
+	// 样式修复
+	:deep(.wic2-badge) {
+		display: block;
+	}
 
-			:deep(.v-field),
-			:deep(.v-input) {
-				height: fit-content;
-			}
-		}
-
-		:deep(input) {
-			padding: 0 4px;
-		}
+	:deep(.wic2-n-base-select-option__content) {
+		flex: 1;
 	}
 </style>

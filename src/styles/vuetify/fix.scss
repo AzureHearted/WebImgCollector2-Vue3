@@ -1,0 +1,20 @@
+*,
+::before,
+::after {
+	background-repeat: unset;
+	box-sizing: unset;
+}
+
+.web-img-collector-container {
+	*,
+	::before,
+	::after {
+		background-repeat: no-repeat;
+		box-sizing: inherit;
+	}
+}
+
+html,
+body {
+	height: unset;
+}

@@ -11,16 +11,16 @@ export type ICard = Partial<BaseCard> & BaseState;
 
 // 卡片对象
 export default class Card implements ICard {
-	readonly id: string;
+	public readonly id: string;
 	public source: CardSource = {
 		url: "", // 卡片来源url，可能为空，因为可能从本地创建的卡片，没有url
 		dom: null,
-		meta: { valid: false, width: 0, height: 0 },
+		meta: { valid: false, width: 0, height: 0, type: "html", ext: "" },
 	};
 	public preview: CardPreview = {
 		url: "", // 预览图url,
 		dom: null,
-		meta: { valid: false, width: 0, height: 0 },
+		meta: { valid: false, width: 0, height: 0, type: "html", ext: "" },
 	};
 	public description: CardDescription = {
 		title: "", // 卡片标题，可能为空，因为可能从本地创建的卡片，没有标题
@@ -30,6 +30,7 @@ export default class Card implements ICard {
 	public isLoaded: boolean;
 	public isSelected: boolean;
 
+	// 构造函数
 	constructor(
 		source?: CardSource,
 		preview?: CardPreview,

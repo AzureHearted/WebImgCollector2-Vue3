@@ -1,54 +1,98 @@
 <template>
 	<!-- 脚本应用容器 -->
-	<div ref="appContainer" class="web-img-collector-container">
-		<!-- 路由出口 -->
-		<RouterView />
-		<!-- 悬浮按钮 -->
-		<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
-		<!-- 顶层元素的承载容器 -->
-		<div ref="windowContainer" class="web-img-collector-top-container"></div>
+	<div :data-host="host" class="web-img-collector-container">
+		<!-- 消息通知类信息容器 -->
+		<el-config-provider namespace="el">
+			<div class="web-img-collector-notification-container"></div>
+		</el-config-provider>
+		<!-- 内容区 -->
+		<el-config-provider namespace="wic2">
+			<n-config-provider
+				namespace="wic2-n"
+				cls-prefix="wic2-n"
+				inline-theme-disabled
+				preflight-style-disabled
+				abstract>
+				<!-- 路由出口 -->
+				<!-- <RouterView /> -->
+				<Layout />
+				<!-- 悬浮按钮 -->
+				<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
+				<!-- 顶层元素的承载容器 -->
+				<div
+					ref="windowContainer"
+					class="web-img-collector-top-container"></div>
+			</n-config-provider>
+		</el-config-provider>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { ref, defineAsyncComponent, onMounted } from "vue";
-	import { RouterView } from "vue-router";
-	import { useGlobalStore } from "@/stores";
-	import { GM_getValue, GM_setValue, GM_info } from "$";
+	import { ref, onMounted, defineAsyncComponent } from "vue";
+	import { useGlobalStore, usePatternStore } from "@/stores";
 
-	// console.log("油猴信息：", GM_info);
-
-	const globalStore = useGlobalStore();
-	// globalStore.visibleScrollbar(false);
-
-	const appContainer = ref<HTMLElement | null>(null);
-	const windowContainer = ref<HTMLElement | null>(null);
+	// 异步导入Layout组件
+	const Layout = defineAsyncComponent(
+		() => import("@/views/layout/layout-index.vue")
+	);
 
 	// 异步导入HoverButton组件
 	const HoverButton = defineAsyncComponent(
 		() => import("@/views/hover-button.vue")
 	);
+
+	const globalStore = useGlobalStore();
+	const patternStore = usePatternStore();
+
+	// 子窗口容器
+	const windowContainer = ref<HTMLElement | null>(null);
+
+	// 当前站点host
+	const host = ref(location.host);
+
+	onMounted(() => {
+		// 配置信息获取
+		patternStore.getUserPatternInfo(); //获取本地方案信息
+		patternStore.setInitPattern(); // 获取初始方案
+	});
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
 	.web-img-collector-container {
 		box-sizing: border-box;
-		position: fixed !important;
+		position: fixed;
 		overflow: hidden;
 		width: unset;
 		height: unset;
 		inset: 0;
+		text-align: left;
 		background-color: transparent;
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
-		z-index: 2147483647;
-		// 仅仅让容器本身不响应鼠标事件
+		z-index: 2147483646;
+		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
-		// 子元素默认还能响应
-		:deep(*) {
+		& > :deep(*) {
+			// 子元素默认还能响应
 			pointer-events: auto;
+		}
+
+		body,
+		div,
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6,
+		p,
+		ul,
+		li,
+		dd,
+		dt {
+			color: initial;
 		}
 	}
 
@@ -57,7 +101,7 @@
 		position: absolute;
 		inset: 0;
 		// background: wheat;
-		// 仅仅让容器本身不响应鼠标事件
+		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
 
 		// 子元素默认还能响应
@@ -65,28 +109,9 @@
 			pointer-events: auto;
 		}
 	}
-	:deep(*) {
-		margin: unset;
-		padding: unset;
-		border-radius: unset;
-		border: unset;
-		font-size: unset;
-		color: unset;
-		border: unset;
-		box-shadow: unset;
-		// min-width: unset;
-		// min-height: unset;
-	}
-	:deep(.v-slider) input {
-		display: unset;
-		background: unset;
-		border: unset;
-		box-shadow: unset;
-		margin: unset;
-		padding: unset;
-		border-radius: unset;
-		border: unset;
-		font-size: unset;
-		color: unset;
-	}
+</style>
+
+<style lang="scss">
+	// 导入修复样式
+	@import "./styles/website/index.scss";
 </style>

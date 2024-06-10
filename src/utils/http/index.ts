@@ -1,4 +1,5 @@
-import { getHostByUrl } from "../common";
+import { ElNotification } from "@/plugin/element-plus";
+import { getHostByUrl, isUrl } from "../common";
 import { GMRequest } from "./GMRequest";
 
 // 通过链接获取blob
@@ -20,6 +21,7 @@ export function getBlobByUrl(
 					.catch(() => null);
 				if (blob && blob.size) {
 					// console.log("Fetch请求成功", blob);
+					console.count("Fetch请求成功!");
 					resolve(blob);
 				}
 				// 第二次尝试：如果第一次尝试失败则再次设置cache为no-cache再次尝试
@@ -28,8 +30,10 @@ export function getBlobByUrl(
 					.catch(() => null);
 				if (blob && blob.size) {
 					// console.log("Fetch请求成功", blob);
+					console.count("Fetch请求成功!");
 					resolve(blob);
 				} else {
+					console.count("Fetch请求失败");
 					resolve(null);
 				}
 			})();
@@ -40,9 +44,11 @@ export function getBlobByUrl(
 			GMRequest({ url, referer, responseType: "blob" }).then((blob) => {
 				if (blob && blob.size) {
 					// console.log("GM请求成功", blob);
+					console.count("GM跨域请求成功!");
 					resolve(blob);
 				} else {
 					// console.log("GM请求失败", blob);
+					console.count("GM跨域请求失败");
 					resolve(null);
 				}
 			});
@@ -54,7 +60,8 @@ export function getBlobByUrl(
 export async function getBlobByUrlAuto(url: string): Promise<Blob | null> {
 	// console.log("请求", url);
 	//s 链接为空直接返回空blob
-	if (!url || !url.trim().length) return null;
+
+	if (!url || !url.trim().length || !isUrl(url)) return null;
 
 	// 尝试获取blob
 	const blob = await tryGetBlob(url, [
@@ -82,6 +89,9 @@ async function tryGetBlob(
 ): Promise<Blob | null> {
 	let blob: Blob | null = null;
 
+	const objURL = new URL(url);
+	const urlUnSearch = objURL.origin + objURL.pathname; // 去除查询语句的URL
+
 	for (const request of requests) {
 		// 打印日志消息
 		if (request.message && !!request.message.trim().length) {
@@ -89,6 +99,28 @@ async function tryGetBlob(
 		}
 		// 请求blob
 		blob = await getBlobByUrl(url, request.mode, request.referer);
+		// ElNotification({
+		// 	duration: 0,
+		// 	title: "日志",
+		// 	message: `mode:${request.mode},referer:${
+		// 		request.referer
+		// 	},请求结果:${!!blob}`,
+		// 	type: "info",
+		// 	appendTo: ".web-img-collector-notification-container",
+		// });
+		// 如果第一次失败且url去除查询语句后于与去除后不相同，则进行一次对去除查询语句后的url的请求
+		if (!blob && url !== urlUnSearch) {
+			blob = await getBlobByUrl(urlUnSearch, request.mode, request.referer);
+			// ElNotification({
+			// 	duration: 0,
+			// 	title: "日志",
+			// 	message: `(去除查询语句)mode:${request.mode},referer:${
+			// 		request.referer
+			// 	},请求结果:${!!blob}`,
+			// 	type: "info",
+			// 	appendTo: ".web-img-collector-notification-container",
+			// });
+		}
 		// 一旦成功就跳出循环
 		if (blob) break;
 	}

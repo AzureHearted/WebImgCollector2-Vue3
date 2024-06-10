@@ -10,9 +10,13 @@
 <script setup lang="ts">
 	import GalleryToolbar from "./gallery-toolbar.vue";
 	import GalleryWaterfall from "./gallery-waterfall.vue";
+	// import { onMounted } from "vue";
+	// onMounted(() => {
+	// 	console.log("gallery挂载！");
+	// });
 </script>
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 	// 画廊容器样式
 	.gallery-container {
 		width: 100%;
@@ -20,5 +24,9 @@
 		display: flex;
 		flex-flow: column;
 		overflow: hidden;
+	}
+	:deep(input) {
+		background: unset;
+		box-shadow: unset;
 	}
 </style>
