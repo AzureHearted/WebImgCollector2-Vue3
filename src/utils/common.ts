@@ -138,7 +138,7 @@ export async function getPicMetaByBlob(blob: Blob) {
 		const reader = new FileReader();
 		if (blob) {
 			reader.readAsDataURL(blob);
-			reader.onload = (theFile) => {
+			reader.onload = () => {
 				const image = new Image();
 				image.src = (reader.result as string) || "";
 				image.onload = () => {
@@ -194,7 +194,7 @@ export async function getPicMetaByImage(url: string) {
 		};
 		return errMeta;
 	}
-	return await new Promise((resolve, reject) => {
+	return await new Promise((resolve) => {
 		const img = new Image();
 		img.src = url;
 		if (img.complete) {

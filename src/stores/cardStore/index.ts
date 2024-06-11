@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, reactive, computed } from "vue";
+import {  reactive, computed } from "vue";
 // 导入类
 import Card from "./class/Card";
 import { TaskQueue } from "@/utils/taskQueue"; // 任务队列
@@ -46,17 +46,17 @@ export default defineStore("cardStore", () => {
 	// 卡片数据信息定义，用于过滤。
 	const info = reactive({
 		size: {
-			width: ref<[number, number]>([0, 2000]), //宽度范围
-			height: ref<[number, number]>([0, 2000]), //高度范围
-			max: ref(2000),
+			width: [0, 2000] as [number, number], //宽度范围
+			height: [0, 2000] as [number, number], //高度范围
+			max: 2000,
 		},
 	});
 
 	// 过滤器
 	const filters = reactive({
 		size: {
-			width: ref<[number, number]>([300, info.size.width[1]]), //宽度过滤器
-			height: ref<[number, number]>([300, info.size.height[1]]), //高度过滤器
+			width: [250, info.size.width[1]] as [number, number], //宽度过滤器
+			height: [250, info.size.height[1]] as [number, number], //高度过滤器
 			marks: computed(() => {
 				const markStyle = reactive({
 					"font-size": "10px !important",
@@ -111,8 +111,8 @@ export default defineStore("cardStore", () => {
 				return tempMarks;
 			}),
 		},
-		type: ref<string[]>(["image"]), //类型过滤器
-		extension: ref<string[]>([]), //扩展名过滤器
+		type: [] as string[], //类型过滤器
+		extension: [] as string[], //扩展名过滤器
 	});
 
 	// 排序相关
@@ -389,10 +389,15 @@ export default defineStore("cardStore", () => {
 		info.size.width = [0, 2000]; // 重置宽度范围。
 		info.size.height = [0, 2000]; // 重置高度范围。
 		info.size.max = 2000;
-		filters.size.width = [300, 2000];
-		filters.size.height = [300, 2000];
+		resetFilters();
+	}
+
+	// 重置过滤器
+	function resetFilters() {
+		filters.size.width = [250, 2000];
+		filters.size.height = [250, 2000];
 		filters.extension = [];
-		filters.type = ["image"];
+		filters.type = [];
 	}
 
 	// 移除卡片
@@ -597,5 +602,6 @@ export default defineStore("cardStore", () => {
 		clearCardList,
 		removeCard,
 		downloadCards,
+		resetFilters,
 	};
 });

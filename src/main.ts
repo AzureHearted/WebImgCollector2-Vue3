@@ -33,10 +33,3 @@ document.documentElement.appendChild(appContainer);
 
 // 为止bug临时修复
 // document.body.classList.remove("tag");
-
-// import { monitorWindowOpen } from "./utils/common";
-// window.addEventListener("DOMContentLoaded", () => {
-// 	setTimeout(() => {
-// 		monitorWindowOpen();
-// 	});
-// });

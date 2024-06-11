@@ -61,6 +61,14 @@
 							<var-button type="danger" icon-container block @click="clear">
 								所有清空
 							</var-button>
+							<!-- 重置过滤器 -->
+							<var-button
+								type="warning"
+								icon-container
+								block
+								@click="resetFilters">
+								重置过滤器
+							</var-button>
 						</var-button-group>
 					</template>
 				</var-menu>
@@ -363,6 +371,13 @@
 	// 清空
 	function clear() {
 		cardStore.clearCardList();
+		filters.size.width = cardStore.filters.size.width;
+		filters.size.height = cardStore.filters.size.height;
+	}
+
+	// 重置过滤器
+	function resetFilters() {
+		cardStore.resetFilters();
 		filters.size.width = cardStore.filters.size.width;
 		filters.size.height = cardStore.filters.size.height;
 	}
