@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import {  reactive, computed } from "vue";
+import { reactive, computed } from "vue";
 // 导入类
 import Card from "./class/Card";
 import { TaskQueue } from "@/utils/taskQueue"; // 任务队列
@@ -347,8 +347,6 @@ export default defineStore("cardStore", () => {
 					onFinished() {
 						amount = data.cardList.length;
 					},
-					// 传入已有url和blob的map对象,用于防止重复发送请求
-					existingUrlBlobMap: data.urlBlobMap,
 				}
 			);
 		}
@@ -416,6 +414,7 @@ export default defineStore("cardStore", () => {
 		const cards = validCardList.value.filter((x) => ids.includes(x.id));
 		if (cards.length === 1) {
 			const card = cards[0];
+			card.loading = true;
 			// 等于1的时候不打包，直接下载
 			if (!card.source.blob) {
 				// 如果没有blob先获取
@@ -428,6 +427,7 @@ export default defineStore("cardStore", () => {
 			if (!initName) {
 				initName = getNameByUrl(card.source.url);
 			}
+			card.loading = false;
 			// console.log(name);
 			// 下载完成后让用户进行文件名确认
 			ElMessageBox.prompt("文件已准备完成,请确认文件名", "提示", {
@@ -558,7 +558,9 @@ export default defineStore("cardStore", () => {
 								(async () => {
 									if (!card.source.blob) {
 										// 如果没有blob先获取
+										card.loading = true;
 										const blob = await getBlobByUrlAuto(card.source.url);
+										card.loading = false;
 										if (blob) {
 											card.source.blob = blob;
 										} else {

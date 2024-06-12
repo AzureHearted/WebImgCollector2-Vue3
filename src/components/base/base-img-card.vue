@@ -32,8 +32,8 @@
 	// 定义props
 	const props = withDefaults(
 		defineProps<{
-			data: any;
-			imgUrl: string; // 图片地址，必传参数，用于显示图片
+			data?: any;
+			imgUrl?: string; // 图片地址，必传参数，用于显示图片
 			useThumb?: boolean; // 是否使用缩略图，可选参数，默认false
 			imgThumb?: string; // 图片缩略图地址，可选参数，用于预加载图片
 			backgroundColor?: string; // 卡片背景颜色，可选参数，默认白色

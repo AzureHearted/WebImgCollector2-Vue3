@@ -12,7 +12,7 @@ export interface BaseCard extends BaseState {
 export interface BaseState {
 	isMatch: boolean; // ? 匹配标识符
 	isSelected: boolean; // ? 选中标识符
-	isLoaded: boolean; // ? 加载标识符，用于懒加载的卡片
+	loading: boolean; // ? 加载标识符
 }
 
 // 元信息接口

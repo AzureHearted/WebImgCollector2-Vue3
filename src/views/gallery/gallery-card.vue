@@ -1,12 +1,9 @@
 <template>
 	<BaseImgCard
 		class="gallery-card"
-		:data-show="isMobile()"
 		style="overflow: hidden; border: unset"
-		:data-checked="data.isSelected"
-		:data="data"
-		:img-url="data.source.url"
-		:img-thumb="data.preview.url">
+		:data-show="isMobile()"
+		:data-checked="data.isSelected">
 		<!-- 卡片顶部 -->
 		<template #header>
 			<div class="gallery-card-header">
@@ -23,7 +20,10 @@
 					<div class="card-button-group">
 						<el-button-group size="small">
 							<!-- 删除 -->
-							<el-button type="danger" @click="toRemove(data)" v-ripple>
+							<el-button
+								type="danger"
+								@click="emits('delete', data.id)"
+								v-ripple>
 								<template #icon>
 									<i-material-symbols-delete />
 								</template>
@@ -50,9 +50,9 @@
 									data.source.meta.type === 'image' ||
 									data.preview.meta.type === 'image'
 								"
-								:loading="downloading"
+								:loading="data.loading"
 								type="default"
-								@click="toDownload(data)"
+								@click="emits('download', data.id)"
 								v-ripple>
 								<template #icon>
 									<i-material-symbols-download />
@@ -91,7 +91,7 @@
 					:thumb="data.preview.url"
 					:init-width="data.preview.meta.width"
 					:init-height="data.preview.meta.height"
-					@loaded="handleCardLoaded(data, $event)"
+					@loaded="emits('loaded', data.id, $event)"
 					:draggable="false"></BaseImg>
 				<BaseImg
 					v-else-if="
@@ -102,13 +102,13 @@
 					:src="data.preview.url"
 					:init-width="data.preview.meta.width"
 					:init-height="data.preview.meta.height"
-					@loaded="handleCardLoaded(data, $event)"
+					@loaded="emits('loaded', data.id, $event)"
 					:draggable="false"></BaseImg>
 				<BaseImg
 					v-else
 					src=""
 					:init-show="true"
-					@loaded="handleCardLoaded(data, $event)"
+					@loaded="emits('loaded', data.id, $event)"
 					:draggable="false">
 					<htmlTypeImg
 						style="width: 100%; height: auto; transform: scale(0.5)" />
@@ -174,6 +174,7 @@
 	import BaseImg from "@/components/base/base-img.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
 	import type { BaseCard } from "@/stores/cardStore/interface";
+	import Card from "@/stores/cardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 
 	const { appContext } = getCurrentInstance()!;
@@ -185,22 +186,23 @@
 	import htmlTypeImg from "@svg/html.svg";
 
 	// 导入仓库
-	import { useGlobalStore, useCardStore } from "@/stores";
-	import { ref } from "vue";
+	import { useGlobalStore } from "@/stores";
 	import { GM_openInTab } from "$";
 	import { ElMessageBox } from "@/plugin/element-plus";
 	const globalStore = useGlobalStore();
-	const cardStore = useCardStore();
 
 	// const data = defineModel({ type: Card, required: true });
 	const props = withDefaults(
 		defineProps<{
-			data: BaseCard;
+			data: Card;
 		}>(),
 		{}
 	);
 	const emits = defineEmits<{
-		(e: "change:selected", val: boolean): void;
+		(e: "change:selected", val: boolean): Promise<void>;
+		(e: "loaded", id: string, info: returnInfo): Promise<void>; // 卡片加载成功事件
+		(e: "download", id: string): Promise<void>; // 下载事件
+		(e: "delete", id: string): Promise<void>; // 删除事件
 	}>();
 
 	// 大小
@@ -232,35 +234,6 @@
 		}
 		return type;
 	});
-
-	// 处理卡片加载完成的事件
-	function handleCardLoaded(item: Pick<BaseCard, "id">, info: returnInfo) {
-		// console.log(info);
-		// 仓库找到对应的数据
-		const index = cardStore.validCardList.findIndex((x) => x?.id === item.id);
-		if (index < 0) return;
-
-		const card = cardStore.validCardList[index];
-		// 刷新仓库对应卡片的preview.meta信息
-		card.preview.meta = { ...card.preview.meta, ...info.meta };
-		if (
-			card.preview.meta.width > card.source.meta.width &&
-			card.preview.meta.height > card.source.meta.height
-		) {
-			card.source.meta.width = card.preview.meta.width;
-			card.source.meta.height = card.preview.meta.height;
-			// 更新仓库的尺寸范围信息
-			cardStore.info.size.width[1] = Math.max(
-				cardStore.info.size.width[1],
-				card.source.meta.width
-			);
-			cardStore.info.size.height[1] = Math.max(
-				cardStore.info.size.height[1],
-				card.source.meta.height
-			);
-			// 同步更新仓库尺寸过滤器的最高值
-		}
-	}
 
 	// 页面定位元素
 	function toLocate(item: BaseCard) {
@@ -298,23 +271,9 @@
 				// 取消
 			});
 	}
-	// 删除卡片
-	function toRemove(item: Pick<BaseCard, "id">) {
-		// 删除卡片数据模型中的卡片。
-		cardStore.removeCard([item.id!]); // 删除卡片数据模型中的卡片。
-	}
-	// 下载
-	const downloading = ref(false);
-	async function toDownload(item: Pick<BaseCard, "id">) {
-		downloading.value = true;
-		console.log("下载", item);
-		await cardStore.downloadCards([item.id!]);
-		downloading.value = false;
-	}
+
 	// 打开网址
 	async function openUrl(url: string) {
-		// window.open(url, "_blank");
-		// open(url, "_blank");
 		GM_openInTab(url, { active: true, insert: true, setParent: true });
 	}
 </script>
@@ -364,6 +323,7 @@
 		transform: translateY(-150%);
 		transition: transform 0.2s;
 	}
+
 	.gallery-card[data-show="true"] .gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);

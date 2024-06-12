@@ -1,7 +1,6 @@
 import { getDOM, getDOMInfo } from "@/utils/dom";
 import type {
 	BaseMatch,
-	BaseMatchPreview,
 	BaseRule,
 	BaseFix,
 } from "../../patternStore/interface/Pattern";
@@ -13,7 +12,6 @@ import type {
 } from "../interface";
 import Card from "../class/Card";
 // 导入请求工具
-import { getBlobByUrlAuto } from "@/utils/http";
 import { getExtByUrl, getNameByUrl, isUrl } from "@/utils/common";
 import { TaskQueue } from "@/utils/taskQueue";
 import type { Task } from "@/utils/taskQueue";
@@ -30,8 +28,6 @@ interface Options {
 		addCard: () => Promise<void>
 	) => Promise<void>;
 	onFinished: () => void;
-	// 已有的url和Blob的映射表(用于判断是否需要发送新的请求)
-	existingUrlBlobMap: Map<string, Blob>;
 }
 
 // 获取卡片
@@ -45,12 +41,10 @@ export default async function getCard(
 		onAllDOMGet: async (doms) => doms,
 		onCardGet: async () => {},
 		onFinished: () => {},
-		existingUrlBlobMap: new Map<string, Blob>(),
 	};
 	// 合并配置
 	options = { ...defaultOptions, ...options };
-	const { onAllDOMGet, onCardGet, onFinished, existingUrlBlobMap } =
-		options as Options;
+	const { onAllDOMGet, onCardGet, onFinished } = options as Options;
 
 	// 卡片列表
 	const cardList: Card[] = [];
@@ -83,7 +77,6 @@ export default async function getCard(
 				handle: async () => {
 					// s source的匹配
 					const source = await handleRegionGetInfo<CardSource>({
-						type: "source",
 						rule: rule.source,
 						regionDOM,
 						callback: async (value, dom) => {
@@ -115,7 +108,6 @@ export default async function getCard(
 						}
 						// 获取preview
 						preview = await handleRegionGetInfo<CardPreview>({
-							type: "preview",
 							rule: rule.preview,
 							regionDOM,
 							targetDOM,
@@ -176,7 +168,6 @@ export default async function getCard(
 						}
 						// 匹配描述信息
 						description = await handleRegionGetInfo<CardDescription>({
-							type: "description",
 							rule: rule.description,
 							regionDOM,
 							targetDOM,
@@ -213,7 +204,7 @@ export default async function getCard(
 					}
 
 					// f 创建卡片
-					const card = new Card(source, preview, description);
+					const card = new Card({ source, preview, description });
 
 					// 触发回调
 					onCardGet(card, i, regionDOM, async () => {
@@ -388,7 +379,7 @@ export default async function getCard(
 					}
 
 					// 创建卡片
-					const card = new Card(source, preview, description);
+					const card = new Card({ source, preview, description });
 
 					// 触发回调
 					onCardGet(card, i, source.dom, async () => {
@@ -419,11 +410,11 @@ export default async function getCard(
 				onFinished();
 				resolve();
 			},
-			onTaskOvertime(task, overtimeTasks) {
-				// const index = taskList.findIndex(task);
-				// const dom = domList[index];
-				// console.log("任务超时", task.dom);
-			},
+			// onTaskOvertime(task, overtimeTasks) {
+			// 	const index = taskList.findIndex(task);
+			// 	const dom = domList[index];
+			// 	console.log("任务超时", task.dom);
+			// },
 		});
 		// 添加任务
 		taskQueue.addTask(taskList);
@@ -434,13 +425,12 @@ export default async function getCard(
 
 // 获取在region模式下信息的处理函数
 async function handleRegionGetInfo<T>(options: {
-	type: "source" | "preview" | "description";
 	rule: BaseMatch; // 规则对象
 	regionDOM: HTMLElement | Document | null; // 区域DOM
 	targetDOM?: HTMLElement | null | false; // 指定DOM
 	callback: (value: string, dom: HTMLElement | null) => Promise<T>;
 }) {
-	const { rule, type, callback } = options;
+	const { rule, callback } = options;
 	let { regionDOM, targetDOM } = options;
 	regionDOM = regionDOM || document;
 	// 获取选择器

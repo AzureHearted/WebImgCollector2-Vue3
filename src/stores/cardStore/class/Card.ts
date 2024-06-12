@@ -27,20 +27,22 @@ export default class Card implements ICard {
 		dom: null,
 	};
 	public isMatch: boolean;
-	public isLoaded: boolean;
 	public isSelected: boolean;
+	public loading: boolean;
 
 	// 构造函数
-	constructor(
-		source?: CardSource,
-		preview?: CardPreview,
-		description?: CardDescription
-	) {
+	constructor(option?: {
+		id?: string;
+		source?: CardSource;
+		preview?: CardPreview;
+		description?: CardDescription;
+	}) {
+		const { id, source, preview, description } = option || {};
 		// 初始化卡片对象属性
-		this.id = buildUUID(); // 生成uuid作为id
+		this.id = id || buildUUID(); // 生成uuid作为id
 		this.isMatch = false;
-		this.isLoaded = false;
 		this.isSelected = false;
+		this.loading = false;
 
 		// 合并用户初始化传入的值，如果有的话。
 		this.source = { ...this.source, ...source };
