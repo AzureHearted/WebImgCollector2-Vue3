@@ -99,6 +99,7 @@
 
 	import hljs from "highlight.js/lib/core";
 	import css from "highlight.js/lib/languages/css";
+	import { onActivated } from "vue";
 
 	hljs.registerLanguage("css", css);
 
@@ -114,10 +115,13 @@
 		// 组件挂载完成后就获取样式表
 		getStyleSheets();
 	});
+	onActivated(() => {
+		getStyleSheets();
+	});
 
 	const styleSheetList = ref<StyleSheet[]>([]);
 	const keyword = ref(""); //检索关键词
-	const filterThisScriptStyle = ref(false); //是否过滤掉当前脚本的样式
+	const filterThisScriptStyle = ref(true); //是否过滤掉当前脚本的样式
 	// 过滤后的样式表
 	const filteredStyleSheetList = computed<StyleSheet[]>(() => {
 		return styleSheetList.value.filter((s) => {

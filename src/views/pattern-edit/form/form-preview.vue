@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 	import { defineModel } from "vue";
-	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
 
 	import FixFrom from "./card-from-fix.vue";
 

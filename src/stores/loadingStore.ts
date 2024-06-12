@@ -1,7 +1,7 @@
 import { computed, nextTick, ref } from "vue";
 import { defineStore } from "pinia";
 
-export default defineStore("loadingStore", () => {
+export default defineStore("LoadingStore", () => {
 	const loading = ref(false);
 	const total = ref(1);
 	const current = ref(0);

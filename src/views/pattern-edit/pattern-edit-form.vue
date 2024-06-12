@@ -205,8 +205,8 @@
 
 	import { storeToRefs } from "pinia";
 	import { usePatternStore } from "@/stores";
-	import { Pattern } from "@/stores/patternStore/class/Pattern";
-	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
 	import { useClipboard } from "@vueuse/core";
 	import { saveAs } from "file-saver";
 	const patternStore = usePatternStore();

@@ -25,7 +25,7 @@
 			</n-layout-sider>
 			<n-layout class="main__content">
 				<transition appear>
-					<keep-alive :include="/gallery|pattern|setting/i" :max="10">
+					<keep-alive :include="/gallery|pattern|favorite|setting/i" :max="10">
 						<component :is="nowPage" />
 					</keep-alive>
 				</transition>
@@ -44,6 +44,7 @@
 	import Gallery from "@/views/gallery/gallery-index.vue";
 	import PatternEdit from "@/views/pattern-edit/pattern-edit-index.vue";
 	import Setting from "@/views/setting/setting-index.vue";
+	import Favorite from "@/views/favorite/favorite-index.vue";
 	import Test from "@/views/test/test-index.vue";
 
 	import { storeToRefs } from "pinia";
@@ -56,8 +57,9 @@
 	const views: { [key: string]: Component } = {
 		Gallery,
 		PatternEdit,
-		Test,
+		Favorite,
 		Setting,
+		Test,
 	};
 	// 动态组件
 	const nowPage = computed(() => {
@@ -77,10 +79,16 @@
 			icon: renderIcon("material-symbols:box-edit"),
 		},
 		{
+			label: "收藏",
+			key: "Favorite",
+			icon: renderIcon("mdi:favorite"),
+		},
+		{
 			label: "设置",
 			key: "Setting",
 			icon: renderIcon("ant-design:setting-twotone"),
 		},
+
 		{
 			label: "测试页面",
 			key: "Test",

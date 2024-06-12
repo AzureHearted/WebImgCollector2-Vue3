@@ -1,6 +1,6 @@
 {
 	"name": "WebImgCollector2",
-	"version": "1.4.7",
+	"version": "1.4.8",
 	"private": true,
 	"author": "ls",
 	"license": "MIT",
@@ -22,6 +22,7 @@
 		"file-saver": "^2.0.5",
 		"gsap": "^3.12.5",
 		"jszip": "3.7.1",
+		"localforage": "^1.10.0",
 		"lodash": "^4.17.21",
 		"pinia": "^2.1.7",
 		"vue": "^3.4.21",

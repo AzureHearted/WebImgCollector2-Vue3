@@ -53,8 +53,11 @@ export default {
 				if (!triggerEl) return;
 				const url = triggerEl.dataset.downloadSrc;
 				const cid = triggerEl.dataset.id;
+				if (!cid) return;
 				console.log("下载", cid, url);
-				cardStore.downloadCards([cid as string]);
+				const card = cardStore.findCard(cid);
+				if (!card) return;
+				cardStore.downloadCards([card]);
 			},
 		},
 		// 定位按钮

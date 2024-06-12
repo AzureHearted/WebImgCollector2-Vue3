@@ -206,7 +206,7 @@
 	import { NEllipsis, NTag } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
 	import type { ComputedRef } from "vue";
-	import type { BaseCard } from "@/stores/cardStore/interface";
+	import type { BaseCard } from "@/stores/CardStore/interface";
 	import BaseImg from "@/components/base/base-img.vue";
 
 	// 导入公用ts库
@@ -214,7 +214,7 @@
 
 	// 导入仓库
 	import { useCardStore, useLoadingStore, usePatternStore } from "@/stores";
-	import { Pattern } from "@/stores/patternStore/class/Pattern";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
 
 	const cardStore = useCardStore();
 	const loadingStore = useLoadingStore();
@@ -384,16 +384,14 @@
 
 	// 下载选中项
 	function downloadSelected() {
-		const ids = cardStore.validCardList
-			.filter((x) => x.isSelected)
-			.map((x) => x.id);
-		cardStore.downloadCards(ids);
+		const cards = cardStore.validCardList.filter((x) => x.isSelected)||[];
+		cardStore.downloadCards(cards);
 	}
 
 	// 下载全部
 	function downloadAll() {
-		const ids = cardStore.filteredCardList.map((x) => x.id);
-		cardStore.downloadCards(ids);
+		const cards = cardStore.filteredCardList||[];
+		cardStore.downloadCards(cards);
 	}
 
 	// 删除选中项

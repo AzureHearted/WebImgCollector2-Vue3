@@ -1,3 +1,4 @@
+import { cloneDeep } from "@/plugin/lodash";
 import type {
 	BaseCard,
 	CardDescription,
@@ -6,6 +7,7 @@ import type {
 	BaseState,
 } from "../interface";
 import { buildUUID } from "@/utils/common";
+import type { BaseCardRowData } from "../interface/base-card";
 
 export type ICard = Partial<BaseCard> & BaseState;
 
@@ -26,23 +28,31 @@ export default class Card implements ICard {
 		title: "", // 卡片标题，可能为空，因为可能从本地创建的卡片，没有标题
 		dom: null,
 	};
-	public isMatch: boolean;
-	public isSelected: boolean;
-	public loading: boolean;
+	public isMatch: boolean = false;
+	public isSelected: boolean = false;
+	public isLoaded: boolean = false;
+	public isFavorite: boolean = false;
+	public loading: boolean = false;
 
 	// 构造函数
-	constructor(option?: {
-		id?: string;
-		source?: CardSource;
-		preview?: CardPreview;
-		description?: CardDescription;
-	}) {
-		const { id, source, preview, description } = option || {};
+	constructor(option?: Partial<BaseCard>) {
+		const {
+			id,
+			source,
+			preview,
+			description,
+			isMatch,
+			isFavorite,
+			isLoaded,
+			isSelected,
+		} = option || {};
 		// 初始化卡片对象属性
 		this.id = id || buildUUID(); // 生成uuid作为id
-		this.isMatch = false;
-		this.isSelected = false;
-		this.loading = false;
+		this.isMatch = isMatch || this.isMatch;
+		this.isSelected = isSelected || this.isSelected;
+		this.isLoaded = isLoaded || this.isLoaded;
+		this.isFavorite = isFavorite || this.isFavorite;
+		this.loading = this.loading || this.loading;
 
 		// 合并用户初始化传入的值，如果有的话。
 		this.source = { ...this.source, ...source };
@@ -76,5 +86,26 @@ export default class Card implements ICard {
 	// 设置卡片来源
 	public setSource(source: CardSource & { originUrls?: string[] }): void {
 		this.source = source;
+	}
+
+	// 获取纯数据对象
+	public getRowData(options?: { includeId?: boolean }): BaseCardRowData {
+		const defaultOptions: {
+			includeId: boolean;
+		} = {
+			includeId: true,
+		};
+		const { includeId } = { ...defaultOptions, ...options };
+		const rowData = cloneDeep({
+			id: includeId ? this.id : undefined,
+			source: this.source,
+			preview: this.preview,
+			description: this.description,
+		});
+		// 去除所有dom
+		rowData.source.dom = null;
+		rowData.preview.dom = null;
+		rowData.description.dom = null;
+		return rowData;
 	}
 }

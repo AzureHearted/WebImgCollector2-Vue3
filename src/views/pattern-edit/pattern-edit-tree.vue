@@ -129,8 +129,8 @@
 	} from "element-plus/es/components/tree/src/tree.type";
 	import BaseImg from "@/components/base/base-img.vue";
 	import { usePatternStore } from "@/stores";
-	import { Pattern } from "@/stores/patternStore/class/Pattern";
-	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
 
 	const patternStore = usePatternStore();
 	const { createPattern, deletePattern, findPattern, pastePattern } =

@@ -11,7 +11,7 @@ import { ElNotification } from "@/plugin/element-plus";
 
 // import { GM_getValue, GM_setValue } from "$";
 
-export default defineStore("patternStore", () => {
+export default defineStore("PatternStore", () => {
 	// console.log("用户方案列表：", userPatternList);
 	// 方案列表
 	const list = ref<Pattern[]>([defaultPattern]);

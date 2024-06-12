@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 	import { storeToRefs } from "pinia";
-	import useGlobalStore from "@/stores/global"; //导入全局仓库
+	import useGlobalStore from "@/stores/Global"; //导入全局仓库
 	const globalStore = useGlobalStore();
 </script>
 

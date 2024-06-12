@@ -12,10 +12,12 @@
 				<template #default="{ item }">
 					<GalleryCard
 						:data="(item as any)"
+						viewport-selector=".web-img-collector-container .waterfall-wrapper"
 						@change:selected="item.isSelected = $event"
 						@delete="handleDelete"
 						@loaded="handleLoaded"
-						@download="handleDownload" />
+						@download="handleDownload"
+						@toggle-favorite="handleToFavorite(item.id, $event)" />
 				</template>
 			</WaterFallList>
 		</BaseScrollbar>
@@ -23,17 +25,18 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, computed, watch, nextTick } from "vue";
+	import { ref, computed, watch, nextTick, onActivated } from "vue";
 	import type { ComputedRef } from "vue";
-	import type { BaseCard } from "@/stores/cardStore/interface";
+	import type { BaseCard } from "@/stores/CardStore/interface";
 	import WaterFallList from "@/components/base/waterfall-list.vue"; // 瀑布流组件
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 	import GalleryCard from "./gallery-card.vue";
-	import { useCardStore } from "@/stores";
 	import { isMobile } from "@/utils/common";
+	import { useCardStore, useFavoriteStore } from "@/stores";
 
 	const cardStore = useCardStore();
+	const favoriteStore = useFavoriteStore();
 
 	const waterfallContainer = ref<HTMLElement | null>(null);
 
@@ -60,12 +63,15 @@
 		}
 	);
 
-	// 卡片加载成功完成事件
-	const handleLoaded = (id: string, info: returnInfo) => {
+	//f 卡片加载成功完成事件
+	const handleLoaded = async (id: string, info: returnInfo) => {
 		// 仓库找到对应的数据
 		const index = cardStore.validCardList.findIndex((x) => x.id === id);
 		if (index < 0) return;
 		const card = cardStore.validCardList[index];
+		if (card.isLoaded) return; //如果已经成功加载过了就不在执行
+		card.isLoaded = true; // 置为加载成功
+		// console.count("卡片加载完成");
 		// 刷新仓库对应卡片的preview.meta信息
 		card.preview.meta = { ...card.preview.meta, ...info.meta };
 		if (
@@ -85,16 +91,43 @@
 			);
 			// 同步更新仓库尺寸过滤器的最高值
 		}
+		// 判断是否被收藏
+		// 先刷新仓库数据
+		await favoriteStore.refreshStore();
+		// 然后判断该card是否被收藏
+		card.isFavorite = await favoriteStore.isInclude(card);
 	};
-	// 执行卡片删除
+	//f 执行卡片删除
 	const handleDelete = (id: string) => {
 		cardStore.removeCard([id]);
 	};
-	// 处理下载事件
+	//f 处理下载事件
 	const handleDownload = async (id: string) => {
 		console.log("下载", id);
-		cardStore.downloadCards([id]);
+		const card = cardStore.findCard(id);
+		if (!card) return;
+		cardStore.downloadCards([card]);
 	};
+
+	//f 处理收藏切换
+	const handleToFavorite = async (id: string, val: boolean) => {
+		const card = cardStore.findCard(id);
+		if (!card) return;
+		if (val) {
+			card.isFavorite = true;
+			favoriteStore.addCard([card]);
+		} else {
+			card.isFavorite = false;
+			favoriteStore.deleteCard(card);
+		}
+	};
+
+	onActivated(() => {
+		favoriteStore.refreshStore();
+		cardStore.validCardList.forEach(async (c) => {
+			c.isFavorite = await favoriteStore.isInclude(c);
+		});
+	});
 </script>
 
 <style lang="scss" scoped>

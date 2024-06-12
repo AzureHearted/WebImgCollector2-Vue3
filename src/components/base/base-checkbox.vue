@@ -1,10 +1,19 @@
 <template>
 	<div class="base-checkbox__container" @click="isChecked = !isChecked">
-		<n-button :type="isChecked ? 'success' : 'default'" text block v-ripple>
+		<n-button
+			:type="isChecked ? 'success' : 'default'"
+			:color="isChecked ? checkedColor : unCheckedColor"
+			text
+			block
+			v-ripple>
 			<template #icon>
 				<transition appear>
-					<i-material-symbols-check-box-outline-blank v-if="!isChecked" />
-					<i-material-symbols-check-box-rounded v-else />
+					<slot name="un-checked" v-if="!isChecked">
+						<i-material-symbols-check-box-outline-blank />
+					</slot>
+					<slot name="checked" v-else>
+						<i-material-symbols-check-box-rounded />
+					</slot>
 				</transition>
 			</template>
 		</n-button>
@@ -12,11 +21,13 @@
 </template>
 
 <script setup lang="ts">
-	import { defineProps, withDefaults, computed, defineEmits } from "vue";
+	import {  withDefaults, computed, defineEmits } from "vue";
 
 	const props = withDefaults(
 		defineProps<{
 			checked: boolean;
+			checkedColor?: string;
+			unCheckedColor?: string;
 		}>(),
 		{
 			checked: false,

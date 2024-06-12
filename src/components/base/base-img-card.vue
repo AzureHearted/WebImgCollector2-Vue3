@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 	// 导入必要的类型和组件
-	import { defineProps, defineEmits, withDefaults, computed } from "vue";
+	import { withDefaults, computed } from "vue";
 	import type { CSSProperties } from "vue";
 	import BaseImg from "./base-img.vue";
 

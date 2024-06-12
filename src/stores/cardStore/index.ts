@@ -22,11 +22,11 @@ import { useLoadingStore, usePatternStore } from "@/stores";
 
 import { ElNotification, ElMessageBox } from "@/plugin/element-plus";
 
-export default defineStore("cardStore", () => {
+export default defineStore("CardStore", () => {
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
 
-	// 数据定义
+	//s 数据定义
 	const data = reactive({
 		cardList: [] as Card[], //s 卡片列表
 		// 所有匹配到的链接集合
@@ -43,7 +43,7 @@ export default defineStore("cardStore", () => {
 		urlBlobMap: new Map<string, Blob>(),
 	});
 
-	// 卡片数据信息定义，用于过滤。
+	//s 卡片数据信息定义，用于过滤。
 	const info = reactive({
 		size: {
 			width: [0, 2000] as [number, number], //宽度范围
@@ -52,7 +52,7 @@ export default defineStore("cardStore", () => {
 		},
 	});
 
-	// 过滤器
+	//s 过滤器
 	const filters = reactive({
 		size: {
 			width: [250, info.size.width[1]] as [number, number], //宽度过滤器
@@ -115,7 +115,7 @@ export default defineStore("cardStore", () => {
 		extension: [] as string[], //扩展名过滤器
 	});
 
-	// 排序相关
+	//s 排序相关
 	const sortOptions = [
 		{ value: "#", label: "默认排序", group: "#" },
 		{ value: "name-asc", label: "名称-升序", group: "名称" },
@@ -131,7 +131,7 @@ export default defineStore("cardStore", () => {
 		key: string;
 		children: ((typeof sortOptions)[number] & { key: string })[];
 	};
-	// 排序对象
+	//s 排序对象
 	const sort = reactive({
 		method: "#" as (typeof sortOptions)[number]["value"],
 		options: sortOptions,
@@ -157,12 +157,12 @@ export default defineStore("cardStore", () => {
 		},
 	});
 
-	// j 有效的卡片
+	//j 有效的卡片
 	const validCardList = computed(() => {
 		return data.cardList.filter((x) => !!x);
 	});
 
-	// j 过滤后的卡片
+	//j 过滤后的卡片
 	const filteredCardList = computed(() => {
 		// 后续添加处理逻辑，例如过滤、排序等操作。
 		let matchList = data.cardList.filter((x) => {
@@ -217,7 +217,7 @@ export default defineStore("cardStore", () => {
 		return matchList;
 	});
 
-	// j 类型列表
+	//j 类型列表
 	const typeOptions = computed(() => {
 		const typeNameMap = new Map<string, string>([
 			["image", "图片"],
@@ -248,7 +248,7 @@ export default defineStore("cardStore", () => {
 		return options;
 	});
 
-	// j 扩展名列表
+	//j 扩展名列表
 	const extensionOptions = computed(() => {
 		return [...data.extensionMap.keys()]
 			.sort((a, b) => {
@@ -264,7 +264,7 @@ export default defineStore("cardStore", () => {
 			});
 	});
 
-	// 获取页面资源
+	//f 获取页面资源
 	async function getPageCard() {
 		const patternId = patternStore.used.id;
 		const patternNow =
@@ -363,7 +363,7 @@ export default defineStore("cardStore", () => {
 		loadingStore.end();
 	}
 
-	// 更新最大宽高
+	//f 更新最大宽高
 	function updateMaxSize(
 		width: number | undefined,
 		height: number | undefined
@@ -375,7 +375,15 @@ export default defineStore("cardStore", () => {
 		filters.size.height[1] = info.size.height[1]; // 更新过滤器最大宽度。
 	}
 
-	// 清空卡片
+	//f 重置过滤器
+	function resetFilters() {
+		filters.size.width = [250, 2000];
+		filters.size.height = [250, 2000];
+		filters.extension = [];
+		filters.type = [];
+	}
+
+	//f 清空卡片
 	function clearCardList() {
 		data.urlSet.clear(); // 清空链接集合
 		data.domSet.clear(); // 清空DOM集合
@@ -390,28 +398,27 @@ export default defineStore("cardStore", () => {
 		resetFilters();
 	}
 
-	// 重置过滤器
-	function resetFilters() {
-		filters.size.width = [250, 2000];
-		filters.size.height = [250, 2000];
-		filters.extension = [];
-		filters.type = [];
-	}
-
-	// 移除卡片
+	//f 移除卡片
 	function removeCard(ids: string[]) {
 		for (let i = 0; i < ids.length; i++) {
 			const id = ids[i];
 			data.excludeIdSet.add(id);
 		}
-		return;
 	}
 
-	// 下载卡片
-	async function downloadCards(ids: string[]) {
-		if (!ids.length) return;
-		// 先找到对应的卡片
-		const cards = validCardList.value.filter((x) => ids.includes(x.id));
+	//f 查询卡片
+	function findCard(id: string): Card | undefined {
+		return validCardList.value.find((c) => c.id === id);
+	}
+
+	//f 查询多张卡片
+	function findCards(ids: string[]): Card[] {
+		return validCardList.value.filter((c) => ids.includes(c.id)) || [];
+	}
+
+	//f 下载卡片
+	async function downloadCards(cards: Card[]) {
+		if (!cards.length) return;
 		if (cards.length === 1) {
 			const card = cards[0];
 			card.loading = true;
@@ -455,7 +462,7 @@ export default defineStore("cardStore", () => {
 					console.log("取消操作");
 				});
 		} else {
-			loadingStore.start(ids.length); // 开启进度条
+			loadingStore.start(cards.length); // 开启进度条
 
 			ElNotification({
 				title: "提示",
@@ -603,6 +610,7 @@ export default defineStore("cardStore", () => {
 		getPageCard,
 		clearCardList,
 		removeCard,
+		findCard,
 		downloadCards,
 		resetFilters,
 	};

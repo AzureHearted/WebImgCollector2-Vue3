@@ -3,7 +3,7 @@ import type {
 	BaseMatch,
 	BaseRule,
 	BaseFix,
-} from "../../patternStore/interface/Pattern";
+} from "../../PatternStore/interface/Pattern";
 import type {
 	BaseMeta,
 	CardDescription,
@@ -203,6 +203,14 @@ export default async function getCard(
 						}
 					}
 
+					//s 设置卡片来源
+					source.host = location.host;
+					if (source.originUrls?.length) {
+						source.originUrls.push(location.origin + location.pathname);
+					} else {
+						source.originUrls = [location.origin + location.pathname];
+					}
+
 					// f 创建卡片
 					const card = new Card({ source, preview, description });
 
@@ -378,7 +386,15 @@ export default async function getCard(
 						description.title = getNameByUrl(description.title);
 					}
 
-					// 创建卡片
+					//s 设置卡片来源
+					source.host = location.host;
+					if (source.originUrls?.length) {
+						source.originUrls.push(location.origin + location.pathname);
+					} else {
+						source.originUrls = [location.origin + location.pathname];
+					}
+
+					//f 创建卡片
 					const card = new Card({ source, preview, description });
 
 					// 触发回调

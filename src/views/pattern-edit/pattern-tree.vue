@@ -51,8 +51,8 @@
 	import type { TreeOption, TreeInst, TreeDropInfo, TreeProps } from "naive-ui";
 	import { DeleteFilled, Plus } from "@element-plus/icons-vue";
 	import { ElButton, ElPopconfirm } from "element-plus";
-	import { Pattern } from "@/stores/patternStore/class/Pattern";
-	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 
 	import { usePatternStore } from "@/stores";

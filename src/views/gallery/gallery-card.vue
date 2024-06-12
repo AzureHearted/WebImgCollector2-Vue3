@@ -13,6 +13,17 @@
 						<BaseCheckbox
 							:checked="data.isSelected"
 							@change="emits('change:selected', $event)" />
+						<BaseCheckbox
+							:checked="data.isFavorite"
+							checked-color="red"
+							@change="emits('toggle-favorite', $event)">
+							<template #checked>
+								<i-mdi-favorite />
+							</template>
+							<template #un-checked>
+								<i-mdi-favorite-border />
+							</template>
+						</BaseCheckbox>
 					</div>
 				</div>
 				<div class="gallery-card-header-right">
@@ -39,7 +50,11 @@
 						</el-button-group>
 						<el-button-group size="small">
 							<!-- 在页面中定位 -->
-							<el-button type="primary" @click="toLocate(data)" v-ripple>
+							<el-button
+								type="primary"
+								@click="toLocate(data)"
+								v-if="data.source.dom"
+								v-ripple>
 								<template #icon>
 									<i-material-symbols-location-on-outline />
 								</template>
@@ -87,7 +102,7 @@
 					v-if="data.source.meta.type === 'image'"
 					:src="data.source.url"
 					use-thumb
-					viewport-selector=".web-img-collector-container .waterfall-wrapper"
+					:viewport-selector="viewportSelector"
 					:thumb="data.preview.url"
 					:init-width="data.preview.meta.width"
 					:init-height="data.preview.meta.height"
@@ -98,7 +113,7 @@
 						data.source.meta.type === 'html' &&
 						data.preview.meta.type === 'image'
 					"
-					viewport-selector=".web-img-collector-container .waterfall-wrapper"
+					:viewport-selector="viewportSelector"
 					:src="data.preview.url"
 					:init-width="data.preview.meta.width"
 					:init-height="data.preview.meta.height"
@@ -168,13 +183,13 @@
 </template>
 
 <script setup lang="ts">
-	import { computed, defineProps, withDefaults, getCurrentInstance } from "vue";
+	import { computed,  withDefaults, getCurrentInstance } from "vue";
 	import type { ComputedRef } from "vue";
 	import BaseImgCard from "@/components/base/base-img-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
-	import type { BaseCard } from "@/stores/cardStore/interface";
-	import Card from "@/stores/cardStore/class/Card";
+	import type { BaseCard } from "@/stores/CardStore/interface";
+	import Card from "@/stores/CardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 
 	const { appContext } = getCurrentInstance()!;
@@ -195,11 +210,13 @@
 	const props = withDefaults(
 		defineProps<{
 			data: Card;
+			viewportSelector?: string;
 		}>(),
 		{}
 	);
 	const emits = defineEmits<{
 		(e: "change:selected", val: boolean): Promise<void>;
+		(e: "toggle-favorite", val: boolean): Promise<void>; // 卡片收藏事件
 		(e: "loaded", id: string, info: returnInfo): Promise<void>; // 卡片加载成功事件
 		(e: "download", id: string): Promise<void>; // 下载事件
 		(e: "delete", id: string): Promise<void>; // 删除事件
@@ -237,8 +254,10 @@
 
 	// 页面定位元素
 	function toLocate(item: BaseCard) {
+		const dom = item.source.dom;
+		if (!dom) return;
 		// console.log("定位元素", item);
-		(item.source.dom as HTMLElement).scrollIntoView({
+		dom.scrollIntoView({
 			behavior: "smooth",
 			inline: "center",
 			block: "center",
@@ -338,6 +357,7 @@
 
 	.card-checkbox {
 		position: absolute;
+		display: flex;
 		// top: -2px;
 		// left: -2px;
 		transform: translate(-2px, -2px);

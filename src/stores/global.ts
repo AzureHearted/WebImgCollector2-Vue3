@@ -2,7 +2,7 @@ import { ref, watch } from "vue";
 import { defineStore } from "pinia";
 // import views from "@/views/index";
 
-export default defineStore("global", () => {
+export default defineStore("Global", () => {
 	const openWindow = ref(false); // 窗口打开状态
 	const navCollapse = ref(true); // 是否折叠
 	const tab = ref("Gallery"); // 当前标签页
