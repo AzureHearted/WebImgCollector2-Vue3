@@ -9,6 +9,7 @@ import {
 	getBlobType,
 	getExtByBlob,
 	getNameByUrl,
+	legalizationPathString,
 	mixSort,
 } from "@/utils/common";
 // 导入网络工具请求
@@ -158,8 +159,13 @@ export default defineStore("CardStore", () => {
 	});
 
 	//j 有效的卡片
-	const validCardList = computed(() => {
+	const validCardList = computed<Card[]>(() => {
 		return data.cardList.filter((x) => !!x);
+	});
+
+	//j 选中的卡片
+	const selectionCardList = computed<Card[]>(() => {
+		return validCardList.value.filter((x) => x.isSelected);
 	});
 
 	//j 过滤后的卡片
@@ -280,7 +286,7 @@ export default defineStore("CardStore", () => {
 			return;
 		}
 		loadingStore.start();
-		// 依次执行每个规则
+		//s 依次执行每个规则
 		let amount = 0; // 累计数量(用于统计每次匹配过程中的结果数量)
 		for (let i = 0; i < patternNow.rules.length; i++) {
 			const rule = patternNow.rules[i];
@@ -442,12 +448,11 @@ export default defineStore("CardStore", () => {
 				confirmButtonText: "确认",
 				cancelButtonText: "取消",
 				inputPlaceholder: "请输入要保存的文件名称",
-				inputPattern: /^[^\\/:*?"<>|]+$/,
-				inputErrorMessage: '文件名不合法(文件名不能出现字符:\\/:*?"<>|)',
-				inputValue: initName,
+				inputValue: legalizationPathString(initName),
 				draggable: true,
 			})
 				.then(({ value: name }) => {
+					name = legalizationPathString(name);
 					console.log("保存文件名称:", name);
 					// 添加后缀名
 					name =
@@ -532,12 +537,11 @@ export default defineStore("CardStore", () => {
 						confirmButtonText: "确认",
 						cancelButtonText: "取消",
 						inputPlaceholder: "请输入要保存的压缩包名称",
-						inputPattern: /^[^\\/:*?"<>|]+$/,
-						inputErrorMessage: '文件名不合法(文件名不能出现字符:\\/:*?"<>|)',
-						inputValue: initZipName,
+						inputValue: legalizationPathString(initZipName),
 						draggable: true,
 					})
 						.then(({ value: zipName }) => {
+							zipName = legalizationPathString(zipName);
 							console.log("保存压缩包名称:", zipName);
 							saveAs(zip, `${zipName}.zip`);
 
@@ -604,6 +608,7 @@ export default defineStore("CardStore", () => {
 		sort,
 		filters,
 		validCardList,
+		selectionCardList,
 		filteredCardList,
 		typeOptions,
 		extensionOptions,

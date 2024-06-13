@@ -348,3 +348,19 @@ export function GM_storage(
 		return GM_getValue(options.name, options.default);
 	}
 }
+
+//f 合法化路径字符串
+export function legalizationPathString(str: string) {
+	return str
+		.replace("*", "×")
+		.replace("/", "／")
+		.replace("⁄", "／")
+		.replace("\\", "＼")
+		.replace("|", "︱")
+		.replace(":", "：")
+		.replace("?", "？")
+		.replace('"', "＂")
+		.replace("<", "＜")
+		.replace(">", "＞")
+		.replace("$", "＄");
+}

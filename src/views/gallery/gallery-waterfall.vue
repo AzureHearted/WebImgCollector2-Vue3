@@ -12,7 +12,7 @@
 				<template #default="{ item }">
 					<GalleryCard
 						:data="(item as any)"
-						viewport-selector=".web-img-collector-container .waterfall-wrapper"
+						viewport-selector=".web-img-collector-container"
 						@change:selected="item.isSelected = $event"
 						@delete="handleDelete"
 						@loaded="handleLoaded"
@@ -95,7 +95,7 @@
 		// 先刷新仓库数据
 		await favoriteStore.refreshStore();
 		// 然后判断该card是否被收藏
-		card.isFavorite = await favoriteStore.isInclude(card);
+		card.isFavorite = await favoriteStore.isExist(card);
 	};
 	//f 执行卡片删除
 	const handleDelete = (id: string) => {
@@ -118,14 +118,14 @@
 			favoriteStore.addCard([card]);
 		} else {
 			card.isFavorite = false;
-			favoriteStore.deleteCard(card);
+			favoriteStore.unFavoriteCard([card]);
 		}
 	};
 
 	onActivated(() => {
 		favoriteStore.refreshStore();
 		cardStore.validCardList.forEach(async (c) => {
-			c.isFavorite = await favoriteStore.isInclude(c);
+			c.isFavorite = await favoriteStore.isExist(c);
 		});
 	});
 </script>

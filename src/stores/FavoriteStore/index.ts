@@ -1,8 +1,8 @@
-import { defineStore } from "pinia";
-import { ref, reactive, computed } from "vue";
+import { useCardStore } from "@/stores";
 import Card from "@/stores/CardStore/class/Card";
 import localforage from "localforage";
-import { useCardStore } from "@/stores";
+import { defineStore } from "pinia";
+import { computed, reactive, ref } from "vue";
 
 export default defineStore("FavoriteStore", () => {
 	const cardStore = useCardStore();
@@ -74,49 +74,74 @@ export default defineStore("FavoriteStore", () => {
 
 	//f 添加卡片
 	const addCard = async (cards: Card[]) => {
-		console.log(
-			"添加收藏",
-			cards,
-			cards.map((c) => c.id)
-		);
+		// console.log(
+		// 	"添加收藏",
+		// 	cards,
+		// 	cards.map((c) => c.id)
+		// );
 		for (const card of cards) {
-			const rowCard = card.getRowData();
-			rowCard.isFavorite = true;
-			await store.value.setItem(card.id, rowCard);
+			// 判断卡片是否已经存在
+			if (!(await isExist(card))) {
+				const rowCard = card.getRowData();
+				rowCard.isFavorite = true;
+				await store.value.setItem(card.id, rowCard);
+				console.log("成功收藏卡片", card);
+			} else {
+				console.log("卡片已存在", card);
+			}
+		}
+		refreshStore();
+	};
+
+	//f 更新卡片
+	const updateCard = async (cards: Card[]) => {
+		for (const card of cards) {
+			// 先查找卡片在仓库的id
+			const id = await findCardId(
+				(c) =>
+					card.source.url === c.source.url && card.preview.url === c.preview.url
+			);
+			if (!id) continue; //如果id无效就跳过该卡片的更新
+			const rowCard = card.getRowData(); // 获取不带ID的未加工数据
+			await store.value.setItem(id, rowCard);
+			console.log("成功更新卡片", card);
 		}
 		refreshStore();
 	};
 
 	//f 删除卡片
-	const deleteCard = async (card: Card) => {
-		// 先查找卡片
-		const id = await findCardId((currCard: Card) => {
-			return (
-				card.source.url === currCard.source.url &&
-				card.preview.url === currCard.preview.url
+	const deleteCard = async (cards: Card[]) => {
+		for (const card of cards) {
+			// 先查找卡片在仓库的id
+			const id = await findCardId(
+				(c) =>
+					card.source.url === c.source.url && card.preview.url === c.preview.url
 			);
-		});
-		if (!id) return;
-		await store.value.removeItem(id);
+			if (!id) continue; //如果id无效就跳过该卡片的取消收藏
+			await store.value.removeItem(id);
+			console.log("成功从Favorite仓库删除卡片", card);
+		}
 		refreshStore();
 	};
 
 	//f 取消收藏卡片
-	const unFavoriteCard = async (card: Card) => {
-		// 先查找卡片
-		const id = await findCardId((currCard: Card) => {
-			return (
-				card.source.url === currCard.source.url &&
-				card.preview.url === currCard.preview.url
+	const unFavoriteCard = async (cards: Card[]) => {
+		for (const card of cards) {
+			// 先查找卡片在仓库的id
+			const id = await findCardId(
+				(c) =>
+					card.source.url === c.source.url && card.preview.url === c.preview.url
 			);
-		});
-		if (!id) return;
-		await store.value.removeItem(id);
+			if (!id) continue; //如果id无效就跳过该卡片的取消收藏
+			await store.value.removeItem(id);
+			console.log("成功取消收藏卡片", card);
+		}
 		refreshStore();
 	};
 
 	//f 查找卡片id
 	const findCardId = async (
+		/** 匹配函数 */
 		matchComparator: (currCard: Card) => boolean
 	): Promise<string | undefined> => {
 		// 先刷新仓库
@@ -126,6 +151,7 @@ export default defineStore("FavoriteStore", () => {
 
 	//f 查找卡片
 	const findCard = async (
+		/** 匹配函数 */
 		matchComparator: (currCard: Card) => boolean
 	): Promise<Card | undefined> => {
 		// 先刷新仓库
@@ -147,12 +173,15 @@ export default defineStore("FavoriteStore", () => {
 		return cardList.value.filter((c) => ids.includes(c.id)) || [];
 	};
 
-	//f 判断是否包含卡片
-	const isInclude = async (card: Card) => {
+	//f 判断卡片是否存在
+	/** 若source.url和preview.url相同则视为同一张卡片 */
+	const isExist = async (card: Card) => {
 		// 先刷新仓库
 		await refreshStore();
+		// 判断是否包含卡片
 		return cardList.value.some(
 			(c) =>
+				//s 需要source.url和preview.url相同才视为同一张卡片
 				c.source.url === card.source.url && c.preview.url === card.preview.url
 		);
 	};
@@ -167,8 +196,12 @@ export default defineStore("FavoriteStore", () => {
 		refreshStore,
 		clearStore,
 		addCard,
+		updateCard,
 		deleteCard,
-		isInclude,
+		unFavoriteCard,
+		findCard,
+		findCardById,
+		isExist,
 		downloadCards,
 	};
 });

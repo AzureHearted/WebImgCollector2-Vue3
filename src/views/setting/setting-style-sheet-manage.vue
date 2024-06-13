@@ -113,10 +113,10 @@
 	onMounted(() => {
 		console.log("样式管理器挂载！");
 		// 组件挂载完成后就获取样式表
-		getStyleSheets();
+		// getStyleSheets();
 	});
 	onActivated(() => {
-		getStyleSheets();
+		// getStyleSheets();
 	});
 
 	const styleSheetList = ref<StyleSheet[]>([]);

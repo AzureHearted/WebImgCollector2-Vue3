@@ -30,7 +30,6 @@
 <script setup lang="ts">
 	import { ref, onMounted, defineAsyncComponent } from "vue";
 	import { useGlobalStore, usePatternStore } from "@/stores";
-
 	// 异步导入Layout组件
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")
@@ -67,7 +66,7 @@
 		height: unset;
 		inset: 0;
 		text-align: left;
-		background-color: transparent;
+		background: transparent;
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
 		z-index: 2147483646;

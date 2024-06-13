@@ -1,7 +1,12 @@
 <template>
 	<div class="layout-app-bar">
 		<!-- 标题 -->
-		<div class="layout-app-bar__title">Web Img Collector 2</div>
+		<div class="layout-app-bar__title">
+			<n-gradient-text type="primary"> Web Img Collector 2 </n-gradient-text>
+			<n-tag type="info" size="tiny" round :bordered="false">
+				{{ VERSION }}
+			</n-tag>
+		</div>
 		<el-button
 			class="layout-app-bar__close-button"
 			type="danger"
@@ -17,9 +22,10 @@
 </template>
 
 <script setup lang="ts">
-	import { storeToRefs } from "pinia";
-	import useGlobalStore from "@/stores/Global"; //导入全局仓库
+	import { useGlobalStore } from "@/stores"; //导入全局仓库
+	import { GM_info } from "$";
 	const globalStore = useGlobalStore();
+	const VERSION = GM_info.script.version; // 导入版本号
 </script>
 
 <style lang="scss" scoped>

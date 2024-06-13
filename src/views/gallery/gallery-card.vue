@@ -11,9 +11,11 @@
 					<!-- 复选框 -->
 					<div class="card-checkbox">
 						<BaseCheckbox
+							v-if="showCheckBox"
 							:checked="data.isSelected"
 							@change="emits('change:selected', $event)" />
 						<BaseCheckbox
+							v-if="showFavoriteButton"
 							:checked="data.isFavorite"
 							checked-color="red"
 							@change="emits('toggle-favorite', $event)">
@@ -30,8 +32,9 @@
 					<!-- 卡片按钮组 -->
 					<div class="card-button-group">
 						<el-button-group size="small">
-							<!-- 删除 -->
+							<!--s 删除 -->
 							<el-button
+								v-if="showDeleteButton"
 								type="danger"
 								@click="emits('delete', data.id)"
 								v-ripple>
@@ -41,7 +44,7 @@
 							</el-button>
 						</el-button-group>
 						<el-button-group size="small">
-							<!-- 重命名 -->
+							<!--s 重命名 -->
 							<el-button type="primary" @click="rename(data)" v-ripple>
 								<template #icon>
 									<i-ep-edit />
@@ -49,7 +52,7 @@
 							</el-button>
 						</el-button-group>
 						<el-button-group size="small">
-							<!-- 在页面中定位 -->
+							<!--s 在页面中定位 -->
 							<el-button
 								type="primary"
 								@click="toLocate(data)"
@@ -59,21 +62,22 @@
 									<i-material-symbols-location-on-outline />
 								</template>
 							</el-button>
-							<!-- 下载(图片类) -->
+							<!--s 下载(图片类) -->
 							<el-button
 								v-if="
-									data.source.meta.type === 'image' ||
-									data.preview.meta.type === 'image'
+									(data.source.meta.type === 'image' ||
+										data.preview.meta.type === 'image') &&
+									showDownloadButton
 								"
 								:loading="data.loading"
-								type="default"
+								type="success"
 								@click="emits('download', data.id)"
 								v-ripple>
 								<template #icon>
 									<i-material-symbols-download />
 								</template>
 							</el-button>
-							<!-- 打开(网址类) -->
+							<!--s 打开(网址类) -->
 							<el-button
 								v-if="data.source.meta.type === 'html'"
 								type="default"
@@ -133,7 +137,8 @@
 		<!-- 卡片底部 -->
 		<template #footer>
 			<div class="gallery-card-footer">
-				<!-- 尺寸信息 -->
+				<n-flex :size="4"> </n-flex>
+				<!--s 尺寸信息 -->
 				<var-chip
 					v-if="data.source.meta.type === 'image'"
 					type="primary"
@@ -141,7 +146,7 @@
 					:round="false">
 					{{ data.source.meta.width }}x{{ data.source.meta.height }}
 				</var-chip>
-				<!-- 扩展名信息 -->
+				<!--s 扩展名信息 -->
 				<var-chip
 					v-if="!!data.source.meta.ext"
 					type="success"
@@ -149,15 +154,23 @@
 					:round="false">
 					{{ data.source.meta.ext }}
 				</var-chip>
-				<!-- 网页标签 -->
+				<!--s 网页标签 -->
 				<var-chip
 					v-if="data.source.meta.type === 'html'"
-					type="info"
+					type="warning"
 					size="mini"
 					:round="false">
 					网页
 				</var-chip>
-				<!-- 描述标签 -->
+				<!--s 文件大小信息 -->
+				<var-chip
+					v-if="!!data.source.blob && !!data.source.blob.size"
+					type="info"
+					size="mini"
+					:round="false">
+					{{ size }}
+				</var-chip>
+				<!--s 描述标签 -->
 				<el-tooltip
 					:content="data.description.title.trim()"
 					placement="top-start">
@@ -169,33 +182,28 @@
 						{{ data.description.title.trim() }}
 					</var-chip>
 				</el-tooltip>
-				<!-- 文件大小信息 -->
-				<var-chip
-					v-if="!!data.source.blob && !!data.source.blob.size"
-					type="info"
-					size="mini"
-					:round="false">
-					{{ size }}
-				</var-chip>
 			</div>
 		</template>
 	</BaseImgCard>
 </template>
 
 <script setup lang="ts">
-	import { computed,  withDefaults, getCurrentInstance } from "vue";
+	import { computed, withDefaults, getCurrentInstance } from "vue";
 	import type { ComputedRef } from "vue";
 	import BaseImgCard from "@/components/base/base-img-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
-	import type { BaseCard } from "@/stores/CardStore/interface";
 	import Card from "@/stores/CardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 
 	const { appContext } = getCurrentInstance()!;
 
 	// 导入公用TS库
-	import { byteAutoUnit, isMobile } from "@/utils/common";
+	import {
+		byteAutoUnit,
+		isMobile,
+		legalizationPathString,
+	} from "@/utils/common";
 
 	// 导入svg
 	import htmlTypeImg from "@svg/html.svg";
@@ -211,11 +219,23 @@
 		defineProps<{
 			data: Card;
 			viewportSelector?: string;
+			showCheckBox?: boolean;
+			showDeleteButton?: boolean;
+			showDownloadButton?: boolean;
+			showFavoriteButton?: boolean;
+			showToLocateButton?: boolean;
 		}>(),
-		{}
+		{
+			showCheckBox: true,
+			showDeleteButton: true,
+			showDownloadButton: true,
+			showFavoriteButton: true,
+			showToLocateButton: true,
+		}
 	);
 	const emits = defineEmits<{
-		(e: "change:selected", val: boolean): Promise<void>;
+		(e: "change:selected", val: boolean): Promise<void>; // 选中状态变化事件
+		(e: "change:title", id: string, val: string): Promise<void>; // 标题变化事件
 		(e: "toggle-favorite", val: boolean): Promise<void>; // 卡片收藏事件
 		(e: "loaded", id: string, info: returnInfo): Promise<void>; // 卡片加载成功事件
 		(e: "download", id: string): Promise<void>; // 下载事件
@@ -253,7 +273,7 @@
 	});
 
 	// 页面定位元素
-	function toLocate(item: BaseCard) {
+	function toLocate(item: Card) {
 		const dom = item.source.dom;
 		if (!dom) return;
 		// console.log("定位元素", item);
@@ -265,7 +285,7 @@
 		globalStore.openWindow = false;
 	}
 	// 重命名
-	function rename(item: BaseCard) {
+	function rename(item: Card) {
 		// 删除卡片数据模型中的卡片。
 		ElMessageBox.prompt(
 			`重命名卡片"${item.description.title}"为……`,
@@ -275,16 +295,16 @@
 				confirmButtonText: "确认",
 				cancelButtonText: "取消",
 				inputPlaceholder: "请输入新卡片名称",
-				inputPattern: /^[^\\/:*?"<>|]+$/,
-				inputErrorMessage: '文件名不合法(文件名不能出现字符:\\/:*?"<>|)',
-				inputValue: item.description.title,
+				inputValue: legalizationPathString(item.description.title),
 				draggable: true,
 			},
 			appContext
 		)
 			.then(({ value: newName }) => {
 				// 确认
-				item.description.title = newName;
+				item.description.title = legalizationPathString(newName);
+				// 触发标题变化事件
+				emits("change:title", item.id!, item.description.title);
 			})
 			.catch(() => {
 				// 取消
@@ -366,7 +386,7 @@
 
 	// 卡片底部
 	.gallery-card-footer {
-		padding: 4px;
+		padding: 2px;
 		// margin: 2px;
 		display: flex;
 		flex-flow: row wrap;
@@ -385,10 +405,11 @@
 		:deep(.var-chip) {
 			justify-content: start;
 			max-width: 50%;
-			// overflow: hidden;
-			// text-overflow: ellipsis;
+			overflow: hidden;
+			text-overflow: ellipsis;
 			&.title-chip {
-				max-width: 25%;
+				max-width: 50%;
+				flex: 1;
 			}
 			& > span {
 				overflow: hidden;

@@ -692,6 +692,7 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 	let meta: BaseMeta;
 	const img = new Image();
 	img.src = url;
+	img.referrerPolicy = "no-referrer-when-downgrade";
 	return new Promise((resolve) => {
 		if (img.complete) {
 			// console.log("图片信息获取-->成功!");

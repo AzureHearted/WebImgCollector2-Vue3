@@ -59,7 +59,7 @@
 	// props定义
 	const props = withDefaults(
 		defineProps<{
-			data: IData[]; // 数据源，包含图片URL和缩略图URL等信息。
+			data: any[]; // 数据对象
 			keyProp?: string; // 数据源中用于作为唯一标识的属性名。
 			itemPadding?: number | string; // 每个item之间的间距。
 			itemBaseWidth?: number; // 每个item的基准宽度。
@@ -69,7 +69,7 @@
 			loading?: boolean;
 		}>(),
 		{
-			data: () => [] as IData[], // 默认值为空数组。
+			data: () => [] as any[], // 默认值为空数组。
 			keyProp: "id", // 默认值为"id"。
 			itemPadding: "2px", // 默认值为
 			itemBaseWidth: 220, // 默认值为220。
@@ -89,7 +89,7 @@
 
 	// 数据信息
 	const dataInfo = reactive({
-		list: [] as IData[],
+		list: [] as any[],
 	});
 
 	// 状态信息

@@ -93,7 +93,7 @@
 
 	watch(
 		() => props.src,
-		(newSrc, oldSrc) => {
+		(newSrc) => {
 			// console.log("src变化", newSrc, oldSrc);
 			loadImage(newSrc);
 		}

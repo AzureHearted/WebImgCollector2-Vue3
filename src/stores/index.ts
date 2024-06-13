@@ -1,4 +1,4 @@
-import useGlobalStore from "./Global"; // 全局仓库
+import useGlobalStore from "./GlobalStore"; // 全局仓库
 import useLoadingStore from "./LoadingStore"; // 进度条仓库
 import useCardStore from "./CardStore"; // 卡片仓库
 import usePatternStore from "./PatternStore"; // 规则仓库

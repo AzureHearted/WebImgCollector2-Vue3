@@ -36,16 +36,16 @@
 				:value="cardStore.validCardList.length">
 				<var-menu
 					placement="bottom-start"
-					:default-style="false"
+					:same-width="false"
 					:trigger="isMobile() ? 'click' : 'hover'"
+					close-on-click-reference
 					:teleport="false">
-					<var-button-group type="success">
-						<!-- 加载按钮 -->
+					<var-button-group type="primary">
+						<!--s 加载按钮 -->
 						<var-button
 							@click.stop="getCards"
 							:loading="loadingStore.loading"
-							block
-							icon-container>
+							block>
 							加载
 						</var-button>
 						<var-button style="padding: 0 4px">
@@ -56,20 +56,34 @@
 						</var-button>
 					</var-button-group>
 					<template #menu>
-						<var-button-group vertical>
-							<!-- 清空按钮 -->
-							<var-button type="danger" icon-container block @click="clear">
-								所有清空
-							</var-button>
-							<!-- 重置过滤器 -->
-							<var-button
-								type="warning"
-								icon-container
-								block
-								@click="resetFilters">
-								重置过滤器
-							</var-button>
-						</var-button-group>
+						<var-cell
+							@click="reload"
+							title="重新加载"
+							v-if="!loadingStore.loading"
+							ripple>
+							<template #icon>
+								<i-ant-design-reload-outlined />
+							</template>
+						</var-cell>
+						<var-cell @click="resetFilters" title="重置过滤器" ripple>
+							<template #icon>
+								<Icon
+									icon="material-symbols:reset-settings-rounded"
+									width="1.2em"
+									height="1.2em" />
+							</template>
+						</var-cell>
+						<var-cell
+							@click="clear"
+							title="清空所有"
+							v-if="
+								!!cardStore.filteredCardList.length && !loadingStore.loading
+							"
+							ripple>
+							<template #icon>
+								<i-mdi-delete-empty style="color: red" />
+							</template>
+						</var-cell>
 					</template>
 				</var-menu>
 			</el-badge>
@@ -110,7 +124,6 @@
 				:value="`${checkedCardList.length} (${checkedTotalSize})`">
 				<var-menu
 					placement="bottom-start"
-					:default-style="false"
 					:trigger="isMobile() ? 'click' : 'hover'"
 					:teleport="false">
 					<var-button-group type="primary">
@@ -120,7 +133,9 @@
 							下载
 						</var-button>
 						<var-button
-							:disabled="!cardStore.validCardList.length"
+							:disabled="
+								!cardStore.filteredCardList.length || loadingStore.loading
+							"
 							style="padding: 0 4px">
 							<i-material-symbols-arrow-drop-down-rounded
 								style="fill: white"
@@ -129,12 +144,29 @@
 						</var-button>
 					</var-button-group>
 					<template #menu>
-						<var-button-group vertical>
-							<var-button @click="downloadAll"> 全部下载 </var-button>
-							<var-button type="danger" @click="deleteSelected">
-								删除选中项
-							</var-button>
-						</var-button-group>
+						<var-cell title="全部下载" @click="downloadAll" ripple>
+							<template #icon>
+								<i-mdi-auto-download />
+							</template>
+						</var-cell>
+						<var-cell
+							title="删除选中项"
+							@click="deleteSelected"
+							v-if="!!cardStore.selectionCardList.length"
+							ripple>
+							<template #icon>
+								<i-mdi-delete-sweep style="color: red" />
+							</template>
+						</var-cell>
+						<var-cell
+							title="收藏选中项"
+							@click="favoriteSelected"
+							v-if="!!cardStore.selectionCardList.length"
+							ripple>
+							<template #icon>
+								<i-mdi-book-favorite style="color: purple" />
+							</template>
+						</var-cell>
 					</template>
 				</var-menu>
 			</el-badge>
@@ -208,15 +240,22 @@
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/CardStore/interface";
 	import BaseImg from "@/components/base/base-img.vue";
+	import { Icon } from "@iconify/vue";
 
 	// 导入公用ts库
 	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入仓库
-	import { useCardStore, useLoadingStore, usePatternStore } from "@/stores";
+	import {
+		useCardStore,
+		useLoadingStore,
+		usePatternStore,
+		useFavoriteStore,
+	} from "@/stores";
 	import { Pattern } from "@/stores/PatternStore/class/Pattern";
 
 	const cardStore = useCardStore();
+	const favoriteStore = useFavoriteStore();
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
 
@@ -342,64 +381,76 @@
 		);
 	};
 
-	// 获取卡片
+	//f 获取卡片
 	async function getCards() {
 		await cardStore.getPageCard();
 	}
 
-	// 过滤器改变
-	function filterChange(key: "width" | "height", value: [number, number]) {
-		// console.log("过滤器变化", key, value);
-		cardStore.filters.size[key] = value; // 更新仓库过滤器
+	//f 重新加载
+	async function reload() {
+		await clear(); // 先清空
+		await getCards(); // 后重载
 	}
 
-	// 全选
-	function checkAll() {
-		cardStore.filteredCardList.forEach((c) => (c.isSelected = true));
-	}
-
-	// 反选
-	function inverseAll() {
-		cardStore.filteredCardList.forEach((c) => (c.isSelected = !c.isSelected));
-	}
-
-	// 取消
-	function cancel() {
-		cardStore.validCardList.forEach((c) => (c.isSelected = false));
-	}
-
-	// 清空
-	function clear() {
+	//f 清空
+	async function clear() {
 		cardStore.clearCardList();
 		filters.size.width = cardStore.filters.size.width;
 		filters.size.height = cardStore.filters.size.height;
 	}
 
-	// 重置过滤器
+	//f 过滤器改变
+	function filterChange(key: "width" | "height", value: [number, number]) {
+		// console.log("过滤器变化", key, value);
+		cardStore.filters.size[key] = value; // 更新仓库过滤器
+	}
+
+	//f 全选
+	function checkAll() {
+		cardStore.filteredCardList.forEach((c) => (c.isSelected = true));
+	}
+
+	//f 反选
+	function inverseAll() {
+		cardStore.filteredCardList.forEach((c) => (c.isSelected = !c.isSelected));
+	}
+
+	//f 取消
+	function cancel() {
+		cardStore.validCardList.forEach((c) => (c.isSelected = false));
+	}
+
+	//f 重置过滤器
 	function resetFilters() {
 		cardStore.resetFilters();
 		filters.size.width = cardStore.filters.size.width;
 		filters.size.height = cardStore.filters.size.height;
 	}
 
-	// 下载选中项
+	//f 下载选中项
 	function downloadSelected() {
-		const cards = cardStore.validCardList.filter((x) => x.isSelected)||[];
+		const cards = cardStore.validCardList.filter((x) => x.isSelected) || [];
 		cardStore.downloadCards(cards);
 	}
 
-	// 下载全部
+	//f 下载全部
 	function downloadAll() {
-		const cards = cardStore.filteredCardList||[];
+		const cards = cardStore.filteredCardList || [];
 		cardStore.downloadCards(cards);
 	}
 
-	// 删除选中项
+	//f 删除选中项
 	function deleteSelected() {
 		const ids = cardStore.validCardList
 			.filter((x) => x.isSelected)
 			.map((x) => x.id);
 		cardStore.removeCard(ids);
+	}
+
+	//f 收藏选中项
+	function favoriteSelected() {
+		favoriteStore.addCard(cardStore.selectionCardList); // 添加卡片到Favorite仓库
+		cardStore.selectionCardList.forEach((c) => (c.isFavorite = true)); // 更新卡片收藏状态
 	}
 </script>
 
@@ -507,5 +558,8 @@
 
 	:deep(.wic2-n-base-select-option__content) {
 		flex: 1;
+	}
+	:deep(.var-menu__menu) {
+		width: max-content;
 	}
 </style>

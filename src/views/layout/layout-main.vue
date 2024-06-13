@@ -8,9 +8,18 @@
 				width="130"
 				:collapsed="collapsed"
 				show-trigger
-				trigger-style="transition: 0.5s;z-index:10000"
+				:trigger-style="{
+					transition: '0.5s',
+					zIndex: 10000,
+					scale: isMobile() ? 1.5 : 1,
+				}"
 				:collapsed-trigger-style="
-					isMobile() ? 'transform: translateX(80%) translateY(-50%)' : {}
+					isMobile()
+						? {
+								transform: ' translateX(60%) translateY(-50%) ',
+								scale: 1.5,
+						  }
+						: {}
 				"
 				@collapse="collapsed = true"
 				@expand="collapsed = false">
