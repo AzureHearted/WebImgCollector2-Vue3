@@ -27,12 +27,12 @@
 		<!-- 操作栏 -->
 		<div class="control-group-button">
 			<!-- 控制按钮组 -->
-			<el-badge
-				:offset="[-8, 0]"
+			<n-badge
+				:offset="[-8, 2]"
 				style="z-index: 3"
 				type="info"
 				:max="999"
-				:hidden="!cardStore.validCardList.length"
+				:show="!!cardStore.validCardList.length"
 				:value="cardStore.validCardList.length">
 				<var-menu
 					placement="bottom-start"
@@ -86,24 +86,24 @@
 						</var-cell>
 					</template>
 				</var-menu>
-			</el-badge>
+			</n-badge>
 		</div>
 		<!-- 排序方式 -->
 		<div class="sort-method-select">
 			<n-select
-				v-model:value="cardStore.sort.method"
+				v-model:value="sort.method"
 				placeholder="请选择一个排序方式"
 				:to="false"
-				:options="cardStore.sort.groups" />
+				:options="sort.groups" />
 		</div>
 		<!-- 选择器 -->
 		<div class="control-group-button">
-			<el-badge
-				:offset="[-118, 0]"
+			<n-badge
+				:offset="[-116, 2]"
 				style="z-index: 2"
-				type="primary"
+				type="success"
 				:max="999"
-				:hidden="!cardStore.filteredCardList.length"
+				:show="!!cardStore.filteredCardList.length"
 				:value="cardStore.filteredCardList.length">
 				<!-- 选择器按钮组 -->
 				<var-button-group class="control-button-group">
@@ -111,17 +111,17 @@
 					<var-button type="info" @click="inverseAll"> 反选 </var-button>
 					<var-button @click="cancel"> 取消 </var-button>
 				</var-button-group>
-			</el-badge>
+			</n-badge>
 		</div>
 		<!-- 下载控制 -->
 		<div class="control-group-button">
 			<!-- 下载按钮 -->
-			<el-badge
-				type="success"
+			<n-badge
+				:offset="[0, 2]"
 				style="z-index: 2"
 				:max="999"
-				:hidden="!checkedCardList.length"
-				:value="`${checkedCardList.length} (${checkedTotalSize})`">
+				:show="!!checkedCardList.length"
+				:value="`${checkedCardList.length}${checkedTotalSizeTip}`">
 				<var-menu
 					placement="bottom-start"
 					:trigger="isMobile() ? 'click' : 'hover'"
@@ -169,7 +169,7 @@
 						</var-cell>
 					</template>
 				</var-menu>
-			</el-badge>
+			</n-badge>
 		</div>
 		<!-- 过滤控制器 -->
 		<div class="control-group">
@@ -210,8 +210,8 @@
 					v-model="filters.size.width"
 					range
 					:step="1"
-					:max="cardStore.info.size.width[1]"
 					:min="cardStore.info.size.width[0]"
+					:max="cardStore.info.size.width[1]"
 					:marks="cardStore.filters.size.marks"
 					@change="filterChange('width', $event as [number, number])" />
 			</div>
@@ -223,8 +223,8 @@
 					v-model="filters.size.height"
 					range
 					:step="1"
-					:max="cardStore.info.size.height[1]"
 					:min="cardStore.info.size.height[0]"
+					:max="cardStore.info.size.height[1]"
 					:marks="cardStore.filters.size.marks"
 					@change="filterChange('height', $event as [number, number])" />
 			</div>
@@ -235,10 +235,11 @@
 <script setup lang="ts">
 	import { h, ref, reactive, computed, watch } from "vue";
 	import type { VNodeChild } from "vue";
-	import { NEllipsis, NTag } from "naive-ui";
+	import { NEllipsis, NTag, NBadge } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
 	import type { ComputedRef } from "vue";
 	import type { BaseCard } from "@/stores/CardStore/interface";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
 	import BaseImg from "@/components/base/base-img.vue";
 	import { Icon } from "@iconify/vue";
 
@@ -246,20 +247,19 @@
 	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入仓库
-	import {
-		useCardStore,
-		useLoadingStore,
-		usePatternStore,
-		useFavoriteStore,
-	} from "@/stores";
-	import { Pattern } from "@/stores/PatternStore/class/Pattern";
+	import { storeToRefs } from "pinia";
+	import useLoadingStore from "@/stores/LoadingStore";
+	import usePatternStore from "@/stores/PatternStore";
+	import useCardStore from "@/stores/CardStore";
+	import useFavoriteStore from "@/stores/FavoriteStore";
 
 	const cardStore = useCardStore();
+	const { sort } = storeToRefs(cardStore);
 	const favoriteStore = useFavoriteStore();
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
 
-	// 过滤器定义
+	//s 过滤器定义
 	const filters = reactive({
 		size: {
 			width: ref([
@@ -294,13 +294,25 @@
 	});
 
 	// 计算被选中的卡片对应的体积大小总和
-	const checkedTotalSize: ComputedRef<string> = computed(() => {
-		const totalByte = checkedCardList.value.reduce(
-			(total, curr) =>
-				total + (curr.source.blob! && curr.source.blob.size) || 0,
-			0
-		);
-		return byteAutoUnit(totalByte);
+	const checkedTotalSizeTip: ComputedRef = computed(() => {
+		let existUnDownload = false; // 标记是否存在为下载的卡片
+		// 先计算尺寸大小
+		const totalByte = checkedCardList.value.reduce((total, curr) => {
+			if (curr.source.blob) {
+				return total + curr.source.blob.size;
+			} else {
+				existUnDownload = true;
+				return total;
+			}
+		}, 0);
+		// 合成显示文本
+		if (totalByte) {
+			return ` (${byteAutoUnit(totalByte)})${
+				existUnDownload ? " 存在未下载" : ""
+			}`;
+		} else {
+			return "";
+		}
 	});
 
 	// f控制相关
@@ -340,7 +352,7 @@
 		);
 	};
 
-	// 选择器多选Tag渲染函数
+	//f 选择器多选Tag渲染函数
 	const renderTag: SelectRenderTag = ({ option, handleClose }) => {
 		return h(
 			NTag,
@@ -359,7 +371,7 @@
 		);
 	};
 
-	// 带数量的选项标签渲染函数
+	//f 带数量的选项标签渲染函数
 	const renderOptionLabelWithCount = (option: SelectOption): VNodeChild => {
 		return h(
 			"div",
@@ -369,13 +381,16 @@
 			[
 				h(NEllipsis, {}, { default: () => option.label as string }),
 				h(
-					NTag,
+					NBadge,
 					{
 						type: "info",
-						size: "small",
+						max: 999,
 						style: "margin-left:auto;",
 					},
-					{ default: () => option.count + "个" }
+					{
+						value: () =>
+							(option.count as number) <= 999 ? option.count : "999+" + "个",
+					}
 				),
 			]
 		);

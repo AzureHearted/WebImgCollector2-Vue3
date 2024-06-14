@@ -33,7 +33,9 @@
 	import type { returnInfo } from "@/components/base/base-img.vue";
 	import GalleryCard from "./gallery-card.vue";
 	import { isMobile } from "@/utils/common";
-	import { useCardStore, useFavoriteStore } from "@/stores";
+	// import { useCardStore, useFavoriteStore } from "@/stores";
+	import useCardStore from "@/stores/CardStore";
+	import useFavoriteStore from "@/stores/FavoriteStore";
 
 	const cardStore = useCardStore();
 	const favoriteStore = useFavoriteStore();

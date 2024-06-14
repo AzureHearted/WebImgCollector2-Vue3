@@ -364,3 +364,47 @@ export function legalizationPathString(str: string) {
 		.replace(">", "＞")
 		.replace("$", "＄");
 }
+
+//f 判断两个URL字符串是否相等(可选择是否包含search查询部分)
+export function isEqualUrl(
+	url1: string,
+	url2: string,
+	option?: {
+		/**是否排除查询字符串(默认值:false) */
+		excludeSearch?: boolean;
+	}
+) {
+	const { excludeSearch: includeSearch } = {
+		...({ includeSearch: false } as { includeSearch: boolean }), //s 默认配置对象
+		...option, //s 用户传入的配置对象
+	};
+	//s 判断是否需要判断查询字符串
+	if (includeSearch) {
+		let oURL1: URL | false = false,
+			oURL2: URL | false = false;
+
+		// 分别尝试转换两个url字符串未URL对象
+		try {
+			oURL1 = new URL(url1);
+		} catch (error) {
+			console.log(`url字符串：${url1} 转换为URL对象失败!`, error);
+		}
+		try {
+			oURL2 = new URL(url2);
+		} catch (error) {
+			console.log(`url字符串：${url2} 转换为URL对象失败!`, error);
+		}
+
+		// 判断是否两个url字符串都是合法url
+		if (oURL1 instanceof URL && oURL2 instanceof URL) {
+			// 如果两个URL都合法
+			return oURL1.origin + oURL1.pathname === oURL2.origin + oURL2.pathname;
+		} else {
+			// 如果两个URL有不合法URL对象(直接比较两个字符串结果是否相同)
+			return url1 === url2;
+		}
+	} else {
+		// 如果不需要判断查询字符串就直接比较两个字符串是否相等
+		return url1 === url2;
+	}
+}

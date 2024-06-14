@@ -3,8 +3,9 @@ import type {
 	ToolbarItemsType,
 } from "@fancyapps/ui/types/Fancybox/plugins";
 import type { Fancybox } from "@fancyapps/ui";
-import { useCardStore, useFavoriteStore } from "@/stores";
 import { GM_openInTab } from "$";
+import useCardStore from "@/stores/CardStore";
+import useFavoriteStore from "@/stores/FavoriteStore";
 const cardStore = useCardStore();
 const favoriteStore = useFavoriteStore();
 // import type { Fancybox } from "@fancyapps/ui/types";

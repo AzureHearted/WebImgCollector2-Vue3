@@ -37,12 +37,15 @@ export default defineStore("CardStore", () => {
 		// 所有被排除的卡片集合
 		excludeIdSet: new Set() as Set<Card["id"]>,
 		// 类型与数量的映射表
-		typeMap: new Map<string, number>([]),
+		typeMap: new Map<string, number>(),
 		// 扩展名与数量的映射表
-		extensionMap: new Map<string, number>([]),
+		extensionMap: new Map<string, number>(),
 		// 记录所有链接与Blob的映射表
 		urlBlobMap: new Map<string, Blob>(),
 	});
+	// 设置初始类型
+	data.typeMap.set("image", 0);
+	data.typeMap.set("html", 0);
 
 	//s 卡片数据信息定义，用于过滤。
 	const info = reactive({
@@ -244,13 +247,6 @@ export default defineStore("CardStore", () => {
 					count: data.typeMap.get(x),
 				};
 			});
-		if (!options.length) {
-			options.push({
-				label: "图片",
-				value: "image",
-				count: 0,
-			});
-		}
 		return options;
 	});
 
