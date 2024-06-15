@@ -22,8 +22,8 @@
 </template>
 
 <script setup lang="ts">
-	import { useGlobalStore } from "@/stores"; //导入全局仓库
 	import { GM_info } from "$";
+	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	const globalStore = useGlobalStore();
 	const VERSION = GM_info.script.version; // 导入版本号
 </script>

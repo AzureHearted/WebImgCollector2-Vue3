@@ -33,11 +33,9 @@
 					:options="menuOptions" />
 			</n-layout-sider>
 			<n-layout class="main__content">
-				<transition appear>
-					<keep-alive :include="/gallery|pattern|favorite|setting/i" :max="10">
-						<component :is="nowPage" />
-					</keep-alive>
-				</transition>
+				<keep-alive :include="/gallery|pattern|favorite|setting/i" :max="10">
+					<component :is="nowPage" />
+				</keep-alive>
 			</n-layout>
 		</n-layout>
 	</div>
@@ -55,10 +53,10 @@
 	import Setting from "@/views/setting/setting-index.vue";
 	import Favorite from "@/views/favorite/favorite-index.vue";
 	import Test from "@/views/test/test-index.vue";
+	import { isMobile } from "@/utils/common";
 
 	import { storeToRefs } from "pinia";
-	import { useGlobalStore } from "@/stores";
-	import { isMobile } from "@/utils/common";
+	import useGlobalStore from "@/stores/GlobalStore";
 	const globalStore = useGlobalStore();
 	const { tab: activeKey, navCollapse: collapsed } = storeToRefs(globalStore);
 

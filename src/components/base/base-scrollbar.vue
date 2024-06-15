@@ -31,7 +31,6 @@
 					class="base-scrollbar__bar bar__is-vertical"
 					:class="{ 'is-dragging': scrollbar.vertical.isDragging }"
 					v-show="verticalScrollbarVisible"
-					@wheel.prevent
 					@mousedown.stop
 					@mouseup.stop
 					@click.stop
@@ -47,6 +46,12 @@
 					class="base-scrollbar__bar bar__is-horizontal"
 					:class="{ 'is-dragging': scrollbar.horizontal.isDragging }"
 					v-show="horizontalScrollbarVisible"
+					@mousedown.stop
+					@mouseup.stop
+					@click.stop
+					@touchstart.stop
+					@touchmove.prevent
+					@touchend.stop
 					:style="horizontalStyle"></div>
 			</transition>
 			<!-- 回到顶部按钮 -->
@@ -77,10 +82,13 @@
 		onMounted,
 		computed,
 		watch,
+		nextTick,
 		defineProps,
 		withDefaults,
 		watchEffect,
 		onUpdated,
+		onActivated,
+		onDeactivated,
 	} from "vue";
 	import type { ComputedRef, CSSProperties } from "vue";
 	import { useScroll, useElementBounding, useDraggable } from "@vueuse/core";
@@ -137,17 +145,6 @@
 		};
 		// 获取配置参数
 		const { delay } = { ...defaultOptions, ...options };
-		// // 如果计时器还没结束就又出触发该函数就清除计时器(重置计时)
-		// if (timer) {
-		// 	clearTimeout(timer);
-		// 	timer = null;
-		// }
-
-		// // 设置计时器等待时间到达执行重新布局
-		// timer = window.setTimeout(() => {
-		// 	// console.log("触发 scrollbar 更新");
-		// 	update(); // 执行任务
-		// }, delay);
 
 		// 节流写法
 		if (!timer) {
@@ -176,6 +173,24 @@
 			isDragging: false,
 			x: 0,
 		},
+	});
+
+	//s 标记组件是否被冻结
+	const freeze = ref(false);
+
+	//* 组件被解冻时
+	onActivated(() => {
+		nextTick(() => {
+			update();
+		});
+		setTimeout(() => {
+			update();
+			freeze.value = false;
+		});
+	});
+	//* 组件被冻结时
+	onDeactivated(() => {
+		freeze.value = true;
 	});
 
 	// 滚动条DOM(垂直)

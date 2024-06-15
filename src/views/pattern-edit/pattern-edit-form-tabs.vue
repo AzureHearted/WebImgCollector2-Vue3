@@ -49,14 +49,13 @@
 
 <script lang="ts" setup>
 	import { ref } from "vue";
-	import type { TabsPaneContext } from "element-plus";
 
 	import FormSource from "./form/form-source.vue";
 	import FormPreview from "./form/form-preview.vue";
 	import FormDescription from "./form/form-description.vue";
 
 	import { storeToRefs } from "pinia";
-	import { usePatternStore } from "@/stores";
+	import usePatternStore from "@/stores/PatternStore";
 
 	const patternStore = usePatternStore();
 	const { editingRule } = storeToRefs(patternStore);

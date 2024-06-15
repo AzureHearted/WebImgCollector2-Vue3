@@ -2,25 +2,25 @@
 	<div
 		ref="imgContainer"
 		class="img__container"
-		:class="{ loading: !state.loaded }">
+		:class="{ loading: !state.loaded && show }">
 		<!-- 图片主体 -->
 		<div
 			class="img__wrap"
 			:class="{
-				loading: !state.loaded,
-				show: state.show,
+				loading: !state.loaded && show,
+				show: state.show && show,
 				error: state.isError,
 			}"
 			:style="{ aspectRatio: aspectRatio }">
 			<slot>
 				<img
 					v-if="mounted"
+					v-show="show"
 					ref="imgDom"
 					v-lazy.src="src"
 					:draggable="draggable" />
 			</slot>
 		</div>
-
 		<!-- 其他内容(插槽) -->
 		<slot name="other"></slot>
 	</div>
@@ -33,6 +33,7 @@
 		ref,
 		reactive,
 		computed,
+		onUnmounted,
 		defineProps,
 		withDefaults,
 		defineEmits,
@@ -58,6 +59,7 @@
 			manualControl?: boolean;
 			draggable?: boolean; // 是否允许拖拽图片
 			initShow?: boolean;
+			show?: boolean; //是否显示图片
 		}>(),
 		{
 			src: "",
@@ -72,14 +74,20 @@
 			manualControl: false,
 			draggable: true, // 默认允许拖拽图片
 			initShow: false,
+			show: true,
 		}
 	);
 
 	const mounted = ref(false);
 	onMounted(() => {
+		// console.log("图片组件挂载");
 		nextTick(() => {
 			mounted.value = true;
 		});
+	});
+
+	onUnmounted(() => {
+		// console.log("图片组件卸载");
 	});
 
 	const imgContainer = ref<HTMLElement | null>(null);
@@ -378,13 +386,15 @@
 	.img__container {
 		position: relative;
 		box-sizing: border-box; // 盒子模型，确保边框不会影响内容的大小。
+		// background: rgba(0, 0, 0, 0.5);
+		background: transparent;
 		* {
 			box-sizing: border-box;
 		}
 	}
 	.img__wrap {
 		opacity: 0; //默认不显示
-		transition: 0.5s ease-in-out; // 添加过渡效果
+		transition: 0.5s ease-out; // 添加过渡效果
 	}
 	// 加载中的样式
 	.img__wrap.loading {
@@ -411,7 +421,6 @@
 		user-select: none;
 		/* 禁止图文拖拽 */
 		-webkit-user-drag: none;
-		transition: 0.5s ease-in-out; // 添加过渡效果
 	}
 
 	/* 图片加载动画 */

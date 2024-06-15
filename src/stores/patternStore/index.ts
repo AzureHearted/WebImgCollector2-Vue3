@@ -1,4 +1,4 @@
-import { ref, toRefs, reactive, computed } from "vue";
+import { ref, reactive, computed } from "vue";
 import type { ComputedRef } from "vue";
 import { defineStore } from "pinia";
 import { Pattern, defaultPattern } from "./class/Pattern";

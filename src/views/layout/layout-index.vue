@@ -1,18 +1,18 @@
 <template>
-	<section
+	<div
 		class="layout-container"
 		ref="containerDOM"
-		:class="{ open: globalStore.openWindow }"
-		@wheel.stop.passive>
+		@scroll.stop
+		:class="{ open: globalStore.openWindow }">
 		<AppBar class="layout-app-bar" />
 		<Main class="layout-main" />
-	</section>
+	</div>
 </template>
 
 <script setup lang="ts">
 	import { ref, onMounted, watch, onUnmounted, onUpdated } from "vue";
 
-	import { useGlobalStore } from "@/stores"; //导入全局仓库
+	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	const globalStore = useGlobalStore();
 
 	// 导入组件
@@ -23,10 +23,13 @@
 
 	watch(
 		() => globalStore.openWindow,
-		(val) => {
-			if (val) {
+		(isOpen) => {
+			if (isOpen) {
 				// 每当窗口打开后都自动聚焦到该容器
 				containerDOM.value?.focus();
+				// 页面滚动元素进行滚动
+			} else {
+				// 取消页面元素的滚动阻止事件
 			}
 		}
 	);
@@ -54,6 +57,7 @@
 		Fancybox.bind(listContainerDOM, itemSelector, {
 			...configFancybox,
 			parentEl: teleportToDOMs ? teleportToDOMs : listContainerDOM,
+			hideScrollbar: false,
 		});
 	}
 </script>
@@ -66,6 +70,7 @@
 		height: 100%;
 		display: flex;
 		flex-flow: column nowrap;
+		border: unset;
 
 		background: rgba(255, 255, 255, 0.3);
 		backdrop-filter: blur(10px);

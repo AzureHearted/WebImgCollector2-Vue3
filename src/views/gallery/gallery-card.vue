@@ -1,8 +1,10 @@
 <template>
 	<BaseImgCard
 		class="gallery-card"
+		background-color="transparent"
 		style="overflow: hidden; border: unset"
 		:data-show="isMobile()"
+		:data-visible="targetIsVisible"
 		:data-checked="data.isSelected">
 		<!-- 卡片顶部 -->
 		<template #header>
@@ -95,6 +97,10 @@
 		<!-- 卡片主体(图片) -->
 		<template #default>
 			<div
+				:style="{
+					aspectRatio: data.preview.meta.aspectRatio || 1,
+				}"
+				ref="imgWrapRef"
 				data-fancybox="web-img-collector"
 				:data-id="data.id"
 				:href="data.source.url"
@@ -105,6 +111,7 @@
 				<BaseImg
 					v-if="data.source.meta.type === 'image'"
 					:src="data.source.url"
+					:show="targetIsVisible"
 					use-thumb
 					:viewport-selector="viewportSelector"
 					:thumb="data.preview.url"
@@ -119,6 +126,7 @@
 					"
 					:viewport-selector="viewportSelector"
 					:src="data.preview.url"
+					:show="targetIsVisible"
 					:init-width="data.preview.meta.width"
 					:init-height="data.preview.meta.height"
 					@loaded="emits('loaded', data.id, $event)"
@@ -129,7 +137,7 @@
 					:init-show="true"
 					@loaded="emits('loaded', data.id, $event)"
 					:draggable="false">
-					<htmlTypeImg
+					<HtmlTypeImg
 						style="width: 100%; height: auto; transform: scale(0.5)" />
 				</BaseImg>
 			</div>
@@ -188,15 +196,16 @@
 </template>
 
 <script setup lang="ts">
-	import { computed, withDefaults, getCurrentInstance } from "vue";
+	import { ref, computed, withDefaults } from "vue";
 	import type { ComputedRef } from "vue";
 	import BaseImgCard from "@/components/base/base-img-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
 	import Card from "@/stores/CardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
-
-	const { appContext } = getCurrentInstance()!;
+	import { GM_openInTab } from "$";
+	import { ElMessageBox } from "@/plugin/element-plus";
+	import { useElementVisibility } from "@vueuse/core";
 
 	// 导入公用TS库
 	import {
@@ -206,13 +215,14 @@
 	} from "@/utils/common";
 
 	// 导入svg
-	import htmlTypeImg from "@svg/html.svg";
+	import HtmlTypeImg from "@svg/html.svg";
 
 	// 导入仓库
-	import { useGlobalStore } from "@/stores";
-	import { GM_openInTab } from "$";
-	import { ElMessageBox } from "@/plugin/element-plus";
+	import useGlobalStore from "@/stores/GlobalStore";
 	const globalStore = useGlobalStore();
+
+	const imgWrapRef = ref<HTMLElement | null>(null);
+	const targetIsVisible = useElementVisibility(imgWrapRef);
 
 	// const data = defineModel({ type: Card, required: true });
 	const props = withDefaults(
@@ -240,6 +250,7 @@
 		(e: "loaded", id: string, info: returnInfo): Promise<void>; // 卡片加载成功事件
 		(e: "download", id: string): Promise<void>; // 下载事件
 		(e: "delete", id: string): Promise<void>; // 删除事件
+		(e: "change:visible", val: boolean): Promise<void>; // 可见性发生变化
 	}>();
 
 	// 大小
@@ -287,19 +298,14 @@
 	// 重命名
 	function rename(item: Card) {
 		// 删除卡片数据模型中的卡片。
-		ElMessageBox.prompt(
-			`重命名卡片"${item.description.title}"为……`,
-			"重命名",
-			{
-				appendTo: ".web-img-collector-notification-container",
-				confirmButtonText: "确认",
-				cancelButtonText: "取消",
-				inputPlaceholder: "请输入新卡片名称",
-				inputValue: legalizationPathString(item.description.title),
-				draggable: true,
-			},
-			appContext
-		)
+		ElMessageBox.prompt(`重命名卡片"${item.description.title}"为……`, "重命名", {
+			appendTo: ".web-img-collector-notification-container",
+			confirmButtonText: "确认",
+			cancelButtonText: "取消",
+			inputPlaceholder: "请输入新卡片名称",
+			inputValue: legalizationPathString(item.description.title),
+			draggable: true,
+		})
 			.then(({ value: newName }) => {
 				// 确认
 				item.description.title = legalizationPathString(newName);
@@ -363,7 +369,8 @@
 		transition: transform 0.2s;
 	}
 
-	.gallery-card[data-show="true"] .gallery-card-header-right,
+	.gallery-card[data-show="true"][data-visible="true"]
+		.gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);
 		transition: transform 0.2s;
@@ -389,11 +396,10 @@
 		padding: 2px;
 		// margin: 2px;
 		display: flex;
-		flex-flow: row wrap;
+		flex-flow: row nowrap;
 		overflow: hidden;
 		gap: 4px;
 		// background-color: wheat;
-
 		// transform: translateY(100%);
 		transition: transform 0.3s;
 
@@ -409,7 +415,7 @@
 			text-overflow: ellipsis;
 			&.title-chip {
 				max-width: 50%;
-				flex: 1;
+				width: fit-content;
 			}
 			& > span {
 				overflow: hidden;
@@ -420,8 +426,24 @@
 		}
 	}
 
-	.gallery-card[data-show="true"] .gallery-card-footer,
+	.gallery-card[data-show="true"][data-visible="true"] .gallery-card-footer,
 	.gallery-card:hover .gallery-card-footer {
 		transform: translateY(0);
+	}
+
+	// 进场过渡,退场过渡
+	.v-enter-from,
+	.v-leave-to {
+		position: absolute;
+		opacity: 0;
+	}
+
+	// 进入的过程中
+	.v-enter-active {
+		transition: 0.4s;
+	}
+	// 离开的过程中
+	.v-leave-active {
+		transition: 0.4s;
 	}
 </style>

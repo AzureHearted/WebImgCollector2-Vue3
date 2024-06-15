@@ -53,7 +53,7 @@
 			</var-badge>
 		</template>
 		<template #default>
-			<!-- 图库 -->
+			<!--s 图库 -->
 			<var-badge
 				style="z-index: 1"
 				type="danger"
@@ -64,30 +64,30 @@
 					round
 					icon-container
 					@click="toggleWindow('Gallery')">
-					<i-material-symbols-team-dashboard
-						color="black"
-						style="font-size: 20px" />
+					<i-material-symbols-team-dashboard color="black" />
 				</var-button>
 			</var-badge>
-			<!-- 方案管理 -->
+			<!--s 方案管理 -->
 			<var-button type="info" round @click="toggleWindow('PatternEdit')">
-				<i-material-symbols-box-edit color="black" style="font-size: 20px" />
+				<i-material-symbols-box-edit color="black" />
 			</var-button>
-			<!-- 设置 -->
+			<!--s 收藏 -->
+			<var-button type="success" round @click="toggleWindow('Favorite')">
+				<i-mdi-favorite color="red" />
+			</var-button>
+			<!--s 设置 -->
 			<var-button
 				color="rgb(217, 121, 252)"
 				round
 				@click="toggleWindow('Setting')">
-				<i-ant-design-setting-twotone color="black" style="font-size: 20px" />
+				<i-ant-design-setting-twotone color="black" />
 			</var-button>
-			<!-- 测试窗口 -->
+			<!--s 测试窗口 -->
 			<var-button
 				color="rgb(117, 121, 252)"
 				round
 				@click="toggleWindow('Test')">
-				<i-material-symbols-experiment-outline
-					color="black"
-					style="font-size: 20px" />
+				<i-material-symbols-experiment-outline color="black" />
 			</var-button>
 		</template>
 	</var-fab>
@@ -96,9 +96,10 @@
 <script setup lang="ts">
 	import { ref, reactive, onMounted } from "vue";
 	import { isMobile } from "@/utils/common";
-
-	import { useGlobalStore } from "@/stores"; //导入全局仓库
+	import { storeToRefs } from "pinia";
+	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	const globalStore = useGlobalStore();
+	const { openWindow, tab } = storeToRefs(globalStore);
 
 	const active = ref(false); // 控制悬浮按钮的显示状态
 
@@ -133,11 +134,11 @@
 	function toggleWindow(name?: string) {
 		active.value = false;
 		if (name) {
-			globalStore.tab = name;
-			globalStore.openWindow = true;
+			tab.value = name;
+			openWindow.value = true;
 		} else {
-			globalStore.tab = "Gallery";
-			globalStore.openWindow = !globalStore.openWindow;
+			// tab.value = "Gallery";
+			openWindow.value = !openWindow.value;
 		}
 	}
 
@@ -238,6 +239,11 @@
 			height: 310%;
 		}
 	}
+
+	:deep(.var-button__content) {
+		font-size: 20px;
+	}
+
 	.bottom-fab :deep(.var-button--round) {
 		width: 40px;
 		height: 40px;

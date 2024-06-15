@@ -1,9 +1,9 @@
 <template>
 	<n-flex class="favorite__container" vertical :size="4">
-		<!-- 工具栏 -->
+		<!--s 工具栏 -->
 		<n-flex :size="4">
 			<!-- s关键词过滤 -->
-			<n-badge :value="filterCardList.length" :max="999" type="info">
+			<n-badge :value="filterCardList.all.length" :max="999" type="info">
 				<n-input
 					style="width: 200px"
 					v-model:value="filterKeyword"
@@ -11,31 +11,26 @@
 					placeholder="输入检索关键词"
 					clearable />
 			</n-badge>
-			<!-- s类型过滤器 -->
+			<!-- s排序方式选择 -->
 			<n-select
-				class="type-select"
-				v-model:value="favoriteStore.filters.type"
-				placeholder="类型过滤"
-				multiple
-				clearable
+				class="sort-method-select"
+				v-model:value="sortInfo.method"
+				placeholder="请选择一个排序方式"
 				:to="false"
-				:render-tag="renderTag"
-				:render-label="renderOptionLabelWithCount"
-				:options="favoriteStore.typeOptions"
-				max-tag-count="responsive" />
+				:options="sortInfo.groups" />
 			<!-- s扩展名过滤器 -->
 			<n-select
 				class="ext-select"
-				v-model:value="favoriteStore.filters.extension"
+				v-model:value="storeFilters.extension"
 				placeholder="扩展名过滤"
 				multiple
 				clearable
 				:to="false"
 				:render-tag="renderTag"
 				:render-label="renderOptionLabelWithCount"
-				:options="favoriteStore.extensionOptions"
+				:options="extensionOptions"
 				max-tag-count="responsive" />
-			<!-- 尺寸过滤器 -->
+			<!--s 尺寸过滤器 -->
 			<div class="size-filter">
 				<!--s 宽度过滤器 -->
 				<div class="width-filter">
@@ -65,61 +60,102 @@
 				</div>
 			</div>
 		</n-flex>
-		<!-- 瀑布流 -->
+		<!--s 内容区 -->
 		<n-flex class="waterfall-wrapper" :size="4">
-			<BaseScrollbar>
-				<WaterFallList :data="filterCardList" item-padding="2px">
-					<template #default="{ item }">
-						<GalleryCard
-							:data="(item as Card)"
-							:show-to-locate-button="false"
-							:show-delete-button="false"
-							:show-download-button="(item as Card).source.meta.type==='image'"
-							viewport-selector=".web-img-collector-container"
-							@change:selected="item.isSelected = $event"
-							@change:title="updateCard([item as Card])"
-							@download="handleDownload(item as Card)"
-							@toggle-favorite="handleToggleFavorite(item as Card)"
-							@delete="deleteCard([item as Card])" />
+			<n-tabs
+				type="line"
+				size="small"
+				v-model:value="active"
+				:placement="isMobile() ? 'top' : 'left'"
+				pane-wrapper-style="height:100%;max-height:100%"
+				style="height: 100%">
+				<n-tab-pane
+					class="tab-pane"
+					name="image"
+					:disabled="!filterCardList.image.length">
+					<template #tab>
+						<div style="width: 70px">
+							图片
+							<n-badge
+								style="margin-left: 4px"
+								:value="filterCardList.image.length"
+								:max="999"
+								type="default">
+							</n-badge>
+						</div>
 					</template>
-				</WaterFallList>
-			</BaseScrollbar>
+					<keep-alive>
+						<BaseCardList :card-list="filterCardList.image" />
+					</keep-alive>
+				</n-tab-pane>
+				<n-tab-pane
+					class="tab-pane"
+					name="html"
+					:disabled="!filterCardList.html.length">
+					<template #tab>
+						<div style="width: 70px">
+							网页
+							<n-badge
+								style="margin-left: 4px"
+								:value="filterCardList.html.length"
+								:max="999"
+								type="default">
+							</n-badge>
+						</div>
+					</template>
+					<BaseCardList :card-list="filterCardList.html" />
+				</n-tab-pane>
+				<n-tab-pane
+					class="tab-pane"
+					name="other"
+					:disabled="!filterCardList.other.length">
+					<template #tab>
+						<div style="width: 70px">
+							其他
+							<n-badge
+								style="margin-left: 4px"
+								:value="filterCardList.other.length"
+								:max="999"
+								type="default">
+							</n-badge>
+						</div>
+					</template>
+					<BaseCardList :card-list="filterCardList.other" />
+				</n-tab-pane>
+			</n-tabs>
 		</n-flex>
 	</n-flex>
 </template>
 
 <script setup lang="ts">
-	import { h, ref, reactive, onMounted, onUnmounted, onActivated } from "vue";
+	import { h, ref, watch, reactive, onMounted, onActivated } from "vue";
 	import type { VNodeChild } from "vue";
 	import { isMobile } from "@/utils/common";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
 	import { NEllipsis, NTag, NBadge } from "naive-ui";
-	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
-	import WaterFallList from "@/components/base/waterfall-list.vue";
-	import GalleryCard from "../gallery/gallery-card.vue";
-	import Card from "@/stores/CardStore/class/Card";
+	import BaseCardList from "./favorite-base-waterfall.vue";
 
 	import { storeToRefs } from "pinia";
 	import useFavoriteStore from "@/stores/FavoriteStore";
+	import type { BaseMeta } from "@/stores/CardStore/interface";
 	const favoriteStore = useFavoriteStore();
+
 	const {
-		cardList,
 		filterCardList,
 		filterKeyword,
 		filters: storeFilters,
+		extensionOptions,
+		sortInfo,
 		sizeRange,
 	} = storeToRefs(favoriteStore);
-	const {
-		refreshStore,
-		clearStore,
-		addCard,
-		updateCard,
-		deleteCard,
-		unFavoriteCard,
-		downloadCards,
-	} = favoriteStore;
 
-	//s 过滤器定义
+	const { refreshStore } = favoriteStore;
+
+	onMounted(() => {
+		refreshStore();
+	});
+
+	//s 过滤器定义(组件内过滤器)
 	const filters = reactive({
 		size: {
 			width: [
@@ -132,32 +168,62 @@
 			],
 		},
 	});
-	onMounted(() => {
+
+	//f 刷新filter
+	const reFreshFilter = () => {
 		refreshStore();
 		filters.size.width[1] = sizeRange.value.width[1];
 		filters.size.height[1] = sizeRange.value.height[1];
 		storeFilters.value.size.width[1] = sizeRange.value.width[1];
 		storeFilters.value.size.height[1] = sizeRange.value.height[1];
-	});
-	onActivated(() => {
-		refreshStore();
-		filters.size.width[1] = sizeRange.value.width[1];
-		filters.size.height[1] = sizeRange.value.height[1];
-		storeFilters.value.size.width[1] = sizeRange.value.width[1];
-		storeFilters.value.size.height[1] = sizeRange.value.height[1];
-	});
-
-	//f 处理卡片下载
-	const handleDownload = async (card: Card) => {
-		await downloadCards([card]);
-		// 更新卡片
-		updateCard([card]);
 	};
+	//* 挂载和激活时都进行一次filter刷新
+	onMounted(() => reFreshFilter());
+	onActivated(() => reFreshFilter());
+	// onActivated(() => console.log("激活"));
 
-	//f 处理收藏/取消收藏
-	const handleToggleFavorite = (card: Card) => {
-		unFavoriteCard([card]);
-	};
+	//t 排除false的工具类型
+	type ExcludeFalse<T> = T extends false ? never : T;
+	//s 当前激活的标签
+	const active = ref<ExcludeFalse<BaseMeta["type"] | "other">>("image");
+	//w 修正监听器
+	watch(
+		[
+			active,
+			() => filterCardList.value.image,
+			() => filterCardList.value.html,
+			() => filterCardList.value.other,
+		],
+		([nowActive, imageList, htmlList, otherList]) => {
+			// console.log(nowActive);
+			if (nowActive === "image") {
+				if (!imageList.length) {
+					if (htmlList.length) {
+						active.value = "html";
+					} else if (otherList.length) {
+						active.value = "other";
+					}
+				}
+			} else if (nowActive === "html") {
+				if (!htmlList.length) {
+					if (imageList.length) {
+						active.value = "image";
+					} else if (otherList.length) {
+						active.value = "other";
+					}
+				}
+			} else if (nowActive === "other") {
+				if (!otherList.length) {
+					if (imageList.length) {
+						active.value = "image";
+					} else if (htmlList.length) {
+						active.value = "html";
+					}
+				}
+			}
+		},
+		{ immediate: true }
+	);
 
 	//f 选择器多选Tag渲染函数
 	const renderTag: SelectRenderTag = ({ option, handleClose }) => {
@@ -207,6 +273,7 @@
 		console.log("过滤器变化", key, value);
 		storeFilters.value.size[key] = value; // 更新仓库过滤器
 	}
+
 	// 等待实现: 需要对收藏页面进行多级分类
 </script>
 
@@ -233,6 +300,14 @@
 		display: flex;
 		flex-flow: row nowrap;
 		gap: 2px;
+	}
+
+	// 排序方式选择器
+	.sort-method-select {
+		width: 130px;
+		:deep(.wic2-n-base-selection-input__content) {
+			user-select: none;
+		}
 	}
 
 	// 类型、扩展名选择器样式
@@ -270,5 +345,15 @@
 				white-space: nowrap;
 			}
 		}
+	}
+
+	.tab-pane {
+		height: 100%;
+		box-sizing: border-box;
+	}
+
+	:deep(.wic2-n-tabs-tab) {
+		padding-left: 12px;
+		padding-right: 0px;
 	}
 </style>

@@ -199,16 +199,16 @@
 </template>
 
 <script setup lang="ts">
+	import { saveAs } from "file-saver";
+	import { useClipboard } from "@vueuse/core";
 	import FormTabs from "./pattern-edit-form-tabs.vue";
 	import BaseImg from "@/components/base/base-img.vue";
 	import { ElNotification } from "@/plugin/element-plus";
-
-	import { storeToRefs } from "pinia";
-	import { usePatternStore } from "@/stores";
 	import { Pattern } from "@/stores/PatternStore/class/Pattern";
 	import { Rule } from "@/stores/PatternStore/class/Rule";
-	import { useClipboard } from "@vueuse/core";
-	import { saveAs } from "file-saver";
+
+	import { storeToRefs } from "pinia";
+	import usePatternStore from "@/stores/PatternStore";
 	const patternStore = usePatternStore();
 	const { editingPattern, editingRule } = storeToRefs(patternStore);
 	const { saveUserPatternInfo } = patternStore;

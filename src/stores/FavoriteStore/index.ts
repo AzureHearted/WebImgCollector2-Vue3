@@ -1,9 +1,9 @@
-import { useCardStore } from "@/stores";
 import Card from "@/stores/CardStore/class/Card";
-import { isEqualUrl } from "@/utils/common";
+import { isEqualUrl, mixSort } from "@/utils/common";
 import localforage from "localforage";
 import { defineStore } from "pinia";
-import { computed, onMounted, reactive, ref } from "vue";
+import useCardStore from "@/stores/CardStore";
+import { computed, reactive, ref } from "vue";
 
 export default defineStore("FavoriteStore", () => {
 	const cardStore = useCardStore();
@@ -32,7 +32,7 @@ export default defineStore("FavoriteStore", () => {
 
 	//j 类型->数量映射列表
 	const typeMap = computed<Map<string, number>>(() => {
-		return cardList.value.reduce((prev, curr, currIndex) => {
+		return cardList.value.reduce((prev, curr) => {
 			const currType = curr.source.meta.type;
 			if (!currType) return prev;
 			if (prev.has(currType)) {
@@ -46,7 +46,7 @@ export default defineStore("FavoriteStore", () => {
 
 	//j 扩展名->数量映射列表
 	const extensionMap = computed<Map<string, number>>(() => {
-		return cardList.value.reduce((prev, curr, currIndex) => {
+		return cardList.value.reduce((prev, curr) => {
 			const currExt = curr.source.meta.ext;
 			if (!currExt) return prev;
 			if (prev.has(currExt)) {
@@ -100,8 +100,8 @@ export default defineStore("FavoriteStore", () => {
 		type: [] as string[], //类型过滤器
 		extension: [] as string[], //扩展名过滤器
 		size: {
-			width: [250, sizeRange.value.width[1]] as [number, number], //宽度过滤器
-			height: [250, sizeRange.value.height[1]] as [number, number], //高度过滤器
+			width: [250, 2000] as [number, number], //宽度过滤器
+			height: [250, 2000] as [number, number], //高度过滤器
 			marks: computed(() => {
 				const markStyle = reactive({
 					"font-size": "10px !important",
@@ -198,28 +198,117 @@ export default defineStore("FavoriteStore", () => {
 			});
 	});
 
-	//j 过滤后的卡片列表
-	const filterCardList = computed<Card[]>(() => {
-		return cardList.value.filter((c) => {
+	//s 排序相关
+	const sortOptions = [
+		{ value: "#", label: "默认排序", group: "#" },
+		{ value: "name-asc", label: "名称-升序", group: "名称" },
+		{ value: "name-desc", label: "名称-降序", group: "名称" },
+		{ value: "width-asc", label: "宽度-升序", group: "尺寸" },
+		{ value: "width-desc", label: "宽度-降序", group: "尺寸" },
+		{ value: "height-asc", label: "高度-升序", group: "尺寸" },
+		{ value: "height-desc", label: "高度-降序", group: "尺寸" },
+	] as const; // 这里断言数组中的所有属性值为只读(为了能正确进行类型提示)
+	type sortGroup = {
+		type: "group";
+		label: string;
+		key: string;
+		children: ((typeof sortOptions)[number] & { key: string })[];
+	};
+	//s 排序对象
+	const sortInfo = reactive({
+		method: "#" as (typeof sortOptions)[number]["value"],
+		options: sortOptions,
+		// (访问器)获取分组数组
+		get groups(): sortGroup[] {
+			return Object.values(
+				this.options.reduce((prev, curr) => {
+					if (!prev[curr.group]) {
+						prev[curr.group] = {
+							type: "group",
+							key: curr.group,
+							label: curr.group,
+							children: [],
+						};
+					}
+					prev[curr.group].children.push({
+						...curr,
+						key: curr.value,
+					});
+					return prev;
+				}, <{ [key: string]: sortGroup }>{})
+			);
+		},
+	});
+
+	//j 初步过滤后的卡片列表
+	const filterCardList = computed<{
+		all: Card[];
+		image: Card[];
+		html: Card[];
+		other: Card[];
+	}>(() => {
+		let matchList = cardList.value.filter((c) => {
+			// console.log(c.source.meta.width, filters.size.width[1]);
 			return (
 				c.description.title
 					.trim()
 					.toLocaleLowerCase()
 					.includes(filterKeyword.value.trim().toLocaleLowerCase()) &&
-				(filters.type.length > 0
-					? filters.type.includes(String(c.source.meta.type))
-					: true) &&
+				// (filters.type.length > 0
+				// 	? filters.type.includes(String(c.source.meta.type))
+				// 	: true) &&
 				(filters.extension.length > 0
 					? filters.extension.includes(String(c.source.meta.ext))
 					: true) &&
 				(c.source.meta.type === "image"
-					? c.source.meta.width! >= filters.size.width[0] &&
-					  c.source.meta.width! <= filters.size.width[1] &&
-					  c.source.meta.height! >= filters.size.height[0] &&
-					  c.source.meta.height! <= filters.size.height[1]
+					? c.source.meta.width >= filters.size.width[0] &&
+					  c.source.meta.width <= filters.size.width[1] &&
+					  c.source.meta.height <= filters.size.height[1] &&
+					  c.source.meta.height >= filters.size.height[0]
 					: true)
 			);
 		});
+		// 排序
+		if (sortInfo.method === "#") {
+			matchList = matchList.sort((a, b) =>
+				mixSort(
+					a.source.originUrls ? a.source.originUrls[0] : "",
+					b.source.originUrls ? b.source.originUrls[0] : ""
+				)
+			);
+		} else if (sortInfo.method === "name-asc") {
+			matchList = matchList.sort((a, b) =>
+				mixSort(a.description.title, b.description.title)
+			);
+		} else if (sortInfo.method === "name-desc") {
+			matchList = matchList.sort((a, b) =>
+				mixSort(b.description.title, a.description.title)
+			);
+		} else if (sortInfo.method === "width-asc") {
+			matchList = matchList.sort(
+				(a, b) => a.source.meta.width - b.source.meta.width
+			);
+		} else if (sortInfo.method === "width-desc") {
+			matchList = matchList.sort(
+				(a, b) => b.source.meta.width - a.source.meta.width
+			);
+		} else if (sortInfo.method === "height-asc") {
+			matchList = matchList.sort(
+				(a, b) => a.source.meta.height - b.source.meta.height
+			);
+		} else if (sortInfo.method === "height-desc") {
+			matchList = matchList.sort(
+				(a, b) => b.source.meta.height - a.source.meta.height
+			);
+		}
+		return {
+			all: matchList,
+			image: matchList.filter((c) => c.source.meta.type === "image"),
+			html: matchList.filter((c) => c.source.meta.type === "html"),
+			other: matchList.filter(
+				(c) => c.source.meta.type !== "image" && c.source.meta.type !== "html"
+			),
+		};
 	});
 
 	//f 刷新仓库数据
@@ -367,6 +456,8 @@ export default defineStore("FavoriteStore", () => {
 		cardList,
 		sizeRange,
 		filters,
+		sortInfo,
+		sortOptions,
 		typeOptions,
 		extensionOptions,
 		filterCardList,
@@ -381,6 +472,7 @@ export default defineStore("FavoriteStore", () => {
 		unFavoriteCard,
 		findCard,
 		findCardById,
+		findCardsById,
 		isExist,
 		downloadCards,
 	};

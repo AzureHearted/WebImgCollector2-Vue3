@@ -61,7 +61,7 @@
 	const {
 		createPattern,
 		deletePattern,
-		findPattern,
+		// findPattern,
 		pastePattern,
 		adjustPatternPosition,
 		adjustRulePosition,

@@ -1,4 +1,3 @@
-import { ElNotification } from "@/plugin/element-plus";
 import { getHostByUrl, isUrl } from "../common";
 import { GMRequest } from "./GMRequest";
 

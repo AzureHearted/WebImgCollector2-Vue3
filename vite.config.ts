@@ -1,6 +1,6 @@
 import { fileURLToPath, URL } from "node:url";
-import path from "path";
-const pathSrc = path.resolve(__dirname, "src");
+// import path from "path";
+// const pathSrc = path.resolve(__dirname, "src");
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 // import VueDevTools from "vite-plugin-vue-devtools";
@@ -26,7 +26,7 @@ import svgLoader from "vite-svg-loader";
 // 打包分析插件
 import { visualizer } from "rollup-plugin-visualizer";
 
-import vuetify from "vite-plugin-vuetify";
+// import vuetify from "vite-plugin-vuetify";
 
 // NaiveUi配置
 import { NaiveUiResolver } from "unplugin-vue-components/resolvers";

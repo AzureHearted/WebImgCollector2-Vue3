@@ -32,8 +32,8 @@
 				style="z-index: 3"
 				type="info"
 				:max="999"
-				:show="!!cardStore.validCardList.length"
-				:value="cardStore.validCardList.length">
+				:show="!!validCardList.length"
+				:value="validCardList.length">
 				<var-menu
 					placement="bottom-start"
 					:same-width="false"
@@ -76,9 +76,7 @@
 						<var-cell
 							@click="clear"
 							title="清空所有"
-							v-if="
-								!!cardStore.filteredCardList.length && !loadingStore.loading
-							"
+							v-if="!!filteredCardList.length && !loadingStore.loading"
 							ripple>
 							<template #icon>
 								<i-mdi-delete-empty style="color: red" />
@@ -103,8 +101,8 @@
 				style="z-index: 2"
 				type="success"
 				:max="999"
-				:show="!!cardStore.filteredCardList.length"
-				:value="cardStore.filteredCardList.length">
+				:show="!!filteredCardList.length"
+				:value="filteredCardList.length">
 				<!-- 选择器按钮组 -->
 				<var-button-group class="control-button-group">
 					<var-button type="primary" @click="checkAll"> 全选 </var-button>
@@ -133,9 +131,7 @@
 							下载
 						</var-button>
 						<var-button
-							:disabled="
-								!cardStore.filteredCardList.length || loadingStore.loading
-							"
+							:disabled="!filteredCardList.length || loadingStore.loading"
 							style="padding: 0 4px">
 							<i-material-symbols-arrow-drop-down-rounded
 								style="fill: white"
@@ -152,7 +148,7 @@
 						<var-cell
 							title="删除选中项"
 							@click="deleteSelected"
-							v-if="!!cardStore.selectionCardList.length"
+							v-if="!!selectionCardList.length"
 							ripple>
 							<template #icon>
 								<i-mdi-delete-sweep style="color: red" />
@@ -161,7 +157,7 @@
 						<var-cell
 							title="收藏选中项"
 							@click="favoriteSelected"
-							v-if="!!cardStore.selectionCardList.length"
+							v-if="!!selectionCardList.length"
 							ripple>
 							<template #icon>
 								<i-mdi-book-favorite style="color: purple" />
@@ -176,27 +172,27 @@
 			<!-- 类型过滤器 -->
 			<div class="type-select">
 				<n-select
-					v-model:value="cardStore.filters.type"
+					v-model:value="storeFilters.type"
 					placeholder="类型过滤"
 					multiple
 					clearable
 					:to="false"
 					:render-tag="renderTag"
 					:render-label="renderOptionLabelWithCount"
-					:options="cardStore.typeOptions"
+					:options="typeOptions"
 					max-tag-count="responsive" />
 			</div>
 			<!-- 扩展名过滤器 -->
 			<div class="ext-select">
 				<n-select
-					v-model:value="cardStore.filters.extension"
+					v-model:value="storeFilters.extension"
 					placeholder="扩展名过滤"
 					multiple
 					clearable
 					:to="false"
 					:render-tag="renderTag"
 					:render-label="renderOptionLabelWithCount"
-					:options="cardStore.extensionOptions"
+					:options="extOptions"
 					max-tag-count="responsive" />
 			</div>
 		</div>
@@ -210,9 +206,9 @@
 					v-model="filters.size.width"
 					range
 					:step="1"
-					:min="cardStore.info.size.width[0]"
-					:max="cardStore.info.size.width[1]"
-					:marks="cardStore.filters.size.marks"
+					:min="sizeRange.width[0]"
+					:max="sizeRange.width[1]"
+					:marks="storeFilters.size.marks"
 					@change="filterChange('width', $event as [number, number])" />
 			</div>
 			<!-- 高度过滤器 -->
@@ -223,9 +219,9 @@
 					v-model="filters.size.height"
 					range
 					:step="1"
-					:min="cardStore.info.size.height[0]"
-					:max="cardStore.info.size.height[1]"
-					:marks="cardStore.filters.size.marks"
+					:min="sizeRange.height[0]"
+					:max="sizeRange.height[1]"
+					:marks="storeFilters.size.marks"
 					@change="filterChange('height', $event as [number, number])" />
 			</div>
 		</div>
@@ -233,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-	import { h, ref, reactive, computed, watch } from "vue";
+	import { h, reactive, computed, watch } from "vue";
 	import type { VNodeChild } from "vue";
 	import { NEllipsis, NTag, NBadge } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
@@ -254,7 +250,16 @@
 	import useFavoriteStore from "@/stores/FavoriteStore";
 
 	const cardStore = useCardStore();
-	const { sort } = storeToRefs(cardStore);
+	const {
+		sort,
+		sizeRange,
+		filteredCardList,
+		validCardList,
+		selectionCardList,
+		typeOptions,
+		extensionOptions: extOptions,
+		filters: storeFilters,
+	} = storeToRefs(cardStore);
 	const favoriteStore = useFavoriteStore();
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
@@ -262,14 +267,14 @@
 	//s 过滤器定义
 	const filters = reactive({
 		size: {
-			width: ref([
-				cardStore.filters.size.width[0],
-				cardStore.filters.size.width[1],
-			]),
-			height: ref([
-				cardStore.filters.size.height[0],
-				cardStore.filters.size.height[1],
-			]),
+			width: [
+				storeFilters.value.size.width[0],
+				storeFilters.value.size.width[1],
+			],
+			height: [
+				storeFilters.value.size.height[0],
+				storeFilters.value.size.height[1],
+			],
 		},
 	});
 
@@ -290,7 +295,7 @@
 
 	// 被选中的卡片
 	const checkedCardList: ComputedRef<BaseCard[]> = computed(() => {
-		return cardStore.validCardList.filter((x) => x.isSelected);
+		return validCardList.value.filter((x) => x.isSelected);
 	});
 
 	// 计算被选中的卡片对应的体积大小总和
@@ -410,53 +415,53 @@
 	//f 清空
 	async function clear() {
 		cardStore.clearCardList();
-		filters.size.width = cardStore.filters.size.width;
-		filters.size.height = cardStore.filters.size.height;
+		filters.size.width = storeFilters.value.size.width;
+		filters.size.height = storeFilters.value.size.height;
 	}
 
 	//f 过滤器改变
 	function filterChange(key: "width" | "height", value: [number, number]) {
 		// console.log("过滤器变化", key, value);
-		cardStore.filters.size[key] = value; // 更新仓库过滤器
+		storeFilters.value.size[key] = value; // 更新仓库过滤器
 	}
 
 	//f 全选
 	function checkAll() {
-		cardStore.filteredCardList.forEach((c) => (c.isSelected = true));
+		filteredCardList.value.forEach((c) => (c.isSelected = true));
 	}
 
 	//f 反选
 	function inverseAll() {
-		cardStore.filteredCardList.forEach((c) => (c.isSelected = !c.isSelected));
+		filteredCardList.value.forEach((c) => (c.isSelected = !c.isSelected));
 	}
 
 	//f 取消
 	function cancel() {
-		cardStore.validCardList.forEach((c) => (c.isSelected = false));
+		validCardList.value.forEach((c) => (c.isSelected = false));
 	}
 
 	//f 重置过滤器
 	function resetFilters() {
 		cardStore.resetFilters();
-		filters.size.width = cardStore.filters.size.width;
-		filters.size.height = cardStore.filters.size.height;
+		filters.size.width = storeFilters.value.size.width;
+		filters.size.height = storeFilters.value.size.height;
 	}
 
 	//f 下载选中项
 	function downloadSelected() {
-		const cards = cardStore.validCardList.filter((x) => x.isSelected) || [];
+		const cards = validCardList.value.filter((x) => x.isSelected) || [];
 		cardStore.downloadCards(cards);
 	}
 
 	//f 下载全部
 	function downloadAll() {
-		const cards = cardStore.filteredCardList || [];
+		const cards = filteredCardList.value || [];
 		cardStore.downloadCards(cards);
 	}
 
 	//f 删除选中项
 	function deleteSelected() {
-		const ids = cardStore.validCardList
+		const ids = validCardList.value
 			.filter((x) => x.isSelected)
 			.map((x) => x.id);
 		cardStore.removeCard(ids);
@@ -464,8 +469,8 @@
 
 	//f 收藏选中项
 	function favoriteSelected() {
-		favoriteStore.addCard(cardStore.selectionCardList); // 添加卡片到Favorite仓库
-		cardStore.selectionCardList.forEach((c) => (c.isFavorite = true)); // 更新卡片收藏状态
+		favoriteStore.addCard(selectionCardList.value); // 添加卡片到Favorite仓库
+		selectionCardList.value.forEach((c) => (c.isFavorite = true)); // 更新卡片收藏状态
 	}
 </script>
 

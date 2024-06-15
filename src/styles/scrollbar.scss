@@ -1,25 +1,27 @@
 /* 滚动条样式(控制滚动条显示与隐藏) */
 :root {
 	&[data-show-scrollbar="false"] {
-		// overflow: overlay;
+		overflow: overlay;
 
 		scrollbar-color: unset;
 		scrollbar-width: unset;
-
-		> ::-webkit-scrollbar {
+		html::-webkit-scrollbar,
+		body::-webkit-scrollbar {
 			width: 0px !important;
 			height: 0px !important;
-			transition: all 0.5s;
 		}
 	}
 }
 
+// body {
+// 	margin-left: calc(100vw - 100%);
+// }
+
 /* 滚动条样式 */
-::-webkit-scrollbar {
-	/* 滚动条整体样式 */
-	width: 0px;
-	height: 0px;
-}
+// ::-webkit-scrollbar {
+// 	width: 0px;
+// 	height: 0px;
+// }
 
 // @media screen and (min-width: 767px) {
 // 	::-webkit-scrollbar {
@@ -41,18 +43,26 @@
 // 	}
 // }
 
-::-webkit-scrollbar-thumb {
-	/* 滚动条里面小方块 */
-	border-radius: 10px;
-	-webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-	background: #cacaca6a;
-}
-::-webkit-scrollbar-thumb:hover {
-	background: #999999;
-}
+/* 修改整个滚动条的宽度 */
+// ::-webkit-scrollbar {
+// 	box-sizing: border-box;
+// 	width: 12px;
+// 	height: 12px;
+// }
 
-::-webkit-scrollbar-track {
-	/* 滚动条里面轨道 */
-	-webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0);
-	border-radius: 10px;
-}
+/* 修改滚动条轨道的样式 */
+// ::-webkit-scrollbar-track {
+// 	background: rgba(255, 255, 255, 0);
+// }
+
+/* 修改滚动条滑块的样式 */
+// ::-webkit-scrollbar-thumb {
+// 	background: #888;
+// 	border-radius: 12px;
+// }
+
+/* 鼠标悬停在滚动条滑块上时的样式 */
+// ::-webkit-scrollbar-thumb:hover {
+// 	background: #555;
+// 	border: 0;
+// }

@@ -1,7 +1,7 @@
 import {
 	createRouter,
 	createWebHistory,
-	createWebHashHistory,
+	// createWebHashHistory,
 } from "vue-router";
 import type { RouterOptions } from "vue-router";
 import Layout from "@/views/layout/layout-index.vue";

@@ -66,12 +66,12 @@
 		height: unset;
 		inset: 0;
 		text-align: left;
-		background: transparent;
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
 		z-index: 2147483646;
 		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
+		transition: 0.5s;
 
 		& > :deep(*) {
 			// 子元素默认还能响应
@@ -107,6 +107,10 @@
 		:deep(*) {
 			pointer-events: auto;
 		}
+	}
+
+	dialog {
+		padding: unset;
 	}
 </style>
 

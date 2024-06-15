@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { reactive, computed } from "vue";
+import { ElNotification, ElMessageBox } from "@/plugin/element-plus";
 // 导入类
 import Card from "./class/Card";
 import { TaskQueue } from "@/utils/taskQueue"; // 任务队列
@@ -19,9 +20,8 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现文件保存
 
 // 导入其他仓库
-import { useLoadingStore, usePatternStore } from "@/stores";
-
-import { ElNotification, ElMessageBox } from "@/plugin/element-plus";
+import useLoadingStore from "@/stores/LoadingStore";
+import usePatternStore from "@/stores/PatternStore";
 
 export default defineStore("CardStore", () => {
 	const loadingStore = useLoadingStore();
@@ -54,6 +54,33 @@ export default defineStore("CardStore", () => {
 			height: [0, 2000] as [number, number], //高度范围
 			max: 2000,
 		},
+	});
+
+	//j 仓库尺寸范围
+	const sizeRange = computed<{
+		width: [number, number];
+		height: [number, number];
+		max: number;
+		min: number;
+	}>(() => {
+		return data.cardList.reduce(
+			(prev, curr) => {
+				const { width, height } = curr.source.meta;
+				if (prev.width[0] > width) prev.width[0] = width;
+				if (prev.height[0] > height) prev.height[0] = height;
+				if (prev.width[1] < width) prev.width[1] = width;
+				if (prev.height[1] < height) prev.height[1] = height;
+				prev.min = Math.min(prev.min, prev.width[0], prev.height[0]);
+				prev.max = Math.max(prev.max, prev.width[1], prev.height[1]);
+				return prev;
+			},
+			{
+				width: [0, 2000],
+				height: [0, 2000],
+				min: 0,
+				max: 2000,
+			}
+		);
 	});
 
 	//s 过滤器
@@ -185,7 +212,7 @@ export default defineStore("CardStore", () => {
 				(filters.extension.length > 0
 					? filters.extension.includes(String(x.source.meta.ext))
 					: true) &&
-				(x.source.meta.type === "image"
+				(x.source.meta.type === "image" && x.isLoaded
 					? x.source.meta.width! >= filters.size.width[0] &&
 					  x.source.meta.height! >= filters.size.height[0]
 					: true);
@@ -445,6 +472,7 @@ export default defineStore("CardStore", () => {
 				cancelButtonText: "取消",
 				inputPlaceholder: "请输入要保存的文件名称",
 				inputValue: legalizationPathString(initName),
+				closeOnClickModal: false,
 				draggable: true,
 			})
 				.then(({ value: name }) => {
@@ -534,6 +562,7 @@ export default defineStore("CardStore", () => {
 						cancelButtonText: "取消",
 						inputPlaceholder: "请输入要保存的压缩包名称",
 						inputValue: legalizationPathString(initZipName),
+						closeOnClickModal: false,
 						draggable: true,
 					})
 						.then(({ value: zipName }) => {
@@ -601,6 +630,7 @@ export default defineStore("CardStore", () => {
 	return {
 		data,
 		info,
+		sizeRange,
 		sort,
 		filters,
 		validCardList,
@@ -612,6 +642,7 @@ export default defineStore("CardStore", () => {
 		clearCardList,
 		removeCard,
 		findCard,
+		findCards,
 		downloadCards,
 		resetFilters,
 	};
