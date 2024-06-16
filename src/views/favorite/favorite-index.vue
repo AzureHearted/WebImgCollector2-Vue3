@@ -1,11 +1,11 @@
 <template>
-	<n-flex class="favorite__container" vertical :size="4">
+	<n-flex ref="containerDOM" class="favorite__container" vertical :size="4">
 		<!--s 工具栏 -->
-		<n-flex :size="4">
+		<n-flex class="toolbar-wrap" :size="4">
 			<!-- s关键词过滤 -->
 			<n-badge :value="filterCardList.all.length" :max="999" type="info">
 				<n-input
-					style="width: 200px"
+					style="width: 180px"
 					v-model:value="filterKeyword"
 					type="text"
 					placeholder="输入检索关键词"
@@ -61,20 +61,19 @@
 			</div>
 		</n-flex>
 		<!--s 内容区 -->
-		<n-flex class="waterfall-wrapper" :size="4">
+		<n-flex class="content-wrap" :size="4">
 			<n-tabs
 				type="line"
 				size="small"
 				v-model:value="active"
-				:placement="isMobile() ? 'top' : 'left'"
-				pane-wrapper-style="height:100%;max-height:100%"
+				tab-style="width: 70px"
 				style="height: 100%">
 				<n-tab-pane
 					class="tab-pane"
 					name="image"
 					:disabled="!filterCardList.image.length">
 					<template #tab>
-						<div style="width: 70px">
+						<n-flex :size="4" align="center" :wrap="false">
 							图片
 							<n-badge
 								style="margin-left: 4px"
@@ -82,7 +81,7 @@
 								:max="999"
 								type="default">
 							</n-badge>
-						</div>
+						</n-flex>
 					</template>
 					<keep-alive>
 						<BaseCardList :card-list="filterCardList.image" />
@@ -93,7 +92,7 @@
 					name="html"
 					:disabled="!filterCardList.html.length">
 					<template #tab>
-						<div style="width: 70px">
+						<n-flex :size="4" align="center" :wrap="false">
 							网页
 							<n-badge
 								style="margin-left: 4px"
@@ -101,7 +100,7 @@
 								:max="999"
 								type="default">
 							</n-badge>
-						</div>
+						</n-flex>
 					</template>
 					<BaseCardList :card-list="filterCardList.html" />
 				</n-tab-pane>
@@ -110,7 +109,7 @@
 					name="other"
 					:disabled="!filterCardList.other.length">
 					<template #tab>
-						<div style="width: 70px">
+						<n-flex :size="4" align="center" :wrap="false">
 							其他
 							<n-badge
 								style="margin-left: 4px"
@@ -118,7 +117,7 @@
 								:max="999"
 								type="default">
 							</n-badge>
-						</div>
+						</n-flex>
 					</template>
 					<BaseCardList :card-list="filterCardList.other" />
 				</n-tab-pane>
@@ -128,11 +127,20 @@
 </template>
 
 <script setup lang="ts">
-	import { h, ref, watch, reactive, onMounted, onActivated } from "vue";
+	import {
+		h,
+		ref,
+		watch,
+		reactive,
+		onMounted,
+		onUpdated,
+		onUnmounted,
+		onActivated,
+	} from "vue";
 	import type { VNodeChild } from "vue";
 	import { isMobile } from "@/utils/common";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
-	import { NEllipsis, NTag, NBadge } from "naive-ui";
+	import { NEllipsis, NTag, NBadge, NFlex } from "naive-ui";
 	import BaseCardList from "./favorite-base-waterfall.vue";
 
 	import { storeToRefs } from "pinia";
@@ -274,25 +282,54 @@
 		storeFilters.value.size[key] = value; // 更新仓库过滤器
 	}
 
+	const containerDOM = ref<InstanceType<typeof NFlex> | null>(null);
+	//* 导入Fancybox和相关配置
+	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
+	import { onDeactivated } from "vue";
+	onMounted(() => FancyboxBind(containerDOM.value?.$el, "[data-fancybox]"));
+	onActivated(() => FancyboxBind(containerDOM.value?.$el, "[data-fancybox]"));
+	onUnmounted(() => Fancybox.destroy());
+	onDeactivated(() => Fancybox.destroy());
+	onUpdated(() => {
+		Fancybox.unbind(containerDOM.value?.$el);
+		Fancybox.close();
+		FancyboxBind(containerDOM.value?.$el, "[data-fancybox]");
+	});
+
+	//f 执行FancyBox绑定
+	function FancyboxBind(
+		listContainerDOM: HTMLElement | null,
+		itemSelector: string = "[data-fancybox]",
+		teleportToDOMs?: HTMLElement
+	) {
+		Fancybox.bind(listContainerDOM, itemSelector, {
+			...configFancybox,
+			parentEl: teleportToDOMs ? teleportToDOMs : listContainerDOM,
+			hideScrollbar: false,
+		});
+	}
+
 	// 等待实现: 需要对收藏页面进行多级分类
 </script>
 
 <style lang="scss" scoped>
 	.favorite__container {
-		position: relative;
+		// position: relative;
 		box-sizing: border-box;
 		width: 100%;
 		height: 100%;
-		padding: 4px;
-		padding-top: 10px;
 		overflow: hidden;
 	}
 
-	.waterfall-wrapper {
-		flex: 1;
-		scroll-behavior: smooth;
-		overflow: clip; // 必须要设置溢出裁切
-		border-radius: 4px;
+	.toolbar-wrap {
+		padding: 2px;
+		margin-top: 8px;
+	}
+
+	.content-wrap {
+		flex: 1; // 必须设置用来撑满容器
+		padding: 4px;
+		overflow: hidden; // 必须要设置溢出隐藏
 	}
 
 	// 控制组样式
@@ -349,6 +386,7 @@
 
 	.tab-pane {
 		height: 100%;
+		overflow: hidden;
 		box-sizing: border-box;
 	}
 

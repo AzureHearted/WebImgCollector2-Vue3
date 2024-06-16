@@ -13,6 +13,7 @@
 					viewport-selector=".web-img-collector-container"
 					@change:selected="item.isSelected = $event"
 					@change:title="updateCard([item as Card])"
+					@loaded="handleLoaded"
 					@download="handleDownload(item as Card)"
 					@toggle-favorite="handleToggleFavorite(item as Card)"
 					@delete="deleteCard([item as Card])" />
@@ -22,14 +23,16 @@
 </template>
 
 <script setup lang="ts">
-	import { defineProps, withDefaults, onActivated } from "vue";
+	import { defineProps, withDefaults,  } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import WaterFallList from "@/components/base/waterfall-list.vue";
 	import GalleryCard from "../gallery/gallery-card.vue";
 	import Card from "@/stores/CardStore/class/Card";
+	import type { returnInfo } from "@/components/base/base-img.vue";
 
 	import useFavoriteStore from "@/stores/FavoriteStore";
 	import useGlobalStore from "@/stores/GlobalStore";
+	import { isEqualUrl } from "@/utils/common";
 
 	const favoriteStore = useFavoriteStore();
 	const globalStore = useGlobalStore();
@@ -40,9 +43,10 @@
 		unFavoriteCard,
 		downloadCards,
 		refreshStore,
+		findCardById,
 	} = favoriteStore;
 
-	const props = withDefaults(
+	withDefaults(
 		defineProps<{
 			cardList: Card[];
 		}>(),
@@ -50,11 +54,6 @@
 			cardList: () => [],
 		}
 	);
-
-	//* 挂载和激活时都进行一次filter刷新
-	// onMounted(() => refreshStore());
-	// onActivated(() => refreshStore());
-	onActivated(() => console.log("激活", props.cardList));
 
 	//f 处理卡片下载
 	const handleDownload = async (card: Card) => {
@@ -67,6 +66,22 @@
 	const handleToggleFavorite = (card: Card) => {
 		unFavoriteCard([card]);
 		refreshStore();
+	};
+
+	//f 卡片加载成功完成事件( 1.更新cardStore的尺寸范围信息;2.判断卡片是否被收藏 )
+	const handleLoaded = async (id: string, info: returnInfo) => {
+		//s 仓库找到对应的数据
+		const card = await findCardById(id);
+		if (!card) return; //* 如果卡片不存在也不在向下执行
+		if (card.isLoaded) return; //* 如果已经成功加载过了就不在执行
+		card.isLoaded = true; //s 置为加载成功
+		// console.count("卡片加载完成");
+		//s 刷新仓库对应卡片的preview.meta信息
+		card.preview.meta = { ...card.preview.meta, ...info.meta };
+		if (isEqualUrl(card.preview.url, card.source.url)) {
+			card.source.meta = card.preview.meta;
+			updateCard([card]);
+		}
 	};
 </script>
 

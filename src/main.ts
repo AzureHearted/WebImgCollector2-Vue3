@@ -23,5 +23,5 @@ app.use(createPinia());
 // app.use(router);
 
 app.mount(appContainer); // 挂载app
-document.documentElement.appendChild(appContainer);
-// document.body.appendChild(fragment);
+// document.documentElement.appendChild(appContainer);
+document.documentElement.appendChild(fragment);

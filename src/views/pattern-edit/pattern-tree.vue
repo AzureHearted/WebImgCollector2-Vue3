@@ -54,14 +54,13 @@
 	import { Pattern } from "@/stores/PatternStore/class/Pattern";
 	import { Rule } from "@/stores/PatternStore/class/Rule";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
-
-	import { usePatternStore } from "@/stores";
 	import BaseImg from "@/components/base/base-img.vue";
+
+	import usePatternStore from "@/stores/PatternStore";
 	const patternStore = usePatternStore();
 	const {
 		createPattern,
 		deletePattern,
-		// findPattern,
 		pastePattern,
 		adjustPatternPosition,
 		adjustRulePosition,

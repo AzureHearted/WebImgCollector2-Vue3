@@ -1,6 +1,6 @@
 <template>
 	<div class="gallery-toolbar">
-		<!-- 进度条 -->
+		<!--j 进度条 -->
 		<el-progress
 			class="toolbar-loading"
 			striped
@@ -15,7 +15,7 @@
 				{{ loadingStore.percentage.toFixed(2) }}%
 			</span>
 		</el-progress>
-		<!-- 方案选择器 -->
+		<!--s 方案选择器 -->
 		<div class="pattern-select">
 			<n-select
 				v-model:value="patternStore.used.id"
@@ -24,12 +24,11 @@
 				:render-label="renderPatternSelectOptionsLabel"
 				:options="patternSelectOptions" />
 		</div>
-		<!-- 操作栏 -->
+		<!--s 操作栏 -->
 		<div class="control-group-button">
 			<!-- 控制按钮组 -->
 			<n-badge
 				:offset="[-8, 2]"
-				style="z-index: 3"
 				type="info"
 				:max="999"
 				:show="!!validCardList.length"
@@ -76,7 +75,7 @@
 						<var-cell
 							@click="clear"
 							title="清空所有"
-							v-if="!!filteredCardList.length && !loadingStore.loading"
+							v-if="!!filterCardList.all.length && !loadingStore.loading"
 							ripple>
 							<template #icon>
 								<i-mdi-delete-empty style="color: red" />
@@ -86,7 +85,7 @@
 				</var-menu>
 			</n-badge>
 		</div>
-		<!-- 排序方式 -->
+		<!--s 排序方式 -->
 		<div class="sort-method-select">
 			<n-select
 				v-model:value="sort.method"
@@ -94,15 +93,14 @@
 				:to="false"
 				:options="sort.groups" />
 		</div>
-		<!-- 选择器 -->
+		<!--s 选择器 -->
 		<div class="control-group-button">
 			<n-badge
 				:offset="[-116, 2]"
-				style="z-index: 2"
 				type="success"
 				:max="999"
-				:show="!!filteredCardList.length"
-				:value="filteredCardList.length">
+				:show="!!filterCardList.all.length"
+				:value="filterCardList.all.length">
 				<!-- 选择器按钮组 -->
 				<var-button-group class="control-button-group">
 					<var-button type="primary" @click="checkAll"> 全选 </var-button>
@@ -111,12 +109,11 @@
 				</var-button-group>
 			</n-badge>
 		</div>
-		<!-- 下载控制 -->
+		<!--s 下载控制 -->
 		<div class="control-group-button">
 			<!-- 下载按钮 -->
 			<n-badge
 				:offset="[0, 2]"
-				style="z-index: 2"
 				:max="999"
 				:show="!!checkedCardList.length"
 				:value="`${checkedCardList.length}${checkedTotalSizeTip}`">
@@ -131,7 +128,7 @@
 							下载
 						</var-button>
 						<var-button
-							:disabled="!filteredCardList.length || loadingStore.loading"
+							:disabled="!filterCardList.all.length || loadingStore.loading"
 							style="padding: 0 4px">
 							<i-material-symbols-arrow-drop-down-rounded
 								style="fill: white"
@@ -167,10 +164,10 @@
 				</var-menu>
 			</n-badge>
 		</div>
-		<!-- 过滤控制器 -->
+		<!--s 过滤控制器 -->
 		<div class="control-group">
 			<!-- 类型过滤器 -->
-			<div class="type-select">
+			<!-- <div class="type-select">
 				<n-select
 					v-model:value="storeFilters.type"
 					placeholder="类型过滤"
@@ -181,7 +178,7 @@
 					:render-label="renderOptionLabelWithCount"
 					:options="typeOptions"
 					max-tag-count="responsive" />
-			</div>
+			</div> -->
 			<!-- 扩展名过滤器 -->
 			<div class="ext-select">
 				<n-select
@@ -196,7 +193,7 @@
 					max-tag-count="responsive" />
 			</div>
 		</div>
-		<!-- 尺寸过滤器 -->
+		<!--s 尺寸过滤器 -->
 		<div class="size-filter">
 			<!-- 宽度过滤器 -->
 			<div class="width-filter">
@@ -253,10 +250,10 @@
 	const {
 		sort,
 		sizeRange,
-		filteredCardList,
+		filterCardList,
 		validCardList,
 		selectionCardList,
-		typeOptions,
+		// typeOptions,
 		extensionOptions: extOptions,
 		filters: storeFilters,
 	} = storeToRefs(cardStore);
@@ -280,7 +277,7 @@
 
 	// 监听card仓库卡片尺寸最大值变化
 	watch(
-		() => [cardStore.info.size.width[1], cardStore.info.size.height[1]],
+		() => [cardStore.sizeRange.width[1], cardStore.sizeRange.height[1]],
 		([width, height]) => {
 			// console.log("过滤器变化", width, height);
 			// 更新组件过滤器最大值
@@ -295,7 +292,7 @@
 
 	// 被选中的卡片
 	const checkedCardList: ComputedRef<BaseCard[]> = computed(() => {
-		return validCardList.value.filter((x) => x.isSelected);
+		return filterCardList.value.all.filter((x) => x.isSelected);
 	});
 
 	// 计算被选中的卡片对应的体积大小总和
@@ -427,12 +424,12 @@
 
 	//f 全选
 	function checkAll() {
-		filteredCardList.value.forEach((c) => (c.isSelected = true));
+		filterCardList.value.all.forEach((c) => (c.isSelected = true));
 	}
 
 	//f 反选
 	function inverseAll() {
-		filteredCardList.value.forEach((c) => (c.isSelected = !c.isSelected));
+		filterCardList.value.all.forEach((c) => (c.isSelected = !c.isSelected));
 	}
 
 	//f 取消
@@ -449,19 +446,19 @@
 
 	//f 下载选中项
 	function downloadSelected() {
-		const cards = validCardList.value.filter((x) => x.isSelected) || [];
+		const cards = filterCardList.value.all.filter((x) => x.isSelected) || [];
 		cardStore.downloadCards(cards);
 	}
 
 	//f 下载全部
 	function downloadAll() {
-		const cards = filteredCardList.value || [];
+		const cards = filterCardList.value.all || [];
 		cardStore.downloadCards(cards);
 	}
 
 	//f 删除选中项
 	function deleteSelected() {
-		const ids = validCardList.value
+		const ids = filterCardList.value.all
 			.filter((x) => x.isSelected)
 			.map((x) => x.id);
 		cardStore.removeCard(ids);
@@ -574,6 +571,9 @@
 	// 样式修复
 	:deep(.wic2-badge) {
 		display: block;
+	}
+	:deep(.wic2-n-badge-sup) {
+		z-index: 2;
 	}
 
 	:deep(.wic2-n-base-select-option__content) {

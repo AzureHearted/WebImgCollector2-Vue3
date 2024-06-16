@@ -2,6 +2,8 @@
 	<div
 		ref="imgContainer"
 		class="img__container"
+		:data-width="state.width"
+		:data-height="state.height"
 		:class="{ loading: !state.loaded && show }">
 		<!-- 图片主体 -->
 		<div

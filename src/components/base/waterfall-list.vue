@@ -137,6 +137,7 @@
 	const defaultOptions = {
 		delay: 300,
 	};
+	defineExpose({ handleResetPosition });
 	function handleResetPosition(
 		task?: (() => void) | any,
 		options?: { delay: number } // 配置选项,可用于临时调整时间间隔
@@ -159,14 +160,17 @@
 			handleTask(); // 执行任务
 			nextTick(() => {
 				if (!resetPosition()) {
-					// setTimeout(() => {
-					// 	handleResetPosition();
-					// }, 100);
-					// console.log("布局失败！");
+					setTimeout(() => {
+						handleResetPosition();
+						// console.timeEnd("布局");
+					});
+					console.log("布局失败！");
+				} else {
+					// console.timeEnd("布局");
 				}
 			});
 			// console.timeEnd("布局");
-			handleTask = () => {}; // 重置任务
+			// handleTask = () => {}; // 重置任务
 			// console.timeEnd("布局");
 		}, delay);
 	}
@@ -376,7 +380,7 @@
 		// console.log("元素过渡结束");
 		// const propertyNames = ["width", "height", "top", "left", "aspect-ratio"];
 		const propertyNames = ["height", "aspect-ratio"];
-		// console.log("有元素过渡结束 => ", e.target, e.propertyName);
+		// console.log("有元素过渡结束 => ", e.propertyName);
 		if (propertyNames.includes(e.propertyName)) {
 			// console.log("有元素过渡结束 => ", e.propertyName);
 			handleResetPosition(null, { delay: 300 });

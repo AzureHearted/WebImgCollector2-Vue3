@@ -30,6 +30,7 @@
 <script setup lang="ts">
 	import { ref, onMounted, defineAsyncComponent } from "vue";
 	import { useGlobalStore, usePatternStore } from "@/stores";
+	import { onActivated } from "vue";
 	// 异步导入Layout组件
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")
@@ -54,6 +55,7 @@
 		patternStore.getUserPatternInfo(); //获取本地方案信息
 		patternStore.setInitPattern(); // 获取初始方案
 	});
+	onActivated(() => {});
 </script>
 
 <style lang="scss" scoped>

@@ -3,6 +3,10 @@
 		class="layout-container"
 		ref="containerDOM"
 		@scroll.stop
+		@wheel.stop
+		@keydown.stop
+		@keypress.stop
+		@keyup.stop
 		:class="{ open: globalStore.openWindow }">
 		<AppBar class="layout-app-bar" />
 		<Main class="layout-main" />
@@ -10,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted, watch, onUnmounted, onUpdated } from "vue";
+	import { ref, watch } from "vue";
 
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	const globalStore = useGlobalStore();
@@ -34,32 +38,32 @@
 		}
 	);
 
-	// 导入Fancybox和相关配置
-	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
-	onMounted(() => {
-		FancyboxBind(containerDOM.value, "[data-fancybox]");
-	});
-	onUpdated(() => {
-		Fancybox.unbind(containerDOM.value);
-		Fancybox.close();
-		FancyboxBind(containerDOM.value, "[data-fancybox]");
-	});
-	onUnmounted(() => {
-		Fancybox.destroy();
-	});
+	//* 导入Fancybox和相关配置
+	// import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
+	// onMounted(() => {
+	// 	FancyboxBind(containerDOM.value, "[data-fancybox]");
+	// });
+	// onUpdated(() => {
+	// 	Fancybox.unbind(containerDOM.value);
+	// 	Fancybox.close();
+	// 	FancyboxBind(containerDOM.value, "[data-fancybox]");
+	// });
+	// onUnmounted(() => {
+	// 	Fancybox.destroy();
+	// });
 
-	// 执行FancyBox绑定
-	function FancyboxBind(
-		listContainerDOM: HTMLElement | null,
-		itemSelector: string = "[data-fancybox]",
-		teleportToDOMs?: HTMLElement
-	) {
-		Fancybox.bind(listContainerDOM, itemSelector, {
-			...configFancybox,
-			parentEl: teleportToDOMs ? teleportToDOMs : listContainerDOM,
-			hideScrollbar: false,
-		});
-	}
+	//f 执行FancyBox绑定
+	// function FancyboxBind(
+	// 	listContainerDOM: HTMLElement | null,
+	// 	itemSelector: string = "[data-fancybox]",
+	// 	teleportToDOMs?: HTMLElement
+	// ) {
+	// 	Fancybox.bind(listContainerDOM, itemSelector, {
+	// 		...configFancybox,
+	// 		parentEl: teleportToDOMs ? teleportToDOMs : listContainerDOM,
+	// 		hideScrollbar: false,
+	// 	});
+	// }
 </script>
 
 <style lang="scss" scoped>

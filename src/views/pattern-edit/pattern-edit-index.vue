@@ -14,13 +14,22 @@
 </template>
 
 <script setup lang="ts">
+	import { onMounted } from "vue";
 	import Tree from "./pattern-tree.vue";
 	import Form from "./pattern-edit-form.vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
-	// import { onMounted } from "vue";
-	// onMounted(() => {
-	// 	console.log("pattern-edit挂载！");
-	// });
+	import usePatternStore from "@/stores/PatternStore";
+	import { onActivated } from "vue";
+
+	const patternStore = usePatternStore();
+	const { getUserPatternInfo } = patternStore;
+
+	onMounted(() => {
+		getUserPatternInfo(); //获取本地方案信息
+	});
+	onActivated(() => {
+		getUserPatternInfo(); //获取本地方案信息
+	});
 </script>
 
 <style lang="scss" scoped>

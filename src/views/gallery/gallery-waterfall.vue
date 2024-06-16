@@ -1,26 +1,25 @@
 <template>
-	<div class="waterfall-wrapper">
-		<BaseScrollbar
-			ref="scrollbarRef"
-			:show-scrollbar="showScrollbar"
-			show-bakctop-button>
-			<WaterFallList
-				:data="(cardList as any)"
-				:pause-layout="!globalStore.openWindow"
-				item-padding="2px">
-				<template #default="{ item }">
-					<GalleryCard
-						:data="(item as any)"
-						viewport-selector=".web-img-collector-container"
-						@change:selected="item.isSelected = $event"
-						@delete="removeCard([$event])"
-						@loaded="handleLoaded"
-						@download="handleDownload"
-						@toggle-favorite="handleToFavorite(item.id, $event)" />
-				</template>
-			</WaterFallList>
-		</BaseScrollbar>
-	</div>
+	<BaseScrollbar
+		ref="scrollbarRef"
+		:show-scrollbar="showScrollbar"
+		show-bakctop-button>
+		<WaterFallList
+			ref="waterFallRef"
+			:data="(filterCardList.all as any)"
+			:pause-layout="!globalStore.openWindow"
+			item-padding="2px">
+			<template #default="{ item }">
+				<GalleryCard
+					:data="(item as any)"
+					viewport-selector=".web-img-collector-container"
+					@change:selected="item.isSelected = $event"
+					@delete="removeCard([$event])"
+					@loaded="handleLoaded"
+					@download="handleDownload"
+					@toggle-favorite="handleToFavorite(item.id, $event)" />
+			</template>
+		</WaterFallList>
+	</BaseScrollbar>
 </template>
 
 <script setup lang="ts">
@@ -29,7 +28,7 @@
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 	import GalleryCard from "./gallery-card.vue";
-	import { isMobile } from "@/utils/common";
+	import { isEqualUrl, isMobile } from "@/utils/common";
 	//i 导入仓库
 	import { storeToRefs } from "pinia";
 	import useCardStore from "@/stores/CardStore";
@@ -41,7 +40,7 @@
 
 	//s 卡片仓库
 	const cardStore = useCardStore();
-	const { filteredCardList: cardList, validCardList } = storeToRefs(cardStore);
+	const { filterCardList } = storeToRefs(cardStore);
 	const { findCard, removeCard, downloadCards } = cardStore;
 	//s 收藏仓库
 	const favoriteStore = useFavoriteStore();
@@ -59,7 +58,7 @@
 
 	//w 手动刷新showScrollbar,临时解决scrollbar组件中wrapper的scroll尺寸未及时更新的bug
 	watch(
-		() => cardList.value,
+		() => filterCardList.value.all,
 		(newList, oldList) => {
 			if (scrollbarRef.value && newList.length === 0 && oldList.length > 0) {
 				showScrollbar.value = !showScrollbar.value;
@@ -72,6 +71,9 @@
 		}
 	);
 
+	//s 瀑布流组件实例
+	const waterFallRef = ref<InstanceType<typeof WaterFallList> | null>(null);
+
 	//f 卡片加载成功完成事件( 1.更新cardStore的尺寸范围信息;2.判断卡片是否被收藏 )
 	const handleLoaded = async (id: string, info: returnInfo) => {
 		//s 仓库找到对应的数据
@@ -82,10 +84,15 @@
 		// console.count("卡片加载完成");
 		//s 刷新仓库对应卡片的preview.meta信息
 		card.preview.meta = { ...card.preview.meta, ...info.meta };
+		if (isEqualUrl(card.preview.url, card.source.url)) {
+			card.source.meta = card.preview.meta;
+		}
 		//s 先刷新仓库数据
 		await refreshFavoriteStore();
 		//s 然后判断该card是否被收藏
 		card.isFavorite = await isFavorite(card);
+		//s 卡片加载完成后手动刷新一次瀑布流
+		waterFallRef.value?.handleResetPosition();
 	};
 
 	//f 处理下载事件
@@ -112,18 +119,10 @@
 	//* 激活时进行比对所有卡片收藏状态
 	onActivated(() => {
 		refreshFavoriteStore();
-		validCardList.value.forEach(async (c) => {
+		filterCardList.value.all.forEach(async (c) => {
 			c.isFavorite = await isFavorite(c);
 		});
 	});
 </script>
 
-<style lang="scss" scoped>
-	// 瀑布流容器样式
-	.waterfall-wrapper {
-		flex: 1;
-		padding: 4px;
-		scroll-behavior: smooth;
-		overflow: clip; // 必须要设置溢出裁切
-	}
-</style>
+<style lang="scss" scoped></style>

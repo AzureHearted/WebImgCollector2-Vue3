@@ -6,7 +6,9 @@
 				placeholder="请输入css选择器"
 				clearable>
 				<template v-if="rule.region.enable" #prepend>
-					{{ rule.region.selector }}
+					<n-ellipsis tooltip style="max-width: 100px">
+						{{ rule.region.selector }}
+					</n-ellipsis>
 				</template>
 			</el-input>
 		</el-form-item>

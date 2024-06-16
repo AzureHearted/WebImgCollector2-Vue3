@@ -1,30 +1,34 @@
 <template>
-	<!-- 视口区域 -->
+	<!--s 视口区域 -->
 	<div
 		ref="containerDOM"
 		class="base-scrollbar_container"
 		@mouseover="scrollbar.show = true"
 		@mouseleave="scrollbar.show = false">
-		<!-- 内容区域 -->
+		<!--s 内容区域 -->
 		<div ref="wrapDOM" class="base-scrollbar__wrap" @wheel.stop @scroll.stop>
-			<!-- 内容内部区域 -->
+			<!--s 内容内部区域 -->
 			<div
 				ref="viewDOM"
 				class="base-scrollbar__view"
 				@transitionend="handleUpdate()">
 				<!-- 调试区域 -->
 				<div v-if="false" class="debug">
-					{{ viewInfo.height }},{{ viewInfo.width }}<br />
-					{{ wrapInfo.height }},{{ wrapInfo.width }}<br />
-					{{ wrapDOM ? wrapDOM!.scrollHeight : 0 }} ,{{
-						wrapDOM ? wrapDOM!.scrollWidth : 0
+					containerInfo {{ containerInfo.height }},{{ containerInfo.width
 					}}<br />
-					{{ wrapInfo }}<br />
+					viewInfo {{ viewInfo.height }},{{ viewInfo.width }}<br />
+					wrapInfo {{ wrapInfo.height }},{{ wrapInfo.width }}<br />
+					wrapDOM {{ wrapDOM ? wrapDOM!.scrollHeight : 0 }} ,{{
+						wrapDOM ? wrapDOM!.scrollWidth : 0
+					}}
+					scrollbarLength {{ scrollbar.vertical.length }},{{
+						scrollbar.horizontal.length
+					}}
 				</div>
-				<!-- 插槽出口 -->
+				<!--s 插槽出口 -->
 				<slot></slot>
 			</div>
-			<!-- 垂直滚动条 -->
+			<!--s 垂直滚动条 -->
 			<transition name="scrollbar">
 				<div
 					ref="verticalBar"
@@ -39,7 +43,7 @@
 					@touchend.stop
 					:style="verticalStyle"></div>
 			</transition>
-			<!-- 水平滚动条 -->
+			<!--s 水平滚动条 -->
 			<transition name="scrollbar">
 				<div
 					ref="horizontalBar"
@@ -54,7 +58,7 @@
 					@touchend.stop
 					:style="horizontalStyle"></div>
 			</transition>
-			<!-- 回到顶部按钮 -->
+			<!--s 回到顶部按钮 -->
 			<transition name="back-top">
 				<div
 					class="base-scrollbar__back-top"
@@ -85,13 +89,16 @@
 		nextTick,
 		defineProps,
 		withDefaults,
-		watchEffect,
 		onUpdated,
 		onActivated,
 		onDeactivated,
 	} from "vue";
 	import type { ComputedRef, CSSProperties } from "vue";
-	import { useScroll, useElementBounding, useDraggable } from "@vueuse/core";
+	import {
+		useScroll,
+		useElementBounding,
+		useDraggable,
+	} from "@vueuse/core";
 
 	// 定义props
 	const props = withDefaults(
@@ -104,6 +111,9 @@
 
 	// 组件容器DOM
 	const containerDOM = ref<HTMLElement | null>(null);
+	const containerInfo = reactive({
+		...useElementBounding(containerDOM),
+	});
 	// 滚动容器
 	const wrapDOM = ref<HTMLElement | null>(null);
 	const wrapInfo = reactive({
@@ -193,109 +203,9 @@
 		freeze.value = true;
 	});
 
-	// 滚动条DOM(垂直)
-	const verticalBar = ref<HTMLElement | null>(null);
-	onMounted(() => {
-		const { y, isDragging } = useDraggable(verticalBar, {
-			axis: "y", // 限制垂直拖拽
-			containerElement: containerDOM.value, // 设置父容器
-		});
-		watchEffect(() => {
-			scrollbar.vertical.y = y.value;
-		});
-		// 监听拖拽参数变化
-		watch([() => scrollbar.vertical.y, isDragging], ([sy, isDragging]) => {
-			if (!wrapDOM.value) return;
-			scrollbar.vertical.top = sy; // 更新滚动条位置
-			scrollbar.vertical.isDragging = isDragging;
-			if (isScrolling.value) return; //如果此时页面正在滚动则不进行下面的操作
-			// 计算滚动距离
-			const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
-			const top = (scrollHeight / wrapInfo.height) * scrollbar.vertical.top;
-			const left = (scrollWidth / wrapInfo.width) * scrollbar.horizontal.left;
-			// 更新滚动距离
-			updateScrollPosition({ y: top, x: left, behavior: "instant" });
-		});
-	});
-
-	// 滚动条样式(垂直)
-	const verticalStyle: ComputedRef<CSSProperties> = computed(() => {
-		return {
-			// 根据滚动条长度决定是否显示滚动条
-			height: `${scrollbar.vertical.length}px`,
-			top: `${scrollbar.vertical.top}px`,
-		};
-	});
-
-	// 垂直滚动条可见性
-	const verticalScrollbarVisible = computed<boolean>(() => {
-		return (
-			((scrollbar.show && scrollbar.vertical.length > 0) ||
-				scrollbar.vertical.isDragging) &&
-			props.showScrollbar
-		);
-	});
-
-	// 滚动条DOM(水平)
-	const horizontalBar = ref<HTMLElement | null>(null);
-	onMounted(() => {
-		const { x, isDragging } = useDraggable(horizontalBar, {
-			axis: "x", // 限制水平拖拽
-			containerElement: containerDOM.value, // 设置父容器
-		});
-		// 同步数据
-		watchEffect(() => {
-			scrollbar.horizontal.x = x.value;
-		});
-		// 监听拖拽参数变化
-		watch([() => scrollbar.horizontal.x, isDragging], ([sx, isDragging]) => {
-			if (!wrapDOM.value) return;
-			scrollbar.horizontal.left = sx; // 更新滚动条位置
-			scrollbar.horizontal.isDragging = isDragging;
-			if (isScrolling.value) return; //如果此时页面正在滚动则不进行下面的操作
-			const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
-			// 计算滚动距离
-			const top = (scrollHeight / wrapInfo.height) * scrollbar.vertical.top;
-			const left = (scrollWidth / wrapInfo.width) * scrollbar.horizontal.left;
-			// 更新滚动距离
-			updateScrollPosition({ y: top, x: left, behavior: "instant" });
-		});
-	});
-
-	// 滚动条样式(水平)
-	const horizontalStyle: ComputedRef<CSSProperties> = computed(() => {
-		return {
-			// 根据滚动条长度决定是否显示滚动条
-			width: `${scrollbar.horizontal.length}px`,
-			left: `${scrollbar.horizontal.left}px`,
-		};
-	});
-
-	// 水平滚动条可见性
-	const horizontalScrollbarVisible = computed<boolean>(() => {
-		return (
-			((scrollbar.show && scrollbar.horizontal.length > 0) ||
-				scrollbar.horizontal.isDragging) &&
-			props.showScrollbar
-		);
-	});
-
-	// 计算滚动条尺寸
-	function calculateScrollbarSize() {
-		if (!wrapDOM.value) return;
-		const { width, height } = wrapInfo; // 提滚动容器视口宽高
-		const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
-		// console.log("当前视口宽度", width, "当前wrapper宽度", scrollWidth);
-		// 计算垂直滚动条长度
-		scrollbar.vertical.length =
-			scrollHeight > Math.ceil(height) ? (height / scrollHeight) * height : -1;
-		// 计算水平滚动条长度
-		scrollbar.horizontal.length =
-			scrollWidth > Math.ceil(width) ? (width / scrollWidth) * width : -1;
-	}
-
+	//s 滚动对象
 	const { x: wrapperX, y: wrapperY, isScrolling } = useScroll(wrapDOM);
-	// 监听wrapper滚动
+	//w 监听wrapper滚动
 	watch([wrapperX, wrapperY], ([x, y]) => {
 		// console.log("wrapper滚动", x, y);
 		if (!scrollbar.vertical.isDragging) {
@@ -304,20 +214,171 @@
 		}
 	});
 
-	// 设置滚动条位置
-	function setScrollbarPosition() {
-		if (wrapDOM.value) {
-			// console.log("内容滚动", wrapInfo.width, wrapperDOM.value.scrollWidth);
-			// 更新滚动条位置
-			scrollbar.vertical.y =
-				(wrapInfo.height / wrapDOM.value.scrollHeight) * wrapperY.value;
-			scrollbar.horizontal.x =
-				(wrapInfo.width / wrapDOM.value.scrollWidth) * wrapperX.value;
-			// console.log("滚动事件", scrollTop);
+	//s 滚动条DOM(垂直)
+	const verticalBar = ref<HTMLElement | null>(null);
+	onMounted(() => {
+		const { y } = useDraggable(verticalBar, {
+			axis: "y", // 限制垂直拖拽
+			containerElement: containerDOM.value, // 设置父容器
+			preventDefault: true,
+			onStart({ y }) {
+				scrollbar.vertical.isDragging = true;
+				// console.log("开始拖拽", y);
+			},
+			onMove({ y }) {
+				// console.log("拖拽中", y, verticalBar.value?.offsetHeight);
+				calcVerticalBarPosition(y);
+			},
+			onEnd({ y }) {
+				scrollbar.vertical.isDragging = false;
+				// console.log("拖拽结束", y);
+			},
+		});
+	});
+
+	watch(
+		() => scrollbar.vertical.y,
+		(nowY) => {
+			calcVerticalBarPosition(nowY);
 		}
+	);
+
+	//f 设置垂直滚动条位置
+	const calcVerticalBarPosition = (y: number) => {
+		if (!wrapDOM.value) return;
+		scrollbar.vertical.top = y; // 更新滚动条位置
+		if (isScrolling.value) return; //如果此时页面正在滚动则不进行下面的操作
+		// 计算滚动距离
+		const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
+		const top = (scrollHeight / containerInfo.height) * scrollbar.vertical.top;
+		const left =
+			(scrollWidth / containerInfo.width) * scrollbar.horizontal.left;
+		// 更新滚动距离
+		updateScrollPosition({ y: top, x: left, behavior: "instant" });
+	};
+
+	//j 滚动条样式(垂直)
+	const verticalStyle: ComputedRef<CSSProperties> = computed(() => {
+		return {
+			// 根据滚动条长度决定是否显示滚动条
+			height: `${scrollbar.vertical.length}px`,
+			top: `${scrollbar.vertical.top}px`,
+		};
+	});
+
+	//j 垂直滚动条可见性
+	const verticalScrollbarVisible = computed<boolean>(() => {
+		return (
+			((scrollbar.show && scrollbar.vertical.length > 0) ||
+				scrollbar.vertical.isDragging) &&
+			props.showScrollbar
+		);
+	});
+
+	//s 滚动条DOM(水平)
+	const horizontalBar = ref<HTMLElement | null>(null);
+	onMounted(() => {
+		const { x } = useDraggable(horizontalBar, {
+			axis: "x", // 限制水平拖拽
+			containerElement: containerDOM.value, // 设置父容器
+			onStart({ x }) {
+				scrollbar.horizontal.isDragging = true;
+				// console.log("开始拖拽", y);
+			},
+			onMove({ x }) {
+				// console.log("拖拽中", x);
+				calcHorizontalBarPosition(x);
+			},
+			onEnd({ x }) {
+				scrollbar.horizontal.isDragging = false;
+				// console.log("拖拽结束", y);
+			},
+		});
+	});
+
+	watch(
+		() => scrollbar.horizontal.x,
+		(nowX) => {
+			calcHorizontalBarPosition(nowX);
+		}
+	);
+
+	//f 设置水平滚动条位置
+	const calcHorizontalBarPosition = (x: number) => {
+		if (!wrapDOM.value) return;
+		scrollbar.horizontal.left = x; // 更新滚动条位置
+		scrollbar.horizontal.x = x;
+		if (isScrolling.value) return; // 如果此时页面正在滚动则不进行下面的操作
+		const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
+		// 计算滚动距离
+		const top = (scrollHeight / wrapInfo.height) * scrollbar.vertical.top;
+		const left = (scrollWidth / wrapInfo.width) * scrollbar.horizontal.left;
+		// 更新滚动距离
+		updateScrollPosition({ y: top, x: left, behavior: "instant" });
+	};
+
+	//j 滚动条样式(水平)
+	const horizontalStyle: ComputedRef<CSSProperties> = computed(() => {
+		return {
+			// 根据滚动条长度决定是否显示滚动条
+			width: `${scrollbar.horizontal.length}px`,
+			left: `${scrollbar.horizontal.left}px`,
+		};
+	});
+
+	//j 水平滚动条可见性
+	const horizontalScrollbarVisible = computed<boolean>(() => {
+		return (
+			((scrollbar.show && scrollbar.horizontal.length > 0) ||
+				scrollbar.horizontal.isDragging) &&
+			props.showScrollbar
+		);
+	});
+
+	//t (算法)由当前视口高度计算滚动条高度
+	const calcBarLength = (
+		channelHeightOrWidth: number, // 滚动条轨道高度(或宽度)
+		scrollHeightOrWidth: number, // 滚动区域总高度(或宽度)
+		contentHeightOrWidth: number // 当前界面显示内容的高度(或宽度)
+	) => {
+		return channelHeightOrWidth * (contentHeightOrWidth / scrollHeightOrWidth);
+	};
+
+	//f 计算滚动条尺寸
+	function calculateScrollbarSize() {
+		if (!wrapDOM.value || !containerDOM.value) return;
+		const { width: channelWidth, height: channelHeight } = containerInfo; // 提取滚动容器视口宽高
+		const { width: wrapWidth, height: wrapHeight } = wrapInfo; // 提取滚动容器视口宽高
+		const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
+		// 计算垂直滚动条长度
+		scrollbar.vertical.length =
+			Math.ceil(scrollHeight) > Math.ceil(wrapHeight)
+				? calcBarLength(channelHeight, scrollHeight, wrapHeight)
+				: -1;
+		// 计算水平滚动条长度
+		scrollbar.horizontal.length =
+			Math.ceil(scrollWidth) > Math.ceil(wrapWidth)
+				? calcBarLength(channelWidth, scrollWidth, wrapWidth)
+				: -1;
 	}
 
-	// 设置wrapper的滚动位置
+	//f 设置滚动条位置
+	function setScrollbarPosition() {
+		if (!wrapDOM.value) return;
+		const { width: channelWidth, height: channelHeight } = containerInfo; // 提取滚动容器视口宽高
+		const { width: wrapWidth, height: wrapHeight } = wrapInfo;
+		const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
+		// 更新滚动条位置
+		scrollbar.vertical.y =
+			(wrapHeight / scrollHeight) *
+			wrapperY.value *
+			(channelHeight / wrapHeight);
+		scrollbar.horizontal.x =
+			(wrapWidth / scrollWidth) * wrapperX.value * (channelWidth / wrapWidth);
+		// console.log("滚动事件", scrollTop);
+	}
+
+	//f 设置wrapper的滚动位置
 	function updateScrollPosition(options: {
 		x?: number;
 		y?: number;
@@ -339,12 +400,12 @@
 		}
 	}
 
-	// f backTop 回到顶部按钮
+	//f backTop 回到顶部按钮
 	const bakctopShow = computed<Boolean>(() => {
 		return scrollbar.vertical.top > 20;
 	});
 
-	// 执行回到顶部
+	//f 执行回到顶部
 	function backToTop() {
 		updateScrollPosition({ y: 0 });
 	}
@@ -369,6 +430,7 @@
 		display: flex;
 		flex-flow: column nowrap;
 		// border: 1px solid black;
+		// background: white;
 	}
 
 	// 内容容器
@@ -381,6 +443,7 @@
 	}
 
 	.base-scrollbar__view {
+		box-sizing: border-box;
 		// background: wheat;
 		transition: opacity 0.5s, width 0.5s, height 0.5s;
 	}
@@ -499,7 +562,12 @@
 			font-size: inherit;
 		}
 	}
-
+	.debug {
+		position: absolute;
+		bottom: 0;
+		z-index: 10;
+		background: white;
+	}
 	.back-top-enter-active,
 	.back-top-leave-active {
 		transition: opacity 0.5s ease;
