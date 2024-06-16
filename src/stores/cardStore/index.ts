@@ -29,7 +29,7 @@ export default defineStore("CardStore", () => {
 
 	//s 数据定义
 	const data = reactive({
-		cardList: [] as Card[], //s 卡片列表
+		cardList: [] as Card[],
 		// 所有匹配到的链接集合
 		urlSet: new Set() as Set<string>,
 		// 所有匹配到的dom集合

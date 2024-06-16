@@ -9,10 +9,8 @@ import {
 } from "./utils/handle-user-data";
 import { ElNotification } from "@/plugin/element-plus";
 
-// import { GM_getValue, GM_setValue } from "$";
 
 export default defineStore("PatternStore", () => {
-	// console.log("用户方案列表：", userPatternList);
 	//s 方案列表
 	const list = ref<Pattern[]>([defaultPattern]);
 	//f 获取用户方案信息
@@ -22,7 +20,7 @@ export default defineStore("PatternStore", () => {
 		const userPatternList: Pattern[] = getUserPatternList();
 		console.log(
 			"%c[日志]%cWebImgCollector2:",
-			"color: #800080; background: #FFFF00; font-size: 14px;font-weight: bold; padding: 0 5px;",
+			"color: #800081; background: #FFFF00; font-size: 14px;font-weight: bold; padding: 0 5px;",
 			"color: #00FF00; font-size: 14px; padding: 0 5px;margin:5px",
 			"读取用户方案",
 			userPatternList
