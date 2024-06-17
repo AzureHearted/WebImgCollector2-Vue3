@@ -9,7 +9,6 @@ import {
 } from "./utils/handle-user-data";
 import { ElNotification } from "@/plugin/element-plus";
 
-
 export default defineStore("PatternStore", () => {
 	//s 方案列表
 	const list = ref<Pattern[]>([defaultPattern]);
@@ -48,18 +47,19 @@ export default defineStore("PatternStore", () => {
 		id: "#",
 	});
 
-	// 获取初始方案id
+	//f 获取初始方案id
 	function setInitPattern() {
 		let targetPattern: Pattern | null = null;
 
 		const matchedPatterns: Pattern[] = list.value.filter((p) => {
 			if (p.id.includes("#")) return false;
-			// 先过滤域名
-			return new RegExp(`${p.mainInfo.host}`).test(location.origin);
+			//s 先过滤域名
+			return p.mainInfo.matchHost.some((host) => {
+				return new RegExp(`${host}`).test(location.origin);
+			});
 		});
-		// console.log("matchedPatterns", matchedPatterns, matchedPatterns.length);
 		if (matchedPatterns.length) {
-			// 路径过滤
+			//s 在路径过滤
 			for (let i = 0; i < matchedPatterns.length; i++) {
 				const pattern = matchedPatterns[i];
 

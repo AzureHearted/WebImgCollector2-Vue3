@@ -1,6 +1,6 @@
 <template>
 	<div
-		ref="imgContainer"
+		ref="containerDOM"
 		class="img__container"
 		:data-width="state.width"
 		:data-height="state.height"
@@ -18,8 +18,9 @@
 				<img
 					v-if="mounted"
 					v-show="show"
-					ref="imgDom"
+					ref="imgDOM"
 					v-lazy.src="src"
+					:style="{ aspectRatio: aspectRatio }"
 					:draggable="draggable" />
 			</slot>
 		</div>
@@ -88,11 +89,9 @@
 		});
 	});
 
-	onUnmounted(() => {
-		// console.log("图片组件卸载");
-	});
-
-	const imgContainer = ref<HTMLElement | null>(null);
+	//s 组件容器DOM
+	const containerDOM = ref<HTMLElement | null>(null);
+	//j 视口容器DOM
 	const viewportDom = computed<IntersectionObserverInit["root"]>(() => {
 		if (props.viewportSelector.trim()) {
 			return document.querySelector(props.viewportSelector);
@@ -101,15 +100,18 @@
 		}
 	});
 
+	//w 监听传入的src变化,变化时立即重新加载
 	watch(
 		() => props.src,
 		(newSrc) => {
 			// console.log("src变化", newSrc, oldSrc);
-			loadImage(newSrc);
+			if (mounted.value) {
+				loadImage(newSrc);
+			}
 		}
 	);
 
-	// 定义状态
+	//s 定义状态
 	const state = reactive({
 		errorImg: errorImg,
 		width: props.initWidth,
@@ -119,7 +121,7 @@
 		show: ref(props.initShow),
 	});
 
-	// 定义宽高比
+	//j 宽高比
 	const aspectRatio = computed(() => {
 		if (state.isError) {
 			return props.initWidth && props.initHeight
@@ -130,9 +132,10 @@
 		}
 	});
 
-	// 定义img标签的ref
-	const imgDom = ref<HTMLImageElement | null>(null);
+	//s 图片DOM
+	const imgDOM = ref<HTMLImageElement | null>(null);
 
+	//t 返回值类型定义
 	export type returnInfo = {
 		meta: {
 			valid: boolean;
@@ -151,20 +154,19 @@
 		(e: "error"): void;
 	}>();
 
-	// 加载图片
+	//f 加载图片
 	const loadImage = async (src: string) => {
 		// console.log("src", src);
 		const img = new Image();
-		// img.referrerPolicy = "strict-origin-when-cross-origin";
-		// img.referrerPolicy = "no-referrer";
-		img.referrerPolicy = "no-referrer-when-downgrade";
+		// img.referrerPolicy = "no-referrer-when-downgrade";
+		// img.referrerPolicy = "no-referrer-when-downgrade";
 		// 图片加载函数
 		const handleLoad = () => {
 			// console.log(imgDom.value);
-			if (imgDom.value) {
-				imgDom.value.src = src;
+			if (imgDOM.value) {
+				imgDOM.value.src = src;
 				nextTick(() => {
-					imgDom.value!.style.display = "block";
+					imgDOM.value!.style.display = "block";
 				});
 			}
 			state.loaded = true;
@@ -250,7 +252,7 @@
 					console.log("图片加载错误", src);
 					state.isError = true;
 					state.loaded = true;
-					imgDom.value!.src = state.errorImg;
+					imgDOM.value!.src = state.errorImg;
 					// 触发error事件
 					emit("error");
 				},
@@ -374,8 +376,8 @@
 				// console.log(viewportDom.value);
 				const observer = new IntersectionObserver(handleIntersection, options);
 				// 开始监听
-				if (imgContainer.value) {
-					observer.observe(imgContainer.value);
+				if (containerDOM.value) {
+					observer.observe(containerDOM.value);
 				} else {
 					console.log("图片监听失效,可能未找到imgContainer");
 				}
@@ -417,7 +419,6 @@
 		width: 100%;
 		height: auto;
 		padding: 0;
-		object-fit: cover;
 		background: transparent;
 		/* 禁止选中文字 */
 		user-select: none;

@@ -22,9 +22,9 @@ export default function getDOM(
 		mode: "first",
 		regionDOM: document,
 	};
-	// 合并选项
+	//s 合并选项
 	const { mode, regionDOM } = { ...defaultOptions, ...options };
-	// 选择器为空则返回空值
+	//s 选择器为空则返回空值
 	if (!selector) {
 		if (mode === "all") {
 			return [] as HTMLElement[];
@@ -32,8 +32,14 @@ export default function getDOM(
 			return null;
 		}
 	}
-	// 获取dom
-	const doms = regionDOM.querySelectorAll(selector);
+	//s 拆分选择器(拆分用逗号分隔的选择器,用于调整最后结果的顺序)
+	const selectors = selector.split(",");
+	//s 获取dom
+	const doms = selectors.reduce((result, currSelector) => {
+		const match = regionDOM.querySelectorAll(currSelector);
+		result.push(...match);
+		return result;
+	}, [] as Element[]);
 	// console.log("selector", selector, "doms", doms);
 	// 判断返回结果
 	switch (mode) {

@@ -7,14 +7,11 @@
 			<n-tabs
 				type="line"
 				size="small"
-				v-model:value="active"
+				v-model:value="nowType"
 				tab-style="min-width: 80px"
 				style="width: 100%; height: 100%">
 				<!--s 图片类 -->
-				<n-tab-pane
-					class="tab-pane"
-					name="image"
-					:disabled="!filterCardList.image.length">
+				<n-tab-pane class="tab-pane" name="image">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							图片
@@ -29,11 +26,24 @@
 						<GalleryBaseWaterfall :card-list="filterCardList.image" />
 					</keep-alive>
 				</n-tab-pane>
+				<!--s 视频类 -->
+				<n-tab-pane class="tab-pane" name="video">
+					<template #tab>
+						<n-flex :size="4" align="center" :wrap="false">
+							视频
+							<n-badge
+								:value="filterCardList.video.length"
+								:max="999"
+								type="default">
+							</n-badge>
+						</n-flex>
+					</template>
+					<keep-alive>
+						<GalleryBaseWaterfall :card-list="filterCardList.video" />
+					</keep-alive>
+				</n-tab-pane>
 				<!--s 网页类 -->
-				<n-tab-pane
-					class="tab-pane"
-					name="html"
-					:disabled="!filterCardList.html.length">
+				<n-tab-pane class="tab-pane" name="html">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							网页
@@ -47,10 +57,7 @@
 					<GalleryBaseWaterfall :card-list="filterCardList.html" />
 				</n-tab-pane>
 				<!--s 其他类 -->
-				<n-tab-pane
-					class="tab-pane"
-					name="other"
-					:disabled="!filterCardList.other.length">
+				<n-tab-pane class="tab-pane" name="other">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							其他
@@ -81,54 +88,13 @@
 	import { storeToRefs } from "pinia";
 	import GalleryToolbar from "./gallery-toolbar.vue";
 	import GalleryBaseWaterfall from "./gallery-base-waterfall.vue";
-	import type { BaseMeta } from "@/stores/CardStore/interface";
 
 	import useCardStore from "@/stores/CardStore";
 	const cardStore = useCardStore();
-	const { filterCardList } = storeToRefs(cardStore);
+	const { filterCardList, nowType } = storeToRefs(cardStore);
 
 	//t 排除false的工具类型
 	type ExcludeFalse<T> = T extends false ? never : T;
-	//s 当前激活的标签
-	const active = ref<ExcludeFalse<BaseMeta["type"] | "other">>("image");
-	//w 修正监听器
-	watch(
-		[
-			active,
-			() => filterCardList.value.image,
-			() => filterCardList.value.html,
-			() => filterCardList.value.other,
-		],
-		([nowActive, imageList, htmlList, otherList]) => {
-			// console.log(nowActive);
-			if (nowActive === "image") {
-				if (!imageList.length) {
-					if (htmlList.length) {
-						active.value = "html";
-					} else if (otherList.length) {
-						active.value = "other";
-					}
-				}
-			} else if (nowActive === "html") {
-				if (!htmlList.length) {
-					if (imageList.length) {
-						active.value = "image";
-					} else if (otherList.length) {
-						active.value = "other";
-					}
-				}
-			} else if (nowActive === "other") {
-				if (!otherList.length) {
-					if (imageList.length) {
-						active.value = "image";
-					} else if (htmlList.length) {
-						active.value = "html";
-					}
-				}
-			}
-		},
-		{ immediate: true }
-	);
 
 	const containerDOM = ref<HTMLElement | null>(null);
 	//* 导入Fancybox和相关配置

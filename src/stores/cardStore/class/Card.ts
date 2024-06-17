@@ -28,6 +28,8 @@ export default class Card implements ICard {
 		title: "", // 卡片标题，可能为空，因为可能从本地创建的卡片，没有标题
 		dom: null,
 	};
+	public tags: string[];
+
 	public isMatch: boolean = false;
 	public isSelected: boolean = false;
 	public isLoaded: boolean = false;
@@ -43,8 +45,10 @@ export default class Card implements ICard {
 			description,
 			isMatch,
 			isFavorite,
+			loading,
 			isLoaded,
 			isSelected,
+			tags,
 		} = option || {};
 		// 初始化卡片对象属性
 		this.id = id || buildUUID(); // 生成uuid作为id
@@ -52,8 +56,8 @@ export default class Card implements ICard {
 		this.isSelected = isSelected || this.isSelected;
 		this.isLoaded = isLoaded || this.isLoaded;
 		this.isFavorite = isFavorite || this.isFavorite;
-		this.loading = this.loading || this.loading;
-
+		this.loading = loading || this.loading;
+		this.tags = tags || [];
 		// 合并用户初始化传入的值，如果有的话。
 		this.source = { ...this.source, ...source };
 		this.preview = { ...this.preview, ...preview };
@@ -101,6 +105,7 @@ export default class Card implements ICard {
 			source: this.source,
 			preview: this.preview,
 			description: this.description,
+			tags: this.tags,
 		});
 		// 去除所有dom
 		rowData.source.dom = null;

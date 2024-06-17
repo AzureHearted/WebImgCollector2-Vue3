@@ -9,7 +9,7 @@
 					:data="(item as Card)"
 					:show-to-locate-button="false"
 					:show-delete-button="false"
-					:show-download-button="(item as Card).source.meta.type==='image'"
+					:show-download-button="(item as Card).source.meta.type!=='html'"
 					viewport-selector=".web-img-collector-container"
 					@change:selected="item.isSelected = $event"
 					@change:title="updateCard([item as Card])"
@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-	import { defineProps, withDefaults,  } from "vue";
+	import { defineProps, withDefaults } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import WaterFallList from "@/components/base/waterfall-list.vue";
 	import GalleryCard from "../gallery/gallery-card.vue";
@@ -78,7 +78,11 @@
 		// console.count("卡片加载完成");
 		//s 刷新仓库对应卡片的preview.meta信息
 		card.preview.meta = { ...card.preview.meta, ...info.meta };
-		if (isEqualUrl(card.preview.url, card.source.url)) {
+		if (
+			isEqualUrl(card.preview.url, card.source.url) &&
+			(card.preview.meta.width > card.source.meta.width ||
+				card.preview.meta.height > card.source.meta.height)
+		) {
 			card.source.meta = card.preview.meta;
 			updateCard([card]);
 		}

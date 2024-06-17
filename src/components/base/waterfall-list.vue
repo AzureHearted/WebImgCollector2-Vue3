@@ -20,11 +20,8 @@
 					:style="{ ...itemStyle }"
 					:data-index="index">
 					<slot :item="item" :index="index">
-						<BaseImgCard
-							:data="item"
-							:img-url="item.url"
-							:img-thumb="item.thumb">
-						</BaseImgCard>
+						<BaseCard :data="item" :img-url="item.url" :img-thumb="item.thumb">
+						</BaseCard>
 					</slot>
 				</div>
 			</template>
@@ -51,7 +48,7 @@
 		onActivated,
 		onDeactivated,
 	} from "vue";
-	import BaseImgCard from "./base-img-card.vue";
+	import BaseCard from "./base-card.vue";
 	import type { CSSProperties, ComputedRef } from "vue";
 
 	export interface IData {

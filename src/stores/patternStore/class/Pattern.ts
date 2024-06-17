@@ -15,6 +15,7 @@ export class Pattern implements BasePattern {
 	public mainInfo: BaseMainInfo = {
 		name: "新方案",
 		host: location.hostname,
+		matchHost: [],
 		icon: getFavicon(),
 		titleSelector: "title",
 		filter: {
@@ -30,7 +31,7 @@ export class Pattern implements BasePattern {
 
 	public backup: BasePattern["backup"] | null = null;
 
-	// 构造
+	//s 构造
 	constructor(options?: Partial<BasePattern>) {
 		this.id = options?.id || buildUUID(); // 为规则生成(拷贝)id
 		this.mainInfo = {
@@ -50,6 +51,10 @@ export class Pattern implements BasePattern {
 			this.rules = this.rules.map((r) => new Rule(r));
 		}
 
+		//! 旧版兼容性设置
+		if (!this.mainInfo.matchHost.length) {
+			this.mainInfo.matchHost.push(this.mainInfo.host);
+		}
 		// 构造后进行数据备份
 		this.backupData();
 	}
@@ -145,6 +150,7 @@ export const defaultPattern = new Pattern({
 	mainInfo: {
 		name: "默认方案",
 		host: "",
+		matchHost: [],
 		icon: "",
 		titleSelector: "title",
 		filter: {

@@ -119,4 +119,11 @@
 <style lang="scss">
 	// 导入修复样式
 	@import "./styles/website/index.scss";
+
+	button i {
+		all: unset;
+	}
+	button {
+		overflow: unset;
+	}
 </style>

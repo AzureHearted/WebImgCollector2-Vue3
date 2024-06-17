@@ -1,6 +1,9 @@
 import { defineStore } from "pinia";
-import { reactive, computed, watch } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import { ElNotification, ElMessageBox } from "@/plugin/element-plus";
+import type { BaseMeta } from "@/stores/CardStore/interface";
+import type { ExcludeType } from "@/types/tools";
+
 // 导入类
 import Card from "./class/Card";
 import { TaskQueue } from "@/utils/taskQueue"; // 任务队列
@@ -29,7 +32,7 @@ export default defineStore("CardStore", () => {
 
 	//s 数据定义
 	const data = reactive({
-		cardList: [] as Card[],
+		cardList: [] as (Card | undefined)[],
 		// 所有匹配到的链接集合
 		urlSet: new Set() as Set<string>,
 		// 所有匹配到的dom集合
@@ -44,6 +47,11 @@ export default defineStore("CardStore", () => {
 		urlBlobMap: new Map<string, Blob>(),
 	});
 
+	//j 有效的卡片
+	const validCardList = computed<Card[]>(() => {
+		return data.cardList.filter((x) => !!x && x !== undefined) as Card[];
+	});
+
 	//* 设置初始类型
 	data.typeMap.set("image", 0);
 	data.typeMap.set("html", 0);
@@ -55,7 +63,7 @@ export default defineStore("CardStore", () => {
 		max: number;
 		min: number;
 	}>(() => {
-		return data.cardList.reduce(
+		return validCardList.value.reduce(
 			(prev, curr) => {
 				const { width, height } = curr.source.meta;
 				if (prev.width[0] > width) prev.width[0] = width;
@@ -85,8 +93,13 @@ export default defineStore("CardStore", () => {
 		}
 	);
 
+	//t 卡片类型(类型)
+	type CardType = ExcludeType<"all" | BaseMeta["type"] | "other", false>;
+	//s 当前类型
+	const nowType = ref<CardType>("image");
 	//s 过滤器
 	const filters = reactive({
+		keyword: "",
 		size: {
 			width: [250, sizeRange.value.width[1]] as [number, number], //宽度过滤器
 			height: [250, sizeRange.value.height[1]] as [number, number], //高度过滤器
@@ -147,7 +160,6 @@ export default defineStore("CardStore", () => {
 		type: [] as string[], //类型过滤器
 		extension: [] as string[], //扩展名过滤器
 	});
-
 	//s 排序相关
 	const sortOptions = [
 		{ value: "#", label: "默认排序", group: "#" },
@@ -190,80 +202,91 @@ export default defineStore("CardStore", () => {
 		},
 	});
 
-	//j 有效的卡片
-	const validCardList = computed<Card[]>(() => {
-		return data.cardList.filter((x) => !!x);
-	});
-
-	//j 选中的卡片
-	const selectionCardList = computed<Card[]>(() => {
-		return validCardList.value.filter((x) => x.isSelected);
-	});
-
 	//j 过滤后的卡片
 	const filterCardList = computed<{
-		all: Card[];
-		image: Card[];
-		html: Card[];
-		other: Card[];
+		[key in CardType]: Card[];
 	}>(() => {
-		// 后续添加处理逻辑，例如过滤、排序等操作。
-		let matchList = data.cardList.filter((x) => {
-			// * 暂时取消最大尺寸限制的过滤
-			const isMatch =
-				!!x && // 过滤排除
-				!data.excludeIdSet.has(x.id) && // 过滤被排除的项
-				(filters.type.length > 0
-					? filters.type.includes(String(x.source.meta.type))
-					: true) &&
-				(filters.extension.length > 0
-					? filters.extension.includes(String(x.source.meta.ext))
-					: true) &&
-				(x.source.meta.type === "image" && x.isLoaded
-					? x.source.meta.width! >= filters.size.width[0] &&
-					  x.source.meta.height! >= filters.size.height[0]
-					: true);
-			if (!isMatch) {
-				// 如果不匹配的需要将选中状态设置为false
-				x.isSelected = false;
-				// console.log("未被选中");
-			}
-			return isMatch;
-		});
-		// 排序
+		const image = [] as Card[],
+			video = [] as Card[],
+			audio = [] as Card[],
+			html = [] as Card[],
+			other = [] as Card[];
+		let all = validCardList.value;
+
+		//s 先排序
 		if (sort.method === "name-asc") {
-			matchList = matchList.sort((a, b) =>
+			all = all.sort((a, b) =>
 				mixSort(a.description.title, b.description.title)
 			);
 		} else if (sort.method === "name-desc") {
-			matchList = matchList.sort((a, b) =>
+			all = all.sort((a, b) =>
 				mixSort(b.description.title, a.description.title)
 			);
 		} else if (sort.method === "width-asc") {
-			matchList = matchList.sort(
-				(a, b) => a.source.meta.width - b.source.meta.width
-			);
+			all = all.sort((a, b) => a.source.meta.width - b.source.meta.width);
 		} else if (sort.method === "width-desc") {
-			matchList = matchList.sort(
-				(a, b) => b.source.meta.width - a.source.meta.width
-			);
+			all = all.sort((a, b) => b.source.meta.width - a.source.meta.width);
 		} else if (sort.method === "height-asc") {
-			matchList = matchList.sort(
-				(a, b) => a.source.meta.height - b.source.meta.height
-			);
+			all = all.sort((a, b) => a.source.meta.height - b.source.meta.height);
 		} else if (sort.method === "height-desc") {
-			matchList = matchList.sort(
-				(a, b) => b.source.meta.height - a.source.meta.height
-			);
+			all = all.sort((a, b) => b.source.meta.height - a.source.meta.height);
 		}
-		// return matchList;
+
+		//s 再过滤
+		all = all.filter((x) => {
+			const { id, isLoaded } = x;
+			const {
+				type: sType,
+				width: sWidth,
+				height: sHeight,
+				ext: sExt,
+			} = x.source.meta;
+			const { title } = x.description;
+			//* 暂时取消最大尺寸限制的过滤
+			const isMatch =
+				title
+					.trim()
+					.toLocaleLowerCase()
+					.includes(filters.keyword.trim().toLocaleLowerCase()) &&
+				!data.excludeIdSet.has(id) && // 过滤被排除的项
+				(filters.extension.length > 0
+					? filters.extension.includes(String(sExt))
+					: true) &&
+				(sType === "image" || sType === "video"
+					? sWidth! >= filters.size.width[0] &&
+					  sHeight! >= filters.size.height[0]
+					: true);
+			if (!isMatch) x.isSelected = false; // 如果不匹配的需要将选中状态设置为false
+			if (isMatch) {
+				if (sType === "image") {
+					image.push(x);
+				} else if (sType === "html") {
+					html.push(x);
+				} else if (sType === "video") {
+					video.push(x);
+				} else if (sType === "audio") {
+					video.push(x);
+				} else {
+					other.push(x);
+				}
+			}
+			return isMatch;
+		});
+
+		return { all, image, video, audio, html, other };
+	});
+
+	//j 选中的卡片
+	const selectionCardList = computed<{
+		[key in CardType]: Card[];
+	}>(() => {
 		return {
-			all: matchList,
-			image: matchList.filter((c) => c.source.meta.type === "image"),
-			html: matchList.filter((c) => c.source.meta.type === "html"),
-			other: matchList.filter(
-				(c) => c.source.meta.type !== "image" && c.source.meta.type !== "html"
-			),
+			all: filterCardList.value.all.filter((x) => x.isSelected),
+			image: filterCardList.value.image.filter((x) => x.isSelected),
+			video: filterCardList.value.video.filter((x) => x.isSelected),
+			audio: filterCardList.value.audio.filter((x) => x.isSelected),
+			html: filterCardList.value.html.filter((x) => x.isSelected),
+			other: filterCardList.value.other.filter((x) => x.isSelected),
 		};
 	});
 
@@ -388,6 +411,7 @@ export default defineStore("CardStore", () => {
 					},
 					// 匹配结束后的回调
 					onFinished() {
+						// 记录当前数量
 						amount = data.cardList.length;
 					},
 				}
@@ -631,6 +655,7 @@ export default defineStore("CardStore", () => {
 		sizeRange,
 		sort,
 		filters,
+		nowType,
 		validCardList,
 		selectionCardList,
 		filterCardList,

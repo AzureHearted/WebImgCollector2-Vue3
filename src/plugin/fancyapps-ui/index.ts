@@ -19,6 +19,11 @@ export const configFancybox: Partial<OptionsType> = {
 	autoFocus: true,
 	Hash: false,
 	on,
+	Html: {
+		videoTpl: /*html*/ `
+			<video class="fancybox__html5video" playsinline  controls  poster="{{poster}}" draggable="false"><source src="{{src}}" type="{{format}}" />抱歉，您的浏览器不支持嵌入式视频.</video>
+		`,
+	},
 };
 
 export const Fancybox = _Fancybox;

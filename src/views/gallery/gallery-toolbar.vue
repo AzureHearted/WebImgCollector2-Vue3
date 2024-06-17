@@ -75,7 +75,7 @@
 						<var-cell
 							@click="clear"
 							title="清空所有"
-							v-if="!!filterCardList.all.length && !loadingStore.loading"
+							v-if="!!filterCardList[nowType].length && !loadingStore.loading"
 							ripple>
 							<template #icon>
 								<i-mdi-delete-empty style="color: red" />
@@ -99,8 +99,8 @@
 				:offset="[-116, 2]"
 				type="success"
 				:max="999"
-				:show="!!filterCardList.all.length"
-				:value="filterCardList.all.length">
+				:show="!!filterCardList[nowType].length"
+				:value="filterCardList[nowType].length">
 				<!-- 选择器按钮组 -->
 				<var-button-group class="control-button-group">
 					<var-button type="primary" @click="checkAll"> 全选 </var-button>
@@ -128,7 +128,9 @@
 							下载
 						</var-button>
 						<var-button
-							:disabled="!filterCardList.all.length || loadingStore.loading"
+							:disabled="
+								!filterCardList[nowType].length || loadingStore.loading
+							"
 							style="padding: 0 4px">
 							<i-material-symbols-arrow-drop-down-rounded
 								style="fill: white"
@@ -145,7 +147,7 @@
 						<var-cell
 							title="删除选中项"
 							@click="deleteSelected"
-							v-if="!!selectionCardList.length"
+							v-if="!!selectionCardList[nowType].length"
 							ripple>
 							<template #icon>
 								<i-mdi-delete-sweep style="color: red" />
@@ -154,7 +156,7 @@
 						<var-cell
 							title="收藏选中项"
 							@click="favoriteSelected"
-							v-if="!!selectionCardList.length"
+							v-if="!!selectionCardList[nowType].length"
 							ripple>
 							<template #icon>
 								<i-mdi-book-favorite style="color: purple" />
@@ -166,20 +168,7 @@
 		</div>
 		<!--s 过滤控制器 -->
 		<div class="control-group">
-			<!-- 类型过滤器 -->
-			<!-- <div class="type-select">
-				<n-select
-					v-model:value="storeFilters.type"
-					placeholder="类型过滤"
-					multiple
-					clearable
-					:to="false"
-					:render-tag="renderTag"
-					:render-label="renderOptionLabelWithCount"
-					:options="typeOptions"
-					max-tag-count="responsive" />
-			</div> -->
-			<!-- 扩展名过滤器 -->
+			<!--s 扩展名过滤器 -->
 			<div class="ext-select">
 				<n-select
 					v-model:value="storeFilters.extension"
@@ -192,9 +181,24 @@
 					:options="extOptions"
 					max-tag-count="responsive" />
 			</div>
+			<!--s 关键词过滤 -->
+			<n-badge
+				:offset="[-4, 2]"
+				class="keyword-filter-input"
+				:value="filterCardList.all.length"
+				:max="999"
+				type="info">
+				<n-input
+					type="text"
+					v-model:value="filters.keyword"
+					placeholder="输入检索关键词"
+					clearable
+					@clear="handleKeywordFilter('')"
+					@keydown.enter="handleKeywordFilter()" />
+			</n-badge>
 		</div>
 		<!--s 尺寸过滤器 -->
-		<div class="size-filter">
+		<div v-if="nowType === 'image'" class="size-filter">
 			<!-- 宽度过滤器 -->
 			<div class="width-filter">
 				<el-text type="primary">宽度</el-text>
@@ -245,6 +249,7 @@
 	import usePatternStore from "@/stores/PatternStore";
 	import useCardStore from "@/stores/CardStore";
 	import useFavoriteStore from "@/stores/FavoriteStore";
+	import type Card from "@/stores/CardStore/class/Card";
 
 	const cardStore = useCardStore();
 	const {
@@ -256,6 +261,7 @@
 		// typeOptions,
 		extensionOptions: extOptions,
 		filters: storeFilters,
+		nowType,
 	} = storeToRefs(cardStore);
 	const favoriteStore = useFavoriteStore();
 	const loadingStore = useLoadingStore();
@@ -263,6 +269,7 @@
 
 	//s 过滤器定义
 	const filters = reactive({
+		keyword: "",
 		size: {
 			width: [
 				storeFilters.value.size.width[0],
@@ -291,8 +298,8 @@
 	);
 
 	// 被选中的卡片
-	const checkedCardList: ComputedRef<BaseCard[]> = computed(() => {
-		return filterCardList.value.all.filter((x) => x.isSelected);
+	const checkedCardList: ComputedRef<Card[]> = computed(() => {
+		return filterCardList.value[nowType.value].filter((x) => x.isSelected);
 	});
 
 	// 计算被选中的卡片对应的体积大小总和
@@ -329,7 +336,8 @@
 			} as SelectOption;
 		});
 	});
-	// 方案选项标签渲染函数
+
+	//f 方案选项标签渲染函数
 	const renderPatternSelectOptionsLabel = (
 		option: SelectOption
 	): VNodeChild => {
@@ -347,7 +355,19 @@
 					: null,
 				h(
 					NEllipsis,
-					{ style: "user-select: none;" },
+					{
+						style: {
+							userSelect: "none",
+							//s 这里如果判断选项对应的方案与当前站点匹配则字体显示为红色
+							color:
+								!(option.rowData as Pattern).id.includes("#") &&
+								(option.rowData as Pattern).mainInfo.matchHost.some((host) => {
+									return new RegExp(`${host}`).test(location.origin);
+								})
+									? "red"
+									: null,
+						},
+					},
 					{ default: () => option.label as string }
 				),
 			]
@@ -424,17 +444,19 @@
 
 	//f 全选
 	function checkAll() {
-		filterCardList.value.all.forEach((c) => (c.isSelected = true));
+		filterCardList.value[nowType.value].forEach((c) => (c.isSelected = true));
 	}
 
 	//f 反选
 	function inverseAll() {
-		filterCardList.value.all.forEach((c) => (c.isSelected = !c.isSelected));
+		filterCardList.value[nowType.value].forEach(
+			(c) => (c.isSelected = !c.isSelected)
+		);
 	}
 
 	//f 取消
 	function cancel() {
-		validCardList.value.forEach((c) => (c.isSelected = false));
+		filterCardList.value[nowType.value].forEach((c) => (c.isSelected = false));
 	}
 
 	//f 重置过滤器
@@ -446,19 +468,20 @@
 
 	//f 下载选中项
 	function downloadSelected() {
-		const cards = filterCardList.value.all.filter((x) => x.isSelected) || [];
+		const cards =
+			filterCardList.value[nowType.value].filter((x) => x.isSelected) || [];
 		cardStore.downloadCards(cards);
 	}
 
 	//f 下载全部
 	function downloadAll() {
-		const cards = filterCardList.value.all || [];
+		const cards = filterCardList.value[nowType.value] || [];
 		cardStore.downloadCards(cards);
 	}
 
 	//f 删除选中项
 	function deleteSelected() {
-		const ids = filterCardList.value.all
+		const ids = filterCardList.value[nowType.value]
 			.filter((x) => x.isSelected)
 			.map((x) => x.id);
 		cardStore.removeCard(ids);
@@ -466,9 +489,18 @@
 
 	//f 收藏选中项
 	function favoriteSelected() {
-		favoriteStore.addCard(selectionCardList.value); // 添加卡片到Favorite仓库
-		selectionCardList.value.forEach((c) => (c.isFavorite = true)); // 更新卡片收藏状态
+		favoriteStore.addCard(selectionCardList.value[nowType.value]); // 添加卡片到Favorite仓库
+		selectionCardList.value[nowType.value].forEach(
+			(c) => (c.isFavorite = true)
+		); // 更新卡片收藏状态
 	}
+
+	//f 处理关键词过滤(回车或点击搜索按钮触发)
+	const handleKeywordFilter = (value?: string) => {
+		const keyword = value !== undefined ? value : filters.keyword;
+		console.log("触发关键词过滤", keyword);
+		storeFilters.value.keyword = keyword;
+	};
 </script>
 
 <style lang="scss" scoped>
@@ -535,10 +567,14 @@
 		gap: 2px;
 	}
 
+	// 关键词过滤器
+	.keyword-filter-input {
+		width: 180px;
+	}
 	// 类型、扩展名选择器样式
 	.type-select,
 	.ext-select {
-		width: 150px;
+		width: 130px;
 	}
 
 	// 尺寸过滤器样式
@@ -553,7 +589,7 @@
 		.height-filter {
 			flex: 1 0;
 			min-width: 200px;
-			max-width: 400px;
+			max-width: 250px;
 			display: flex;
 			flex-flow: row nowrap;
 			padding-right: 10px;
@@ -573,7 +609,7 @@
 		display: block;
 	}
 	:deep(.wic2-n-badge-sup) {
-		z-index: 2;
+		z-index: 5;
 	}
 
 	:deep(.wic2-n-base-select-option__content) {

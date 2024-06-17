@@ -4,20 +4,19 @@
 			<template #header>
 				<div class="form-card-header">
 					<div class="form-card-header-left">
-						<i-material-symbols-box-edit
-							v-if="editingPattern?.id.includes('#')" />
+						<i-material-symbols-box-edit v-if="disabled" />
 						<BaseImg
 							v-else
 							:src="editingPattern?.mainInfo.icon"
 							style="width: 16px; height: 16px"></BaseImg>
 						<span>{{ editingPattern?.mainInfo?.name }}</span>
-						<!-- 在新窗口打开 -->
+						<!--s 在新窗口打开 -->
 						<el-button
-							v-if="!editingPattern?.id.includes('#')"
+							v-if="!disabled"
 							type="success"
 							circle
 							text
-							@click="open()">
+							@click="open(editingPattern.mainInfo.host)">
 							<i-material-symbols-open-in-new />
 						</el-button>
 					</div>
@@ -46,7 +45,7 @@
 				v-if="editingPattern"
 				ref="form"
 				label-position="left"
-				:disabled="editingPattern.id.includes('#')">
+				:disabled="disabled">
 				<el-form-item label="方案名称">
 					<el-input
 						v-model="editingPattern.mainInfo.name"
@@ -56,8 +55,69 @@
 				<el-form-item label="域名">
 					<el-input
 						v-model="editingPattern.mainInfo.host"
-						placeholder=""
+						placeholder="请输入域名地址"
 						clearable></el-input>
+				</el-form-item>
+				<el-form-item label="匹配域名">
+					<n-flex :size="4" style="flex: 1">
+						<template
+							v-for="(item, index) in editingPattern.mainInfo.matchHost"
+							:key="index">
+							<el-input
+								v-model="editingPattern.mainInfo.matchHost[index]"
+								placeholder="请输入域名地址"
+								clearable>
+								<template v-if="!disabled" #append>
+									<n-flex :size="4" style="margin: 0 -10px">
+										<!--s 新增 -->
+										<n-button
+											:disabled="disabled"
+											type="success"
+											size="tiny"
+											circle
+											@click="
+												editingPattern.mainInfo.matchHost.splice(
+													index + 1,
+													0,
+													''
+												)
+											">
+											<template #icon>
+												<i-ep-plus />
+											</template>
+										</n-button>
+										<!--s 打开 -->
+										<n-button
+											type="info"
+											size="tiny"
+											circle
+											@click="open(item)">
+											<template #icon>
+												<i-material-symbols-open-in-new />
+											</template>
+										</n-button>
+										<!--s 删除 -->
+										<el-popconfirm
+											title="确定删除?"
+											:hide-after="0"
+											confirm-button-text="是"
+											cancel-button-text="否"
+											@confirm="
+												editingPattern.mainInfo.matchHost.splice(index, 1)
+											">
+											<template #reference>
+												<n-button type="error" size="tiny" circle @click.stop>
+													<template #icon>
+														<i-material-symbols-delete-rounded />
+													</template>
+												</n-button>
+											</template>
+										</el-popconfirm>
+									</n-flex>
+								</template>
+							</el-input>
+						</template>
+					</n-flex>
 				</el-form-item>
 				<el-form-item label="过滤器">
 					<el-input
@@ -155,7 +215,7 @@
 							placeholder="规则名"
 							:maxlength="30"
 							show-word-limit
-							:disabled="editingRule.id.includes('#')"
+							:disabled="disabled"
 							name="ruleName"
 							v-model="editingRule.name">
 							<template #prefix>
@@ -166,7 +226,7 @@
 						</el-input>
 						<el-switch
 							v-model="editingRule.enable"
-							:disabled="editingRule.id.includes('#')"
+							:disabled="disabled"
 							style="--wic2-switch-off-color: #ff9f00"
 							inline-prompt
 							active-text="启用"
@@ -209,22 +269,29 @@
 
 	import { storeToRefs } from "pinia";
 	import usePatternStore from "@/stores/PatternStore";
+	import { GM_openInTab } from "$";
+	import { computed } from "vue";
 	const patternStore = usePatternStore();
 	const { editingPattern, editingRule } = storeToRefs(patternStore);
 	const { saveUserPatternInfo } = patternStore;
 
-	// 保存结果
+	//j 是否禁用
+	const disabled = computed(() => {
+		return editingPattern.value?.id.includes("#");
+	});
+
+	//f 保存结果
 	function save() {
 		// console.log(editingPattern.value?.getJson());
 		editingPattern.value?.backupData(); //先进行备份
 		saveUserPatternInfo(); // 备份后进行数据存储
 	}
-	// 重置表单
+	//f 重置表单
 	function reset() {
 		editingPattern.value?.recoveryData();
 	}
 
-	// 拷贝方案(或规则)至剪贴板
+	//f 拷贝方案(或规则)至剪贴板
 	function copyToClipboard(obj: Pattern | Rule) {
 		const { copy } = useClipboard();
 		const rowData = JSON.stringify(obj.getRowData({ includeId: false }));
@@ -253,7 +320,7 @@
 			});
 	}
 
-	// 保存方案(或规则)至本地文件
+	//f 保存方案(或规则)至本地文件
 	function saveToFile(obj: Pattern | Rule) {
 		const rowData = JSON.stringify(obj.getRowData({ includeId: true }));
 		// 将文本转为blob
@@ -265,16 +332,16 @@
 		}
 	}
 
-	// 打开对应网站
-	async function open() {
-		if (!editingPattern.value) return;
-		let { host: url } = editingPattern.value.mainInfo;
+	//f 打开对应网站
+	function open(url: string) {
 		if (!url.trim()) return;
 		url = "https://" + url.trim();
-		window.open(url, "_blank");
+		GM_openInTab(url, {
+			active: true,
+		});
 	}
 
-	// 粘贴规则
+	//f 粘贴规则
 	function pasteRule() {
 		navigator.clipboard
 			.readText()

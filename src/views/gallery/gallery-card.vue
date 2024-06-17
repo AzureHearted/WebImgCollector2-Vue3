@@ -1,21 +1,25 @@
 <template>
-	<BaseImgCard
+	<BaseCard
 		class="gallery-card"
 		background-color="transparent"
 		style="overflow: hidden; border: unset"
 		:data-show="isMobile()"
 		:data-visible="targetIsVisible"
+		:data-source-type="data.source.meta.type"
+		:data-preview-type="data.preview.meta.type"
 		:data-checked="data.isSelected">
-		<!-- 卡片顶部 -->
+		<!--s 卡片顶部 -->
 		<template #header>
 			<div class="gallery-card-header">
 				<div class="gallery-card-header-left">
-					<!-- 复选框 -->
+					<!--s 复选框 -->
 					<div class="card-checkbox">
+						<!--s 选中复选框 -->
 						<BaseCheckbox
 							v-if="showCheckBox"
 							:checked="data.isSelected"
 							@change="emits('change:selected', $event)" />
+						<!--s 收藏复选框 -->
 						<BaseCheckbox
 							v-if="showFavoriteButton"
 							:checked="data.isFavorite"
@@ -31,7 +35,7 @@
 					</div>
 				</div>
 				<div class="gallery-card-header-right">
-					<!-- 卡片按钮组 -->
+					<!--s 卡片按钮组 -->
 					<div class="card-button-group">
 						<el-button-group size="small">
 							<!--s 删除 -->
@@ -46,6 +50,15 @@
 							</el-button>
 						</el-button-group>
 						<el-button-group size="small">
+							<!--s 标签编辑 -->
+							<TagEdit to=".web-img-collector-top-container">
+								<el-button type="primary" v-ripple>
+									<template #icon>
+										<i-mdi-tag-text />
+									</template>
+								</el-button>
+							</TagEdit>
+							<!--! 标签编辑窗口(组件)  -->
 							<!--s 重命名 -->
 							<el-button type="primary" @click="rename(data)" v-ripple>
 								<template #icon>
@@ -64,11 +77,13 @@
 									<i-material-symbols-location-on-outline />
 								</template>
 							</el-button>
-							<!--s 下载(图片类) -->
+							<!--s 下载(图片或视频类) -->
 							<el-button
 								v-if="
 									(data.source.meta.type === 'image' ||
-										data.preview.meta.type === 'image') &&
+										data.preview.meta.type === 'image' ||
+										data.source.meta.type === 'video' ||
+										data.preview.meta.type === 'video') &&
 									showDownloadButton
 								"
 								:loading="data.loading"
@@ -94,7 +109,7 @@
 				</div>
 			</div>
 		</template>
-		<!-- 卡片主体(图片) -->
+		<!--s 卡片主体(图片) -->
 		<template #default>
 			<div
 				:style="{
@@ -106,31 +121,60 @@
 				:href="data.source.url"
 				:data-type="showType"
 				:data-preload="showType === 'iframe' ? false : true"
+				:data-width="showType === 'html5video' ? data.source.meta.width : false"
+				:data-height="
+					showType === 'html5video' ? data.source.meta.height : false
+				"
 				:data-thumb="data.preview.url"
 				:data-download-src="data.source.url">
-				<BaseImg
-					v-if="data.source.meta.type === 'image'"
-					:src="data.source.url"
-					:show="targetIsVisible"
-					use-thumb
-					:viewport-selector="viewportSelector"
-					:thumb="data.preview.url"
-					:init-width="data.preview.meta.width"
-					:init-height="data.preview.meta.height"
-					@loaded="emits('loaded', data.id, $event)"
-					:draggable="false"></BaseImg>
-				<BaseImg
-					v-else-if="
-						data.source.meta.type === 'html' &&
-						data.preview.meta.type === 'image'
-					"
-					:viewport-selector="viewportSelector"
-					:src="data.preview.url"
-					:show="targetIsVisible"
-					:init-width="data.preview.meta.width"
-					:init-height="data.preview.meta.height"
-					@loaded="emits('loaded', data.id, $event)"
-					:draggable="false"></BaseImg>
+				<template v-if="data.preview.meta.type === 'image'">
+					<!--s 纯图片类型 -->
+					<BaseImg
+						v-if="data.source.meta.type === 'image'"
+						:src="data.source.url"
+						:show="targetIsVisible"
+						:viewport-selector="viewportSelector"
+						use-thumb
+						:thumb="data.preview.url"
+						:init-width="data.preview.meta.width"
+						:init-height="data.preview.meta.height"
+						@loaded="emits('loaded', data.id, $event)"
+						:draggable="false" />
+					<!--s 网页类型(封面图片) -->
+					<BaseImg
+						v-else-if="
+							data.source.meta.type === 'html' ||
+							data.source.meta.type === 'video'
+						"
+						:viewport-selector="viewportSelector"
+						:src="data.preview.url"
+						:show="targetIsVisible"
+						:init-width="data.preview.meta.width"
+						:init-height="data.preview.meta.height"
+						@loaded="emits('loaded', data.id, $event)"
+						:draggable="false" />
+				</template>
+				<template v-else-if="data.preview.meta.type === 'video'">
+					<!--s 纯视频类型 或 网页类型(封面视频or图片)-->
+					<BaseVideo
+						v-if="
+							data.source.meta.type === 'video' ||
+							data.source.meta.type === 'image' ||
+							data.source.meta.type === 'html'
+						"
+						muted
+						hover-play
+						hover-anew-start
+						loop
+						:show-controls="false"
+						:src="data.preview.url"
+						:show="targetIsVisible"
+						:viewport-selector="viewportSelector"
+						:init-width="data.preview.meta.width"
+						:init-height="data.preview.meta.height"
+						@loaded="emits('loaded', data.id, $event)" />
+				</template>
+				<!--s html的其他类型 -->
 				<BaseImg
 					v-else
 					src=""
@@ -142,7 +186,7 @@
 				</BaseImg>
 			</div>
 		</template>
-		<!-- 卡片底部 -->
+		<!--s 卡片底部 -->
 		<template #footer>
 			<div class="gallery-card-footer">
 				<n-flex :size="4"> </n-flex>
@@ -192,15 +236,24 @@
 				</el-tooltip>
 			</div>
 		</template>
-	</BaseImgCard>
+	</BaseCard>
 </template>
 
 <script setup lang="ts">
-	import { ref, computed, withDefaults } from "vue";
+	import {
+		ref,
+		computed,
+		withDefaults,
+		// onMounted,
+		// onActivated,
+		// onDeactivated,
+	} from "vue";
 	import type { ComputedRef } from "vue";
-	import BaseImgCard from "@/components/base/base-img-card.vue";
+	import BaseCard from "@/components/base/base-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
+	import BaseVideo from "@/components/base/base-video.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
+	import TagEdit from "./tag-edit.vue";
 	import Card from "@/stores/CardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 	import { GM_openInTab } from "$";
@@ -243,6 +296,17 @@
 			showToLocateButton: true,
 		}
 	);
+
+	// onMounted(() => {
+	// 	console.log("卡片被挂载", props.data.id);
+	// });
+	// onActivated(() => {
+	// 	console.log("卡片被激活", props.data.id);
+	// });
+	// onDeactivated(() => {
+	// 	console.log("卡片被冻结", props.data.id);
+	// });
+
 	const emits = defineEmits<{
 		(e: "change:selected", val: boolean): Promise<void>; // 选中状态变化事件
 		(e: "change:title", id: string, val: string): Promise<void>; // 标题变化事件
@@ -253,7 +317,7 @@
 		(e: "change:visible", val: boolean): Promise<void>; // 可见性发生变化
 	}>();
 
-	// 大小
+	//j 大小
 	const size: ComputedRef<string> = computed(() => {
 		const byteSize = props.data.source.blob?.size;
 		if (byteSize) {
@@ -268,17 +332,20 @@
 		| "image"
 		| "iframe"
 		| "youtube"
-		| "vimeo"
 		| "inline"
 		| "html"
 		| "ajax"
+		| "html5video"
 		| false;
-	// 计算默认类型
+	//j 计算默认类型
 	const showType: ComputedRef<FancyboxType> = computed(() => {
 		const { type: metaType } = props.data.source.meta;
 		let type: FancyboxType = "image";
-		if (metaType && metaType === "html") {
+		if (!metaType) return type;
+		if (metaType === "html") {
 			type = "iframe";
+		} else if (metaType === "video") {
+			type = "html5video";
 		}
 		return type;
 	});

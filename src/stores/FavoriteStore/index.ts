@@ -1,9 +1,11 @@
-import Card from "@/stores/CardStore/class/Card";
-import { isEqualUrl, mixSort } from "@/utils/common";
-import localforage from "localforage";
 import { defineStore } from "pinia";
-import useCardStore from "@/stores/CardStore";
 import { computed, reactive, ref } from "vue";
+import Card from "@/stores/CardStore/class/Card";
+import type { BaseMeta } from "@/stores/CardStore/interface";
+import { isEqualUrl, mixSort } from "@/utils/common";
+import type { ExcludeType } from "@/types/tools";
+import localforage from "localforage";
+import useCardStore from "@/stores/CardStore";
 
 export default defineStore("FavoriteStore", () => {
 	const cardStore = useCardStore();
@@ -94,6 +96,11 @@ export default defineStore("FavoriteStore", () => {
 	const selectedCardList = computed<Card[]>(() => {
 		return cardList.value.filter((c) => c.isSelected);
 	});
+
+	//t 卡片类型(类型)
+	type CardType = ExcludeType<"all" | BaseMeta["type"] | "other", false>;
+	//s 当前类型
+	const nowType = ref<CardType>("image");
 
 	//s 过滤器
 	const filters = reactive({
@@ -242,73 +249,83 @@ export default defineStore("FavoriteStore", () => {
 
 	//j 初步过滤后的卡片列表
 	const filterCardList = computed<{
-		all: Card[];
-		image: Card[];
-		html: Card[];
-		other: Card[];
+		[key in CardType]: Card[];
 	}>(() => {
-		let matchList = cardList.value.filter((c) => {
-			// console.log(c.source.meta.width, filters.size.width[1]);
-			return (
-				c.description.title
-					.trim()
-					.toLocaleLowerCase()
-					.includes(filterKeyword.value.trim().toLocaleLowerCase()) &&
-				// (filters.type.length > 0
-				// 	? filters.type.includes(String(c.source.meta.type))
-				// 	: true) &&
-				(filters.extension.length > 0
-					? filters.extension.includes(String(c.source.meta.ext))
-					: true) &&
-				(c.source.meta.type === "image"
-					? c.source.meta.width >= filters.size.width[0] &&
-					  c.source.meta.width <= filters.size.width[1] &&
-					  c.source.meta.height <= filters.size.height[1] &&
-					  c.source.meta.height >= filters.size.height[0]
-					: true)
-			);
-		});
-		// 排序
+		const image = [] as Card[],
+			video = [] as Card[],
+			audio = [] as Card[],
+			html = [] as Card[],
+			other = [] as Card[];
+		let all = cardList.value;
+		//s 先排序
 		if (sortInfo.method === "#") {
-			matchList = matchList.sort((a, b) =>
+			all = all.sort((a, b) =>
 				mixSort(
 					a.source.originUrls ? a.source.originUrls[0] : "",
 					b.source.originUrls ? b.source.originUrls[0] : ""
 				)
 			);
 		} else if (sortInfo.method === "name-asc") {
-			matchList = matchList.sort((a, b) =>
+			all = all.sort((a, b) =>
 				mixSort(a.description.title, b.description.title)
 			);
 		} else if (sortInfo.method === "name-desc") {
-			matchList = matchList.sort((a, b) =>
+			all = all.sort((a, b) =>
 				mixSort(b.description.title, a.description.title)
 			);
 		} else if (sortInfo.method === "width-asc") {
-			matchList = matchList.sort(
-				(a, b) => a.source.meta.width - b.source.meta.width
-			);
+			all = all.sort((a, b) => a.source.meta.width - b.source.meta.width);
 		} else if (sortInfo.method === "width-desc") {
-			matchList = matchList.sort(
-				(a, b) => b.source.meta.width - a.source.meta.width
-			);
+			all = all.sort((a, b) => b.source.meta.width - a.source.meta.width);
 		} else if (sortInfo.method === "height-asc") {
-			matchList = matchList.sort(
-				(a, b) => a.source.meta.height - b.source.meta.height
-			);
+			all = all.sort((a, b) => a.source.meta.height - b.source.meta.height);
 		} else if (sortInfo.method === "height-desc") {
-			matchList = matchList.sort(
-				(a, b) => b.source.meta.height - a.source.meta.height
-			);
+			all = all.sort((a, b) => b.source.meta.height - a.source.meta.height);
 		}
-		return {
-			all: matchList,
-			image: matchList.filter((c) => c.source.meta.type === "image"),
-			html: matchList.filter((c) => c.source.meta.type === "html"),
-			other: matchList.filter(
-				(c) => c.source.meta.type !== "image" && c.source.meta.type !== "html"
-			),
-		};
+		//s 再过滤
+		all = all.filter((c) => {
+			// console.log(c.source.meta.width, filters.size.width[1]);
+			// const { id, isLoaded } = c;
+			const {
+				type: sType,
+				width: sWidth,
+				height: sHeight,
+				ext: sExt,
+			} = c.source.meta;
+			const { title } = c.description;
+			const isMatch =
+				title
+					.trim()
+					.toLocaleLowerCase()
+					.includes(filterKeyword.value.trim().toLocaleLowerCase()) &&
+				(filters.extension.length > 0
+					? filters.extension.includes(String(sExt))
+					: true) &&
+				(sType === "image" || sType === "video"
+					? sWidth >= filters.size.width[0] &&
+					  sWidth <= filters.size.width[1] &&
+					  sHeight <= filters.size.height[1] &&
+					  sHeight >= filters.size.height[0]
+					: true);
+			if (!isMatch) c.isSelected = false; // 如果不匹配的需要将选中状态设置为false
+			if (isMatch) {
+				if (sType === "image") {
+					image.push(c);
+				} else if (sType === "html") {
+					html.push(c);
+				} else if (sType === "video") {
+					video.push(c);
+				} else if (sType === "audio") {
+					audio.push(c);
+				} else {
+					other.push(c);
+				}
+			}
+
+			return isMatch;
+		});
+
+		return { all, image, video, audio, html, other };
 	});
 
 	//f 刷新仓库数据
@@ -455,6 +472,7 @@ export default defineStore("FavoriteStore", () => {
 		store,
 		cardList,
 		sizeRange,
+		nowType,
 		filters,
 		sortInfo,
 		sortOptions,

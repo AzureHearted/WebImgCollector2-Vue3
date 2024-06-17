@@ -65,9 +65,10 @@
 			<n-tabs
 				type="line"
 				size="small"
-				v-model:value="active"
+				v-model:value="nowType"
 				tab-style="width: 70px"
 				style="height: 100%">
+				<!--s 图片类 -->
 				<n-tab-pane
 					class="tab-pane"
 					name="image"
@@ -85,6 +86,22 @@
 					</template>
 					<keep-alive>
 						<BaseCardList :card-list="filterCardList.image" />
+					</keep-alive>
+				</n-tab-pane>
+				<!--s 视频类 -->
+				<n-tab-pane class="tab-pane" name="video" :disabled="!filterCardList.video.length">
+					<template #tab>
+						<n-flex :size="4" align="center" :wrap="false">
+							视频
+							<n-badge
+								:value="filterCardList.video.length"
+								:max="999"
+								type="default">
+							</n-badge>
+						</n-flex>
+					</template>
+					<keep-alive>
+						<BaseCardList :card-list="filterCardList.video" />
 					</keep-alive>
 				</n-tab-pane>
 				<n-tab-pane
@@ -145,10 +162,10 @@
 
 	import { storeToRefs } from "pinia";
 	import useFavoriteStore from "@/stores/FavoriteStore";
-	import type { BaseMeta } from "@/stores/CardStore/interface";
 	const favoriteStore = useFavoriteStore();
 
 	const {
+		nowType,
 		filterCardList,
 		filterKeyword,
 		filters: storeFilters,
@@ -189,49 +206,6 @@
 	onMounted(() => reFreshFilter());
 	onActivated(() => reFreshFilter());
 	// onActivated(() => console.log("激活"));
-
-	//t 排除false的工具类型
-	type ExcludeFalse<T> = T extends false ? never : T;
-	//s 当前激活的标签
-	const active = ref<ExcludeFalse<BaseMeta["type"] | "other">>("image");
-	//w 修正监听器
-	watch(
-		[
-			active,
-			() => filterCardList.value.image,
-			() => filterCardList.value.html,
-			() => filterCardList.value.other,
-		],
-		([nowActive, imageList, htmlList, otherList]) => {
-			// console.log(nowActive);
-			if (nowActive === "image") {
-				if (!imageList.length) {
-					if (htmlList.length) {
-						active.value = "html";
-					} else if (otherList.length) {
-						active.value = "other";
-					}
-				}
-			} else if (nowActive === "html") {
-				if (!htmlList.length) {
-					if (imageList.length) {
-						active.value = "image";
-					} else if (otherList.length) {
-						active.value = "other";
-					}
-				}
-			} else if (nowActive === "other") {
-				if (!otherList.length) {
-					if (imageList.length) {
-						active.value = "image";
-					} else if (htmlList.length) {
-						active.value = "html";
-					}
-				}
-			}
-		},
-		{ immediate: true }
-	);
 
 	//f 选择器多选Tag渲染函数
 	const renderTag: SelectRenderTag = ({ option, handleClose }) => {
@@ -285,6 +259,8 @@
 	const containerDOM = ref<InstanceType<typeof NFlex> | null>(null);
 	//* 导入Fancybox和相关配置
 	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
+	import toolbarConfig from "@/plugin/fancyapps-ui/toolbar";
+	import type { ToolbarOptionsType } from "@fancyapps/ui/types/Fancybox/plugins";
 	import { onDeactivated } from "vue";
 	onMounted(() => FancyboxBind(containerDOM.value?.$el, "[data-fancybox]"));
 	onActivated(() => FancyboxBind(containerDOM.value?.$el, "[data-fancybox]"));
@@ -306,6 +282,13 @@
 			...configFancybox,
 			parentEl: teleportToDOMs ? teleportToDOMs : listContainerDOM,
 			hideScrollbar: false,
+			Toolbar: {
+				...toolbarConfig,
+				display: {
+					...toolbarConfig.display,
+					right: ["thumbs", "close"],
+				} as ToolbarOptionsType["display"],
+			},
 		});
 	}
 

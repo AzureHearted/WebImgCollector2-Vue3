@@ -82,7 +82,7 @@ export default async function getCard(
 						callback: async (value, dom) => {
 							dom = dom || regionDOM;
 							// 元信息获取
-							let meta = await getMeta(dom); // 获取元信息(通过dom)
+							let meta = await getMeta(dom, { url: value }); // 获取元信息(通过dom)
 							if (!meta.valid) {
 								meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 							}
@@ -112,12 +112,13 @@ export default async function getCard(
 							regionDOM,
 							targetDOM,
 							callback: async (value, dom) => {
+								// console.log("preview.url", value);
 								// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 								dom = dom || source.dom || regionDOM;
 								// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
-								value = value || source.url;
+								value = value.trim() || source.url;
 								// 元信息获取
-								let meta = await getMeta(dom); // 获取元信息(通过dom)
+								let meta = await getMeta(dom, { url: value }); // 获取元信息(通过dom)
 								if (!meta.valid) {
 									meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 								}
@@ -143,7 +144,9 @@ export default async function getCard(
 						preview.url = await fixResult(preview.url, rule.preview.fix);
 						// 获取preview.meta
 						// 先使用dom进行判断
-						preview.meta = await getMeta(preview.dom as HTMLElement);
+						preview.meta = await getMeta(preview.dom as HTMLElement, {
+							url: preview.url,
+						});
 						preview.meta.ext = getExtByUrl(preview.url);
 						if (!preview.meta.valid) {
 							// 如果无效在使用匹配到的内容判断
@@ -175,7 +178,7 @@ export default async function getCard(
 								// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
 								dom = dom || source.dom || regionDOM || preview.dom;
 								// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
-								value = value || source.url || preview.url;
+								value = value.trim() || source.url || preview.url;
 								if (isUrl(value)) {
 									value = getNameByUrl(value);
 								}
@@ -294,7 +297,9 @@ export default async function getCard(
 					// 获取source.meta
 					// 先使用dom进行判断
 					// console.log("开始获取meta");
-					source.meta = await getMeta(source.dom as HTMLElement);
+					source.meta = await getMeta(source.dom as HTMLElement, {
+						url: source.url,
+					});
 					// console.log("获取到meta", source.meta);
 
 					source.meta.ext = getExtByUrl(source.url);
@@ -343,7 +348,9 @@ export default async function getCard(
 
 					// 获取preview.meta
 					// 先使用dom进行判断
-					preview.meta = await getMeta(preview.dom as HTMLElement);
+					preview.meta = await getMeta(preview.dom as HTMLElement, {
+						url: preview.url,
+					});
 					preview.meta.ext = getExtByUrl(preview.url);
 					if (!preview.meta.valid) {
 						// 如果无效在使用匹配到的内容判断
@@ -535,10 +542,15 @@ function fillArrayToLength<T>(
 	return newArray;
 }
 
-// 获取元信息(根据传入的值类型判断获取方式)
+interface GetMetaOption {
+	method: "auto" | "byNaturalSize" | "byImage" | "byUrl" | "byBlob";
+	url?: string;
+}
+
+//f 获取元信息(根据传入的值类型判断获取方式)
 async function getMeta(
 	target: string | Blob | HTMLElement,
-	method: "auto" | "byNaturalSize" | "byImage" | "byUrl" | "byBlob" = "auto"
+	option?: Partial<GetMetaOption>
 ) {
 	let meta: BaseMeta = {
 		valid: false,
@@ -547,20 +559,48 @@ async function getMeta(
 		type: "image",
 		ext: false,
 	}; //设置一个初始空值
+	const defaultOption: GetMetaOption = {
+		method: "auto",
+	};
+	const { method, url } = { ...defaultOption, ...option };
 	// console.log("开始Meta获取 target:", target);
 	if (method === "auto") {
-		// s 安装优先级顺序一次尝试各种方式获取meta
+		//s 按照优先级顺序一次尝试各种方式获取meta
+		//s DOM
 		if (typeof target === "object" && target instanceof HTMLElement) {
 			// console.log("获取元信息(类型:DOM元素)", target);
-			// 如果只能是一个HTML元素
-			const { width, height } = await getDOMNaturalSize(target);
-			meta = {
-				...meta,
-				...{ valid: width > 0 && height > 0, width, height, type: "image" },
-			};
+			if (!(target instanceof HTMLImageElement && target.srcset)) {
+				//s 只有不含有srcset属性的元素才能执行
+				const { width, height } = await getDOMNaturalSize(target);
+				meta = {
+					...meta,
+					...{ valid: width > 0 && height > 0, width, height, type: "image" },
+				};
+				if (target instanceof HTMLVideoElement) {
+					if (url && url.trim() && isUrl(url)) {
+						if (inferUrlType(new URL(url)) === "video") {
+							meta.type = "video";
+						}
+					} else {
+						meta.type = "video";
+					}
+				}
+				if (target instanceof HTMLSourceElement) {
+					const sType = target.type;
+					if (sType) {
+						if (/^video/g.test(sType)) {
+							meta.type = "video";
+						} else if (/^audio/g.test(sType)) {
+							meta.type = "audio";
+						}
+					}
+					// console.log("source元素", meta);
+				}
+			}
 			// console.log("getDOMNaturalSize 获取结果", target, meta);
 			// console.count('通过HTML获取元信息')
 		}
+		//s 链接
 		if (!meta.valid && typeof target === "string" && isUrl(target)) {
 			// console.log("开始获取元信息(类型:链接)", target);
 			const url = new URL(target);
@@ -570,6 +610,7 @@ async function getMeta(
 			// console.log("通过Url获取元信息(成功)");
 			// console.log("getMetaByUrl 获取结果", target, meta);
 		}
+		//s Blob
 		if (!meta.valid && typeof target === "object" && target instanceof Blob) {
 			// console.log("开始通过Blob获取元信息", target);
 			// 如果是一个Blob
@@ -584,7 +625,7 @@ async function getMeta(
 			typeof target === "object" &&
 			target instanceof HTMLElement
 		) {
-			// 如果只能是一个HTML元素
+			//s DOM
 			const { width, height } = await getDOMNaturalSize(target);
 			meta = { ...meta, ...{ valid: width > 0 && height > 0, width, height } };
 		} else if (
@@ -592,14 +633,14 @@ async function getMeta(
 			typeof target === "string" &&
 			isUrl(target)
 		) {
-			// 如果是一个链接
+			//s 链接
 			meta = await getMetaByUrl(new URL(target));
 		} else if (
 			method === "byBlob" &&
 			typeof target === "object" &&
 			target instanceof Blob
 		) {
-			// 如果是一个Blob
+			//s Blob
 			meta = await getMetaByBlob(target);
 		} else {
 			// 没有符合的匹配条件
@@ -631,8 +672,12 @@ async function getMetaByUrl(url: URL, _default: Partial<BaseMeta> = {}) {
 	const type = inferUrlType(url);
 	// console.log("链接类型==>", type);
 	if (type === "image") {
-		// 处理图片类型
+		//s 处理图片类型
+		// console.log("通过getImgMetaByImage获取Meta信息", url.href);
 		meta = { ...meta, ...(await getImgMetaByImage(url.href)) };
+	} else if (type === "video") {
+		//s 处理视频类型
+		meta = { ...meta, ...(await getMetaByVideo(url.href)) };
 	} else {
 		meta = {
 			valid: true,
@@ -723,7 +768,7 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 				{ once: true }
 			);
 			const error = () => {
-				// console.log("图片信息获取-->失败!");
+				console.log("图片信息获取-->失败!");
 				meta = {
 					valid: false,
 					width: 0,
@@ -737,6 +782,53 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 			img.addEventListener("abort", error, { once: true });
 			img.addEventListener("cancel", error, { once: true });
 		}
+	});
+}
+
+//f [功能封装]通过Video对象获取视频meta
+export function getMetaByVideo(url: string): Promise<BaseMeta> {
+	if (!url || !url.trim().length) {
+		console.log("链接无效", url);
+		const errMeta: BaseMeta = {
+			valid: false,
+			width: 0,
+			height: 0,
+			aspectRatio: 1,
+			type: false,
+			ext: false,
+		};
+		return Promise.resolve(errMeta);
+	}
+	let meta: BaseMeta;
+	return new Promise((resolve) => {
+		const video = document.createElement("video");
+		video.onloadedmetadata = function () {
+			// 获取视频宽度和高度
+			const width = video.videoWidth;
+			const height = video.videoHeight;
+			// 释放资源
+			URL.revokeObjectURL(video.src);
+			resolve({
+				width,
+				height,
+				ext: getExtByUrl(url),
+				type: "video",
+				valid: true,
+			});
+		};
+		video.onerror = function () {
+			meta = {
+				valid: false,
+				width: 0,
+				height: 0,
+				type: false,
+				ext: getExtByUrl(url),
+			};
+			resolve(meta);
+		};
+
+		video.src = url;
+		video.load();
 	});
 }
 
@@ -863,6 +955,7 @@ function inferUrlType(url: URL) {
 		type = "html";
 	}
 
+	// console.log("推断链接类型", url.pathname, type);
 	return type;
 }
 
