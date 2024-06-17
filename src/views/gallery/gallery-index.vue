@@ -93,9 +93,6 @@
 	const cardStore = useCardStore();
 	const { filterCardList, nowType } = storeToRefs(cardStore);
 
-	//t 排除false的工具类型
-	type ExcludeFalse<T> = T extends false ? never : T;
-
 	const containerDOM = ref<HTMLElement | null>(null);
 	//* 导入Fancybox和相关配置
 	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";

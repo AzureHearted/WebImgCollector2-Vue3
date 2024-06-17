@@ -87,6 +87,21 @@ export default defineStore("FavoriteStore", () => {
 		);
 	});
 
+	//j 仓库中所有标签集合
+	const allTags = computed<{ [name: string]: number }>(() => {
+		return cardList.value.reduce((all, curr) => {
+			const { tags } = curr;
+			tags.forEach((tag) => {
+				if (Object.keys(all).includes(tag)) {
+					all[tag]++;
+				} else {
+					all[tag] = 1;
+				}
+			});
+			return all;
+		}, {} as { [name: string]: number });
+	});
+
 	//j 仓库中所有Key值列表
 	const keys = computed(() => {
 		return cardList.value.map((c) => c.id);
@@ -333,10 +348,18 @@ export default defineStore("FavoriteStore", () => {
 		cardList.value = await new Promise<Card[]>((resolve) => {
 			const list: Card[] = [];
 			store.value
-				.iterate((value: any) => {
-					const { id, source, preview, description } = value;
+				.iterate((value: InstanceType<typeof Card>) => {
+					//TODO 如果Card类型增添新的内容这里需要同步修改
+					const { id, source, preview, description, tags } = value;
 					list.push(
-						new Card({ id, source, preview, description, isFavorite: true })
+						new Card({
+							id,
+							source,
+							preview,
+							description,
+							tags,
+							isFavorite: true,
+						})
 					);
 				})
 				.finally(() => {
@@ -481,6 +504,7 @@ export default defineStore("FavoriteStore", () => {
 		filterCardList,
 		selectedCardList,
 		keys,
+		allTags,
 		filterKeyword,
 		refreshStore,
 		clearStore,

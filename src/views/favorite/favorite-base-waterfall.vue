@@ -6,7 +6,7 @@
 			item-padding="2px">
 			<template #default="{ item }">
 				<GalleryCard
-					:data="(item as Card)"
+					v-model:data="(item as Card)"
 					:show-to-locate-button="false"
 					:show-delete-button="false"
 					:show-download-button="(item as Card).source.meta.type!=='html'"
@@ -16,6 +16,7 @@
 					@loaded="handleLoaded"
 					@download="handleDownload(item as Card)"
 					@toggle-favorite="handleToggleFavorite(item as Card)"
+					@save:tags="handleTagsSave(item as Card)"
 					@delete="deleteCard([item as Card])" />
 			</template>
 		</WaterFallList>
@@ -86,6 +87,11 @@
 			card.source.meta = card.preview.meta;
 			updateCard([card]);
 		}
+	};
+
+	//f 处理卡片标签变化
+	const handleTagsSave = async (card: Card) => {
+		updateCard([card]);
 	};
 </script>
 

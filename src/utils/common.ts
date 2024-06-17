@@ -408,3 +408,36 @@ export function isEqualUrl(
 		return url1 === url2;
 	}
 }
+
+//f 防抖函数
+export function debounce(func: Function, delay = 500) {
+	// 声明全局变量timeout
+	let timeout: number;
+	// 返回一个函数(通过解构的方式将所有变量传给args)
+	return function (...args: any[]) {
+		// 清除超时
+		clearTimeout(timeout);
+		// 设置超时
+		timeout = window.setTimeout(() => {
+			// 调用函数
+			func(args);
+		}, delay);
+	};
+}
+
+//f 节流函数
+export function throttle(func: Function, wait = 500) {
+	// 声明全局变量timeout
+	let timeout: number | null;
+	// 返回一个函数(通过解构的方式将所有变量传给args)
+	return function (...args: any) {
+		// 如果定时器为null才执行
+		if (!timeout) {
+			// 设置定时器
+			timeout = window.setTimeout(function () {
+				timeout = null;
+				func(args);
+			}, wait);
+		}
+	};
+}

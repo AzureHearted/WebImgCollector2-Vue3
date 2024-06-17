@@ -1,5 +1,5 @@
 <template>
-	<n-flex ref="containerDOM" class="favorite__container" vertical :size="4">
+	<n-flex ref="containerDOM" class="favorite__container" vertical :size="0">
 		<!--s 工具栏 -->
 		<n-flex class="toolbar-wrap" :size="4">
 			<!-- s关键词过滤 -->
@@ -59,6 +59,7 @@
 						@change="filterChange('height', $event as [number, number])" />
 				</div>
 			</div>
+			<div>当前仓库标签：{{ allTags }}</div>
 		</n-flex>
 		<!--s 内容区 -->
 		<n-flex class="content-wrap" :size="4">
@@ -89,7 +90,10 @@
 					</keep-alive>
 				</n-tab-pane>
 				<!--s 视频类 -->
-				<n-tab-pane class="tab-pane" name="video" :disabled="!filterCardList.video.length">
+				<n-tab-pane
+					class="tab-pane"
+					name="video"
+					:disabled="!filterCardList.video.length">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							视频
@@ -172,6 +176,7 @@
 		extensionOptions,
 		sortInfo,
 		sizeRange,
+		allTags,
 	} = storeToRefs(favoriteStore);
 
 	const { refreshStore } = favoriteStore;

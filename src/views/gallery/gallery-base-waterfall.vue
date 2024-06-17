@@ -10,7 +10,7 @@
 			item-padding="2px">
 			<template #default="{ item }">
 				<GalleryCard
-					:data="(item as any)"
+					v-model:data="(item as any)"
 					viewport-selector=".web-img-collector-container"
 					@change:selected="item.isSelected = $event"
 					@delete="removeCard([$event])"

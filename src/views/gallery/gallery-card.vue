@@ -51,7 +51,10 @@
 						</el-button-group>
 						<el-button-group size="small">
 							<!--s 标签编辑 -->
-							<TagEdit to=".web-img-collector-top-container">
+							<TagEdit
+								:tags="data.tags"
+								@on-save="handleTagsSave"
+								to=".web-img-collector-top-container">
 								<el-button type="primary" v-ripple>
 									<template #icon>
 										<i-mdi-tag-text />
@@ -121,10 +124,6 @@
 				:href="data.source.url"
 				:data-type="showType"
 				:data-preload="showType === 'iframe' ? false : true"
-				:data-width="showType === 'html5video' ? data.source.meta.width : false"
-				:data-height="
-					showType === 'html5video' ? data.source.meta.height : false
-				"
 				:data-thumb="data.preview.url"
 				:data-download-src="data.source.url">
 				<template v-if="data.preview.meta.type === 'image'">
@@ -188,53 +187,49 @@
 		</template>
 		<!--s 卡片底部 -->
 		<template #footer>
-			<div class="gallery-card-footer">
-				<n-flex :size="4"> </n-flex>
-				<!--s 尺寸信息 -->
-				<var-chip
-					v-if="data.source.meta.type === 'image'"
-					type="primary"
-					size="mini"
-					:round="false">
-					{{ data.source.meta.width }}x{{ data.source.meta.height }}
-				</var-chip>
-				<!--s 扩展名信息 -->
-				<var-chip
-					v-if="!!data.source.meta.ext"
-					type="success"
-					size="mini"
-					:round="false">
-					{{ data.source.meta.ext }}
-				</var-chip>
-				<!--s 网页标签 -->
-				<var-chip
-					v-if="data.source.meta.type === 'html'"
-					type="warning"
-					size="mini"
-					:round="false">
-					网页
-				</var-chip>
-				<!--s 文件大小信息 -->
-				<var-chip
-					v-if="!!data.source.blob && !!data.source.blob.size"
-					type="info"
-					size="mini"
-					:round="false">
-					{{ size }}
-				</var-chip>
+			<!-- TODO 这里需要处理 -->
+			<n-flex class="gallery-card-footer" :size="2">
 				<!--s 描述标签 -->
 				<el-tooltip
 					:content="data.description.title.trim()"
 					placement="top-start">
-					<var-chip
-						class="title-chip"
-						type="primary"
-						size="mini"
-						:round="false">
+					<n-tag class="title-chip" type="primary" size="tiny">
 						{{ data.description.title.trim() }}
-					</var-chip>
+					</n-tag>
 				</el-tooltip>
-			</div>
+				<n-flex :wrap="false" :size="2">
+					<!--s 尺寸信息 -->
+					<n-tag
+						v-if="data.source.meta.type === 'image'"
+						type="info"
+						size="tiny">
+						{{ data.source.meta.width }}x{{ data.source.meta.height }}
+					</n-tag>
+					<!--s 扩展名信息 -->
+					<n-tag v-if="!!data.source.meta.ext" type="info" size="tiny">
+						{{ data.source.meta.ext }}
+					</n-tag>
+					<!--s 网页标签 -->
+					<n-tag
+						v-if="data.source.meta.type === 'html'"
+						type="warning"
+						size="tiny">
+						网页
+					</n-tag>
+					<!--s 文件大小信息 -->
+					<n-tag
+						v-if="!!data.source.blob && !!data.source.blob.size"
+						type="info"
+						size="tiny">
+						{{ size }}
+					</n-tag>
+				</n-flex>
+				<n-flex :wrap="false" :size="2">
+					<n-tag v-for="(item, index) in data.tags" :key="index" size="tiny">
+						{{ item }}
+					</n-tag>
+				</n-flex>
+			</n-flex>
 		</template>
 	</BaseCard>
 </template>
@@ -253,6 +248,7 @@
 	import BaseImg from "@/components/base/base-img.vue";
 	import BaseVideo from "@/components/base/base-video.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
+	import BaseLineOverFlowList from "@/components/base/base-line-overflow-list.vue";
 	import TagEdit from "./tag-edit.vue";
 	import Card from "@/stores/CardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
@@ -277,10 +273,10 @@
 	const imgWrapRef = ref<HTMLElement | null>(null);
 	const targetIsVisible = useElementVisibility(imgWrapRef);
 
-	// const data = defineModel({ type: Card, required: true });
+	const data = defineModel("data", { type: Card, default: () => new Card() });
 	const props = withDefaults(
 		defineProps<{
-			data: Card;
+			// data: Card;
 			viewportSelector?: string;
 			showCheckBox?: boolean;
 			showDeleteButton?: boolean;
@@ -315,11 +311,12 @@
 		(e: "download", id: string): Promise<void>; // 下载事件
 		(e: "delete", id: string): Promise<void>; // 删除事件
 		(e: "change:visible", val: boolean): Promise<void>; // 可见性发生变化
+		(e: "save:tags", id: string, newTags: string[]): Promise<void>; // 卡片tags保存事件
 	}>();
 
 	//j 大小
 	const size: ComputedRef<string> = computed(() => {
-		const byteSize = props.data.source.blob?.size;
+		const byteSize = data.value.source.blob?.size;
 		if (byteSize) {
 			return byteAutoUnit(byteSize);
 		} else {
@@ -339,7 +336,7 @@
 		| false;
 	//j 计算默认类型
 	const showType: ComputedRef<FancyboxType> = computed(() => {
-		const { type: metaType } = props.data.source.meta;
+		const { type: metaType } = data.value.source.meta;
 		let type: FancyboxType = "image";
 		if (!metaType) return type;
 		if (metaType === "html") {
@@ -350,7 +347,7 @@
 		return type;
 	});
 
-	// 页面定位元素
+	//f 页面定位元素
 	function toLocate(item: Card) {
 		const dom = item.source.dom;
 		if (!dom) return;
@@ -362,7 +359,7 @@
 		}); // 滚动到指定元素位置，平滑滚动，并居中显示。
 		globalStore.openWindow = false;
 	}
-	// 重命名
+	//f 重命名
 	function rename(item: Card) {
 		// 删除卡片数据模型中的卡片。
 		ElMessageBox.prompt(`重命名卡片"${item.description.title}"为……`, "重命名", {
@@ -384,10 +381,16 @@
 			});
 	}
 
-	// 打开网址
+	//f 打开网址
 	async function openUrl(url: string) {
 		GM_openInTab(url, { active: true, insert: true, setParent: true });
 	}
+
+	//f 处理卡片标签变化
+	const handleTagsSave = (newTags: string[]) => {
+		data.value.tags = newTags;
+		emits("save:tags", data.value.id, newTags);
+	};
 </script>
 
 <style lang="scss" scoped>
@@ -461,13 +464,18 @@
 	// 卡片底部
 	.gallery-card-footer {
 		padding: 2px;
-		// margin: 2px;
-		display: flex;
-		flex-flow: row nowrap;
-		overflow: hidden;
-		gap: 4px;
-		// background-color: wheat;
+		// overflow: hidden;
+		overflow-x: auto;
 		// transform: translateY(100%);
+
+		// background: rgba(256, 256, 256, 0.5);
+		background: linear-gradient(
+			to top,
+			rgba(255, 255, 255, 0.5) 0%,
+			rgba(255, 255, 255, 0.4) 50%,
+			rgba(255, 255, 255, 0) 100%
+		);
+		// backdrop-filter: blur(10px);
 		transition: transform 0.3s;
 
 		pointer-events: none;
@@ -475,16 +483,21 @@
 			pointer-events: auto;
 		}
 
-		:deep(.var-chip) {
-			justify-content: start;
-			max-width: 50%;
+		:deep(.wic2-n-tag) {
+			display: block;
+			flex-shrink: 0;
+			box-sizing: border-box;
+			// justify-content: start;
+			// max-width: 50%;
 			overflow: hidden;
 			text-overflow: ellipsis;
 			&.title-chip {
-				max-width: 50%;
+				flex-shrink: 1;
+				// max-width: 50%;
 				width: fit-content;
 			}
 			& > span {
+				box-sizing: border-box;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;

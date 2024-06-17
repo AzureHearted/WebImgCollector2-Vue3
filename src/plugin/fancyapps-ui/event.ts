@@ -50,4 +50,8 @@ export default {
 			fixShowSize(slide);
 		});
 	},
+	done: (_, slide: slideType) => {
+		// console.log("done:", slide);
+		fixShowSize(slide);
+	},
 } as OptionsType["on"];

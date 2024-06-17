@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, watch } from "vue";
+	import { ref, watch, onMounted, onUpdated, onUnmounted } from "vue";
 
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	const globalStore = useGlobalStore();
@@ -39,7 +39,7 @@
 	);
 
 	//* 导入Fancybox和相关配置
-	// import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
+	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
 	// onMounted(() => {
 	// 	FancyboxBind(containerDOM.value, "[data-fancybox]");
 	// });
