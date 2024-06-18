@@ -294,7 +294,11 @@
 	//f 拷贝方案(或规则)至剪贴板
 	function copyToClipboard(obj: Pattern | Rule) {
 		const { copy } = useClipboard();
-		const rowData = JSON.stringify(obj.getRowData({ includeId: false }));
+		const rowData = JSON.stringify(
+			obj.getRowData({ includeId: false }),
+			null,
+			2
+		);
 		copy(rowData)
 			.then(() => {
 				ElNotification({
@@ -322,7 +326,11 @@
 
 	//f 保存方案(或规则)至本地文件
 	function saveToFile(obj: Pattern | Rule) {
-		const rowData = JSON.stringify(obj.getRowData({ includeId: true }));
+		const rowData = JSON.stringify(
+			obj.getRowData({ includeId: true }),
+			null,
+			2
+		);
 		// 将文本转为blob
 		const blob = new Blob([rowData], { type: "text/plain;charset=utf-8" });
 		if (obj instanceof Pattern) {
