@@ -1,24 +1,24 @@
 <template>
-	<!-- 脚本应用容器 -->
+	<!--s 脚本应用容器 -->
 	<div :data-host="host" class="web-img-collector-container">
-		<!-- 消息通知类信息容器 -->
+		<!--s 消息通知类信息容器 -->
 		<el-config-provider namespace="el">
 			<div class="web-img-collector-notification-container"></div>
 		</el-config-provider>
-		<!-- 内容区 -->
+		<!--s 内容区 -->
 		<el-config-provider namespace="wic2">
 			<n-config-provider
 				namespace="wic2-n"
 				cls-prefix="wic2-n"
 				inline-theme-disabled
 				preflight-style-disabled
+				:hljs="hljs"
 				abstract>
-				<!-- 路由出口 -->
-				<!-- <RouterView /> -->
+				<!--s 布局 -->
 				<Layout />
-				<!-- 悬浮按钮 -->
+				<!--s 悬浮按钮 -->
 				<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
-				<!-- 顶层元素的承载容器 -->
+				<!--s 顶层元素的承载容器 -->
 				<div
 					ref="windowContainer"
 					class="web-img-collector-top-container"></div>
@@ -28,9 +28,15 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted, defineAsyncComponent } from "vue";
+	import { ref, onMounted, onActivated, defineAsyncComponent } from "vue";
 	import { useGlobalStore, usePatternStore } from "@/stores";
-	import { onActivated } from "vue";
+
+	import hljs from "highlight.js/lib/core";
+	import css from "highlight.js/lib/languages/css";
+	import javascript from "highlight.js/lib/languages/javascript";
+	hljs.registerLanguage("css", css);
+	hljs.registerLanguage("javascript", javascript);
+
 	// 异步导入Layout组件
 	const Layout = defineAsyncComponent(
 		() => import("@/views/layout/layout-index.vue")

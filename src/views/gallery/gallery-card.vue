@@ -469,12 +469,12 @@
 		// transform: translateY(100%);
 
 		// background: rgba(256, 256, 256, 0.5);
-		background: linear-gradient(
-			to top,
-			rgba(255, 255, 255, 0.5) 0%,
-			rgba(255, 255, 255, 0.4) 50%,
-			rgba(255, 255, 255, 0) 100%
-		);
+		// background: linear-gradient(
+		// 	to top,
+		// 	rgba(255, 255, 255, 0.5) 0%,
+		// 	rgba(255, 255, 255, 0.3) 30%,
+		// 	rgba(255, 255, 255, 0) 100%
+		// );
 		// backdrop-filter: blur(10px);
 		transition: transform 0.3s;
 
