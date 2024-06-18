@@ -2,7 +2,7 @@
 	<BaseScrollbar
 		ref="scrollbarRef"
 		:show-scrollbar="showScrollbar"
-		show-bakctop-button>
+		show-back-top-button>
 		<WaterFallList
 			ref="waterFallRef"
 			:data="(filterCardList.all as any)"

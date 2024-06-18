@@ -211,25 +211,28 @@ export default defineStore("CardStore", () => {
 			audio = [] as Card[],
 			html = [] as Card[],
 			other = [] as Card[];
-		let all = validCardList.value;
+		let all = [...validCardList.value];
 
 		//s 先排序
-		if (sort.method === "name-asc") {
-			all = all.sort((a, b) =>
-				mixSort(a.description.title, b.description.title)
-			);
-		} else if (sort.method === "name-desc") {
-			all = all.sort((a, b) =>
-				mixSort(b.description.title, a.description.title)
-			);
-		} else if (sort.method === "width-asc") {
-			all = all.sort((a, b) => a.source.meta.width - b.source.meta.width);
-		} else if (sort.method === "width-desc") {
-			all = all.sort((a, b) => b.source.meta.width - a.source.meta.width);
-		} else if (sort.method === "height-asc") {
-			all = all.sort((a, b) => a.source.meta.height - b.source.meta.height);
-		} else if (sort.method === "height-desc") {
-			all = all.sort((a, b) => b.source.meta.height - a.source.meta.height);
+		switch (sort.method) {
+			case "name-asc":
+				all.sort((a, b) => mixSort(a.description.title, b.description.title));
+				break;
+			case "name-desc":
+				all.sort((a, b) => mixSort(b.description.title, a.description.title));
+				break;
+			case "width-asc":
+				all.sort((a, b) => a.source.meta.width - b.source.meta.width);
+				break;
+			case "width-desc":
+				all.sort((a, b) => b.source.meta.width - a.source.meta.width);
+				break;
+			case "height-asc":
+				all.sort((a, b) => a.source.meta.height - b.source.meta.height);
+				break;
+			case "height-desc":
+				all.sort((a, b) => b.source.meta.height - a.source.meta.height);
+				break;
 		}
 
 		//s 再过滤

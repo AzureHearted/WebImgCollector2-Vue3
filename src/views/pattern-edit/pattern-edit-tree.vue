@@ -27,7 +27,7 @@
 			</el-input>
 		</el-card>
 		<div class="pattern-tree__tree">
-			<BaseScrollbar :show-bakctop-button="false">
+			<BaseScrollbar :show-back-top-button="false">
 				<el-tree
 					ref="treeRef"
 					:data="treeData"

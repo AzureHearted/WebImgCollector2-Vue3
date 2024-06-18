@@ -1,24 +1,20 @@
 <template>
 	<slot></slot>
-	<BaseDragModal v-model:show="show" :teleport="to">
-		<template #header>
-			<n-flex :size="4" align="center">
-				<div>标签编辑</div>
-				<n-flex @click.stop @touchstart.stop style="margin-left: auto">
-					<n-button type="error" circle text @click="handleClose">
-						<template #icon>
-							<i-ant-design-close-circle-filled />
-						</template>
-					</n-button>
-				</n-flex>
-			</n-flex>
-		</template>
+	<BaseDragModal
+		v-model:show="show"
+		:title="title"
+		:teleport-to="teleportTo"
+		@closed="handleClose">
 		<template #default>
 			<div style="padding: 2px">
 				<!-- {{ tags }} -->
-				<n-dynamic-tags v-model:value="tags" type="info" />
+				<n-dynamic-tags
+					v-model:value="tags"
+					type="info"
+					@change="handleChange" />
 			</div>
 		</template>
+		<!-- TODO 暂时禁用footer  -->
 		<template #footer>
 			<n-flex :size="4">
 				<n-button
@@ -37,20 +33,18 @@
 
 <script setup lang="ts">
 	import BaseDragModal from "@/components/base/base-drag-modal.vue";
-	import { h, ref, watch, onMounted, getCurrentInstance } from "vue";
-	import { NTag } from "naive-ui";
+	import { ref, watch, onMounted, getCurrentInstance } from "vue";
 	const show = defineModel("show", { type: Boolean, default: false });
 	const tags = defineModel("tags", { type: Array<string>, default: () => [] });
 
 	withDefaults(
 		defineProps<{
-			to?: string;
+			title?: string;
+			teleportTo?: string;
 			initWidth?: number;
 			initHeight?: number;
-			// tags?: string[];
 		}>(),
 		{
-			// tags: () => [],
 			initWidth: 300,
 			initHeight: 200,
 		}
@@ -76,10 +70,10 @@
 	});
 
 	const handleSave = () => {
-		console.log("newTags", tags.value);
+		// console.log("newTags", tags.value);
 		emits("onSave", tags.value);
-		show.value = false;
 	};
+
 	const handleClose = () => {
 		emits("onClose");
 		show.value = false;
@@ -90,15 +84,9 @@
 		show.value = false;
 	};
 
-	watch(tags, (newTags) => {
-		// console.log("newTags", newTags);
+	const handleChange = (newTags: string[]) => {
 		emits("onChange", newTags);
-	});
+	};
 </script>
 
-<style lang="scss" scoped>
-	.tag-edit__model {
-		position: absolute;
-		display: block;
-	}
-</style>
+<style lang="scss" scoped></style>

@@ -2,10 +2,10 @@
 	<BaseScrollbar
 		ref="scrollbarRef"
 		:show-scrollbar="showScrollbar"
-		show-bakctop-button>
+		show-back-top-button>
 		<WaterFallList
 			ref="waterFallRef"
-			:data="(cardList as any)"
+			:data="cardList"
 			:pause-layout="!globalStore.openWindow"
 			item-padding="2px">
 			<template #default="{ item }">
@@ -35,10 +35,10 @@
 	import useCardStore from "@/stores/CardStore";
 	import useFavoriteStore from "@/stores/FavoriteStore";
 	import useGlobalStore from "@/stores/GlobalStore";
+
 	const props = withDefaults(defineProps<{ cardList: Card[] }>(), {
 		cardList: () => [],
 	});
-
 	//s 全局仓库
 	const globalStore = useGlobalStore();
 	//s 卡片仓库

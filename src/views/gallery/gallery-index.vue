@@ -1,9 +1,9 @@
 <template>
-	<div ref="containerDOM" class="gallery-container">
+	<div ref="containerDOM" class="gallery__container">
 		<!-- 顶部工具栏 -->
 		<GalleryToolbar />
 		<!-- 瀑布流 -->
-		<n-flex class="content-wrap">
+		<n-flex class="gallery__content-wrap">
 			<n-tabs
 				type="line"
 				size="small"
@@ -123,7 +123,7 @@
 
 <style lang="scss" scoped>
 	// 画廊容器样式
-	.gallery-container {
+	.gallery__container {
 		box-sizing: border-box;
 		width: 100%;
 		height: 100%;
@@ -137,7 +137,7 @@
 	}
 
 	// 瀑布流容器样式
-	.content-wrap {
+	.gallery__content-wrap {
 		padding: 4px;
 		flex: 1; // 必须设置用来撑满容器
 		overflow: hidden; // 必须要设置溢出隐藏

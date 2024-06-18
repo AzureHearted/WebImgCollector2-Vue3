@@ -271,31 +271,36 @@ export default defineStore("FavoriteStore", () => {
 			audio = [] as Card[],
 			html = [] as Card[],
 			other = [] as Card[];
-		let all = cardList.value;
+		let all = [...cardList.value];
+
 		//s 先排序
-		if (sortInfo.method === "#") {
-			all = all.sort((a, b) =>
-				mixSort(
-					a.source.originUrls ? a.source.originUrls[0] : "",
-					b.source.originUrls ? b.source.originUrls[0] : ""
-				)
-			);
-		} else if (sortInfo.method === "name-asc") {
-			all = all.sort((a, b) =>
-				mixSort(a.description.title, b.description.title)
-			);
-		} else if (sortInfo.method === "name-desc") {
-			all = all.sort((a, b) =>
-				mixSort(b.description.title, a.description.title)
-			);
-		} else if (sortInfo.method === "width-asc") {
-			all = all.sort((a, b) => a.source.meta.width - b.source.meta.width);
-		} else if (sortInfo.method === "width-desc") {
-			all = all.sort((a, b) => b.source.meta.width - a.source.meta.width);
-		} else if (sortInfo.method === "height-asc") {
-			all = all.sort((a, b) => a.source.meta.height - b.source.meta.height);
-		} else if (sortInfo.method === "height-desc") {
-			all = all.sort((a, b) => b.source.meta.height - a.source.meta.height);
+		switch (sortInfo.method) {
+			case "#":
+				all.sort((a, b) =>
+					mixSort(
+						a.source.originUrls ? a.source.originUrls[0] : "",
+						b.source.originUrls ? b.source.originUrls[0] : ""
+					)
+				);
+				break;
+			case "name-asc":
+				all.sort((a, b) => mixSort(a.description.title, b.description.title));
+				break;
+			case "name-desc":
+				all.sort((a, b) => mixSort(b.description.title, a.description.title));
+				break;
+			case "width-asc":
+				all.sort((a, b) => a.source.meta.width - b.source.meta.width);
+				break;
+			case "width-desc":
+				all.sort((a, b) => b.source.meta.width - a.source.meta.width);
+				break;
+			case "height-asc":
+				all.sort((a, b) => a.source.meta.height - b.source.meta.height);
+				break;
+			case "height-desc":
+				all.sort((a, b) => b.source.meta.height - a.source.meta.height);
+				break;
 		}
 		//s 再过滤
 		all = all.filter((c) => {

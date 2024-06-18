@@ -441,3 +441,24 @@ export function throttle(func: Function, wait = 500) {
 		}
 	};
 }
+
+//f 元素盒模型相关尺寸获取
+export function getDOMBoxValue(
+	element: HTMLElement,
+	property:
+		| "padding-top"
+		| "padding-right"
+		| "padding-bottom"
+		| "padding-left"
+		| "margin-top"
+		| "margin-right"
+		| "margin-bottom"
+		| "margin-left"
+		| "border-top-width"
+		| "border-right-width"
+		| "border-bottom-width"
+		| "border-left-width"
+) {
+	const computedStyle = window.getComputedStyle(element);
+	return parseInt(computedStyle.getPropertyValue(property as string), 10);
+}

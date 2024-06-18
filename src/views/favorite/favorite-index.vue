@@ -59,7 +59,6 @@
 						@change="filterChange('height', $event as [number, number])" />
 				</div>
 			</div>
-			<div>当前仓库标签：{{ allTags }}</div>
 		</n-flex>
 		<!--s 内容区 -->
 		<n-flex class="content-wrap" :size="4">

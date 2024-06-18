@@ -1,6 +1,7 @@
 <template>
 	<BaseScrollbar>
 		<WaterFallList
+			ref="waterFallRef"
 			:data="cardList"
 			:pause-layout="!globalStore.openWindow"
 			item-padding="2px">
@@ -24,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-	import { defineProps, withDefaults } from "vue";
+	import { ref, defineProps, withDefaults } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import WaterFallList from "@/components/base/waterfall-list.vue";
 	import GalleryCard from "../gallery/gallery-card.vue";
@@ -69,6 +70,9 @@
 		refreshStore();
 	};
 
+	//s 瀑布流组件实例
+	const waterFallRef = ref<InstanceType<typeof WaterFallList> | null>(null);
+
 	//f 卡片加载成功完成事件( 1.更新cardStore的尺寸范围信息;2.判断卡片是否被收藏 )
 	const handleLoaded = async (id: string, info: returnInfo) => {
 		//s 仓库找到对应的数据
@@ -87,6 +91,8 @@
 			card.source.meta = card.preview.meta;
 			updateCard([card]);
 		}
+		//s 卡片加载完成后手动刷新一次瀑布流
+		waterFallRef.value?.handleResetPosition();
 	};
 
 	//f 处理卡片标签变化

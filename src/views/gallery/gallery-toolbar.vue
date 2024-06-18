@@ -111,7 +111,6 @@
 		</div>
 		<!--s 下载控制 -->
 		<div class="control-group-button">
-			<!-- 下载按钮 -->
 			<n-badge
 				:offset="[0, 2]"
 				:max="999"
@@ -160,6 +159,15 @@
 							ripple>
 							<template #icon>
 								<i-mdi-book-favorite style="color: purple" />
+							</template>
+						</var-cell>
+						<var-cell
+							title="批量添加标签"
+							@click="batchAddTag"
+							v-if="!!selectionCardList[nowType].length"
+							ripple>
+							<template #icon>
+								<i-mdi-tag-text style="color: purple" />
 							</template>
 						</var-cell>
 					</template>
@@ -441,6 +449,13 @@
 		// console.log("过滤器变化", key, value);
 		storeFilters.value.size[key] = value; // 更新仓库过滤器
 	}
+	
+	//f 处理关键词过滤(回车或点击搜索按钮触发)
+	const handleKeywordFilter = (value?: string) => {
+		const keyword = value !== undefined ? value : filters.keyword;
+		console.log("触发关键词过滤", keyword);
+		storeFilters.value.keyword = keyword;
+	};
 
 	//f 全选
 	function checkAll() {
@@ -495,11 +510,10 @@
 		); // 更新卡片收藏状态
 	}
 
-	//f 处理关键词过滤(回车或点击搜索按钮触发)
-	const handleKeywordFilter = (value?: string) => {
-		const keyword = value !== undefined ? value : filters.keyword;
-		console.log("触发关键词过滤", keyword);
-		storeFilters.value.keyword = keyword;
+	//TODO 等待实现  批量添加标签
+	//f 批量添加标签
+	const batchAddTag = () => {
+		console.log("批量添加标签,等待实现……");
 	};
 </script>
 

@@ -5,14 +5,14 @@
 		class="base-scrollbar_container"
 		@mouseover="scrollbar.show = true"
 		@mouseleave="scrollbar.show = false">
-		<!--s 内容区域 -->
+		<!--s 包裹区 -->
 		<div ref="wrapDOM" class="base-scrollbar__wrap" @wheel.stop @scroll.stop>
-			<!--s 内容内部区域 -->
+			<!--s 视口区内部区域 -->
 			<div
 				ref="viewDOM"
 				class="base-scrollbar__view"
 				@transitionend="handleUpdate()">
-				<!-- 调试区域 -->
+				<!--t 调试区域 -->
 				<div v-if="false" class="debug">
 					containerInfo {{ containerInfo.height }},{{ containerInfo.width
 					}}<br />
@@ -25,44 +25,56 @@
 						scrollbar.horizontal.length
 					}}
 				</div>
-				<!--s 插槽出口 -->
+				<!--s 插槽出口 (内容) -->
 				<slot></slot>
 			</div>
-			<!--s 垂直滚动条 -->
-			<transition name="scrollbar">
-				<div
-					ref="verticalBar"
-					class="base-scrollbar__bar bar__is-vertical"
-					:class="{ 'is-dragging': scrollbar.vertical.isDragging }"
-					v-show="verticalScrollbarVisible"
-					@mousedown.stop
-					@mouseup.stop
-					@click.stop
-					@touchstart.stop
-					@touchmove.prevent
-					@touchend.stop
-					:style="verticalStyle"></div>
-			</transition>
-			<!--s 水平滚动条 -->
-			<transition name="scrollbar">
-				<div
-					ref="horizontalBar"
-					class="base-scrollbar__bar bar__is-horizontal"
-					:class="{ 'is-dragging': scrollbar.horizontal.isDragging }"
-					v-show="horizontalScrollbarVisible"
-					@mousedown.stop
-					@mouseup.stop
-					@click.stop
-					@touchstart.stop
-					@touchmove.prevent
-					@touchend.stop
-					:style="horizontalStyle"></div>
-			</transition>
-			<!--s 回到顶部按钮 -->
+			<teleport :disabled="!teleportTo" :to="teleportTo ? teleportTo : 'body'">
+				<!--t 垂直滚动条 -->
+				<transition name="scrollbar">
+					<div
+						ref="verticalBar"
+						class="base-scrollbar__bar bar__is-vertical"
+						:class="{ 'is-dragging': scrollbar.vertical.isDragging }"
+						v-show="verticalScrollbarVisible"
+						@mousedown.stop
+						@mouseup.stop
+						@click.stop
+						@touchstart.stop
+						@touchmove.prevent
+						@touchend.stop
+						:style="[
+							verticalStyle,
+							{
+								right: `${offset[0]}px`,
+							},
+						]"></div>
+				</transition>
+				<!--t 水平滚动条 -->
+				<transition name="scrollbar">
+					<div
+						ref="horizontalBar"
+						class="base-scrollbar__bar bar__is-horizontal"
+						:class="{ 'is-dragging': scrollbar.horizontal.isDragging }"
+						v-show="horizontalScrollbarVisible"
+						@mousedown.stop
+						@mouseup.stop
+						@click.stop
+						@touchstart.stop
+						@touchmove.prevent
+						@touchend.stop
+						:style="[
+							horizontalStyle,
+							{
+								bottom: `${offset[1]}px`,
+							},
+						]"></div>
+				</transition>
+			</teleport>
+			<!--t 回到顶部按钮 -->
 			<transition name="back-top">
 				<div
 					class="base-scrollbar__back-top"
-					v-show="bakctopShow && showBakctopButton"
+					v-show="bakctopShow && showBackTopButton"
 					@click="backToTop">
 					<i class="back-top__icon">
 						<svg
@@ -93,19 +105,28 @@
 		onActivated,
 		onDeactivated,
 	} from "vue";
-	import type { ComputedRef, CSSProperties } from "vue";
-	import {
-		useScroll,
-		useElementBounding,
-		useDraggable,
-	} from "@vueuse/core";
+	import type { ComputedRef, CSSProperties, TeleportProps } from "vue";
+	import type { Property } from "csstype"; //s 引入css类型接口(方便开发)
+
+	import { useScroll, useElementBounding, useDraggable } from "@vueuse/core";
 
 	// 定义props
 	const props = withDefaults(
-		defineProps<{ showScrollbar?: boolean; showBakctopButton?: boolean }>(),
+		defineProps<{
+			showScrollbar?: boolean; //s 显示滚动条？
+			showBackTopButton?: boolean; //s 显示回到顶部按钮？
+			barWidth?: Property.Width; //s 宽度 (滚动条)
+			barHoverWidth?: Property.Width; //s 宽度 (滚动条 & 悬浮)
+			offset?: [number, number]; //s 滚动条偏移量 [垂直滚动条的横向偏移,水平滚动条的纵向偏移]
+			teleportTo?: TeleportProps["to"] | false;
+		}>(),
 		{
 			showScrollbar: true,
-			showBakctopButton: false,
+			showBackTopButton: false,
+			barWidth: "6px",
+			barHoverWidth: "10px",
+			offset: () => [1, 1],
+			teleportTo: false,
 		}
 	);
 
@@ -426,7 +447,7 @@
 		height: 100%;
 		max-width: 100%;
 		max-height: 100%;
-		overflow: hidden;
+		// overflow: hidden;
 		display: flex;
 		flex-flow: column nowrap;
 		// border: 1px solid black;
@@ -439,7 +460,7 @@
 		width: 100%;
 		height: 100%;
 		scroll-behavior: smooth;
-		overflow: auto;
+		overflow: auto; // 默认xy方向都可以滚动
 	}
 
 	.base-scrollbar__view {
@@ -485,24 +506,25 @@
 			background: rgb(64, 160, 255);
 		}
 	}
+
 	// 虚拟滚动条(垂直)
 	.bar__is-vertical {
 		top: 0;
 		right: 1px;
-		width: 8px;
+		width: v-bind("$props.barWidth");
 		&:hover,
 		&.is-dragging {
-			width: 12px;
+			width: v-bind("$props.barHoverWidth");
 		}
 	}
 	// 虚拟滚动条(水平)
 	.bar__is-horizontal {
 		left: 0;
 		bottom: 1px;
-		height: 8px;
+		height: v-bind("$props.barWidth");
 		&:hover,
 		&.is-dragging {
-			height: 12px;
+			height: v-bind("$props.barHoverWidth");
 		}
 	}
 

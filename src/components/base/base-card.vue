@@ -68,6 +68,7 @@
 <style lang="scss" scoped>
 	// 容器基础样式
 	.img-card-container {
+		box-sizing: border-box;
 		position: relative; // 设置相对定位，以便于其他内容可以定位到图片上。
 		display: flex;
 		flex-flow: column;
@@ -84,6 +85,7 @@
 		box-shadow: 0 0 10px 0 rgba(0, 0, 0, 1); // 阴影效果，根据需要自行调整。
 	}
 	.base-card-header {
+		box-sizing: border-box;
 		position: relative;
 		z-index: 1;
 
@@ -100,7 +102,7 @@
 		}
 	}
 	.base-card-footer {
-		position: relative;
+		box-sizing: border-box;
 
 		pointer-events: none;
 		* {
@@ -108,6 +110,7 @@
 		}
 
 		&[data-layout="absolute"] {
+			box-sizing: border-box;
 			position: absolute;
 			bottom: 0;
 			left: 0;

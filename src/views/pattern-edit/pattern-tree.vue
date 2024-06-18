@@ -21,7 +21,7 @@
 			<template #checked> 展示无关节点 </template>
 			<template #unchecked> 隐藏无关节点 </template>
 		</n-switch>
-		<BaseScrollbar class="pattern-tree__tree" :show-bakctop-button="false">
+		<BaseScrollbar class="pattern-tree__tree" :show-back-top-button="false">
 			<n-tree
 				ref="treeRef"
 				:data="data"

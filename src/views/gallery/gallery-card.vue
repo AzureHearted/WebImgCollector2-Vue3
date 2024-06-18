@@ -1,6 +1,7 @@
 <template>
 	<BaseCard
 		class="gallery-card"
+		:data-id="data.id"
 		background-color="transparent"
 		style="overflow: hidden; border: unset"
 		:data-show="isMobile()"
@@ -11,6 +12,7 @@
 		<!--s 卡片顶部 -->
 		<template #header>
 			<div class="gallery-card-header">
+				<!--s header左侧 -->
 				<div class="gallery-card-header-left">
 					<!--s 复选框 -->
 					<div class="card-checkbox">
@@ -34,6 +36,7 @@
 						</BaseCheckbox>
 					</div>
 				</div>
+				<!--s header右侧 -->
 				<div class="gallery-card-header-right">
 					<!--s 卡片按钮组 -->
 					<div class="card-button-group">
@@ -51,17 +54,17 @@
 						</el-button-group>
 						<el-button-group size="small">
 							<!--s 标签编辑 -->
-							<TagEdit
+							<!-- <TagEdit
+								title="卡片标签编辑"
 								:tags="data.tags"
-								@on-save="handleTagsSave"
-								to=".web-img-collector-top-container">
+								@on-change="handleTagsSave"
+								:teleport-to="`.web-img-collector-top-container`">
 								<el-button type="primary" v-ripple>
 									<template #icon>
 										<i-mdi-tag-text />
 									</template>
 								</el-button>
-							</TagEdit>
-							<!--! 标签编辑窗口(组件)  -->
+							</TagEdit> -->
 							<!--s 重命名 -->
 							<el-button type="primary" @click="rename(data)" v-ripple>
 								<template #icon>
@@ -188,48 +191,66 @@
 		<!--s 卡片底部 -->
 		<template #footer>
 			<!-- TODO 这里需要处理 -->
-			<n-flex class="gallery-card-footer" :size="2">
-				<!--s 描述标签 -->
-				<el-tooltip
-					:content="data.description.title.trim()"
-					placement="top-start">
-					<n-tag class="title-chip" type="primary" size="tiny">
-						{{ data.description.title.trim() }}
-					</n-tag>
-				</el-tooltip>
-				<n-flex :wrap="false" :size="2">
+			<div class="gallery-card-footer" align="center" :size="2">
+				<!--s 额外标签 -->
+				<div class="extra-tag-list">
+					<BaseLineOverFlowList
+						title="更多标签"
+						:list="tags"
+						model-to=".web-img-collector-top-container">
+						<template #default="{ item, openShowMore }">
+							<var-chip :key="item.id" size="mini" @click="openShowMore">
+								{{ (item as Tag).label }}
+							</var-chip>
+						</template>
+						<template #more-modal-content>
+							<n-dynamic-tags
+								:value="data.tags"
+								type="info"
+								@change="handleTagsSave" />
+						</template>
+					</BaseLineOverFlowList>
+				</div>
+				<div style="width: 100%; display: flex; gap: 4px">
+					<!--s 描述标签 -->
+					<var-chip class="title-tag" type="primary" size="mini">
+						<n-ellipsis>
+							{{ data.description.title.trim() }}
+						</n-ellipsis>
+					</var-chip>
 					<!--s 尺寸信息 -->
-					<n-tag
+					<var-chip
 						v-if="data.source.meta.type === 'image'"
 						type="info"
-						size="tiny">
-						{{ data.source.meta.width }}x{{ data.source.meta.height }}
-					</n-tag>
+						size="mini">
+						<n-ellipsis>
+							{{ data.source.meta.width }}x{{ data.source.meta.height }}
+						</n-ellipsis>
+					</var-chip>
 					<!--s 扩展名信息 -->
-					<n-tag v-if="!!data.source.meta.ext" type="info" size="tiny">
-						{{ data.source.meta.ext }}
-					</n-tag>
+					<var-chip v-if="!!data.source.meta.ext" type="default" size="mini">
+						<n-ellipsis>
+							{{ data.source.meta.ext }}
+						</n-ellipsis>
+					</var-chip>
 					<!--s 网页标签 -->
-					<n-tag
+					<var-chip
 						v-if="data.source.meta.type === 'html'"
 						type="warning"
-						size="tiny">
+						size="mini">
 						网页
-					</n-tag>
+					</var-chip>
 					<!--s 文件大小信息 -->
-					<n-tag
+					<var-chip
 						v-if="!!data.source.blob && !!data.source.blob.size"
-						type="info"
-						size="tiny">
-						{{ size }}
-					</n-tag>
-				</n-flex>
-				<n-flex :wrap="false" :size="2">
-					<n-tag v-for="(item, index) in data.tags" :key="index" size="tiny">
-						{{ item }}
-					</n-tag>
-				</n-flex>
-			</n-flex>
+						type="success"
+						size="mini">
+						<n-ellipsis>
+							{{ size }}
+						</n-ellipsis>
+					</var-chip>
+				</div>
+			</div>
 		</template>
 	</BaseCard>
 </template>
@@ -258,6 +279,7 @@
 
 	// 导入公用TS库
 	import {
+		buildUUID,
 		byteAutoUnit,
 		isMobile,
 		legalizationPathString,
@@ -268,6 +290,7 @@
 
 	// 导入仓库
 	import useGlobalStore from "@/stores/GlobalStore";
+
 	const globalStore = useGlobalStore();
 
 	const imgWrapRef = ref<HTMLElement | null>(null);
@@ -322,6 +345,20 @@
 		} else {
 			return `0B`;
 		}
+	});
+
+	interface Tag {
+		id: string;
+		label: string;
+	}
+	//j 标签
+	const tags = computed<Tag[]>(() => {
+		return data.value.tags.map((t) => {
+			return {
+				id: buildUUID(),
+				label: t,
+			};
+		});
 	});
 
 	// 定义Fancybox的默认类型
@@ -388,7 +425,10 @@
 
 	//f 处理卡片标签变化
 	const handleTagsSave = (newTags: string[]) => {
-		data.value.tags = newTags;
+		newTags = [...new Set(newTags)]; //s 去重
+		data.value.tags.splice(0);
+		data.value.tags.push(...newTags);
+		console.log("newTags", data.value.tags, newTags);
 		emits("save:tags", data.value.id, newTags);
 	};
 </script>
@@ -463,19 +503,12 @@
 
 	// 卡片底部
 	.gallery-card-footer {
+		display: flex;
+		flex-flow: row wrap;
+		overflow: hidden;
+		gap: 2px;
 		padding: 2px;
-		// overflow: hidden;
-		overflow-x: auto;
-		// transform: translateY(100%);
 
-		// background: rgba(256, 256, 256, 0.5);
-		// background: linear-gradient(
-		// 	to top,
-		// 	rgba(255, 255, 255, 0.5) 0%,
-		// 	rgba(255, 255, 255, 0.3) 30%,
-		// 	rgba(255, 255, 255, 0) 100%
-		// );
-		// backdrop-filter: blur(10px);
 		transition: transform 0.3s;
 
 		pointer-events: none;
@@ -483,18 +516,19 @@
 			pointer-events: auto;
 		}
 
-		:deep(.wic2-n-tag) {
-			display: block;
-			flex-shrink: 0;
+		//s 标签样式
+		:deep(.var-chip) {
+			flex-basis: content;
+			flex-grow: 0;
+			flex-shrink: 0.1;
 			box-sizing: border-box;
-			// justify-content: start;
-			// max-width: 50%;
 			overflow: hidden;
 			text-overflow: ellipsis;
-			&.title-chip {
-				flex-shrink: 1;
-				// max-width: 50%;
-				width: fit-content;
+
+			&.title-tag {
+				flex-grow: 0;
+				flex-shrink: 500;
+				min-width: 40px;
 			}
 			& > span {
 				box-sizing: border-box;
@@ -503,6 +537,12 @@
 				white-space: nowrap;
 				text-align: left;
 			}
+		}
+
+		//s 额外标签
+		.extra-tag-list {
+			flex: 1;
+			overflow: hidden;
 		}
 	}
 
