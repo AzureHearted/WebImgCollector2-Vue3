@@ -1,51 +1,15 @@
 <template>
 	<n-flex class="test__container" vertical :size="4">
-		<n-flex :size="4">
-			<n-button type="primary" @click="addTag">添加标签</n-button>
-			<n-button type="warning" @click="tags.splice(0)">清空</n-button>
-		</n-flex>
-		<BaseLineOverflowList
-			:list="tags"
-			:wrap-style="{
-				width: '50%',
-			}">
-			<template #default="{ item, index }">
-				<var-chip
-					:key="item.id"
-					size="mini"
-					type="primary"
-					@close="tags.splice(index, 1)">
-					<template #default> ({{ index }}) - {{ item.label }} </template>
-				</var-chip>
-			</template>
-		</BaseLineOverflowList>
+		<!-- s 单行溢出列表测试 -->
+		<TestLineOverflowList />
+		<!-- s Tabs组件测试 -->
+		<TestTabs />
 	</n-flex>
 </template>
 
 <script setup lang="ts">
-	import BaseLineOverflowList from "@/components/base/base-line-overflow-list.vue";
-	import { buildUUID } from "@/utils/common";
-	import { ref, reactive, onMounted } from "vue";
-
-	interface Tag {
-		label: string;
-		id: string;
-	}
-	const tags = ref<Tag[]>(
-		[...Array(6).keys()].map(() => {
-			return {
-				label: `标签${(Math.random() * 100).toFixed(0)}`,
-				id: buildUUID(),
-			};
-		})
-	);
-
-	const addTag = () => {
-		tags.value.push({
-			label: `标签${(Math.random() * 100).toFixed(0)}`,
-			id: buildUUID(),
-		});
-	};
+	import TestLineOverflowList from "./test-line-overflow-list.vue";
+	import TestTabs from "./test-tabs.vue";
 </script>
 
 <style lang="scss" scoped>

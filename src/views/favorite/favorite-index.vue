@@ -62,17 +62,9 @@
 		</n-flex>
 		<!--s 内容区 -->
 		<n-flex class="content-wrap" :size="4">
-			<n-tabs
-				type="line"
-				size="small"
-				v-model:value="nowType"
-				tab-style="width: 70px"
-				style="height: 100%">
+			<BaseTabs style="width: 100%; height: 100%; overflow: hidden">
 				<!--s 图片类 -->
-				<n-tab-pane
-					class="tab-pane"
-					name="image"
-					:disabled="!filterCardList.image.length">
+				<BaseTabPane name="image" class="tab-pane">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							图片
@@ -84,15 +76,10 @@
 							</n-badge>
 						</n-flex>
 					</template>
-					<keep-alive>
-						<BaseCardList :card-list="filterCardList.image" />
-					</keep-alive>
-				</n-tab-pane>
+					<BaseCardList :card-list="filterCardList.image" />
+				</BaseTabPane>
 				<!--s 视频类 -->
-				<n-tab-pane
-					class="tab-pane"
-					name="video"
-					:disabled="!filterCardList.video.length">
+				<BaseTabPane name="video" class="tab-pane">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							视频
@@ -103,14 +90,10 @@
 							</n-badge>
 						</n-flex>
 					</template>
-					<keep-alive>
-						<BaseCardList :card-list="filterCardList.video" />
-					</keep-alive>
-				</n-tab-pane>
-				<n-tab-pane
-					class="tab-pane"
-					name="html"
-					:disabled="!filterCardList.html.length">
+					<BaseCardList :card-list="filterCardList.video" />
+				</BaseTabPane>
+				<!--s 网页类 -->
+				<BaseTabPane name="html" class="tab-pane">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							网页
@@ -123,11 +106,9 @@
 						</n-flex>
 					</template>
 					<BaseCardList :card-list="filterCardList.html" />
-				</n-tab-pane>
-				<n-tab-pane
-					class="tab-pane"
-					name="other"
-					:disabled="!filterCardList.other.length">
+				</BaseTabPane>
+				<!--s 其他类 -->
+				<BaseTabPane name="other" class="tab-pane">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							其他
@@ -140,8 +121,8 @@
 						</n-flex>
 					</template>
 					<BaseCardList :card-list="filterCardList.other" />
-				</n-tab-pane>
-			</n-tabs>
+				</BaseTabPane>
+			</BaseTabs>
 		</n-flex>
 	</n-flex>
 </template>
@@ -161,6 +142,8 @@
 	import { isMobile } from "@/utils/common";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
 	import { NEllipsis, NTag, NBadge, NFlex } from "naive-ui";
+	import BaseTabs from "@/components/base/base-tabs.vue";
+	import BaseTabPane from "@/components/base/base-tab-pane.vue";
 	import BaseCardList from "./favorite-base-waterfall.vue";
 
 	import { storeToRefs } from "pinia";
@@ -369,12 +352,6 @@
 				white-space: nowrap;
 			}
 		}
-	}
-
-	.tab-pane {
-		height: 100%;
-		overflow: hidden;
-		box-sizing: border-box;
 	}
 
 	:deep(.wic2-n-tabs-tab) {

@@ -28,7 +28,7 @@
 					right: `${wrapDOM ? getDOMBoxValue(wrapDOM, 'padding-right') : 0}px`,
 				}"
 				@click.stop="showMore = !showMore">
-				<n-icon :size="maxHeight">
+				<n-icon :size="`${warpInfo.bounding.height}px`">
 					<i-mdi-more-horiz />
 				</n-icon>
 			</div>
@@ -41,7 +41,7 @@
 					left: `${wrapDOM ? getDOMBoxValue(wrapDOM, 'padding-left') : 0}px`,
 				}"
 				@click.stop="showMore = !showMore">
-				<n-icon :size="maxHeight">
+				<n-icon :size="!!list.length ? maxHeight : undefined">
 					<i-mdi-plus />
 				</n-icon>
 			</div>
@@ -333,11 +333,18 @@
 		mask: linear-gradient(to right, rgb(255, 255, 255), transparent 50%);
 	}
 
+	//s 按钮样式
 	.line-overflow-list__button {
 		position: absolute;
-		display: flex;
+
 		top: 50%;
 		transform: translateY(-50%);
+		height: 100%;
+		aspect-ratio: 1;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 	.line-overflow-list__button[data-show="false"] {
 		opacity: 0;

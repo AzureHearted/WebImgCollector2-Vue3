@@ -170,7 +170,7 @@ export const defaultPattern = new Pattern({
 			},
 			source: {
 				selector:
-					'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src]',
+					'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src],video>source[src],video[src]',
 				infoType: "attribute",
 				name: "content|href|srcset|data-src|src",
 				fix: [],
