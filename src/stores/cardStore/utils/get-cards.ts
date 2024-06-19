@@ -683,7 +683,7 @@ async function getMetaByUrl(url: URL, _default: Partial<BaseMeta> = {}) {
 			valid: true,
 			width: 0,
 			height: 0,
-			type: "html",
+			type,
 			ext: false,
 		};
 	}
@@ -935,13 +935,15 @@ async function getDOMNaturalSize(dom: HTMLElement): Promise<{
 // 推断链接类型
 function inferUrlType(url: URL) {
 	// 推测链接类型
-	const imageRegex = /\.(jpg|jpeg|png|gif|webp|bmp|icon|svg)$/i;
+	const imageRegex = /\.(jpg|jpeg|png|gif|webp|bmp|icon|svg)$/gi;
 	const videoRegex =
-		/\.(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)$/i;
-	const audioRegex = /\.(mp3|wav|ogg|aac|flac)$/i;
+		/\.(mp4|avi|mov|mkv|mpeg|mpg|wmv|3gp|flv|f4v|rmvb|webm|ts|webp|ogv)$/gi;
+	const audioRegex = /\.(mp3|wav|ogg|aac|flac)$/gi;
+	const zipRegex = /\.(zip|rar|7z|tar|gz|bz2|xz)$/gi; // 压缩包类型
 
 	// 默认标记类型为未确定
-	let type: "image" | "video" | "html" | "audio" | null = null;
+	let type: "image" | "video" | "html" | "zip" | "audio" | "other" | null =
+		null;
 	const urlStr = url.origin + url.pathname; //只保留“源”和“路径”防止查询参数干扰
 	// console.log("进行类型推断-->", urlStr);
 	// 根据文件扩展名判断类型
@@ -951,6 +953,8 @@ function inferUrlType(url: URL) {
 		type = "video";
 	} else if (audioRegex.test(urlStr)) {
 		type = "audio";
+	} else if (zipRegex.test(urlStr)) {
+		type = "zip";
 	} else {
 		type = "html";
 	}

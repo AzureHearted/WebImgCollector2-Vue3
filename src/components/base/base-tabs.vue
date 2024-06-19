@@ -35,7 +35,7 @@
 			</div>
 		</div>
 		<!--s 内容区 -->
-		<div class="base-tabs__content">
+		<div class="base-tabs__content-wrap" :style="[wrapStyle]">
 			<template v-for="tab in tabs" :key="tab">
 				<keep-alive>
 					<component v-if="tab.id === active" :is="tab.vnode" />
@@ -54,13 +54,23 @@
 		ref,
 		computed,
 		onMounted,
+		watch,
 		onUnmounted,
 		onActivated,
 		useSlots,
+		nextTick,
 	} from "vue";
+	import type { HtmlHTMLAttributes } from "vue";
 	import type { VNode, HTMLAttributes } from "vue";
 	import BaseTabPane from "./base-tab-pane.vue";
 	import { buildUUID } from "@/utils/common";
+
+	withDefaults(
+		defineProps<{
+			wrapStyle?: HtmlHTMLAttributes["style"];
+		}>(),
+		{}
+	);
 
 	const slots = useSlots();
 
@@ -76,9 +86,9 @@
 			: [];
 	});
 
-	onMounted(() => {
-		console.log(tabPanes.value);
-	});
+	// onMounted(() => {
+	// 	console.log(tabPanes.value);
+	// });
 
 	interface Tab {
 		id: string;
@@ -140,7 +150,7 @@
 		function createObserver() {
 			let stopFuncList: Function[] = [];
 			function set() {
-				console.log("创建监听器");
+				// console.log("创建监听器");
 				if (tabDOMs.value) {
 					tabDOMs.value.forEach((dom) => {
 						const { stop } = useMutationObserver(
@@ -158,11 +168,11 @@
 				}
 			}
 			function reset() {
-				console.log("重新设置监听器");
+				// console.log("重新设置监听器");
 				set();
 			}
 			function stop() {
-				console.log("监听器卸载");
+				// console.log("监听器卸载");
 				stopFuncList.forEach((f) => f());
 			}
 			reset();
@@ -186,10 +196,17 @@
 
 	onMounted(() => {
 		//s 挂载(激活)时将激活条的样式赋值给悬浮条
-		hoverBarStyle.value = activeBarStyle.value;
-		onActivated(() => {
+		nextTick(() => {
 			hoverBarStyle.value = activeBarStyle.value;
 		});
+		onActivated(() => {
+			nextTick(() => {
+				hoverBarStyle.value = activeBarStyle.value;
+			});
+		});
+	});
+	watch(activeBarStyle, (value) => {
+		hoverBarStyle.value = value;
 	});
 	//f 更新浮动条样式
 	const updateHoverBar = (e: MouseEvent) => {
@@ -207,7 +224,7 @@
 				left: `${left - wrapLeft}px`,
 			};
 		} else {
-			console.log(e.type);
+			// console.log(e.type);
 			if (!activeTabDOM.value) return;
 			const { width, left } = activeTabDOM.value.getBoundingClientRect();
 			hoverBarStyle.value = {
@@ -296,10 +313,9 @@
 	}
 
 	//s 主要内容区
-	.base-tabs__content {
+	.base-tabs__content-wrap {
 		flex: 1; // 填满剩余空间
-		display: flex; //! 这里必须这样
-		overflow: auto; //! 这里必须这样
+		display: flex;
 		// background-color: rgb(255, 255, 255);
 		transition: 0.3s;
 	}

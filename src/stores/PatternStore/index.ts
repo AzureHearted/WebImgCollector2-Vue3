@@ -103,6 +103,10 @@ export default defineStore("PatternStore", () => {
 		console.log("初始方案", targetPattern);
 		if (targetPattern) {
 			used.id = targetPattern.id;
+			editing.pid = targetPattern.id;
+			if (targetPattern.rules.length) {
+				editing.rid = targetPattern.rules[0].id;
+			}
 			// return targetPattern.id;
 			//? 初始化filter
 			// initFilter(targetPattern);

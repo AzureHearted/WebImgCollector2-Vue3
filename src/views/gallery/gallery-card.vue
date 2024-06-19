@@ -3,7 +3,7 @@
 		class="gallery-card"
 		:data-id="data.id"
 		background-color="transparent"
-		style="overflow: hidden; border: unset"
+		style="border: unset"
 		:data-show="isMobile()"
 		:data-visible="targetIsVisible"
 		:data-source-type="data.source.meta.type"
@@ -40,6 +40,10 @@
 				<div class="gallery-card-header-right">
 					<!--s 卡片按钮组 -->
 					<div class="card-button-group">
+						<!--s 自定义按钮组 -->
+						<el-button-group size="small">
+							<slot name="custom-button" :openUrl="openUrl"></slot>
+						</el-button-group>
 						<el-button-group size="small">
 							<!--s 删除 -->
 							<el-button
@@ -53,18 +57,6 @@
 							</el-button>
 						</el-button-group>
 						<el-button-group size="small">
-							<!--s 标签编辑 -->
-							<!-- <TagEdit
-								title="卡片标签编辑"
-								:tags="data.tags"
-								@on-change="handleTagsSave"
-								:teleport-to="`.web-img-collector-top-container`">
-								<el-button type="primary" v-ripple>
-									<template #icon>
-										<i-mdi-tag-text />
-									</template>
-								</el-button>
-							</TagEdit> -->
 							<!--s 重命名 -->
 							<el-button type="primary" @click="rename(data)" v-ripple>
 								<template #icon>
@@ -88,6 +80,8 @@
 								v-if="
 									(data.source.meta.type === 'image' ||
 										data.preview.meta.type === 'image' ||
+										data.source.meta.type === 'zip' ||
+										data.preview.meta.type === 'zip' ||
 										data.source.meta.type === 'video' ||
 										data.preview.meta.type === 'video') &&
 									showDownloadButton
@@ -118,9 +112,6 @@
 		<!--s 卡片主体(图片) -->
 		<template #default>
 			<div
-				:style="{
-					aspectRatio: data.preview.meta.aspectRatio || 1,
-				}"
 				ref="imgWrapRef"
 				data-fancybox="web-img-collector"
 				:data-id="data.id"
@@ -270,7 +261,6 @@
 	import BaseVideo from "@/components/base/base-video.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
 	import BaseLineOverFlowList from "@/components/base/base-line-overflow-list.vue";
-	import TagEdit from "./tag-edit.vue";
 	import Card from "@/stores/CardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 	import { GM_openInTab } from "$";
@@ -294,10 +284,11 @@
 	const globalStore = useGlobalStore();
 
 	const imgWrapRef = ref<HTMLElement | null>(null);
+	//s 图片可见性
 	const targetIsVisible = useElementVisibility(imgWrapRef);
 
 	const data = defineModel("data", { type: Card, default: () => new Card() });
-	const props = withDefaults(
+	withDefaults(
 		defineProps<{
 			// data: Card;
 			viewportSelector?: string;
@@ -366,7 +357,6 @@
 		| "image"
 		| "iframe"
 		| "youtube"
-		| "inline"
 		| "html"
 		| "ajax"
 		| "html5video"
@@ -435,6 +425,9 @@
 
 <style lang="scss" scoped>
 	// 卡片顶部
+	:deep(.base-card-header) {
+		overflow: hidden;
+	}
 	.gallery-card-header {
 		position: relative;
 		display: flex;
@@ -502,6 +495,9 @@
 	}
 
 	// 卡片底部
+	:deep(.base-card-footer) {
+		overflow: hidden;
+	}
 	.gallery-card-footer {
 		display: flex;
 		flex-flow: row wrap;

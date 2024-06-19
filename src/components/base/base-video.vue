@@ -211,9 +211,9 @@
 		if (state.isError) {
 			return props.initWidth && props.initHeight
 				? props.initWidth / props.initHeight
-				: 1;
+				: 16 / 9;
 		} else {
-			return state.width && state.height ? state.width / state.height : 1;
+			return state.width && state.height ? state.width / state.height : 16 / 9;
 		}
 	});
 
@@ -402,6 +402,7 @@
 		user-select: none;
 		/* 禁止图文拖拽 */
 		-webkit-user-drag: none;
+		transition: 0.5s ease-out; // 添加过渡效果
 	}
 
 	/* 加载动画 */

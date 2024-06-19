@@ -1,6 +1,6 @@
 <template>
 	<!--s 组件主体 -->
-	<div class="line-overflow-list__container">
+	<div class="line-overflow-list__container" ref="containerDOM">
 		<div class="line-overflow-list__wrap" :style="[wrapStyle]" ref="wrapDOM">
 			<!--s 列表区域 -->
 			<slot name="all-content">
@@ -24,11 +24,9 @@
 				ref="overflowButtonDOM"
 				class="line-overflow-list__button overflow-button"
 				:data-show="!!overflowIndexes.length"
-				:style="{
-					right: `${wrapDOM ? getDOMBoxValue(wrapDOM, 'padding-right') : 0}px`,
-				}"
+				:style="overflowButtonStyle"
 				@click.stop="showMore = !showMore">
-				<n-icon :size="`${warpInfo.bounding.height}px`">
+				<n-icon :size="buttonHeight">
 					<i-mdi-more-horiz />
 				</n-icon>
 			</div>
@@ -37,20 +35,19 @@
 				ref="voidButtonDOM"
 				class="line-overflow-list__button void-button"
 				:data-show="!list.length"
-				:style="{
-					left: `${wrapDOM ? getDOMBoxValue(wrapDOM, 'padding-left') : 0}px`,
-				}"
+				:style="voidButtonStyle"
 				@click.stop="showMore = !showMore">
 				<n-icon :size="!!list.length ? maxHeight : undefined">
 					<i-mdi-plus />
 				</n-icon>
 			</div>
 		</div>
-
 		<!--s 更多展示面板 -->
 		<BaseDragModal
-			v-model:show="showMore"
+			v-if="showMore"
+			:show="true"
 			:title="title"
+			@closed="showMore = false"
 			:teleport-to="modelTo">
 			<div>
 				<slot name="more-modal-content" :showMore="showMore">
@@ -67,7 +64,7 @@
 			</div>
 		</BaseDragModal>
 		<!--t 调试面板 -->
-		<div v-if="false" style="background: rgba(256, 256, 256, 0.5)">
+		<!-- <div v-if="false" style="background: rgba(256, 256, 256, 0.5)">
 			<n-collapse
 				:default-expanded-names="[
 					'容器信息',
@@ -111,7 +108,7 @@
 					</n-code>
 				</n-collapse-item>
 			</n-collapse>
-		</div>
+		</div> -->
 	</div>
 </template>
 
@@ -126,7 +123,12 @@
 		nextTick,
 	} from "vue";
 	import type { HTMLAttributes } from "vue";
-	import { useElementBounding, useElementSize } from "@vueuse/core";
+	import {
+		useElementBounding,
+		useElementSize,
+		useElementVisibility,
+		useMutationObserver,
+	} from "@vueuse/core";
 	import { computed } from "vue";
 	import { getDOMBoxValue } from "@/utils/common";
 	import BaseDragModal from "@/components/base/base-drag-modal.vue";
@@ -156,6 +158,8 @@
 		showMore.value = true;
 	};
 
+	const containerDOM = ref<HTMLElement | null>(null);
+
 	const wrapDOM = ref<HTMLElement | null>(null);
 	//s wrap边界尺寸
 	const warpBounding = reactive({
@@ -166,11 +170,34 @@
 		...useElementSize(wrapDOM),
 	});
 
+	//j 按钮样式
+	const buttonHeight = computed<number>(() => {
+		return warpInfo.value.bounding.height;
+	});
+
 	//s 溢出按钮DOM
 	const overflowButtonDOM = ref<HTMLElement | null>(null);
 	//s 溢出按钮边界尺寸
 	const overflowButtonInfo = reactive({
 		...useElementBounding(overflowButtonDOM),
+	});
+
+	//j 溢出按钮样式
+	const overflowButtonStyle = computed<HTMLAttributes["style"]>(() => {
+		return {
+			right: `${
+				wrapDOM.value ? getDOMBoxValue(wrapDOM.value, "padding-right") : 0
+			}px`,
+		};
+	});
+
+	//j 空按钮样式
+	const voidButtonStyle = computed<HTMLAttributes["style"]>(() => {
+		return {
+			left: `${
+				wrapDOM.value ? getDOMBoxValue(wrapDOM.value, "padding-left") : 0
+			}px`,
+		};
 	});
 
 	//j 计算warp元素所有尺寸信息
@@ -223,21 +250,21 @@
 		if (!wrapDOM.value) return;
 		// console.log("挂载", { ...warpBounding }, { ...warpSize });
 		//s 创建一个 MutationObserver 实例来监听子元素的变化
-		const observer = new MutationObserver(() => {
-			if (!wrapDOM.value) return;
-			children.value = Array.from(wrapDOM.value.children);
-			// console.log("MutationObserver", children.value);
-		});
-
-		//s 配置观察器: 监视子元素的增减
-		observer.observe(wrapDOM.value, { childList: true });
+		const { stop } = useMutationObserver(
+			wrapDOM.value,
+			() => {
+				if (!wrapDOM.value) return;
+				children.value = Array.from(wrapDOM.value.children);
+			},
+			{ childList: true }
+		);
 
 		//s 初始时设置 children 的值
 		children.value = Array.from(wrapDOM.value.children);
 
 		//s (组件卸载时)清理
 		onUnmounted(() => {
-			observer.disconnect();
+			stop();
 		});
 	});
 
@@ -278,7 +305,6 @@
 			.map((x) => x.index);
 	});
 
-	//
 	watch(
 		() => childrenBounding.value,
 		() => {
@@ -290,6 +316,7 @@
 
 	onUpdated(() => {
 		nextTick(() => {
+			// console.log("更新");
 			updateChildrenState();
 		});
 	});

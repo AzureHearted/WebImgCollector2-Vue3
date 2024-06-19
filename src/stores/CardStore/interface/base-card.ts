@@ -35,7 +35,7 @@ export interface BaseMeta {
 	width: number;
 	height: number;
 	aspectRatio?: number;
-	type: "image" | "video" | "audio" | "html" | false;
+	type: "image" | "video" | "audio" | "zip" | "html" | "other" | false;
 	size?: number;
 	ext: string | false; // 后缀如果有
 	[key: string]: any; // 允许添加其他属性

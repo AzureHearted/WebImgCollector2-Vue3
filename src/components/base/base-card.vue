@@ -88,6 +88,7 @@
 		box-sizing: border-box;
 		position: relative;
 		z-index: 1;
+		overflow: hidden;
 
 		pointer-events: none;
 		* {
@@ -103,7 +104,7 @@
 	}
 	.base-card-footer {
 		box-sizing: border-box;
-
+		overflow: hidden;
 		pointer-events: none;
 		* {
 			pointer-events: auto;

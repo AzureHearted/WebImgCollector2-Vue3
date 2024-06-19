@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-	import { h, ref, computed } from "vue";
+	import { h, ref, computed, onActivated, onMounted } from "vue";
 	import { NButton, NEllipsis } from "naive-ui";
 	import type { TreeOption, TreeInst, TreeDropInfo, TreeProps } from "naive-ui";
 	import { DeleteFilled, Plus } from "@element-plus/icons-vue";
@@ -73,6 +73,13 @@
 	const showIrrelevantNodes = ref(false); //展示无关节点
 	const defaultExpandedKeys = ref<string[]>([patternStore.editing.pid]); // 默认展开的节点
 	const defaultSelectedKeys = ref<string[]>([patternStore.editing.rid]); // 默认选中的节点
+
+	// onMounted(()=>{
+
+	// })
+	// onActivated(()=>{
+
+	// })
 
 	// 关键数据结构定义
 	interface PatternNode extends TreeOption {
@@ -362,6 +369,7 @@
 	}
 	.pattern-tree__tree {
 		border-radius: 4px;
+		overflow: hidden;
 	}
 	:deep(.wic2-n-tree) {
 		border-radius: 4px;

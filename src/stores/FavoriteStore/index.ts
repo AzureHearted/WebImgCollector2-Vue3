@@ -269,6 +269,7 @@ export default defineStore("FavoriteStore", () => {
 		const image = [] as Card[],
 			video = [] as Card[],
 			audio = [] as Card[],
+			zip = [] as Card[],
 			html = [] as Card[],
 			other = [] as Card[];
 		let all = [...cardList.value];
@@ -329,23 +330,32 @@ export default defineStore("FavoriteStore", () => {
 					: true);
 			if (!isMatch) c.isSelected = false; // 如果不匹配的需要将选中状态设置为false
 			if (isMatch) {
-				if (sType === "image") {
-					image.push(c);
-				} else if (sType === "html") {
-					html.push(c);
-				} else if (sType === "video") {
-					video.push(c);
-				} else if (sType === "audio") {
-					audio.push(c);
-				} else {
-					other.push(c);
+				switch (sType) {
+					case "image":
+						image.push(c);
+						break;
+					case "video":
+						video.push(c);
+						break;
+					case "audio":
+						audio.push(c);
+						break;
+					case "html":
+						html.push(c);
+						break;
+					case "zip":
+						zip.push(c);
+						break;
+					default:
+						other.push(c);
+						break;
 				}
 			}
 
 			return isMatch;
 		});
 
-		return { all, image, video, audio, html, other };
+		return { all, image, video, audio, zip, html, other };
 	});
 
 	//f 刷新仓库数据

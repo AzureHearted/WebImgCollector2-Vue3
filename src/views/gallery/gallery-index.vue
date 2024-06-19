@@ -4,14 +4,9 @@
 		<GalleryToolbar />
 		<!-- 瀑布流 -->
 		<n-flex class="gallery__content-wrap">
-			<n-tabs
-				type="line"
-				size="small"
-				v-model:value="nowType"
-				tab-style="min-width: 80px"
-				style="width: 100%; height: 100%">
+			<BaseTabs style="width: 100%; height: 100%" wrap-style="overflow:hidden;">
 				<!--s 图片类 -->
-				<n-tab-pane class="tab-pane" name="image">
+				<BaseTabPane name="image">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							图片
@@ -25,9 +20,9 @@
 					<keep-alive>
 						<GalleryBaseWaterfall :card-list="filterCardList.image" />
 					</keep-alive>
-				</n-tab-pane>
+				</BaseTabPane>
 				<!--s 视频类 -->
-				<n-tab-pane class="tab-pane" name="video">
+				<BaseTabPane name="video">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							视频
@@ -41,9 +36,23 @@
 					<keep-alive>
 						<GalleryBaseWaterfall :card-list="filterCardList.video" />
 					</keep-alive>
-				</n-tab-pane>
+				</BaseTabPane>
+				<!--s 压缩包类 -->
+				<BaseTabPane name="zip">
+					<template #tab>
+						<n-flex :size="4" align="center" :wrap="false">
+							压缩包
+							<n-badge
+								:value="filterCardList.zip.length"
+								:max="999"
+								type="default">
+							</n-badge>
+						</n-flex>
+					</template>
+					<GalleryBaseWaterfall :card-list="filterCardList.zip" />
+				</BaseTabPane>
 				<!--s 网页类 -->
-				<n-tab-pane class="tab-pane" name="html">
+				<BaseTabPane name="html">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							网页
@@ -55,9 +64,9 @@
 						</n-flex>
 					</template>
 					<GalleryBaseWaterfall :card-list="filterCardList.html" />
-				</n-tab-pane>
+				</BaseTabPane>
 				<!--s 其他类 -->
-				<n-tab-pane class="tab-pane" name="other">
+				<BaseTabPane name="other">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							其他
@@ -69,8 +78,8 @@
 						</n-flex>
 					</template>
 					<GalleryBaseWaterfall :card-list="filterCardList.other" />
-				</n-tab-pane>
-			</n-tabs>
+				</BaseTabPane>
+			</BaseTabs>
 		</n-flex>
 	</div>
 </template>
@@ -88,8 +97,10 @@
 	import { storeToRefs } from "pinia";
 	import GalleryToolbar from "./gallery-toolbar.vue";
 	import GalleryBaseWaterfall from "./gallery-base-waterfall.vue";
-
+	import BaseTabs from "@/components/base/base-tabs.vue";
+	import BaseTabPane from "@/components/base/base-tab-pane.vue";
 	import useCardStore from "@/stores/CardStore";
+
 	const cardStore = useCardStore();
 	const { filterCardList, nowType } = storeToRefs(cardStore);
 

@@ -62,9 +62,9 @@
 		</n-flex>
 		<!--s 内容区 -->
 		<n-flex class="content-wrap" :size="4">
-			<BaseTabs style="width: 100%; height: 100%; overflow: hidden">
+			<BaseTabs style="width: 100%; height: 100%" wrap-style="overflow:hidden;">
 				<!--s 图片类 -->
-				<BaseTabPane name="image" class="tab-pane">
+				<BaseTabPane name="image">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							图片
@@ -79,7 +79,7 @@
 					<BaseCardList :card-list="filterCardList.image" />
 				</BaseTabPane>
 				<!--s 视频类 -->
-				<BaseTabPane name="video" class="tab-pane">
+				<BaseTabPane name="video">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							视频
@@ -92,8 +92,23 @@
 					</template>
 					<BaseCardList :card-list="filterCardList.video" />
 				</BaseTabPane>
+				<!--s 压缩包类 -->
+				<BaseTabPane name="zip">
+					<template #tab>
+						<n-flex :size="4" align="center" :wrap="false">
+							压缩包
+							<n-badge
+								style="margin-left: 4px"
+								:value="filterCardList.zip.length"
+								:max="999"
+								type="default">
+							</n-badge>
+						</n-flex>
+					</template>
+					<BaseCardList :card-list="filterCardList.zip" />
+				</BaseTabPane>
 				<!--s 网页类 -->
-				<BaseTabPane name="html" class="tab-pane">
+				<BaseTabPane name="html">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							网页
@@ -108,7 +123,7 @@
 					<BaseCardList :card-list="filterCardList.html" />
 				</BaseTabPane>
 				<!--s 其他类 -->
-				<BaseTabPane name="other" class="tab-pane">
+				<BaseTabPane name="other">
 					<template #tab>
 						<n-flex :size="4" align="center" :wrap="false">
 							其他

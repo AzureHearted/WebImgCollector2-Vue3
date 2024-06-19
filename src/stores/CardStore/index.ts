@@ -94,7 +94,7 @@ export default defineStore("CardStore", () => {
 	);
 
 	//t 卡片类型(类型)
-	type CardType = ExcludeType<"all" | BaseMeta["type"] | "other", false>;
+	type CardType = ExcludeType<"all" | BaseMeta["type"], false>;
 	//s 当前类型
 	const nowType = ref<CardType>("image");
 	//s 过滤器
@@ -210,6 +210,7 @@ export default defineStore("CardStore", () => {
 			video = [] as Card[],
 			audio = [] as Card[],
 			html = [] as Card[],
+			zip = [] as Card[],
 			other = [] as Card[];
 		let all = [...validCardList.value];
 
@@ -261,22 +262,31 @@ export default defineStore("CardStore", () => {
 					: true);
 			if (!isMatch) x.isSelected = false; // 如果不匹配的需要将选中状态设置为false
 			if (isMatch) {
-				if (sType === "image") {
-					image.push(x);
-				} else if (sType === "html") {
-					html.push(x);
-				} else if (sType === "video") {
-					video.push(x);
-				} else if (sType === "audio") {
-					video.push(x);
-				} else {
-					other.push(x);
+				switch (sType) {
+					case "image":
+						image.push(x);
+						break;
+					case "video":
+						video.push(x);
+						break;
+					case "audio":
+						audio.push(x);
+						break;
+					case "html":
+						html.push(x);
+						break;
+					case "zip":
+						zip.push(x);
+						break;
+					default:
+						other.push(x);
+						break;
 				}
 			}
 			return isMatch;
 		});
 
-		return { all, image, video, audio, html, other };
+		return { all, image, video, zip, audio, html, other };
 	});
 
 	//j 选中的卡片
@@ -288,6 +298,7 @@ export default defineStore("CardStore", () => {
 			image: filterCardList.value.image.filter((x) => x.isSelected),
 			video: filterCardList.value.video.filter((x) => x.isSelected),
 			audio: filterCardList.value.audio.filter((x) => x.isSelected),
+			zip: filterCardList.value.zip.filter((x) => x.isSelected),
 			html: filterCardList.value.html.filter((x) => x.isSelected),
 			other: filterCardList.value.other.filter((x) => x.isSelected),
 		};
