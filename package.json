@@ -4,7 +4,6 @@
 	"private": true,
 	"author": "ls",
 	"license": "MIT",
-	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "run-p type-check \"build-only {@}\" --",

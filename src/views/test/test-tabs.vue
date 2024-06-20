@@ -10,7 +10,7 @@
 						自定义-图片
 					</n-flex>
 				</template>
-				<div v-for="i in 100" :key="i">图片{{ i }}</div>
+				<div v-for="i in 50" :key="i">图片{{ i }}</div>
 			</BaseTabPane>
 			<BaseTabPane title="视频" name="video"> 视频1 </BaseTabPane>
 			<BaseTabPane title="视频" name="video"> 视频2 </BaseTabPane>

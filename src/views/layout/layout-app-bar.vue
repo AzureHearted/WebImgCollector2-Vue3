@@ -38,7 +38,7 @@
 
 		background: white;
 		align-items: center;
-		box-shadow: shadow.$elevation;
+		box-shadow: shadow.$elevation, inset 0 0 10px rgba(128, 128, 128, 0.6);
 	}
 
 	.layout-app-bar__menu-button {

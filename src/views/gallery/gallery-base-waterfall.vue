@@ -20,12 +20,14 @@
 			</template>
 		</WaterFallList>
 	</BaseScrollbar>
+	<!-- <BaseDock></BaseDock> -->
 </template>
 
 <script setup lang="ts">
 	import { ref, watch, nextTick, onActivated } from "vue";
 	import WaterFallList from "@/components/base/waterfall-list.vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
+	import BaseDock from "@/components/base/base-dock.vue";
 	import type { returnInfo } from "@/components/base/base-img.vue";
 	import GalleryCard from "./gallery-card.vue";
 	import Card from "@/stores/CardStore/class/Card";

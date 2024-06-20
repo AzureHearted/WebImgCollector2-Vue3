@@ -1,7 +1,7 @@
 <template>
 	<!-- s悬浮按钮 -->
 	<var-fab
-		:show="show && state.loaded"
+		:show="show && state.mounted"
 		v-model:active="active"
 		type="primary"
 		bottom="20vh"
@@ -11,12 +11,8 @@
 		drag
 		:teleport="false">
 		<template #trigger>
-			<!-- 图库显示切换按钮 -->
-			<var-badge
-				style="z-index: 1"
-				type="danger"
-				:max-value="999"
-				:hidden="true">
+			<!--s 图库显示切换按钮 -->
+			<n-badge :value="filterCardList.all.length" :max="999" type="default">
 				<var-button
 					elevation
 					type="primary"
@@ -29,7 +25,7 @@
 				</var-button>
 				<!-- 底部悬浮按钮 -->
 				<div class="bottom-fab" :data-active="active || state.scrolling">
-					<!-- 页面下滚按钮 -->
+					<!--t 页面下滚按钮 -->
 					<var-button
 						class="scroll-button"
 						round
@@ -39,7 +35,7 @@
 							style="font-size: 24px"
 							color="black" />
 					</var-button>
-					<!-- 页面上滚按钮 -->
+					<!--t 页面上滚按钮 -->
 					<var-button
 						class="scroll-up"
 						round
@@ -50,15 +46,15 @@
 							color="black" />
 					</var-button>
 				</div>
-			</var-badge>
+			</n-badge>
 		</template>
 		<template #default>
 			<!--s 图库 -->
-			<var-badge
-				style="z-index: 1"
-				type="danger"
-				:max-value="999"
-				:hidden="true">
+			<n-badge
+				:value="filterCardList.all.length"
+				:processing="loading"
+				:max="999"
+				type="default">
 				<var-button
 					type="success"
 					round
@@ -66,7 +62,7 @@
 					@click="toggleWindow('Gallery')">
 					<i-material-symbols-team-dashboard color="black" />
 				</var-button>
-			</var-badge>
+			</n-badge>
 			<!--s 方案管理 -->
 			<var-button type="info" round @click="toggleWindow('PatternEdit')">
 				<i-material-symbols-box-edit color="black" />
@@ -98,8 +94,14 @@
 	import { isMobile } from "@/utils/common";
 	import { storeToRefs } from "pinia";
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
+	import useCardStore from "@/stores/CardStore";
+	import useLoadingStore from "@/stores/LoadingStore";
 	const globalStore = useGlobalStore();
 	const { openWindow, tab } = storeToRefs(globalStore);
+	const cardStore = useCardStore();
+	const { filterCardList } = storeToRefs(cardStore);
+	const loadingStore = useLoadingStore();
+	const { loading } = storeToRefs(loadingStore);
 
 	const active = ref(false); // 控制悬浮按钮的显示状态
 
@@ -107,12 +109,10 @@
 	withDefaults(
 		defineProps<{
 			teleportTo?: string | HTMLElement | false; // 指定浮动按钮的挂载点
-			loading?: boolean;
 			show?: boolean;
 		}>(),
 		{
 			teleportTo: () => "body",
-			loading: false,
 			show: true,
 		}
 	);
@@ -121,16 +121,16 @@
 		scrolling: false,
 		scrollingToDown: false,
 		scrollingToUp: false,
-		loaded: false,
+		mounted: false,
 	});
 	// const scrollingToDown = ref(false); // 控制滚动按钮的显示状态
 	// const scrollingToUp = ref(false); // 控制滚动按钮的显示状态
 
 	onMounted(() => {
-		state.loaded = true;
+		state.mounted = true;
 	});
 
-	// 切换窗口显示
+	//f 切换窗口显示
 	function toggleWindow(name?: string) {
 		active.value = false;
 		if (name) {
@@ -142,7 +142,7 @@
 		}
 	}
 
-	// 滚动容器到底部
+	//f 滚动容器到底部
 	function scrollTo(
 		direction: "up" | "down" = "down", // 滚动方向，默认向下滚动
 		container: HTMLElement = document.documentElement, // 滚动元素

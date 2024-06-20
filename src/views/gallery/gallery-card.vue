@@ -5,12 +5,12 @@
 		background-color="transparent"
 		style="border: unset"
 		:data-show="isMobile()"
-		:data-visible="targetIsVisible"
+		:data-visible="isVisible"
 		:data-source-type="data.source.meta.type"
 		:data-preview-type="data.preview.meta.type"
 		:data-checked="data.isSelected">
 		<!--s 卡片顶部 -->
-		<template #header>
+		<template v-if="isVisible" #header>
 			<div class="gallery-card-header">
 				<!--s header左侧 -->
 				<div class="gallery-card-header-left">
@@ -125,7 +125,7 @@
 					<BaseImg
 						v-if="data.source.meta.type === 'image'"
 						:src="data.source.url"
-						:show="targetIsVisible"
+						:show="isVisible"
 						:viewport-selector="viewportSelector"
 						use-thumb
 						:thumb="data.preview.url"
@@ -141,7 +141,7 @@
 						"
 						:viewport-selector="viewportSelector"
 						:src="data.preview.url"
-						:show="targetIsVisible"
+						:show="isVisible"
 						:init-width="data.preview.meta.width"
 						:init-height="data.preview.meta.height"
 						@loaded="emits('loaded', data.id, $event)"
@@ -161,7 +161,7 @@
 						loop
 						:show-controls="false"
 						:src="data.preview.url"
-						:show="targetIsVisible"
+						:show="isVisible"
 						:viewport-selector="viewportSelector"
 						:init-width="data.preview.meta.width"
 						:init-height="data.preview.meta.height"
@@ -181,12 +181,10 @@
 		</template>
 		<!--s 卡片底部 -->
 		<template #footer>
-			<!-- TODO 这里需要处理 -->
 			<div class="gallery-card-footer" align="center" :size="2">
 				<!--s 额外标签 -->
 				<div class="extra-tag-list">
 					<BaseLineOverFlowList
-						title="更多标签"
 						:list="tags"
 						model-to=".web-img-collector-top-container">
 						<template #default="{ item, openShowMore }">
@@ -194,15 +192,39 @@
 								{{ (item as Tag).label }}
 							</var-chip>
 						</template>
-						<template #more-modal-content>
+						<template #modal-title>
+							<div style="font-size: 12px; white-space: wrap">
+								{{ data.description.title }}
+							</div>
+						</template>
+						<template #modal-content>
 							<n-dynamic-tags
 								:value="data.tags"
 								type="info"
 								@change="handleTagsSave" />
 						</template>
+						<template #modal-footer>
+							<div>
+								<n-popconfirm
+									positive-text="确认"
+									negative-text="取消"
+									:to="false"
+									@positive-click="data.tags.splice(0)">
+									<template #trigger>
+										<n-button type="warning" size="tiny" @click.stop>
+											清空
+										</n-button>
+									</template>
+									<div>
+										<div style="color: red">确认清空？</div>
+										<div>此操作将无法撤回</div>
+									</div>
+								</n-popconfirm>
+							</div>
+						</template>
 					</BaseLineOverFlowList>
 				</div>
-				<div style="width: 100%; display: flex; gap: 4px">
+				<div style="width: 100%; display: flex; gap: 4px" v-if="isVisible">
 					<!--s 描述标签 -->
 					<var-chip class="title-tag" type="primary" size="mini">
 						<n-ellipsis>
@@ -285,7 +307,7 @@
 
 	const imgWrapRef = ref<HTMLElement | null>(null);
 	//s 图片可见性
-	const targetIsVisible = useElementVisibility(imgWrapRef);
+	const isVisible = useElementVisibility(imgWrapRef);
 
 	const data = defineModel("data", { type: Card, default: () => new Card() });
 	withDefaults(

@@ -326,10 +326,15 @@
 		// 计算每个盒子的位置
 		for (let i = 0; i < children.length; i++) {
 			let box = children[i];
-			const { clientWidth: bw, clientHeight: bh } = box;
 
 			// 执行逻辑
-			const handle = () => {
+			const handle = async ({
+				clientWidth: bw,
+				clientHeight: bh,
+			}: {
+				clientWidth: number;
+				clientHeight: number;
+			}) => {
 				// 获取元素宽高比
 				const aspectRatio = bw / bh;
 				// 纵坐标
@@ -346,11 +351,13 @@
 			// 任务
 			const task = (): Promise<void> => {
 				return new Promise((resolve) => {
-					if (box.clientWidth !== state.itemFixWidth) {
+					const { clientWidth, clientHeight } = box;
+
+					if (clientWidth !== state.itemFixWidth) {
 						box.style.width = state.itemFixWidth + "px";
 					}
 					nextTick(() => {
-						handle();
+						handle({ clientWidth, clientHeight });
 						resolve();
 					});
 				});

@@ -19,7 +19,7 @@
 					v-if="mounted"
 					v-show="show"
 					ref="imgDOM"
-					:src="imgSrc"
+					v-lazy.src="src"
 					:style="{ aspectRatio: aspectRatio }"
 					:draggable="draggable" />
 			</slot>
@@ -31,13 +31,11 @@
 
 <script setup lang="ts">
 	// 导入工具函数
-	import { useImage } from "@vueuse/core";
-	import { onMounted } from "vue";
 	import {
 		ref,
 		reactive,
 		computed,
-		onUnmounted,
+		onMounted,
 		defineProps,
 		withDefaults,
 		defineEmits,
@@ -81,42 +79,6 @@
 			show: true,
 		}
 	);
-	const imgSrc = ref<string>("");
-	const { then, isLoading } = useImage({ src: props.src });
-	then(({ state: imgState, isReady }) => {
-		// console.log(
-		// 	"图片加载完成",
-		// 	imgState.value?.naturalWidth,
-		// 	imgState.value?.naturalHeight
-		// );
-
-		if (imgState.value) {
-			const { naturalWidth, naturalHeight } = imgState.value;
-			imgState.value.width = naturalWidth;
-			imgState.value.height = naturalHeight;
-			let info: returnInfo = {
-				meta: {
-					valid: true,
-					width: naturalWidth,
-					height: naturalHeight,
-					aspectRatio: naturalWidth / naturalHeight, // 宽高比.
-				},
-			};
-			if (isReady.value) {
-				imgSrc.value = props.src;
-				state.loaded = true;
-				state.show = true;
-				state.isError = false;
-				emit("loaded", info);
-			} else {
-				state.isError = true;
-				state.loaded = true;
-				imgDOM.value!.src = state.errorImg;
-				imgSrc.value = errorImg;
-				emit("error");
-			}
-		}
-	});
 
 	const mounted = ref(false);
 	onMounted(() => {

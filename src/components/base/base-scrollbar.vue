@@ -238,7 +238,7 @@
 	//s 滚动条DOM(垂直)
 	const verticalBar = ref<HTMLElement | null>(null);
 	onMounted(() => {
-		const { y } = useDraggable(verticalBar, {
+		useDraggable(verticalBar, {
 			axis: "y", // 限制垂直拖拽
 			containerElement: containerDOM.value, // 设置父容器
 			preventDefault: true,
@@ -265,7 +265,7 @@
 	);
 
 	//f 设置垂直滚动条位置
-	const calcVerticalBarPosition = (y: number) => {
+	const calcVerticalBarPosition = async (y: number) => {
 		if (!wrapDOM.value) return;
 		scrollbar.vertical.top = y; // 更新滚动条位置
 		if (isScrolling.value) return; //如果此时页面正在滚动则不进行下面的操作
@@ -275,7 +275,9 @@
 		const left =
 			(scrollWidth / containerInfo.width) * scrollbar.horizontal.left;
 		// 更新滚动距离
-		updateScrollPosition({ y: top, x: left, behavior: "instant" });
+		nextTick(() => {
+			updateScrollPosition({ y: top, x: left, behavior: "instant" });
+		});
 	};
 
 	//j 滚动条样式(垂直)
@@ -325,7 +327,7 @@
 	);
 
 	//f 设置水平滚动条位置
-	const calcHorizontalBarPosition = (x: number) => {
+	const calcHorizontalBarPosition = async (x: number) => {
 		if (!wrapDOM.value) return;
 		scrollbar.horizontal.left = x; // 更新滚动条位置
 		scrollbar.horizontal.x = x;
@@ -335,7 +337,9 @@
 		const top = (scrollHeight / wrapInfo.height) * scrollbar.vertical.top;
 		const left = (scrollWidth / wrapInfo.width) * scrollbar.horizontal.left;
 		// 更新滚动距离
-		updateScrollPosition({ y: top, x: left, behavior: "instant" });
+		nextTick(() => {
+			updateScrollPosition({ y: top, x: left, behavior: "instant" });
+		});
 	};
 
 	//j 滚动条样式(水平)
@@ -366,25 +370,25 @@
 	};
 
 	//f 计算滚动条尺寸
-	function calculateScrollbarSize() {
+	async function calculateScrollbarSize() {
 		if (!wrapDOM.value || !containerDOM.value) return;
 		const { width: channelWidth, height: channelHeight } = containerInfo; // 提取滚动容器视口宽高
 		const { width: wrapWidth, height: wrapHeight } = wrapInfo; // 提取滚动容器视口宽高
 		const { scrollWidth, scrollHeight } = wrapDOM.value; // 提取滚动容器内容区宽高
 		// 计算垂直滚动条长度
 		scrollbar.vertical.length =
-			Math.ceil(scrollHeight) > Math.ceil(wrapHeight)
+			Math.floor(scrollHeight) > Math.ceil(wrapHeight)
 				? calcBarLength(channelHeight, scrollHeight, wrapHeight)
 				: -1;
 		// 计算水平滚动条长度
 		scrollbar.horizontal.length =
-			Math.ceil(scrollWidth) > Math.ceil(wrapWidth)
+			Math.floor(scrollWidth) > Math.ceil(wrapWidth)
 				? calcBarLength(channelWidth, scrollWidth, wrapWidth)
 				: -1;
 	}
 
 	//f 设置滚动条位置
-	function setScrollbarPosition() {
+	async function setScrollbarPosition() {
 		if (!wrapDOM.value) return;
 		const { width: channelWidth, height: channelHeight } = containerInfo; // 提取滚动容器视口宽高
 		const { width: wrapWidth, height: wrapHeight } = wrapInfo;
@@ -400,7 +404,7 @@
 	}
 
 	//f 设置wrapper的滚动位置
-	function updateScrollPosition(options: {
+	async function updateScrollPosition(options: {
 		x?: number;
 		y?: number;
 		behavior?: ScrollBehavior;
@@ -427,7 +431,7 @@
 	});
 
 	//f 执行回到顶部
-	function backToTop() {
+	async function backToTop() {
 		updateScrollPosition({ y: 0 });
 	}
 </script>

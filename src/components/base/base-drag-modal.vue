@@ -1,5 +1,5 @@
 <template>
-	<teleport :to="teleportTo" v-if="modalEnable">
+	<teleport  :to="teleportTo"  v-if="modalEnable">
 		<transition
 			name="drag-modal"
 			@after-leave="handleClosed"
@@ -21,7 +21,7 @@
 					:style="[headerStyle]"
 					:class="[headerClass]">
 					<!--s header部分  -->
-					<div class="drag-modal__header-left" :size="0" align="center">
+					<div class="drag-modal__header-left">
 						<!-- s header插槽 -->
 						<slot name="header"> {{ title }} </slot>
 					</div>
@@ -117,13 +117,13 @@
 		</transition>
 	</teleport>
 	<!-- ?默认可拖拽区域 -->
-	<teleport to="body">
+	<teleport :to="teleportTo">
 		<div ref="dragZoneDom" class="base-drag-modal-zone"></div>
 	</teleport>
 </template>
 
 <script setup lang="ts">
-	import { ref, watch, onMounted, useSlots } from "vue";
+	import { ref, watch, reactive, nextTick, onMounted, useSlots } from "vue";
 	import {
 		useWindowSize,
 		useElementBounding,
@@ -132,8 +132,6 @@
 	import type { HtmlHTMLAttributes } from "vue";
 	import type { Property } from "csstype"; //s 引入css类型接口(方便开发)
 	import BaseScrollbar from "./base-scrollbar.vue";
-	import { reactive } from "vue";
-	import { nextTick } from "vue";
 
 	const show = defineModel("show", { type: Boolean, default: false });
 	const slots = useSlots();
@@ -251,7 +249,7 @@
 		modalSize.width = props.modalInitWidth;
 		modalSize.height = props.modalMinHeight;
 		modalPosition.value.x = (window.width.value - props.modalInitWidth) / 2;
-		modalPosition.value.y = (window.width.value - props.modalInitWidth) / 2;
+		modalPosition.value.y = (window.height.value - props.modalInitHeight) / 2;
 	};
 
 	//* modal的可拖拽设置
@@ -722,10 +720,13 @@
 			flex-flow: row nowrap;
 			//s header左侧
 			.drag-modal__header-left {
-				flex: 1;
+				flex: auto;
 				display: flex;
 				flex-flow: row nowrap;
+				align-items: center;
 				padding: 2px 4px;
+				overflow: hidden;
+				text-overflow: ellipsis;
 				white-space: nowrap;
 			}
 			//s header右侧
@@ -769,8 +770,10 @@
 		.drag-modal__footer {
 			position: relative;
 			background: rgba(255, 255, 255, 0.3);
-
-			font-size: 18px;
+			display: flex;
+			flex-flow: row nowrap;
+			align-items: center;
+			font-size: 16px;
 			padding: 4px 8px;
 		}
 
@@ -890,7 +893,7 @@
 	}
 	//s 默认可拖拽区域样式
 	.base-drag-modal-zone {
-		position: fixed;
+		position: absolute;
 		margin: auto;
 		left: 0;
 		top: 0;

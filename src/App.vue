@@ -107,6 +107,8 @@
 	.web-img-collector-top-container {
 		position: absolute;
 		inset: 0;
+		width: 100%;
+		height: 100%;
 		// background: wheat;
 		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
