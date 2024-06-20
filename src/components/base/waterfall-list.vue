@@ -326,10 +326,12 @@
 		// 计算每个盒子的位置
 		for (let i = 0; i < children.length; i++) {
 			let box = children[i];
+			const { clientWidth: bw, clientHeight: bh } = box;
+
 			// 执行逻辑
 			const handle = () => {
 				// 获取元素宽高比
-				const aspectRatio = box.clientWidth / box.clientHeight;
+				const aspectRatio = bw / bh;
 				// 纵坐标
 				let minTop = Math.min(...nextTopsInner); //找到最低的高度
 				let index = nextTopsInner.indexOf(minTop); //找到最低的高度的列号

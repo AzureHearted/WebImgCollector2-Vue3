@@ -7,7 +7,7 @@ export default {
 		description: "图片聚合器",
 		author: "ls", // 作者
 		// updateURL: "", //更新地址
-		version: "1.4.15",
+		version: "1.4.16",
 		icon: "https://vitejs.dev/logo.svg", // 图标
 		namespace: "npm/vite-plugin-monkey", // 命名空间
 		match: ["*://*", "*://*/*"], // 要匹配的网站
