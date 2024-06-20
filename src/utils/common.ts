@@ -351,7 +351,7 @@ export function GM_storage(
 
 //f 合法化路径字符串
 export function legalizationPathString(str: string) {
-	return str
+	return decodeURI(str)
 		.replace("*", "×")
 		.replace("/", "／")
 		.replace("⁄", "／")

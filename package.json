@@ -1,9 +1,10 @@
 {
 	"name": "WebImgCollector2",
-	"version": "1.4.16",
+	"version": "1.4.17",
 	"private": true,
 	"author": "ls",
 	"license": "MIT",
+	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "run-p type-check \"build-only {@}\" --",

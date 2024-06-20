@@ -182,6 +182,7 @@ export default async function getCard(
 								if (isUrl(value)) {
 									value = getNameByUrl(value);
 								}
+								value = decodeURI(value);
 								return {
 									title: value,
 									dom,
@@ -204,6 +205,7 @@ export default async function getCard(
 						if (isUrl(description.title)) {
 							description.title = getNameByUrl(description.title);
 						}
+						description.title = decodeURI(description.title)
 					}
 
 					//s 设置卡片来源
@@ -392,6 +394,7 @@ export default async function getCard(
 					if (isUrl(description.title)) {
 						description.title = getNameByUrl(description.title);
 					}
+					description.title = decodeURI(description.title);
 
 					//s 设置卡片来源
 					source.host = location.host;
