@@ -1,33 +1,33 @@
 <template>
-	<teleport v-if="mounted" :disabled="!!teleportTo" :to="teleportTo">
-		<transition
-			name="drag-modal"
-			@after-leave="handleClosed"
-			@after-appear="handelOpened">
-			<div
-				v-show="show"
-				:data-is-dragging="dragBarIsDragging"
-				:data-mounted="mounted"
-				class="base-dock"
-				ref="dockDOM"
-				:style="[dockStyle, dockStyleFix]">
-				<div ref="dragBarDOM" class="base-dock__drag-bar"></div>
-				<div class="base-dock__button-wrap">
-					<slot></slot>
-					<n-button type="error" size="medium" @click="show = false">
-						<template #icon>
-							<i-ep-close style="height: 100%; aspect-ratio: 1" />
-						</template>
-					</n-button>
-					<!-- <div class="base-dock__close-button" @click="show = false"></div> -->
-				</div>
+	<transition
+		name="drag-modal"
+		@after-leave="handleClosed"
+		@enter="handleEnter"
+		@before-enter="handleBeforeEnter"
+		@after-enter="handleAfterEnter">
+		<dialog
+			v-show="show"
+			:data-is-dragging="dragBarIsDragging"
+			:data-mounted="mounted"
+			class="base-dock"
+			ref="dockDOM"
+			:data-style="dockPosStyle"
+			:style="[dockPosStyle, dockFixStyle]">
+			<div ref="dragBarDOM" class="base-dock__drag-bar"></div>
+			<div class="base-dock__button-wrap">
+				<slot></slot>
+				<n-button type="error" size="medium" @click="show = false">
+					<template #icon>
+						<i-ep-close style="height: 100%; aspect-ratio: 1" />
+					</template>
+				</n-button>
 			</div>
-		</transition>
-	</teleport>
+		</dialog>
+	</transition>
 </template>
 
 <script setup lang="ts">
-	import { ref, reactive, watch, onMounted, nextTick } from "vue";
+	import { ref, reactive, computed, watch, onMounted, nextTick } from "vue";
 	import type { ComputedRef, TeleportProps } from "vue";
 	import {
 		useDraggable,
@@ -36,6 +36,7 @@
 		useWindowSize,
 	} from "@vueuse/core";
 	import type { Position, UseDraggableReturn } from "@vueuse/core";
+	import type { HTMLAttributes } from "vue";
 
 	const props = withDefaults(
 		defineProps<{
@@ -48,38 +49,31 @@
 	);
 	const emits = defineEmits(["open", "closed"]);
 
-	const show = defineModel("show", { type: Boolean, default: true });
-	//f modal开启后的回调
-	function handelOpened() {
-		emits("open");
-	}
-
-	//f modal关闭后的回调
-	function handleClosed() {
-		emits("closed");
-		// 判断是否重置窗口状态
-		if (props.closeResetState) {
-			initPosSize();
-		}
-	}
-
-	const mounted = ref(false);
-	onMounted(() => {
-		nextTick(() => {
-			mounted.value = true;
-		});
-	});
-
 	//s dock容器DOM
-	const dockDOM = ref<HTMLElement | null>(null);
+	const dockDOM = ref<HTMLDialogElement | null>(null);
 	const dockSize = reactive({
 		...useElementSize(dockDOM, undefined, {
 			box: "border-box",
 		}),
 	});
+
 	//s dock样式
 	let dockStyle: ComputedRef<string>;
-	const dockStyleFix = ref("transform: translate(0px, 0px);");
+	const dockFix = reactive<{ x: number | string; y: number | string }>({
+		x: "0",
+		y: "0",
+	});
+	//s dock位置样式
+	let dockPosStyle: ComputedRef<HTMLAttributes["style"]>;
+	//s dock修正样式
+	const dockFixStyle = computed<HTMLAttributes["style"]>(() => {
+		const { x, y } = dockFix;
+		return {
+			transform: `translate(${typeof x === "string" ? x : x + "px"}, ${
+				typeof y === "string" ? y : y + "px"
+			})`,
+		};
+	});
 	//s dock位置
 	let dockPosition: UseDraggableReturn["position"];
 	//s dock容器边界信息
@@ -94,14 +88,21 @@
 	//s 是否拖拽中
 	let dragBarIsDragging: ComputedRef<boolean>;
 
+	const mounted = ref(false);
+
+	const show = defineModel("show", { type: Boolean, default: false });
+
 	onMounted(() => {
+		console.log("onMounted");
+		//f 初始化状态
 		const { style, position, isDragging } = useDraggable(dockDOM, {
 			handle: dragBarDOM,
 			// preventDefault: true,
 			stopPropagation: true,
-			// initialValue: () => initPosSize() as Position,
-			onMove() {
-				//s 更新偏移
+			onMove(position, event) {
+				// console.log(position, event);
+				// position.x = position.x - dockSize.width / 2;
+				// position.y = position.y - dockSize.height / 2;
 				dockBounding.update();
 				//! 防止modal超出边界视口
 				nextTick(() => {
@@ -113,36 +114,109 @@
 		dockPosition = position;
 		dragBarIsDragging = isDragging;
 
-		setTimeout(() => {
-			nextTick(() => {
-				initPosSize();
-			});
+		dockPosStyle = computed<HTMLAttributes["style"]>(() => {
+			return {
+				left: dockPosition.value.x + "px",
+				top: dockPosition.value.y + "px",
+			};
 		});
+		watch(
+			() => dockPosStyle.value,
+			(value, oldValue) => {
+				console.log(dockDOM.value);
+				console.log(value, oldValue);
+				console.log(dockDOM.value);
+			}
+		);
+
+		if (show.value) {
+			nextTick(() => {
+				dockPosition.value = initPosSize();
+				// mounted.value = true;
+			});
+			// handleAfterEnter();
+		}
+		// watch(
+		// 	() => dockPosStyle.value,
+		// 	(value) => {
+		// 		console.log(value);
+		// 	}
+		// );
 
 		//w 监视可拖拽区域的尺寸变化
 		watch([() => winSize.width, () => winSize.height], () => {
 			// console.log([width, height]);
+
 			if (show.value) {
 				handleFixPos();
 			}
 		});
 	});
 
+	//f modal关闭后的回调
+	function handleClosed() {
+		emits("closed");
+	}
+
+	//f modal开启后的回调
+	function handleAfterEnter() {
+		// console.log(
+		// 	"after-enter",
+		// 	dockDOM.value,
+		// 	dockPosition.value,
+		// 	JSON.stringify(dockSize, null, 2)
+		// );
+
+		// 判断是否重置窗口状态
+		if (!mounted.value || props.closeResetState) {
+			// x = x - dockSize.width / 2;
+			// x = y - dockSize.height / 2;
+			nextTick(() => {
+				let { x, y } = initPosSize();
+				dockPosition.value = { x, y };
+				mounted.value = true;
+			});
+		}
+
+		handleFixPos();
+
+		emits("open");
+	}
+
+	function handleEnter() {
+		// console.log(
+		// 	"enter",
+		// 	dockDOM.value,
+		// 	dockPosition.value,
+		// 	JSON.stringify(dockSize, null, 2)
+		// );
+	}
+
+	function handleBeforeEnter() {
+		// console.log(
+		// 	"before-enter",
+		// 	dockDOM.value,
+		// 	dockPosition.value,
+		// 	JSON.stringify(dockSize, null, 2)
+		// );
+	}
+
 	//f 重置位置和尺寸
-	const initPosSize = (): Position | undefined => {
-		if (!dockPosition.value) return;
+	const initPosSize = (): Position => {
+		if (!dockPosition) {
+			const [x, y] = [winSize.width / 2, winSize.height / (1 + 0.01)];
+			return { x, y };
+		}
 		const [x, y] = [
 			(winSize.width - dockSize.width) / 2,
 			(winSize.height - dockSize.height) / (1 + 0.01),
 		];
-		dockPosition.value.x = x;
-		dockPosition.value.y = y;
 		return { x, y };
 	};
 
 	//f 修正位置
 	function handleFixPos() {
-		if (!dockPosition.value || !dockDOM.value) return;
+		if (!dockPosition || !dockDOM.value) return;
 
 		//s 水平方向纠正
 		if (dockSize.width > winSize.width) {
@@ -188,8 +262,11 @@
 	$radius: 4px;
 	.base-dock {
 		position: fixed;
-		// min-width: 100px;
+		min-width: 40px;
 		min-height: 20px;
+		margin: 0;
+		padding: 0;
+		border: none;
 
 		background: rgba(255, 255, 255, 0.2);
 		backdrop-filter: blur(10px);
@@ -202,13 +279,13 @@
 		display: flex;
 		flex-flow: column nowrap;
 
-		// &[data-is-dragging="false"][data-mounted="false"] {
-		// 	transition: 0.5s ease;
-		// }
+		&[data-mounted="true"][data-is-dragging="false"] {
+			transition: 0.5s ease;
+		}
 
 		&[data-mounted="false"] {
 			// bottom: -100%;
-			transition: none;
+			// opacity: 0;
 		}
 	}
 
@@ -271,9 +348,7 @@
 		display: flex;
 		background: red;
 	}
-</style>
 
-<style lang="scss">
 	//? transition效果
 	//s	默认淡出淡入
 	.drag-modal-enter-active,
@@ -283,5 +358,8 @@
 	.drag-modal-enter-from,
 	.drag-modal-leave-to {
 		opacity: 0;
+		top: 100% !important;
 	}
 </style>
+
+<style lang="scss"></style>

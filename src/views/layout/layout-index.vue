@@ -28,9 +28,10 @@
 	watch(
 		() => globalStore.openWindow,
 		(isOpen) => {
+			if (!containerDOM.value) return;
 			if (isOpen) {
 				// 每当窗口打开后都自动聚焦到该容器
-				containerDOM.value?.focus();
+				containerDOM.value.focus();
 				// 页面滚动元素进行滚动
 			} else {
 				// 取消页面元素的滚动阻止事件
@@ -72,6 +73,8 @@
 		position: absolute;
 		width: 100%;
 		height: 100%;
+		margin: 0;
+		padding: 0;
 		display: flex;
 		flex-flow: column nowrap;
 		border: unset;
