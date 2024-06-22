@@ -34,37 +34,45 @@
 			</div>
 		</div>
 		<!--s 更多展示面板 -->
-		<BaseDragModal
-			v-if="showMore"
-			:show="true"
-			:title="title"
-			@closed="showMore = false"
-			:teleport-to="modelTo">
-			<template #header>
+		<base-drag-dialog
+			v-model:show="showMore"
+			:teleport-to="modelTo"
+			:header-style="{
+				height: 'fit-content',
+			}"
+			allow-resize>
+			<template #header-left>
 				<slot name="modal-title"></slot>
 			</template>
-			<slot name="modal-content" :showMore="showMore">
-				<template v-for="(item, index) in list" :key="item.id">
-					<slot
-						name="more-modal-content-item"
-						:item="item"
-						:index="index"
-						:id="item.id">
-						<span>{{ item.label }}</span>
-					</slot>
-				</template>
-			</slot>
-			<template #footer>
+			<base-scrollbar :offset="[-4, -4]">
+				<slot name="modal-content" :showMore="showMore">
+					<template v-for="(item, index) in list" :key="item.id">
+						<slot
+							name="more-modal-content-item"
+							:item="item"
+							:index="index"
+							:id="item.id">
+							<span>{{ item.label }}</span>
+						</slot>
+					</template>
+				</slot>
+			</base-scrollbar>
+			<template v-if="slots['footer']" #footer>
 				<slot name="modal-footer"> </slot>
 			</template>
-		</BaseDragModal>
+		</base-drag-dialog>
 	</div>
 </template>
 
 <script lang="ts" setup>
-	import { useSlots } from "vue";
+	import { useSlots, defineAsyncComponent } from "vue";
 	import type { HTMLAttributes } from "vue";
-	import BaseDragModal from "@/components/base/base-drag-modal.vue";
+	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
+	import BaseDragDialog from "@/components/base/base-drag-dialog.vue";
+
+	// const BaseDragDialog = defineAsyncComponent(
+	// 	() => import("@/components/base/base-drag-dialog.vue")
+	// );
 
 	withDefaults(
 		defineProps<{
@@ -79,7 +87,6 @@
 		}>(),
 		{
 			list: () => [],
-			modelTo: ".line-overflow-list__container",
 			title: "更多",
 		}
 	);
@@ -179,35 +186,35 @@
 		transition: 0.5s;
 	}
 
-	/* 对移动中的元素应用的过渡 */
-	.fade-move {
-		// position: absolute;
-		transition: 0.5s;
-	}
+	// /* 对移动中的元素应用的过渡 */
+	// .fade-move {
+	// 	// position: absolute;
+	// 	transition: 0.5s;
+	// }
 
-	/* 确保将离开的元素从布局流中删除
-	 以便能够正确地计算移动的动画。 */
-	.fade-leave-active {
-		position: absolute;
-	}
+	// /* 确保将离开的元素从布局流中删除
+	//  以便能够正确地计算移动的动画。 */
+	// .fade-leave-active {
+	// 	position: absolute;
+	// }
 
-	// 进场过渡
-	.fade-enter-from {
-		opacity: 0;
-		transform: translateY(10px);
-	}
-	// 退场过渡
-	.fade-leave-to {
-		opacity: 0;
-		// transform: translateY(10px);
-	}
+	// // 进场过渡
+	// .fade-enter-from {
+	// 	opacity: 0;
+	// 	transform: translateY(10px);
+	// }
+	// // 退场过渡
+	// .fade-leave-to {
+	// 	opacity: 0;
+	// 	// transform: translateY(10px);
+	// }
 
-	// 进入的过程中
-	.fade-enter-active {
-		transition: 0.5s;
-	}
-	// 离开的过程中
-	.fade-leave-active {
-		transition: 0.3s;
-	}
+	// // 进入的过程中
+	// .fade-enter-active {
+	// 	transition: 0.5s;
+	// }
+	// // 离开的过程中
+	// .fade-leave-active {
+	// 	transition: 0.3s;
+	// }
 </style>

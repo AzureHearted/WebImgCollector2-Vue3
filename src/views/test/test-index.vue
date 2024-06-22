@@ -1,18 +1,24 @@
 <template>
 	<n-flex class="test__container" vertical :size="4">
 		<!-- s 单行溢出列表测试 -->
-		<n-switch v-model:value="show" @update:value="show = $event" />
+		<n-flex :size="4">
+			<n-switch v-model:value="show" @update:value="show = $event" />
+			<n-button type="primary" @click="showBtn = !showBtn">增加按钮</n-button>
+		</n-flex>
 
 		<TestLineOverflowList />
 		<!-- s Tabs组件测试 -->
 		<TestTabs />
-		<!-- <BaseDragDialog v-model:show="show">
+		<BaseDragDialog v-model:show="show">
 			
-		</BaseDragDialog> -->
+		</BaseDragDialog>
 		<BaseDock v-model:show="show">
-			<n-button type="primary" size="medium">按钮1</n-button>
-			<n-button type="primary" size="medium">按钮1</n-button>
-			<n-button type="primary" size="medium">按钮1</n-button>
+			<n-flex v-if="showBtn" :size="4">
+				<n-button type="primary" size="medium">按钮1</n-button>
+				<n-button type="primary" size="medium">按钮1</n-button>
+				<n-button type="primary" size="medium">按钮1</n-button>
+			</n-flex>
+			<!-- <n-button type="primary" size="medium">测试</n-button> -->
 		</BaseDock>
 	</n-flex>
 </template>
@@ -23,13 +29,14 @@
 	import TestTabs from "./test-tabs.vue";
 	import BaseDock from "@/components/base/base-dock.vue";
 	import BaseDragDialog from "@/components/base/base-drag-dialog.vue";
-	onActivated(() => {
-		console.log("激活", show.value);
-	});
-	onDeactivated(() => {
-		console.log("卸载", show.value);
-	});
-	const show = ref(true);
+	// onActivated(() => {
+	// 	console.log("激活", show.value);
+	// });
+	// onDeactivated(() => {
+	// 	console.log("卸载", show.value);
+	// });
+	const show = ref(false);
+	const showBtn = ref(false);
 </script>
 
 <style lang="scss" scoped>

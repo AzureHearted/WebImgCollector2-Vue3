@@ -92,11 +92,9 @@
 			card.source.meta = card.preview.meta;
 		}
 		//s 先刷新仓库数据
-		await refreshFavoriteStore();
-		//s 然后判断该card是否被收藏
-		card.isFavorite = await isFavorite(card);
+		// await refreshFavoriteStore();
 		//s 卡片加载完成后手动刷新一次瀑布流
-		waterFallRef.value?.handleResetPosition();
+		// waterFallRef.value?.handleResetPosition();
 	};
 
 	//f 处理下载事件

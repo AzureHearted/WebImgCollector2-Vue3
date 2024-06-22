@@ -306,7 +306,7 @@ export default defineStore("FavoriteStore", () => {
 		//s 再过滤
 		all = all.filter((c) => {
 			// console.log(c.source.meta.width, filters.size.width[1]);
-			// const { id, isLoaded } = c;
+			const { tags } = c;
 			const {
 				type: sType,
 				width: sWidth,
@@ -315,10 +315,16 @@ export default defineStore("FavoriteStore", () => {
 			} = c.source.meta;
 			const { title } = c.description;
 			const isMatch =
-				title
+				(title
 					.trim()
 					.toLocaleLowerCase()
-					.includes(filterKeyword.value.trim().toLocaleLowerCase()) &&
+					.includes(filterKeyword.value.trim().toLocaleLowerCase()) ||
+					tags.some((tag) => {
+						return tag
+							.trim()
+							.toLocaleLowerCase()
+							.includes(filterKeyword.value.trim().toLocaleLowerCase());
+					})) &&
 				(filters.extension.length > 0
 					? filters.extension.includes(String(sExt))
 					: true) &&
@@ -479,6 +485,22 @@ export default defineStore("FavoriteStore", () => {
 		return cardList.value.find((c) => matchComparator(c));
 	};
 
+	//f 查找卡片(通过数据)
+	const findCardByData = async (
+		/** 匹配函数 */
+		cardData: Card
+	): Promise<Card | undefined> => {
+		// 先刷新仓库
+		await refreshStore();
+		return cardList.value.find(
+			(c) =>
+				isEqualUrl(c.source.url, cardData.source.url, {
+					excludeSearch: true,
+				}) &&
+				isEqualUrl(c.preview.url, cardData.preview.url, { excludeSearch: true })
+		);
+	};
+
 	//f 查询卡片(通过id)
 	const findCardById = async (id: string): Promise<Card | undefined> => {
 		// 先刷新仓库
@@ -528,6 +550,7 @@ export default defineStore("FavoriteStore", () => {
 		deleteCard,
 		unFavoriteCard,
 		findCard,
+		findCardByData,
 		findCardById,
 		findCardsById,
 		isExist,

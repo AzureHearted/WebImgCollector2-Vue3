@@ -25,10 +25,13 @@ import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现�
 // 导入其他仓库
 import useLoadingStore from "@/stores/LoadingStore";
 import usePatternStore from "@/stores/PatternStore";
+import useFavoriteStore from "@/stores/FavoriteStore";
 
 export default defineStore("CardStore", () => {
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
+	const favoriteStore = useFavoriteStore();
+	const { isExist: isFavorite } = favoriteStore;
 
 	//s 数据定义
 	const data = reactive({
@@ -238,7 +241,7 @@ export default defineStore("CardStore", () => {
 
 		//s 再过滤
 		all = all.filter((x) => {
-			const { id, isLoaded } = x;
+			const { id, tags } = x;
 			const {
 				type: sType,
 				width: sWidth,
@@ -248,10 +251,16 @@ export default defineStore("CardStore", () => {
 			const { title } = x.description;
 			//* 暂时取消最大尺寸限制的过滤
 			const isMatch =
-				title
+				(title
 					.trim()
 					.toLocaleLowerCase()
-					.includes(filters.keyword.trim().toLocaleLowerCase()) &&
+					.includes(filters.keyword.trim().toLocaleLowerCase()) ||
+					tags.some((tag) => {
+						return tag
+							.trim()
+							.toLocaleLowerCase()
+							.includes(filters.keyword.trim().toLocaleLowerCase());
+					})) &&
 				!data.excludeIdSet.has(id) && // 过滤被排除的项
 				(filters.extension.length > 0
 					? filters.extension.includes(String(sExt))
@@ -416,6 +425,15 @@ export default defineStore("CardStore", () => {
 							// (如果blob存在则)记录到url和blob的Map对象中
 							if (card.source.blob) {
 								data.urlBlobMap.set(card.source.url, card.source.blob);
+							}
+							//s  判断卡片是否被收藏
+							//s 然后判断该card是否被收藏
+							card.isFavorite = await isFavorite(card);
+							if (card.isFavorite) {
+								//s 如果卡片已经被收藏了则从仓库获取该卡片对应的tags信息
+								const target = await favoriteStore.findCardByData(card);
+								if (!target) return;
+								card.tags = target.tags;
 							}
 							// data.cardList.push(card); // 添加到卡片列表中。
 							data.cardList[startIndex + index] = card; // 添加到卡片列表中。
