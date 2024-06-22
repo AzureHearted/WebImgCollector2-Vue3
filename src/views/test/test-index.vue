@@ -1,12 +1,15 @@
 <template>
 	<n-flex class="test__container" vertical :size="4">
 		<!-- s 单行溢出列表测试 -->
-		<n-switch v-model:value="show" />
+		<n-switch v-model:value="show" @update:value="show = $event" />
 
 		<TestLineOverflowList />
 		<!-- s Tabs组件测试 -->
 		<TestTabs />
-		<BaseDock v-model:show="show" close-reset-state>
+		<!-- <BaseDragDialog v-model:show="show">
+			
+		</BaseDragDialog> -->
+		<BaseDock v-model:show="show">
 			<n-button type="primary" size="medium">按钮1</n-button>
 			<n-button type="primary" size="medium">按钮1</n-button>
 			<n-button type="primary" size="medium">按钮1</n-button>
@@ -15,11 +18,17 @@
 </template>
 
 <script setup lang="ts">
-	import { ref } from "vue";
+	import { ref, onActivated, onDeactivated } from "vue";
 	import TestLineOverflowList from "./test-line-overflow-list.vue";
 	import TestTabs from "./test-tabs.vue";
 	import BaseDock from "@/components/base/base-dock.vue";
-
+	import BaseDragDialog from "@/components/base/base-drag-dialog.vue";
+	onActivated(() => {
+		console.log("激活", show.value);
+	});
+	onDeactivated(() => {
+		console.log("卸载", show.value);
+	});
 	const show = ref(true);
 </script>
 

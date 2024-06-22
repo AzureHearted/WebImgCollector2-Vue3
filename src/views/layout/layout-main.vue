@@ -33,7 +33,7 @@
 					:options="menuOptions" />
 			</n-layout-sider>
 			<n-layout class="main__content">
-				<keep-alive :include="/gallery|pattern|favorite|setting/i" :max="10">
+				<keep-alive :include="/gallery|pattern|favorite|setting/i">
 					<component :is="nowPage" />
 				</keep-alive>
 			</n-layout>

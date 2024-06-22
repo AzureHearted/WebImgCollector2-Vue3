@@ -1,5 +1,5 @@
 <template>
-	<teleport  :to="teleportTo"  v-if="modalEnable">
+	<teleport :to="teleportTo" v-if="modalEnable">
 		<transition
 			name="drag-modal"
 			@after-leave="handleClosed"
@@ -142,8 +142,8 @@
 		closeResetState?: boolean; // s 关闭后重置状态？
 		teleportTo?: string; //s 指定传送的容器的css选择器
 		defaultDragZoneMargin?: Property.Margin; //s 默认可拖拽区域的
-		modalInitWidth?: number; //s modal 初始宽度
 		modalResize?: "none" | "both" | "h" | "v"; //s 控制modal可改变大小的方向
+		modalInitWidth?: number; //s modal 初始宽度
 		modalInitHeight?: number; //s modal 初始高度
 		modalMinWidth?: number; //s modal 最小宽度
 		modalMinHeight?: number; //s modal 最小高度
