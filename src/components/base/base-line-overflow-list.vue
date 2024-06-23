@@ -108,6 +108,7 @@
 		position: relative;
 		display: flex;
 		flex-flow: row nowrap;
+		align-items: center;
 		gap: 2px;
 
 		height: fit-content;
@@ -127,6 +128,7 @@
 			display: flex;
 		}
 	}
+
 	//s 溢出元素样式
 	.line-overflow-list__wrap > :deep(.overflow) {
 		position: relative;
