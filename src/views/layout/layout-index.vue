@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, watch, onMounted, onUpdated, onUnmounted } from "vue";
+	import { ref, watch, onMounted } from "vue";
 	import { useDisableScroll } from "@/utils/disable-scroll";
 
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
