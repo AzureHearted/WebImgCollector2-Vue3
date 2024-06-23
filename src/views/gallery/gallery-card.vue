@@ -5,12 +5,11 @@
 		background-color="transparent"
 		style="border: unset"
 		:data-show="isMobile()"
-		:data-visible="isVisible"
 		:data-source-type="data.source.meta.type"
 		:data-preview-type="data.preview.meta.type"
 		:data-checked="data.isSelected">
 		<!--s 卡片顶部 -->
-		<template v-if="isVisible" #header>
+		<template #header>
 			<div class="gallery-card-header">
 				<!--s header左侧 -->
 				<div class="gallery-card-header-left">
@@ -119,13 +118,14 @@
 				:data-type="showType"
 				:data-preload="showType === 'iframe' ? false : true"
 				:data-thumb="data.preview.url"
+				:data-source-type="data.source.type"
+				:data-preview-type="data.preview.type"
 				:data-download-src="data.source.url">
 				<template v-if="data.preview.meta.type === 'image'">
 					<!--s 纯图片类型 -->
 					<BaseImg
 						v-if="data.source.meta.type === 'image'"
 						:src="data.source.url"
-						:show="isVisible"
 						:viewport-selector="viewportSelector"
 						use-thumb
 						:thumb="data.preview.url"
@@ -135,13 +135,9 @@
 						:draggable="false" />
 					<!--s 网页类型(封面图片) -->
 					<BaseImg
-						v-else-if="
-							data.source.meta.type === 'html' ||
-							data.source.meta.type === 'video'
-						"
+						v-else
 						:viewport-selector="viewportSelector"
 						:src="data.preview.url"
-						:show="isVisible"
 						:init-width="data.preview.meta.width"
 						:init-height="data.preview.meta.height"
 						@loaded="emits('loaded', data.id, $event)"
@@ -161,7 +157,6 @@
 						loop
 						:show-controls="false"
 						:src="data.preview.url"
-						:show="isVisible"
 						:viewport-selector="viewportSelector"
 						:init-width="data.preview.meta.width"
 						:init-height="data.preview.meta.height"
@@ -224,7 +219,7 @@
 						</template>
 					</BaseLineOverFlowList>
 				</div>
-				<div style="width: 100%; display: flex; gap: 4px" v-if="isVisible">
+				<div style="width: 100%; display: flex; gap: 4px">
 					<!--s 描述标签 -->
 					<var-chip class="title-tag" type="primary" size="mini">
 						<n-ellipsis>
@@ -307,7 +302,7 @@
 
 	const imgWrapRef = ref<HTMLElement | null>(null);
 	//s 图片可见性
-	const isVisible = useElementVisibility(imgWrapRef);
+	// const isVisible = useElementVisibility(imgWrapRef);
 
 	const data = defineModel("data", { type: Card, default: () => new Card() });
 	withDefaults(

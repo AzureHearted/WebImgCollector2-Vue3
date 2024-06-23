@@ -1,6 +1,6 @@
 <template>
 	<!--s 脚本应用容器 -->
-	<div :data-host="host" class="web-img-collector-container">
+	<dialog :data-host="host" ref="appDOM" class="web-img-collector-container">
 		<!--s 消息通知类信息容器 -->
 		<el-config-provider namespace="el">
 			<div class="web-img-collector-notification-container"></div>
@@ -24,11 +24,18 @@
 					class="web-img-collector-top-container"></div>
 			</n-config-provider>
 		</el-config-provider>
-	</div>
+	</dialog>
 </template>
 
 <script setup lang="ts">
-	import { ref, onMounted, onActivated, defineAsyncComponent } from "vue";
+	import {
+		ref,
+		onMounted,
+		onBeforeUnmount,
+		onActivated,
+		defineAsyncComponent,
+		watch,
+	} from "vue";
 	import { useGlobalStore, usePatternStore } from "@/stores";
 
 	import hljs from "highlight.js/lib/core";
@@ -51,7 +58,7 @@
 	const patternStore = usePatternStore();
 
 	// 子窗口容器
-	const windowContainer = ref<HTMLElement | null>(null);
+	const windowContainer = ref<HTMLElement>();
 
 	// 当前站点host
 	const host = ref(location.host);
@@ -62,24 +69,53 @@
 		patternStore.setInitPattern(); // 获取初始方案
 	});
 	onActivated(() => {});
+
+	const appDOM = ref<HTMLDialogElement>();
+	onMounted(() => {
+		if (!appDOM.value) return;
+		appDOM.value.show();
+	});
+	onBeforeUnmount(() => {
+		if (!appDOM.value) return;
+		appDOM.value.close();
+	});
 </script>
 
 <style lang="scss" scoped>
+	dialog {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		border: none;
+		background-color: rgba(0, 0, 0, 0.5); /* 可选：添加背景色 */
+	}
+
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
 	.web-img-collector-container {
 		box-sizing: border-box;
 		position: fixed;
-		overflow: hidden;
-		width: unset;
-		height: unset;
-		inset: 0;
+		// position: absolute;
+		// overflow: hidden;
+		width: 100% !important;
+		height: 100% !important;
+		max-width: unset !important;
+		max-height: unset !important;
+		// inset: 0 !important;
 		text-align: left;
+		padding: unset !important;
+		margin: unset !important;
+		border: unset !important;
+		background: transparent;
 		// backdrop-filter: blur(4px);
 		// 设置 z-index 为最大值
 		z-index: 2147483646;
 		// 仅让容器本身不响应鼠标事件
 		pointer-events: none;
-		transition: 0.5s;
+		// transition: 0.5s;
 
 		& > :deep(*) {
 			// 子元素默认还能响应

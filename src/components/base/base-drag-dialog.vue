@@ -41,15 +41,14 @@
 								<!-- s header插槽 -->
 								<slot name="header-left">
 									<!-- 默认header -->
+									{{ title }}
 								</slot>
 							</div>
 							<!-- s header右侧 -->
-							<div
-								class="base-drag-dialog__header__right"
-								@click.stop
-								@touchstart.stop>
+							<div class="base-drag-dialog__header__right" @click.stop>
 								<!--s 全屏切换按钮 -->
 								<div
+									v-if="allowFullScreen"
 									class="header__button drag-modal__button-toggle-fullscreen"
 									@click="toggleFullScreen">
 									<i-material-symbols-fullscreen-rounded v-if="!isFullscreen" />
@@ -214,15 +213,16 @@
 			initSize?: { width: number; height: number } | "auto"; //s 初始尺寸
 			minWidth?: number; // 最小宽度
 			minHeight?: number; // 最小高度
-			headerHeight?: CSSProperties["height"];
 			dialogStyle?: HTMLAttributes["style"]; // dialog整体样式
 			headerStyle?: HTMLAttributes["style"]; // header部分样式
 			footerStyle?: HTMLAttributes["style"]; // footer部分样式
 			bodyStyle?: HTMLAttributes["style"]; // body部分样式
-			allowResize?: boolean | "vertical" | "horizontal"; //s 是否可更改尺寸大小?
+			allowResize?: boolean | "vertical" | "horizontal"; //s 可更改尺寸大小?
+			allowFullScreen?: boolean; //s 允许全屏?
 			teleportTo?: string; //s 将组件传送到指定位置？
 			boundary?: string; //s 限定边界的css选择器(默认使用window)
 			clickOutsideClose?: boolean; //s 是否在点击dialog外部元素时关闭dialog?
+			title?: string;
 		}>(),
 		{
 			//s 初始尺寸默认值
@@ -234,7 +234,6 @@
 			initPercentY: 0.5,
 			minWidth: 100,
 			minHeight: 100,
-			headerHeight: "16px",
 			clickOutsideClose: true,
 		}
 	);
@@ -282,16 +281,14 @@
 	const boundaryBounding = useElementBounding(boundaryDOM);
 
 	//w 监视可拖拽区域的尺寸变化
-	watch(
-		[() => boundaryBounding.width.value, () => boundaryBounding.height.value],
-		() => {
-			if (show.value) {
-				nextTick(() => {
-					handleFixPosSize();
-				});
-			}
+	watch([boundaryBounding.width, boundaryBounding.height], () => {
+		// console.log("boundaryBounding变化");
+		if (dialogDOM.value) {
+			nextTick(() => {
+				handleFixPosSize();
+			});
 		}
-	);
+	});
 
 	//s 可拖拽部分的DOM
 	const draggableDOM = ref<HTMLElement | null>(null);
@@ -310,6 +307,7 @@
 			handle: draggableDOM,
 			preventDefault: true,
 			stopPropagation: true,
+			containerElement: boundaryDOM,
 			initialValue: () => {
 				//! 位置初始化
 				// console.log(object);
@@ -404,15 +402,15 @@
 	//s 更新标识符
 	const updating = ref(false);
 	//f 更新尺寸
-	async function updateSize(): Promise<void> {
-		return new Promise((resolve) => {
+	function updateSize() {
+		return new Promise<void>((resolve) => {
 			updating.value = true;
 			nextTick(() => {
 				stop();
 				resSetSize();
 				updating.value = false;
+				resolve();
 			});
-			resolve();
 		});
 	}
 
@@ -517,13 +515,6 @@
 			});
 		}
 	});
-
-	function refresh() {
-		show.value = false;
-		nextTick(() => {
-			show.value = true;
-		});
-	}
 
 	//! 组件挂载时
 	onMounted(() => {
@@ -675,14 +666,18 @@
 			toggleFullScreen();
 		}
 	});
+	watch(showDialog, (isShow) => {
+		if (!isShow && isFullscreen.value) {
+			toggleFullScreen();
+		}
+	});
 	//f 全屏和还原切换
 	const toggleFullScreen = () => {
-		if (!dialogSize) return;
+		if (!dialogSize || !props.allowFullScreen) return;
 		isFullscreen.value = !isFullscreen.value;
 		// console.log("双击", isFullscreen.value);
 		nextTick(() => {
 			if (!dialogSize) return;
-
 			if (isFullscreen.value) {
 				//s 全屏前先记录当前位置和尺寸
 				beforePosAndSize.x = position.value.x;
@@ -701,6 +696,11 @@
 				dialogSize.width = beforePosAndSize.width;
 				dialogSize.height = beforePosAndSize.height;
 			}
+			setTimeout(() => {
+				nextTick(() => {
+					handleFixPosSize();
+				});
+			});
 		});
 	};
 
@@ -1098,6 +1098,7 @@
 		border: 1px gray solid;
 		box-shadow: 0 0 8px 0.5px rgba(0, 0, 0, 0.6),
 			inset 0 0 10px 8px rgba(128, 128, 128, 0.6);
+		background: rgba(255, 255, 255, 0.8);
 	}
 
 	//s 主要区域背景
@@ -1109,16 +1110,14 @@
 			content: "";
 			position: absolute;
 			inset: 0;
-			background: rgba(255, 255, 255, 0.8);
-			filter: blur(10x);
 			-webkit-filter: blur(10px);
+			filter: blur(10x);
 		}
 	}
 
 	//s header容器默认样式
 	.base-drag-dialog__header {
 		position: relative;
-		height: v-bind("headerHeight");
 
 		touch-action: none; //! 必须设为none否则useDraggable不能正常使用
 		/* 禁止选中文字 */
@@ -1373,7 +1372,7 @@
 
 	//s 默认可拖拽区域样式(约束边界)
 	.base-drag-dialog__boundary {
-		position: absolute;
+		position: fixed;
 		margin: auto;
 		left: 0;
 		top: 0;

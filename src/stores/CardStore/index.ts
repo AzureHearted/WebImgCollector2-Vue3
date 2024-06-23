@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref, reactive, computed, watch } from "vue";
+import { ref, reactive, computed, watch, nextTick } from "vue";
 import { ElNotification, ElMessageBox } from "@/plugin/element-plus";
 import type { BaseMeta } from "@/stores/CardStore/interface";
 import type { ExcludeType } from "@/types/tools";
@@ -241,7 +241,7 @@ export default defineStore("CardStore", () => {
 
 		//s 再过滤
 		all = all.filter((x) => {
-			const { id, tags } = x;
+			const { id, tags, isLoaded } = x;
 			const {
 				type: sType,
 				width: sWidth,
@@ -391,13 +391,20 @@ export default defineStore("CardStore", () => {
 						loadingStore.current++;
 						// console.log("当前进度", loadingStore.current, loadingStore.total);
 						const sourceMeta = card.source.meta;
+						const previewMeta = card.preview.meta;
+						// console.log(sourceMeta, previewMeta);
 						// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
-						if (sourceMeta.valid && !data.urlSet.has(card.source.url)) {
+						if (
+							(sourceMeta.valid || previewMeta.valid) &&
+							(!data.urlSet.has(card.source.url) ||
+								!data.urlSet.has(card.preview.url))
+						) {
 							// console.log("新增卡片", card, dom);
 							if (dom) {
 								data.domSet.add(dom); // 记录dom用于排序
 							}
 							data.urlSet.add(card.source.url); // 添加到链接集合中
+							data.urlSet.add(card.preview.url); // 添加到链接集合中
 							// 如果类型存在则记录类型
 							if (sourceMeta.type) {
 								if (data.typeMap.has(sourceMeta.type)) {
@@ -426,18 +433,20 @@ export default defineStore("CardStore", () => {
 							if (card.source.blob) {
 								data.urlBlobMap.set(card.source.url, card.source.blob);
 							}
-							//s  判断卡片是否被收藏
-							//s 然后判断该card是否被收藏
-							card.isFavorite = await isFavorite(card);
-							if (card.isFavorite) {
-								//s 如果卡片已经被收藏了则从仓库获取该卡片对应的tags信息
-								const target = await favoriteStore.findCardByData(card);
-								if (!target) return;
-								card.tags = target.tags;
-							}
 							// data.cardList.push(card); // 添加到卡片列表中。
 							data.cardList[startIndex + index] = card; // 添加到卡片列表中。
 							// updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
+							nextTick(async () => {
+								// s  判断卡片是否被收藏
+								// s 然后判断该card是否被收藏
+								card.isFavorite = await isFavorite(card);
+								if (card.isFavorite) {
+									//s 如果卡片已经被收藏了则从仓库获取该卡片对应的tags信息
+									const target = await favoriteStore.findCardByData(card);
+									if (!target) return;
+									card.tags = target.tags;
+								}
+							});
 							await addCard(); //执行回调函数
 						}
 					},
@@ -450,14 +459,18 @@ export default defineStore("CardStore", () => {
 			);
 		}
 
-		if (!validCardList.value.length) {
-			ElNotification({
-				title: "提示",
-				type: "info",
-				message: "该方案未匹配到任何有效结果",
-				appendTo: ".web-img-collector-notification-container",
-			});
-		}
+		nextTick(() => {
+			console.log("data.cardList", data.cardList.length);
+			console.log("validCardList.value.length", validCardList.value.length);
+			if (!validCardList.value.length) {
+				ElNotification({
+					title: "提示",
+					type: "info",
+					message: "该方案未匹配到任何有效结果",
+					appendTo: ".web-img-collector-notification-container",
+				});
+			}
+		});
 
 		loadingStore.end();
 	}
@@ -471,7 +484,7 @@ export default defineStore("CardStore", () => {
 	}
 
 	//f 清空卡片
-	function clearCardList() {
+	async function clearCardList() {
 		data.urlSet.clear(); // 清空链接集合
 		data.domSet.clear(); // 清空DOM集合
 		data.excludeIdSet.clear(); //清空被排除卡片id集合

@@ -85,7 +85,7 @@
 		if (!card) return; //* 如果卡片不存在也不在向下执行
 		if (card.isLoaded) return; //* 如果已经成功加载过了就不在执行
 		card.isLoaded = true; //s 置为加载成功
-		// console.count("卡片加载完成");
+		// console.log("卡片加载完成", info);
 		//s 刷新仓库对应卡片的preview.meta信息
 		card.preview.meta = { ...card.preview.meta, ...info.meta };
 		if (isEqualUrl(card.preview.url, card.source.url)) {

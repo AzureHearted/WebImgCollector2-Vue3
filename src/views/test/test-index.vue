@@ -9,11 +9,12 @@
 		<TestLineOverflowList />
 		<!-- s Tabs组件测试 -->
 		<TestTabs />
-		<BaseDragDialog v-model:show="show">
-			
-		</BaseDragDialog>
 		<BaseDock v-model:show="show">
-			<n-flex v-if="showBtn" :size="4">
+			<n-flex
+				v-if="showBtn"
+				:size="4"
+				:wrap="false"
+				style="box-sizing: border-box">
 				<n-button type="primary" size="medium">按钮1</n-button>
 				<n-button type="primary" size="medium">按钮1</n-button>
 				<n-button type="primary" size="medium">按钮1</n-button>

@@ -18,7 +18,7 @@
 						'disable-tab': tab.disable,
 					}"
 					@mouseenter="!tab.disable && updateHoverBar($event)"
-					@click="!tab.disable && (active = tab.id)">
+					@click="handleActive(tab)">
 					<div class="base-tabs__tab__label">
 						<component v-if="tab.customTab" :is="tab.customTab"></component>
 						<template v-else>
@@ -72,6 +72,10 @@
 		{}
 	);
 
+	const emits = defineEmits<{
+		(e: "tab-active", tabName: string): void;
+	}>();
+
 	const slots = useSlots();
 
 	//j 获取传入默认插槽中的tab-pane组件
@@ -118,6 +122,20 @@
 
 	//s 当前激活的tab
 	const active = ref("");
+
+	function handleActive(tab: Tab) {
+		if (!tab.disable) {
+			active.value = tab.id;
+		}
+	}
+
+	watch(active, (nowId) => {
+		if (!nowId.trim()) return;
+		const tab = tabs.value.find((c) => c.id === nowId);
+		if (!tab) return;
+		emits("tab-active", tab.name);
+	});
+
 	// 挂载后设置默认激活的tab
 	onMounted(() => {
 		// console.log("slots", tabs.value, tabPanes.value);

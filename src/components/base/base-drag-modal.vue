@@ -25,7 +25,7 @@
 						<!-- s header插槽 -->
 						<slot name="header"> {{ title }} </slot>
 					</div>
-					<div class="drag-modal__header-right" @click.stop @touchstart.stop>
+					<div class="drag-modal__header-right" @click.stop>
 						<!--s 全屏切换按钮 -->
 						<div
 							class="header__button drag-modal__button-toggle-fullscreen"

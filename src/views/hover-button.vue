@@ -211,9 +211,11 @@
 		// 一经触发立即执行
 		scrollOnce();
 
-		window.addEventListener("wheel", stopScrollInterval);
-		window.addEventListener("click", stopScrollInterval);
-		window.addEventListener("touchstart", stopScrollInterval);
+		window.addEventListener("wheel", stopScrollInterval, { passive: true });
+		window.addEventListener("click", stopScrollInterval, { passive: true });
+		window.addEventListener("touchmove", stopScrollInterval, {
+			passive: true,
+		});
 	}
 </script>
 

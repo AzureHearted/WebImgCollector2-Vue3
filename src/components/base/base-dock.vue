@@ -1,7 +1,20 @@
 <template>
 	<BaseDragDialog
-	v-model:show="show"
-	>
+		v-model:show="show"
+		ref="dragDialog"
+		close-reset-state
+		:init-percent-y="0.98"
+		:min-height="0"
+		init-size="auto"
+		:header-style="{
+			height: '16px',
+			// flexFlow: 'column nowrap',
+		}"
+		:dialog-style="{
+			borderRadius: '4px',
+			overflow: 'hidden',
+		}"
+		:click-outside-close="false">
 		<template #header-left>
 			<!--s 可拖拽条 -->
 			<slot name="draggableBar">
@@ -34,10 +47,9 @@
 		useMutationObserver(
 			contentDOM,
 			async () => {
-				// console.log("dock变化");
+				console.log("dock变化");
 				await dragDialog.value?.updateSize();
 				dragDialog.value?.toCenter("horizontal");
-				// dragDialog.value.to;
 			},
 			{
 				childList: true,
@@ -87,5 +99,9 @@
 			background: gray;
 			// box-shadow: inset 0 0 1px black, 0 0 1px gray;
 		}
+	}
+
+	.base-dock__content {
+		box-sizing: border-box;
 	}
 </style>

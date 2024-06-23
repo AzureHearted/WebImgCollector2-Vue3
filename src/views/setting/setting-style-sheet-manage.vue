@@ -9,12 +9,11 @@
 				<n-badge :value="filteredStyleSheetList.length" :max="999" type="info">
 					<n-switch
 						v-model:value="filterThisScriptStyle"
-						@change="getStyleSheets">
+						@update:value="getStyleSheets">
 						<template #checked> 已过滤当前脚本样式 </template>
 						<template #unchecked> 未过滤当前脚本样式 </template>
 					</n-switch>
 				</n-badge>
-
 				<n-form-item :show-label="false" :show-feedback="false">
 					<n-input
 						v-model:value="keyword"
@@ -54,7 +53,7 @@
 								:checked-value="false"
 								:unchecked-value="true"
 								:rail-style="railStyle"
-								@change="getStyleSheets">
+								@update:value="getStyleSheets">
 								<template #checked> 已启用 </template>
 								<template #unchecked> 已禁用 </template>
 							</n-switch>

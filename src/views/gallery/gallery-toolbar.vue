@@ -75,7 +75,7 @@
 						<var-cell
 							@click="clear"
 							title="清空所有"
-							v-if="!!filterCardList[nowType].length && !loadingStore.loading"
+							v-if="!!validCardList.length && !loadingStore.loading"
 							ripple>
 							<template #icon>
 								<i-mdi-delete-empty style="color: red" />
@@ -163,7 +163,7 @@
 						</var-cell>
 						<var-cell
 							title="批量添加标签"
-							@click="batchAddTag"
+							@click="showTagEdit = true"
 							v-if="!!selectionCardList[nowType].length"
 							ripple>
 							<template #icon>
@@ -206,7 +206,7 @@
 			</n-badge>
 		</div>
 		<!--s 尺寸过滤器 -->
-		<div v-if="nowType === 'image'" class="size-filter">
+		<div v-if="nowType === 'image' || nowType === 'video'" class="size-filter">
 			<!-- 宽度过滤器 -->
 			<div class="width-filter">
 				<el-text type="primary">宽度</el-text>
@@ -234,11 +234,17 @@
 					@change="filterChange('height', $event as [number, number])" />
 			</div>
 		</div>
+		<!--s Tag编辑器  -->
+		<TagEdit
+			:title="`批量添加标签(${selectionCardList[nowType].length}个卡片)`"
+			v-model:show="showTagEdit"
+			@on-save="batchAddTag">
+		</TagEdit>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { h, reactive, computed, watch } from "vue";
+	import { h, ref, reactive, computed, watch } from "vue";
 	import type { VNodeChild } from "vue";
 	import { NEllipsis, NTag, NBadge } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
@@ -246,6 +252,7 @@
 	import type { BaseCard } from "@/stores/CardStore/interface";
 	import { Pattern } from "@/stores/PatternStore/class/Pattern";
 	import BaseImg from "@/components/base/base-img.vue";
+	import TagEdit from "./tag-edit.vue";
 	import { Icon } from "@iconify/vue";
 
 	// 导入公用ts库
@@ -439,7 +446,7 @@
 
 	//f 清空
 	async function clear() {
-		cardStore.clearCardList();
+		await cardStore.clearCardList();
 		filters.size.width = storeFilters.value.size.width;
 		filters.size.height = storeFilters.value.size.height;
 	}
@@ -449,7 +456,7 @@
 		// console.log("过滤器变化", key, value);
 		storeFilters.value.size[key] = value; // 更新仓库过滤器
 	}
-	
+
 	//f 处理关键词过滤(回车或点击搜索按钮触发)
 	const handleKeywordFilter = (value?: string) => {
 		const keyword = value !== undefined ? value : filters.keyword;
@@ -511,9 +518,13 @@
 	}
 
 	//TODO 等待实现  批量添加标签
+	const showTagEdit = ref(false);
 	//f 批量添加标签
-	const batchAddTag = () => {
-		console.log("批量添加标签,等待实现……");
+	const batchAddTag = (tags: string[]) => {
+		console.log("批量添加标签,等待实现……", tags);
+		selectionCardList.value[nowType.value].forEach((c) => {
+			c.tags = [...new Set([...c.tags, ...tags])];
+		});
 	};
 </script>
 

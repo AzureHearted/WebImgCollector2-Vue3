@@ -4,7 +4,10 @@
 		<GalleryToolbar />
 		<!-- 瀑布流 -->
 		<n-flex class="gallery__content-wrap">
-			<BaseTabs style="width: 100%; height: 100%" wrap-style="overflow:hidden;">
+			<BaseTabs
+				style="width: 100%; height: 100%"
+				wrap-style="overflow:hidden;"
+				@tab-active="nowType = $event as any">
 				<!--s 图片类 -->
 				<BaseTabPane name="image">
 					<template #tab>

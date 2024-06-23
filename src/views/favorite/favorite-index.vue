@@ -2,15 +2,6 @@
 	<n-flex ref="containerDOM" class="favorite__container" vertical :size="0">
 		<!--s 工具栏 -->
 		<n-flex class="toolbar-wrap" :size="4">
-			<!-- s关键词过滤 -->
-			<n-badge :value="filterCardList.all.length" :max="999" type="info">
-				<n-input
-					style="width: 180px"
-					v-model:value="filterKeyword"
-					type="text"
-					placeholder="输入检索关键词"
-					clearable />
-			</n-badge>
 			<!-- s排序方式选择 -->
 			<n-select
 				class="sort-method-select"
@@ -30,8 +21,19 @@
 				:render-label="renderOptionLabelWithCount"
 				:options="extensionOptions"
 				max-tag-count="responsive" />
+			<!-- s关键词过滤 -->
+			<n-badge :value="filterCardList.all.length" :max="999" type="info">
+				<n-input
+					style="width: 180px"
+					v-model:value="filterKeyword"
+					type="text"
+					placeholder="输入检索关键词"
+					clearable />
+			</n-badge>
 			<!--s 尺寸过滤器 -->
-			<div class="size-filter">
+			<div
+				v-if="nowType === 'image' || nowType === 'video'"
+				class="size-filter">
 				<!--s 宽度过滤器 -->
 				<div class="width-filter">
 					<el-text type="primary">宽度</el-text>
@@ -62,7 +64,10 @@
 		</n-flex>
 		<!--s 内容区 -->
 		<n-flex class="content-wrap" :size="4">
-			<BaseTabs style="width: 100%; height: 100%" wrap-style="overflow:hidden;">
+			<BaseTabs
+				style="width: 100%; height: 100%"
+				wrap-style="overflow:hidden;"
+				@tab-active="nowType = $event as any">
 				<!--s 图片类 -->
 				<BaseTabPane name="image">
 					<template #tab>

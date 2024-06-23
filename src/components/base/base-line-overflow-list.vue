@@ -40,6 +40,7 @@
 			:header-style="{
 				height: 'fit-content',
 			}"
+			allow-full-screen
 			allow-resize>
 			<template #header-left>
 				<slot name="modal-title"></slot>

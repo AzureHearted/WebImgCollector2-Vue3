@@ -205,7 +205,7 @@ export default async function getCard(
 						if (isUrl(description.title)) {
 							description.title = getNameByUrl(description.title);
 						}
-						description.title = decodeURI(description.title)
+						description.title = decodeURI(description.title);
 					}
 
 					//s 设置卡片来源

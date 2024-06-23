@@ -6,7 +6,7 @@
 		@mouseover="scrollbar.show = true"
 		@mouseleave="scrollbar.show = false">
 		<!--s 包裹区 -->
-		<div ref="wrapDOM" class="base-scrollbar__wrap" @wheel.stop @scroll.stop>
+		<div ref="wrapDOM" class="base-scrollbar__wrap">
 			<!--s 视口区内部区域 -->
 			<div
 				ref="viewDOM"
@@ -39,8 +39,6 @@
 						@mousedown.stop
 						@mouseup.stop
 						@click.stop
-						@touchstart.stop
-						@touchmove.prevent
 						@touchend.stop
 						:style="[
 							verticalStyle,
@@ -59,8 +57,6 @@
 						@mousedown.stop
 						@mouseup.stop
 						@click.stop
-						@touchstart.stop
-						@touchmove.prevent
 						@touchend.stop
 						:style="[
 							horizontalStyle,
@@ -485,9 +481,9 @@
 		position: absolute;
 
 		border-radius: 10px;
-		box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.5),
-			0 0 2px rgb(0, 0, 0, 0.5);
 		-webkit-box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.5),
+			0 0 2px rgb(0, 0, 0, 0.5);
+		box-shadow: inset 0 0 2px rgba(255, 255, 255, 0.5),
 			0 0 2px rgb(0, 0, 0, 0.5);
 
 		background: rgba(64, 160, 255, 0.5);
