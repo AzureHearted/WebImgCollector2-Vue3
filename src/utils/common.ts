@@ -309,7 +309,7 @@ export function byteAutoUnit(byteSize: number, decimal: number = 2): string {
 
 // 推断字符串是否是链接
 export function isUrl(str: string) {
-	const regex = /^([^/]+?:)?\/\/[\w.,@?^=%&:/~+#-]+/i;
+	const regex = /^([^/]+?:)?\/\/[\w.,@?^=%&:/~+#-]+/gi;
 	let isUrl = false;
 	if (regex.test(str)) {
 		try {

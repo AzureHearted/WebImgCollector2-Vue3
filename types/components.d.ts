@@ -100,7 +100,6 @@ declare module 'vue' {
     NDrawerContent: typeof import('naive-ui')['NDrawerContent']
     NDropdown: typeof import('naive-ui')['NDropdown']
     NDynamicTags: typeof import('naive-ui')['NDynamicTags']
-    NEllipsis: typeof import('naive-ui')['NEllipsis']
     NFlex: typeof import('naive-ui')['NFlex']
     NFormItem: typeof import('naive-ui')['NFormItem']
     NGradientText: typeof import('naive-ui')['NGradientText']

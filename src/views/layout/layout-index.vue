@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, watch, onMounted } from "vue";
+	import { ref, watch, onMounted, nextTick, onUnmounted } from "vue";
 	import { useDisableScroll } from "@/utils/disable-scroll";
 
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
@@ -22,24 +22,26 @@
 	let containerDOM = ref<HTMLElement>();
 
 	onMounted(() => {
-		const { start, stop } = useDisableScroll(document.documentElement);
+		// const { start, stop } = useDisableScroll(document.documentElement);
+		// stop();
 		watch(
 			() => globalStore.openWindow,
 			(isOpen) => {
-				if (!containerDOM.value) return;
 				if (isOpen) {
-					// 每当窗口打开后都自动聚焦到该容器
-					containerDOM.value.focus();
-					// containerDOM.value.showModal();
 					//s 页面滚动元素进行滚动
-					start();
+					// start();
+					if (!containerDOM.value) return;
+					containerDOM.value.focus();
 				} else {
 					//s 取消页面元素的滚动阻止事件
-					stop();
-					// containerDOM.value.close();
+					// stop();
 				}
-			}
+			},
+			{ immediate: true }
 		);
+		// onUnmounted(() => {
+		// 	stop();
+		// });
 	});
 </script>
 

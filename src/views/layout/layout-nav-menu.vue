@@ -67,7 +67,7 @@
 
 	// 标签渲染
 	const renderLabel: MenuProps["renderLabel"] = ({ label }) => {
-		return h(NEllipsis, { tooltip: true }, { default: () => label });
+		return h("div", { title: label }, { default: () => label });
 	};
 </script>
 

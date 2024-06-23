@@ -17,14 +17,16 @@ export default defineStore("FavoriteStore", () => {
 	});
 
 	//s localforage仓库对象
-	const store = ref(
-		localforage.createInstance({
+	const store = ref<LocalForage>();
+
+	async function open() {
+		store.value = localforage.createInstance({
 			driver: localforage.INDEXEDDB,
 			name: info.dbName,
 			storeName: info.storeName,
 			description: "收藏的卡片数据",
-		})
-	);
+		});
+	}
 
 	//s 过滤关键词
 	const filterKeyword = ref("");
@@ -367,6 +369,11 @@ export default defineStore("FavoriteStore", () => {
 	//f 刷新仓库数据
 	const refreshStore = async () => {
 		cardList.value = await new Promise<Card[]>((resolve) => {
+			//s 判断仓库是否打开？没打开等待打开后重新调用
+			if (!store.value) {
+				open().then(() => refreshStore());
+				return;
+			}
 			const list: Card[] = [];
 			store.value
 				.iterate((value: InstanceType<typeof Card>) => {
@@ -391,17 +398,28 @@ export default defineStore("FavoriteStore", () => {
 
 	//f 清空仓库数据
 	const clearStore = async () => {
+		//s 判断仓库是否打开？没打开等待打开后重新调用
+		if (!store.value) {
+			open().then(() => clearStore());
+			return;
+		}
 		await store.value.clear();
 		refreshStore();
 	};
 
 	//f 添加卡片
 	const addCard = async (cards: Card[]) => {
+		//s 判断仓库是否打开？没打开等待打开后重新调用
+		if (!store.value) {
+			open().then(() => addCard(cards));
+			return;
+		}
 		// console.log(
 		// 	"添加收藏",
 		// 	cards,
 		// 	cards.map((c) => c.id)
 		// );
+
 		for (const card of cards) {
 			// 判断卡片是否已经存在
 			if (!(await isExist(card))) {
@@ -418,6 +436,11 @@ export default defineStore("FavoriteStore", () => {
 
 	//f 更新卡片
 	const updateCard = async (cards: Card[]) => {
+		//s 判断仓库是否打开？没打开等待打开后重新调用
+		if (!store.value) {
+			open().then(() => updateCard(cards));
+			return;
+		}
 		for (const card of cards) {
 			// 先查找卡片在仓库的id
 			const id = await findCardId(
@@ -435,6 +458,11 @@ export default defineStore("FavoriteStore", () => {
 
 	//f 删除卡片
 	const deleteCard = async (cards: Card[]) => {
+		//s 判断仓库是否打开？没打开等待打开后重新调用
+		if (!store.value) {
+			open().then(() => deleteCard(cards));
+			return;
+		}
 		for (const card of cards) {
 			// 先查找卡片在仓库的id
 			const id = await findCardId(
@@ -451,6 +479,11 @@ export default defineStore("FavoriteStore", () => {
 
 	//f 取消收藏卡片
 	const unFavoriteCard = async (cards: Card[]) => {
+		//s 判断仓库是否打开？没打开等待打开后重新调用
+		if (!store.value) {
+			open().then(() => unFavoriteCard(cards));
+			return;
+		}
 		for (const card of cards) {
 			// 先查找卡片在仓库的id
 			const id = await findCardId(

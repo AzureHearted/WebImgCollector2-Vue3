@@ -738,10 +738,11 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 		return Promise.resolve(errMeta);
 	}
 	let meta: BaseMeta;
-	const img = new Image();
-	img.src = url;
-	img.referrerPolicy = "no-referrer-when-downgrade";
+
 	return new Promise((resolve) => {
+		let img: HTMLImageElement | null = new Image();
+		img.src = url;
+		img.referrerPolicy = "no-referrer-when-downgrade";
 		if (img.complete) {
 			// console.log("图片信息获取-->成功!");
 			meta = {
@@ -752,25 +753,27 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 				type: "image",
 				ext: getExtByUrl(url),
 			};
+			img = null; //s 用完后释放img对象
 			resolve(meta);
 		} else {
 			img.addEventListener(
 				"load",
-				() => {
+				function () {
 					// console.log("图片信息获取-->成功!");
 					meta = {
 						valid: true,
-						width: img.width,
-						height: img.height,
-						aspectRatio: img.width / img.height,
+						width: this.width,
+						height: this.height,
+						aspectRatio: this.width / this.height,
 						type: "image",
 						ext: getExtByUrl(url),
 					};
+					img = null; //s 用完后释放img对象
 					resolve(meta);
 				},
 				{ once: true }
 			);
-			const error = () => {
+			const error = function () {
 				console.log("图片信息获取-->失败!");
 				meta = {
 					valid: false,
@@ -779,6 +782,7 @@ export function getImgMetaByImage(url: string): Promise<BaseMeta> {
 					type: false,
 					ext: getExtByUrl(url),
 				};
+				img = null; //s 用完后释放img对象
 				resolve(meta);
 			};
 			img.addEventListener("error", error, { once: true });

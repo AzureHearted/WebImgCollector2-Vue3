@@ -165,22 +165,22 @@ export const defaultPattern = new Pattern({
 			enable: true,
 			name: "默认规则",
 			region: {
-				enable: false,
-				selector: "",
+				enable: true,
+				selector:
+					'meta[property="og:image"],a:has(>img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src],video>source[src],video[src]',
 			},
 			source: {
-				selector:
-					'meta[property="og:image"],a:has(img),[href*=\\.jpg],[href*=\\.png],[href*=\\.webp],[href*=\\.jpeg],img[data-src],img[src],video>source[src],video[src]',
+				selector: "",
 				infoType: "attribute",
 				name: "content|href|srcset|data-src|src",
 				fix: [],
 			},
 			preview: {
-				enable: false,
-				origin: "source",
-				selector: "",
-				infoType: "property",
-				name: "src",
+				enable: true,
+				origin: "custom",
+				selector: "&>img",
+				infoType: "attribute",
+				name: "srcset|data-src|src",
 				fix: [],
 			},
 			description: {

@@ -369,7 +369,7 @@
 					  })
 					: null,
 				h(
-					NEllipsis,
+					"div",
 					{
 						style: {
 							userSelect: "none",
@@ -382,6 +382,7 @@
 									? "red"
 									: null,
 						},
+						title: option.label,
 					},
 					{ default: () => option.label as string }
 				),
@@ -416,7 +417,11 @@
 				style: "display:flex; align-items: center;width:100%;",
 			},
 			[
-				h(NEllipsis, {}, { default: () => option.label as string }),
+				h(
+					"div",
+					{ title: option.label },
+					{ default: () => option.label as string }
+				),
 				h(
 					NBadge,
 					{

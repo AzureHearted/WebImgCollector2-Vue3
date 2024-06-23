@@ -13,6 +13,7 @@ export default async function getDOMInfo(
 	name: string
 ) {
 	let result = "";
+	// console.log("getDOMInfo日志：", type, name, dom);
 	switch (type) {
 		case "value":
 			// 处理值的情况
@@ -74,15 +75,23 @@ function getDOMAttribute(dom: HTMLElement, _name: string) {
 	// 对每个值进行匹配
 	for (let i = 0; i < names.length; i++) {
 		const name = names[i];
-		let temp = dom.getAttribute(name);
-		//s 判断是否不为空
-		if (!!temp && !!temp.trim().length) {
-			// 对匹配srcset时的特殊处理
-			if (name === "srcset") {
-				//s srcset属性信息的处理方式
-				temp = getSrcsetMaximumValue(temp);
+		let temp: string | null = null;
+		if (name === "src" || name === "href" || name === "srcset") {
+			//! 是否是和链接相关的属性(如：src、href、srcset) 则使用property方式获取
+			temp = getDOMProperty(dom, name);
+		} else {
+			temp = dom.getAttribute(name);
+			//s 判断是否不为空
+			if (!!temp && !!temp.trim().length) {
+				// 对匹配srcset时的特殊处理
+				if (name === "srcset") {
+					//s srcset属性信息的处理方式
+					temp = getSrcsetMaximumValue(temp);
+				}
 			}
-			value = temp || "";
+		}
+		if (temp) {
+			value = temp;
 			break;
 		}
 	}

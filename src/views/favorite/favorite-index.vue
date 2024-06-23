@@ -157,6 +157,7 @@
 		onUpdated,
 		onUnmounted,
 		onActivated,
+		nextTick,
 	} from "vue";
 	import type { VNodeChild } from "vue";
 	import { isMobile } from "@/utils/common";
@@ -183,10 +184,6 @@
 
 	const { refreshStore } = favoriteStore;
 
-	onMounted(() => {
-		refreshStore();
-	});
-
 	//s 过滤器定义(组件内过滤器)
 	const filters = reactive({
 		size: {
@@ -201,8 +198,8 @@
 		},
 	});
 
-	//f 刷新filter
-	const reFreshFilter = () => {
+	//f 刷新函数
+	const reFresh = () => {
 		refreshStore();
 		filters.size.width[1] = sizeRange.value.width[1];
 		filters.size.height[1] = sizeRange.value.height[1];
@@ -210,8 +207,16 @@
 		storeFilters.value.size.height[1] = sizeRange.value.height[1];
 	};
 	//* 挂载和激活时都进行一次filter刷新
-	onMounted(() => reFreshFilter());
-	onActivated(() => reFreshFilter());
+	onMounted(() => {
+		nextTick(() => {
+			reFresh();
+		});
+	});
+	onActivated(() => {
+		nextTick(() => {
+			reFresh();
+		});
+	});
 	// onActivated(() => console.log("激活"));
 
 	//f 选择器多选Tag渲染函数

@@ -207,7 +207,7 @@
 	const renderLabel: TreeProps["renderLabel"] = ({ option }) => {
 		const node = option as PatternNode | RuleNode;
 		return h(
-			NEllipsis,
+			"div",
 			{
 				//s 这里如果判断当前节点对应的方案与当前站点匹配则字体显示为红色
 				style:
@@ -218,6 +218,7 @@
 					})
 						? "color:red;"
 						: null,
+				title: node.label,
 			},
 			{ default: () => node.label }
 		);

@@ -57,7 +57,11 @@
 						</el-button-group>
 						<el-button-group size="small">
 							<!--s 重命名 -->
-							<el-button type="primary" @click="rename(data)" v-ripple>
+							<el-button
+								type="primary"
+								@click="rename(data)"
+								title="重命名"
+								v-ripple>
 								<template #icon>
 									<i-ep-edit />
 								</template>
@@ -69,6 +73,7 @@
 								type="primary"
 								@click="toLocate(data)"
 								v-if="data.source.dom"
+								title="在页面中定位"
 								v-ripple>
 								<template #icon>
 									<i-material-symbols-location-on-outline />
@@ -87,6 +92,7 @@
 								"
 								:loading="data.loading"
 								type="success"
+								title="下载"
 								@click="emits('download', data.id)"
 								v-ripple>
 								<template #icon>
@@ -98,6 +104,7 @@
 								v-if="data.source.meta.type === 'html'"
 								type="default"
 								@click="openUrl(data.source.url)"
+								title="打开地址"
 								v-ripple>
 								<template #icon>
 									<i-material-symbols-open-in-new-rounded />
@@ -125,10 +132,8 @@
 					<!--s 纯图片类型 -->
 					<BaseImg
 						v-if="data.source.meta.type === 'image'"
-						:src="data.source.url"
+						:src="data.preview.url"
 						:viewport-selector="viewportSelector"
-						use-thumb
-						:thumb="data.preview.url"
 						:init-width="data.preview.meta.width"
 						:init-height="data.preview.meta.height"
 						@loaded="emits('loaded', data.id, $event)"
@@ -136,8 +141,8 @@
 					<!--s 网页类型(封面图片) -->
 					<BaseImg
 						v-else
-						:viewport-selector="viewportSelector"
 						:src="data.preview.url"
+						:viewport-selector="viewportSelector"
 						:init-width="data.preview.meta.width"
 						:init-height="data.preview.meta.height"
 						@loaded="emits('loaded', data.id, $event)"
@@ -183,20 +188,31 @@
 						:list="tags"
 						model-to=".web-img-collector__top-container">
 						<template #default="{ item, openShowMore }">
-							<var-chip :key="item.id" size="mini" @click="openShowMore">
+							<var-chip
+								:key="item.id"
+								size="mini"
+								@click="openShowMore"
+								:title="(item as Tag).label">
 								{{ (item as Tag).label }}
 							</var-chip>
 						</template>
 						<template #modal-title>
-							<div style="font-size: 12px; white-space: wrap">
+							<span
+								:title="data.description.title"
+								style="
+									font-size: 12px;
+									overflow: inherit;
+									white-space: inherit;
+									text-overflow: inherit;
+								">
 								{{ data.description.title }}
-							</div>
+							</span>
 						</template>
 						<template #modal-content>
 							<n-dynamic-tags
 								:value="data.tags"
 								type="info"
-								@change="handleTagsSave" />
+								@update:value="handleTagsSave" />
 						</template>
 						<template #modal-footer>
 							<div>
@@ -221,41 +237,44 @@
 				</div>
 				<div style="width: 100%; display: flex; gap: 4px">
 					<!--s 描述标签 -->
-					<var-chip class="title-tag" type="primary" size="mini">
-						<n-ellipsis>
-							{{ data.description.title.trim() }}
-						</n-ellipsis>
+					<var-chip
+						class="title-tag"
+						type="primary"
+						size="mini"
+						:title="data.description.title.trim()">
+						{{ data.description.title.trim() }}
 					</var-chip>
 					<!--s 尺寸信息 -->
 					<var-chip
 						v-if="data.source.meta.type === 'image'"
 						type="info"
-						size="mini">
-						<n-ellipsis>
-							{{ data.source.meta.width }}x{{ data.source.meta.height }}
-						</n-ellipsis>
+						size="mini"
+						:title="`${data.source.meta.width}x${data.source.meta.height}`">
+						{{ data.source.meta.width }}x{{ data.source.meta.height }}
 					</var-chip>
 					<!--s 扩展名信息 -->
-					<var-chip v-if="!!data.source.meta.ext" type="default" size="mini">
-						<n-ellipsis>
-							{{ data.source.meta.ext }}
-						</n-ellipsis>
+					<var-chip
+						v-if="!!data.source.meta.ext"
+						type="default"
+						size="mini"
+						:title="data.source.meta.ext">
+						{{ data.source.meta.ext }}
 					</var-chip>
 					<!--s 网页标签 -->
 					<var-chip
 						v-if="data.source.meta.type === 'html'"
 						type="warning"
-						size="mini">
+						size="mini"
+						title="网页">
 						网页
 					</var-chip>
 					<!--s 文件大小信息 -->
 					<var-chip
 						v-if="!!data.source.blob && !!data.source.blob.size"
 						type="success"
-						size="mini">
-						<n-ellipsis>
-							{{ size }}
-						</n-ellipsis>
+						size="mini"
+						:title="size">
+						{{ size }}
 					</var-chip>
 				</div>
 			</div>

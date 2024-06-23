@@ -1,5 +1,5 @@
 <template>
-	<BaseScrollbar>
+	<BaseScrollbar show-back-top-button>
 		<WaterFallList
 			ref="waterFallRef"
 			:data="cardList"
@@ -20,19 +20,15 @@
 					@save:tags="handleTagsSave(item as Card)"
 					@delete="deleteCard([item as Card])">
 					<template #custom-button="{ openUrl }">
-						<el-tooltip
-							effect="dark"
-							content="打开卡片对应的来源地址"
-							placement="top">
-							<el-button
-								type="warning"
-								@click="openUrl((item as Card).source.originUrls![0])"
-								v-ripple>
-								<template #icon>
-									<i-material-symbols-open-in-new-down-rounded />
-								</template>
-							</el-button>
-						</el-tooltip>
+						<el-button
+							type="warning"
+							@click="openUrl((item as Card).source.originUrls![0])"
+							title="打开卡片对应的来源地址"
+							v-ripple>
+							<template #icon>
+								<i-material-symbols-open-in-new-down-rounded />
+							</template>
+						</el-button>
 					</template>
 				</GalleryCard>
 			</template>

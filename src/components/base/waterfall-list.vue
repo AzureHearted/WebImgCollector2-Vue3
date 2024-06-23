@@ -178,6 +178,7 @@
 		useResizeObserver(containerDom.value!.$el, () => {
 			// 如果是窗口变化则将执行间隔调低至250ms
 			// console.time("容器尺寸变化");
+			// .5s 再在触发
 			handleResetPosition(null, { delay: 200 });
 			// console.timeEnd("容器尺寸变化");
 		});
