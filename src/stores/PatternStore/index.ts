@@ -28,7 +28,7 @@ export default defineStore("PatternStore", () => {
 	}
 	//f 保存(设置)用户方案信息
 	function saveUserPatternInfo() {
-		// 使用备份数据进行存储
+		//s 使用备份数据进行存储
 		const rowDataList = list.value
 			.slice(1)
 			.map((p) => p.getRowData({ type: "backup" }));

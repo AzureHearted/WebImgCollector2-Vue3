@@ -623,7 +623,7 @@ export default defineStore("CardStore", () => {
 						initZipName = getNameByUrl(decodeURI(location.href)); // 如果标题获取失败就直接使用href提取标题
 					}
 
-					// 下载完成后让用户进行文件名确认
+					//s 下载完成后让用户进行文件名确认
 					ElMessageBox.prompt("压缩包已准备完成,请确认文件名", "提示", {
 						appendTo: ".web-img-collector-notification-container",
 						confirmButtonText: "确认",
