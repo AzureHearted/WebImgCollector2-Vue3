@@ -3,8 +3,11 @@ import type {
 	ToolbarItemsType,
 } from "@fancyapps/ui/types/Fancybox/plugins";
 import type { Fancybox } from "@fancyapps/ui";
-import { useCardStore } from "@/stores";
+import { GM_openInTab } from "$";
+import useCardStore from "@/stores/CardStore";
+import useFavoriteStore from "@/stores/FavoriteStore";
 const cardStore = useCardStore();
+const favoriteStore = useFavoriteStore();
 // import type { Fancybox } from "@fancyapps/ui/types";
 
 export default {
@@ -17,7 +20,7 @@ export default {
 	},
 	// 自定义的按钮
 	items: {
-		// 打开按钮
+		//f 打开按钮
 		open: {
 			tpl: /*html*/ `
       <button class="f-button" title="{{NEW_TAB_OPENS}}"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -30,10 +33,14 @@ export default {
 				const triggerEl = carousel?.slides[index].triggerEl;
 				if (!triggerEl) return;
 				const url = triggerEl.dataset.downloadSrc;
-				window.open(url, "_blank");
+				// window.open(url, "_blank");
+				// open(url, "_blank");
+				if (url) {
+					GM_openInTab(url, { active: true, insert: true, setParent: true });
+				}
 			},
 		},
-		// 下载按钮
+		//f 下载按钮
 		download: {
 			tpl: /*html*/ `
       <button class="f-button" title="{{DOWNLOAD}}">
@@ -41,18 +48,34 @@ export default {
 			</button>
       `,
 			// 点击事件定义
-			click: (instance) => {
+			click: async (instance) => {
 				const carousel = instance.instance.carousel;
 				const index = carousel!.page;
 				const triggerEl = carousel?.slides[index].triggerEl;
 				if (!triggerEl) return;
+				console.log("下载按钮点击", triggerEl);
 				const url = triggerEl.dataset.downloadSrc;
 				const cid = triggerEl.dataset.id;
+				if (!cid) return;
 				console.log("下载", cid, url);
-				cardStore.downloadCards([cid as string]);
+				// 先尝试到图库的卡片仓库擦找卡片
+				// 找不到再从收藏仓库查找
+				let card = cardStore.findCard(cid);
+				if (card) {
+					//? 如果成功在图库卡片仓库找到就直接进行下载
+					cardStore.downloadCards([card]);
+				} else {
+					//? 如果没找到就尝试在收藏仓库中查找
+					card = await favoriteStore.findCardById(cid);
+					if (!card) return; // 没找到就停止
+					// 如果找到了就先下载
+					await favoriteStore.downloadCards([card]);
+					// 下载后更新卡片信息
+					favoriteStore.updateCard([card]);
+				}
 			},
 		},
-		// 定位按钮
+		//f 定位按钮
 		toLocate: {
 			tpl: /*html*/ `
       <button class="f-button" title="{{TO_LOCATE}}">
@@ -70,12 +93,14 @@ export default {
 				const index = carousel!.page;
 				const triggerEl = carousel?.slides[index].triggerEl;
 				if (!triggerEl) return;
+				(instance.instance as Fancybox).close(); // 关闭当前图片，但不关闭弹窗。
 				setTimeout(() => {
 					triggerEl.scrollIntoView({
-						behavior: "auto",
+						behavior: "smooth",
+						inline: "center",
+						block: "center",
 					});
-				}, 0);
-				(instance.instance as Fancybox).close(); // 关闭当前图片，但不关闭弹窗。
+				}, 100);
 			},
 		},
 	} as ToolbarItemsType,

@@ -1,5 +1,8 @@
 <template>
-	<div class="waterfall-container" @transitionend="handleTransitionend">
+	<div
+		class="waterfall-container"
+		:data-disenable-transition="disenableTransition"
+		@transitionend="handleTransitionend">
 		<transition-group
 			name="list-complete"
 			appear
@@ -17,11 +20,8 @@
 					:style="{ ...itemStyle }"
 					:data-index="index">
 					<slot :item="item" :index="index">
-						<BaseImgCard
-							:data="item"
-							:img-url="item.url"
-							:img-thumb="item.thumb">
-						</BaseImgCard>
+						<BaseCard :data="item" :img-url="item.url" :img-thumb="item.thumb">
+						</BaseCard>
 					</slot>
 				</div>
 			</template>
@@ -46,8 +46,9 @@
 		onMounted,
 		watch,
 		onActivated,
+		onDeactivated,
 	} from "vue";
-	import BaseImgCard from "./base-img-card.vue";
+	import BaseCard from "./base-card.vue";
 	import type { CSSProperties, ComputedRef } from "vue";
 
 	export interface IData {
@@ -59,20 +60,24 @@
 	// props定义
 	const props = withDefaults(
 		defineProps<{
-			data: IData[]; // 数据源，包含图片URL和缩略图URL等信息。
+			data: any[]; // 数据对象
 			keyProp?: string; // 数据源中用于作为唯一标识的属性名。
 			itemPadding?: number | string; // 每个item之间的间距。
 			itemBaseWidth?: number; // 每个item的基准宽度。
+			disenableTransition?: boolean; // 禁用过渡
 			sizeMap?: {
 				[key: number]: { columns: number };
 			}; // 图片URL到宽高的映射表。
 			loading?: boolean;
+			// 暂停布局?
+			pauseLayout?: boolean;
 		}>(),
 		{
-			data: () => [] as IData[], // 默认值为空数组。
+			data: () => [] as any[], // 默认值为空数组。
 			keyProp: "id", // 默认值为"id"。
 			itemPadding: "2px", // 默认值为
 			itemBaseWidth: 220, // 默认值为220。
+			disenableTransition: false, // 默认不禁用过渡
 			// 响应式瀑布流的映射配置
 			sizeMap: () => {
 				return {
@@ -84,12 +89,13 @@
 				};
 			}, // 默认值为空Map。
 			loading: false, // 默认值为false。
+			pauseLayout: false,
 		}
 	);
 
 	// 数据信息
 	const dataInfo = reactive({
-		list: [] as IData[],
+		list: [] as any[],
 	});
 
 	// 状态信息
@@ -128,6 +134,7 @@
 	const defaultOptions = {
 		delay: 300,
 	};
+	defineExpose({ handleResetPosition });
 	function handleResetPosition(
 		task?: (() => void) | any,
 		options?: { delay: number } // 配置选项,可用于临时调整时间间隔
@@ -150,20 +157,24 @@
 			handleTask(); // 执行任务
 			nextTick(() => {
 				if (!resetPosition()) {
-					// setTimeout(() => {
-					// 	handleResetPosition();
-					// }, 100);
-					// console.log("布局失败！");
+					setTimeout(() => {
+						handleResetPosition();
+						// console.timeEnd("布局");
+					});
+					console.log("布局失败！");
+				} else {
+					// console.timeEnd("布局");
 				}
 			});
 			// console.timeEnd("布局");
-			handleTask = () => {}; // 重置任务
+			// handleTask = () => {}; // 重置任务
 			// console.timeEnd("布局");
 		}, delay);
 	}
 
-	// 组件挂载后执行
+	//* 组件挂载后执行
 	onMounted(() => {
+		console.log("组件==>被挂载");
 		useResizeObserver(containerDom.value!.$el, () => {
 			// 如果是窗口变化则将执行间隔调低至250ms
 			// console.time("容器尺寸变化");
@@ -181,12 +192,22 @@
 		}
 	});
 
-	// 当组件被激活时执行
+	//s 判断组件是否被冻结
+	const freeze = ref(false);
+
+	//* 当组件被激活时执行
 	onActivated(() => {
 		// console.log("组件==>被激活");
+		freeze.value = false;
 		nextTick(() => {
 			resetPosition();
 		});
+	});
+
+	//* 当组件冻结之前执行(记录每张卡片的位置)
+	onDeactivated(() => {
+		freeze.value = true;
+		// console.log("组件==>被冻结");
 	});
 
 	// 元素离开前
@@ -259,8 +280,21 @@
 		return { columns: nowColumns, fixWidth: FixWidth };
 	}
 
+	watch(
+		() => props.pauseLayout,
+		(newValue, oldValue) => {
+			if (newValue && newValue !== oldValue) {
+				resetPosition();
+			}
+		}
+	);
+
 	// 重新设置item坐标
 	async function resetPosition() {
+		if (props.pauseLayout || freeze.value) {
+			// console.log("已暂停布局");
+			return true;
+		}
 		// console.log("重新布局！！！");
 		if (!containerDom.value) {
 			// 没有容器就标记为布局未完成
@@ -292,10 +326,17 @@
 		// 计算每个盒子的位置
 		for (let i = 0; i < children.length; i++) {
 			let box = children[i];
+
 			// 执行逻辑
-			const handle = () => {
+			const handle = async ({
+				clientWidth: bw,
+				clientHeight: bh,
+			}: {
+				clientWidth: number;
+				clientHeight: number;
+			}) => {
 				// 获取元素宽高比
-				const aspectRatio = box.clientWidth / box.clientHeight;
+				const aspectRatio = bw / bh;
 				// 纵坐标
 				let minTop = Math.min(...nextTopsInner); //找到最低的高度
 				let index = nextTopsInner.indexOf(minTop); //找到最低的高度的列号
@@ -310,11 +351,13 @@
 			// 任务
 			const task = (): Promise<void> => {
 				return new Promise((resolve) => {
-					if (box.clientWidth !== state.itemFixWidth) {
+					const { clientWidth, clientHeight } = box;
+
+					if (clientWidth !== state.itemFixWidth) {
 						box.style.width = state.itemFixWidth + "px";
 					}
 					nextTick(() => {
-						handle();
+						handle({ clientWidth, clientHeight });
 						resolve();
 					});
 				});
@@ -343,10 +386,12 @@
 		// console.log("元素过渡结束");
 		// const propertyNames = ["width", "height", "top", "left", "aspect-ratio"];
 		const propertyNames = ["height", "aspect-ratio"];
+		// console.log("有元素过渡结束 => ", e.propertyName);
 		if (propertyNames.includes(e.propertyName)) {
 			// console.log("有元素过渡结束 => ", e.propertyName);
-			handleResetPosition(null, { delay: 100 });
+			handleResetPosition(null, { delay: 300 });
 		}
+		// handleResetPosition(null, { delay: 300 });
 	}
 
 	// ResizeObserver API的封装
@@ -400,16 +445,25 @@
 		}
 	}
 
+	.waterfall-container[data-disenable-transition="true"] {
+		transition: none !important;
+		* {
+			transition: none !important;
+		}
+	}
+
+	$duration: 0.3s;
 	/* 定义过渡效果 */
 	.list-complete-item {
-		transition: 0.3s;
+		transition: all $duration;
+		// transition: $duration;
 	}
 
 	/* 对移动中的元素应用的过渡 */
 	.list-complete-move,
 	.list-complete-enter-active,
 	.list-complete-leave-active {
-		transition: all 0.3s;
+		transition: all $duration;
 		transition-delay: 0 !important;
 	}
 

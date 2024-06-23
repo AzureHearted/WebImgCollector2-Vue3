@@ -1,56 +1,99 @@
 <template>
-	<BaseImgCard
+	<BaseCard
 		class="gallery-card"
+		:data-id="data.id"
+		background-color="transparent"
+		style="border: unset"
 		:data-show="isMobile()"
-		style="overflow: hidden; border: unset"
-		:data-checked="data.isSelected"
-		:data="data"
-		:img-url="data.source.url"
-		:img-thumb="data.preview.url">
-		<!-- 卡片顶部 -->
+		:data-source-type="data.source.meta.type"
+		:data-preview-type="data.preview.meta.type"
+		:data-checked="data.isSelected">
+		<!--s 卡片顶部 -->
 		<template #header>
 			<div class="gallery-card-header">
+				<!--s header左侧 -->
 				<div class="gallery-card-header-left">
-					<!-- 复选框 -->
+					<!--s 复选框 -->
 					<div class="card-checkbox">
+						<!--s 选中复选框 -->
 						<BaseCheckbox
+							v-if="showCheckBox"
 							:checked="data.isSelected"
 							@change="emits('change:selected', $event)" />
+						<!--s 收藏复选框 -->
+						<BaseCheckbox
+							v-if="showFavoriteButton"
+							:checked="data.isFavorite"
+							checked-color="red"
+							@change="emits('toggle-favorite', $event)">
+							<template #checked>
+								<i-mdi-favorite />
+							</template>
+							<template #un-checked>
+								<i-mdi-favorite-border />
+							</template>
+						</BaseCheckbox>
 					</div>
 				</div>
+				<!--s header右侧 -->
 				<div class="gallery-card-header-right">
-					<!-- 卡片按钮组 -->
+					<!--s 卡片按钮组 -->
 					<div class="card-button-group">
-						<!-- 删除 -->
+						<!--s 自定义按钮组 -->
 						<el-button-group size="small">
-							<el-button type="danger" @click="toRemove(data)" v-ripple>
+							<slot name="custom-button" :openUrl="openUrl"></slot>
+						</el-button-group>
+						<el-button-group size="small">
+							<!--s 删除 -->
+							<el-button
+								v-if="showDeleteButton"
+								type="danger"
+								@click="emits('delete', data.id)"
+								v-ripple>
 								<template #icon>
 									<i-material-symbols-delete />
 								</template>
 							</el-button>
 						</el-button-group>
 						<el-button-group size="small">
-							<!-- 在页面中定位 -->
-							<el-button type="primary" @click="toLocate(data)" v-ripple>
+							<!--s 重命名 -->
+							<el-button type="primary" @click="rename(data)" v-ripple>
+								<template #icon>
+									<i-ep-edit />
+								</template>
+							</el-button>
+						</el-button-group>
+						<el-button-group size="small">
+							<!--s 在页面中定位 -->
+							<el-button
+								type="primary"
+								@click="toLocate(data)"
+								v-if="data.source.dom"
+								v-ripple>
 								<template #icon>
 									<i-material-symbols-location-on-outline />
 								</template>
 							</el-button>
-							<!-- 下载(图片类) -->
+							<!--s 下载(图片或视频类) -->
 							<el-button
 								v-if="
-									data.source.meta.type === 'image' ||
-									data.preview.meta.type === 'image'
+									(data.source.meta.type === 'image' ||
+										data.preview.meta.type === 'image' ||
+										data.source.meta.type === 'zip' ||
+										data.preview.meta.type === 'zip' ||
+										data.source.meta.type === 'video' ||
+										data.preview.meta.type === 'video') &&
+									showDownloadButton
 								"
-								:loading="downloading"
-								type="default"
-								@click="toDownload(data)"
+								:loading="data.loading"
+								type="success"
+								@click="emits('download', data.id)"
 								v-ripple>
 								<template #icon>
 									<i-material-symbols-download />
 								</template>
 							</el-button>
-							<!-- 打开(网址类) -->
+							<!--s 打开(网址类) -->
 							<el-button
 								v-if="data.source.meta.type === 'html'"
 								type="default"
@@ -65,135 +108,246 @@
 				</div>
 			</div>
 		</template>
-		<!-- 卡片主体(图片) -->
+		<!--s 卡片主体(图片) -->
 		<template #default>
 			<div
+				ref="imgWrapRef"
 				data-fancybox="web-img-collector"
 				:data-id="data.id"
 				:href="data.source.url"
 				:data-type="showType"
 				:data-preload="showType === 'iframe' ? false : true"
 				:data-thumb="data.preview.url"
+				:data-source-type="data.source.type"
+				:data-preview-type="data.preview.type"
 				:data-download-src="data.source.url">
-				<BaseImg
-					v-if="data.source.meta.type === 'image'"
-					:src="data.source.url"
-					use-thumb
-					viewport-selector=".web-img-collector-container .waterfall-wrapper"
-					:thumb="data.preview.url"
-					:init-width="data.preview.meta.width"
-					:init-height="data.preview.meta.height"
-					@loaded="handleCardLoaded(data, $event)"
-					:draggable="false"></BaseImg>
-				<BaseImg
-					v-else-if="
-						data.source.meta.type === 'html' &&
-						data.preview.meta.type === 'image'
-					"
-					viewport-selector=".web-img-collector-container .waterfall-wrapper"
-					:src="data.preview.url"
-					:init-width="data.preview.meta.width"
-					:init-height="data.preview.meta.height"
-					@loaded="handleCardLoaded(data, $event)"
-					:draggable="false"></BaseImg>
+				<template v-if="data.preview.meta.type === 'image'">
+					<!--s 纯图片类型 -->
+					<BaseImg
+						v-if="data.source.meta.type === 'image'"
+						:src="data.source.url"
+						:viewport-selector="viewportSelector"
+						use-thumb
+						:thumb="data.preview.url"
+						:init-width="data.preview.meta.width"
+						:init-height="data.preview.meta.height"
+						@loaded="emits('loaded', data.id, $event)"
+						:draggable="false" />
+					<!--s 网页类型(封面图片) -->
+					<BaseImg
+						v-else
+						:viewport-selector="viewportSelector"
+						:src="data.preview.url"
+						:init-width="data.preview.meta.width"
+						:init-height="data.preview.meta.height"
+						@loaded="emits('loaded', data.id, $event)"
+						:draggable="false" />
+				</template>
+				<template v-else-if="data.preview.meta.type === 'video'">
+					<!--s 纯视频类型 或 网页类型(封面视频or图片)-->
+					<BaseVideo
+						v-if="
+							data.source.meta.type === 'video' ||
+							data.source.meta.type === 'image' ||
+							data.source.meta.type === 'html'
+						"
+						muted
+						hover-play
+						hover-anew-start
+						loop
+						:show-controls="false"
+						:src="data.preview.url"
+						:viewport-selector="viewportSelector"
+						:init-width="data.preview.meta.width"
+						:init-height="data.preview.meta.height"
+						@loaded="emits('loaded', data.id, $event)" />
+				</template>
+				<!--s html的其他类型 -->
 				<BaseImg
 					v-else
 					src=""
 					:init-show="true"
-					@loaded="handleCardLoaded(data, $event)"
+					@loaded="emits('loaded', data.id, $event)"
 					:draggable="false">
-					<htmlTypeImg
+					<HtmlTypeImg
 						style="width: 100%; height: auto; transform: scale(0.5)" />
 				</BaseImg>
 			</div>
 		</template>
-		<!-- 卡片底部 -->
+		<!--s 卡片底部 -->
 		<template #footer>
-			<div class="gallery-card-footer">
-				<!-- 尺寸信息 -->
-				<var-chip
-					v-if="data.source.meta.type === 'image'"
-					type="primary"
-					size="mini"
-					:round="false">
-					{{ data.source.meta.width }}x{{ data.source.meta.height }}
-				</var-chip>
-				<!-- 扩展名信息 -->
-				<var-chip
-					v-if="!!data.source.meta.ext"
-					type="success"
-					size="mini"
-					:round="false">
-					{{ data.source.meta.ext }}
-				</var-chip>
-				<!-- 网页标签 -->
-				<var-chip
-					v-if="data.source.meta.type === 'html'"
-					type="info"
-					size="mini"
-					:round="false">
-					网页
-				</var-chip>
-				<!-- 描述标签 -->
-				<el-tooltip
-					:content="data.description.title.trim()"
-					placement="top-start">
-					<var-chip
-						class="title-chip"
-						type="primary"
-						size="mini"
-						:round="false">
-						{{ data.description.title.trim() }}
+			<div class="gallery-card-footer" align="center" :size="2">
+				<!--s 额外标签 -->
+				<div class="extra-tag-list">
+					<BaseLineOverFlowList
+						:list="tags"
+						model-to=".web-img-collector-top-container">
+						<template #default="{ item, openShowMore }">
+							<var-chip :key="item.id" size="mini" @click="openShowMore">
+								{{ (item as Tag).label }}
+							</var-chip>
+						</template>
+						<template #modal-title>
+							<div style="font-size: 12px; white-space: wrap">
+								{{ data.description.title }}
+							</div>
+						</template>
+						<template #modal-content>
+							<n-dynamic-tags
+								:value="data.tags"
+								type="info"
+								@change="handleTagsSave" />
+						</template>
+						<template #modal-footer>
+							<div>
+								<n-popconfirm
+									positive-text="确认"
+									negative-text="取消"
+									:to="false"
+									@positive-click="data.tags.splice(0)">
+									<template #trigger>
+										<n-button type="warning" size="tiny" @click.stop>
+											清空
+										</n-button>
+									</template>
+									<div>
+										<div style="color: red">确认清空？</div>
+										<div>此操作将无法撤回</div>
+									</div>
+								</n-popconfirm>
+							</div>
+						</template>
+					</BaseLineOverFlowList>
+				</div>
+				<div style="width: 100%; display: flex; gap: 4px">
+					<!--s 描述标签 -->
+					<var-chip class="title-tag" type="primary" size="mini">
+						<n-ellipsis>
+							{{ data.description.title.trim() }}
+						</n-ellipsis>
 					</var-chip>
-				</el-tooltip>
-				<!-- 文件大小信息 -->
-				<var-chip
-					v-if="!!data.source.blob && !!data.source.blob.size"
-					type="info"
-					size="mini"
-					:round="false">
-					{{ size }}
-				</var-chip>
+					<!--s 尺寸信息 -->
+					<var-chip
+						v-if="data.source.meta.type === 'image'"
+						type="info"
+						size="mini">
+						<n-ellipsis>
+							{{ data.source.meta.width }}x{{ data.source.meta.height }}
+						</n-ellipsis>
+					</var-chip>
+					<!--s 扩展名信息 -->
+					<var-chip v-if="!!data.source.meta.ext" type="default" size="mini">
+						<n-ellipsis>
+							{{ data.source.meta.ext }}
+						</n-ellipsis>
+					</var-chip>
+					<!--s 网页标签 -->
+					<var-chip
+						v-if="data.source.meta.type === 'html'"
+						type="warning"
+						size="mini">
+						网页
+					</var-chip>
+					<!--s 文件大小信息 -->
+					<var-chip
+						v-if="!!data.source.blob && !!data.source.blob.size"
+						type="success"
+						size="mini">
+						<n-ellipsis>
+							{{ size }}
+						</n-ellipsis>
+					</var-chip>
+				</div>
 			</div>
 		</template>
-	</BaseImgCard>
+	</BaseCard>
 </template>
 
 <script setup lang="ts">
-	import { computed, defineProps, withDefaults } from "vue";
+	import {
+		ref,
+		computed,
+		withDefaults,
+		// onMounted,
+		// onActivated,
+		// onDeactivated,
+	} from "vue";
 	import type { ComputedRef } from "vue";
-	import BaseImgCard from "@/components/base/base-img-card.vue";
+	import BaseCard from "@/components/base/base-card.vue";
 	import BaseImg from "@/components/base/base-img.vue";
+	import BaseVideo from "@/components/base/base-video.vue";
 	import BaseCheckbox from "@/components/base/base-checkbox.vue";
-	import type { BaseCard } from "@/stores/cardStore/interface";
+	import BaseLineOverFlowList from "@/components/base/base-line-overflow-list.vue";
+	import Card from "@/stores/CardStore/class/Card";
 	import type { returnInfo } from "@/components/base/base-img.vue";
+	import { GM_openInTab } from "$";
+	import { ElMessageBox } from "@/plugin/element-plus";
+	import { useElementVisibility } from "@vueuse/core";
 
 	// 导入公用TS库
-	import { byteAutoUnit, isMobile } from "@/utils/common";
+	import {
+		buildUUID,
+		byteAutoUnit,
+		isMobile,
+		legalizationPathString,
+	} from "@/utils/common";
 
 	// 导入svg
-	import htmlTypeImg from "@svg/html.svg";
+	import HtmlTypeImg from "@svg/html.svg";
 
 	// 导入仓库
-	import { useGlobalStore, useCardStore } from "@/stores";
-	import { ref } from "vue";
-	const globalStore = useGlobalStore();
-	const cardStore = useCardStore();
+	import useGlobalStore from "@/stores/GlobalStore";
 
-	// const data = defineModel({ type: Card, required: true });
-	const props = withDefaults(
+	const globalStore = useGlobalStore();
+
+	const imgWrapRef = ref<HTMLElement | null>(null);
+	//s 图片可见性
+	// const isVisible = useElementVisibility(imgWrapRef);
+
+	const data = defineModel("data", { type: Card, default: () => new Card() });
+	withDefaults(
 		defineProps<{
-			data: BaseCard;
+			// data: Card;
+			viewportSelector?: string;
+			showCheckBox?: boolean;
+			showDeleteButton?: boolean;
+			showDownloadButton?: boolean;
+			showFavoriteButton?: boolean;
+			showToLocateButton?: boolean;
 		}>(),
-		{}
+		{
+			showCheckBox: true,
+			showDeleteButton: true,
+			showDownloadButton: true,
+			showFavoriteButton: true,
+			showToLocateButton: true,
+		}
 	);
+
+	// onMounted(() => {
+	// 	console.log("卡片被挂载", props.data.id);
+	// });
+	// onActivated(() => {
+	// 	console.log("卡片被激活", props.data.id);
+	// });
+	// onDeactivated(() => {
+	// 	console.log("卡片被冻结", props.data.id);
+	// });
+
 	const emits = defineEmits<{
-		(e: "change:selected", val: boolean): void;
+		(e: "change:selected", val: boolean): Promise<void>; // 选中状态变化事件
+		(e: "change:title", id: string, val: string): Promise<void>; // 标题变化事件
+		(e: "toggle-favorite", val: boolean): Promise<void>; // 卡片收藏事件
+		(e: "loaded", id: string, info: returnInfo): Promise<void>; // 卡片加载成功事件
+		(e: "download", id: string): Promise<void>; // 下载事件
+		(e: "delete", id: string): Promise<void>; // 删除事件
+		(e: "change:visible", val: boolean): Promise<void>; // 可见性发生变化
+		(e: "save:tags", id: string, newTags: string[]): Promise<void>; // 卡片tags保存事件
 	}>();
 
-	// 大小
+	//j 大小
 	const size: ComputedRef<string> = computed(() => {
-		const byteSize = props.data.source.blob?.size;
+		const byteSize = data.value.source.blob?.size;
 		if (byteSize) {
 			return byteAutoUnit(byteSize);
 		} else {
@@ -201,86 +355,96 @@
 		}
 	});
 
+	interface Tag {
+		id: string;
+		label: string;
+	}
+	//j 标签
+	const tags = computed<Tag[]>(() => {
+		return data.value.tags.map((t) => {
+			return {
+				id: buildUUID(),
+				label: t,
+			};
+		});
+	});
+
 	// 定义Fancybox的默认类型
 	type FancyboxType =
 		| "image"
 		| "iframe"
 		| "youtube"
-		| "vimeo"
-		| "inline"
 		| "html"
 		| "ajax"
+		| "html5video"
 		| false;
-	// 计算默认类型
+	//j 计算默认类型
 	const showType: ComputedRef<FancyboxType> = computed(() => {
-		const { type: metaType } = props.data.source.meta;
+		const { type: metaType } = data.value.source.meta;
 		let type: FancyboxType = "image";
-		if (metaType && metaType === "html") {
+		if (!metaType) return type;
+		if (metaType === "html") {
 			type = "iframe";
+		} else if (metaType === "video") {
+			type = "html5video";
 		}
 		return type;
 	});
 
-	// 处理卡片加载完成的事件
-	function handleCardLoaded(item: Pick<BaseCard, "id">, info: returnInfo) {
-		// console.log(info);
-		// 仓库找到对应的数据
-		const index = cardStore.validCardList.findIndex((x) => x?.id === item.id);
-		if (index < 0) return;
-
-		const card = cardStore.validCardList[index];
-		// 刷新仓库对应卡片的preview.meta信息
-		card.preview.meta = { ...card.preview.meta, ...info.meta };
-		if (
-			card.preview.meta.width > card.source.meta.width &&
-			card.preview.meta.height > card.source.meta.height
-		) {
-			card.source.meta.width = card.preview.meta.width;
-			card.source.meta.height = card.preview.meta.height;
-			// 更新仓库的尺寸范围信息
-			cardStore.info.size.width[1] = Math.max(
-				cardStore.info.size.width[1],
-				card.source.meta.width
-			);
-			cardStore.info.size.height[1] = Math.max(
-				cardStore.info.size.height[1],
-				card.source.meta.height
-			);
-			// 同步更新仓库尺寸过滤器的最高值
-		}
-	}
-
-	// 页面定位元素
-	function toLocate(item: BaseCard) {
+	//f 页面定位元素
+	function toLocate(item: Card) {
+		const dom = item.source.dom;
+		if (!dom) return;
 		// console.log("定位元素", item);
-		(item.source.dom as HTMLElement).scrollIntoView({
+		dom.scrollIntoView({
 			behavior: "smooth",
 			inline: "center",
 			block: "center",
 		}); // 滚动到指定元素位置，平滑滚动，并居中显示。
 		globalStore.openWindow = false;
 	}
-	// 删除卡片
-	function toRemove(item: Pick<BaseCard, "id">) {
+	//f 重命名
+	function rename(item: Card) {
 		// 删除卡片数据模型中的卡片。
-		cardStore.removeCard([item.id!]); // 删除卡片数据模型中的卡片。
+		ElMessageBox.prompt(`重命名卡片"${item.description.title}"为……`, "重命名", {
+			appendTo: ".web-img-collector-notification-container",
+			confirmButtonText: "确认",
+			cancelButtonText: "取消",
+			inputPlaceholder: "请输入新卡片名称",
+			inputValue: legalizationPathString(item.description.title),
+			draggable: true,
+		})
+			.then(({ value: newName }) => {
+				// 确认
+				item.description.title = legalizationPathString(newName);
+				// 触发标题变化事件
+				emits("change:title", item.id!, item.description.title);
+			})
+			.catch(() => {
+				// 取消
+			});
 	}
-	// 下载
-	const downloading = ref(false);
-	async function toDownload(item: Pick<BaseCard, "id">) {
-		downloading.value = true;
-		console.log("下载", item);
-		await cardStore.downloadCards([item.id!]);
-		downloading.value = false;
-	}
-	// 打开网址
+
+	//f 打开网址
 	async function openUrl(url: string) {
-		window.open(url, "_blank");
+		GM_openInTab(url, { active: true, insert: true, setParent: true });
 	}
+
+	//f 处理卡片标签变化
+	const handleTagsSave = (newTags: string[]) => {
+		newTags = [...new Set(newTags)]; //s 去重
+		data.value.tags.splice(0);
+		data.value.tags.push(...newTags);
+		console.log("newTags", data.value.tags, newTags);
+		emits("save:tags", data.value.id, newTags);
+	};
 </script>
 
 <style lang="scss" scoped>
 	// 卡片顶部
+	:deep(.base-card-header) {
+		overflow: hidden;
+	}
 	.gallery-card-header {
 		position: relative;
 		display: flex;
@@ -324,7 +488,9 @@
 		transform: translateY(-150%);
 		transition: transform 0.2s;
 	}
-	.gallery-card[data-show="true"] .gallery-card-header-right,
+
+	.gallery-card[data-show="true"][data-visible="true"]
+		.gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);
 		transition: transform 0.2s;
@@ -338,6 +504,7 @@
 
 	.card-checkbox {
 		position: absolute;
+		display: flex;
 		// top: -2px;
 		// left: -2px;
 		transform: translate(-2px, -2px);
@@ -345,16 +512,16 @@
 	}
 
 	// 卡片底部
+	:deep(.base-card-footer) {
+		overflow: hidden;
+	}
 	.gallery-card-footer {
-		padding: 4px;
-		// margin: 2px;
 		display: flex;
 		flex-flow: row wrap;
 		overflow: hidden;
-		gap: 4px;
-		// background-color: wheat;
+		gap: 2px;
+		padding: 2px;
 
-		// transform: translateY(100%);
 		transition: transform 0.3s;
 
 		pointer-events: none;
@@ -362,25 +529,54 @@
 			pointer-events: auto;
 		}
 
+		//s 标签样式
 		:deep(.var-chip) {
-			justify-content: start;
-			max-width: 50%;
-			// overflow: hidden;
-			// text-overflow: ellipsis;
-			&.title-chip {
-				max-width: 25%;
+			flex-basis: content;
+			flex-grow: 0;
+			flex-shrink: 0.1;
+			box-sizing: border-box;
+			overflow: hidden;
+			text-overflow: ellipsis;
+
+			&.title-tag {
+				flex-grow: 0;
+				flex-shrink: 500;
+				min-width: 40px;
 			}
 			& > span {
+				box-sizing: border-box;
 				overflow: hidden;
 				text-overflow: ellipsis;
 				white-space: nowrap;
 				text-align: left;
 			}
 		}
+
+		//s 额外标签
+		.extra-tag-list {
+			flex: 1;
+			overflow: hidden;
+		}
 	}
 
-	.gallery-card[data-show="true"] .gallery-card-footer,
+	.gallery-card[data-show="true"][data-visible="true"] .gallery-card-footer,
 	.gallery-card:hover .gallery-card-footer {
 		transform: translateY(0);
+	}
+
+	// 进场过渡,退场过渡
+	.v-enter-from,
+	.v-leave-to {
+		position: absolute;
+		opacity: 0;
+	}
+
+	// 进入的过程中
+	.v-enter-active {
+		transition: 0.4s;
+	}
+	// 离开的过程中
+	.v-leave-active {
+		transition: 0.4s;
 	}
 </style>

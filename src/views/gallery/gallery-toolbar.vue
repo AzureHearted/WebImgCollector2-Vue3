@@ -1,6 +1,6 @@
 <template>
 	<div class="gallery-toolbar">
-		<!-- 进度条 -->
+		<!--j 进度条 -->
 		<el-progress
 			class="toolbar-loading"
 			striped
@@ -15,7 +15,7 @@
 				{{ loadingStore.percentage.toFixed(2) }}%
 			</span>
 		</el-progress>
-		<!-- 方案选择器 -->
+		<!--s 方案选择器 -->
 		<div class="pattern-select">
 			<n-select
 				v-model:value="patternStore.used.id"
@@ -24,28 +24,27 @@
 				:render-label="renderPatternSelectOptionsLabel"
 				:options="patternSelectOptions" />
 		</div>
-		<!-- 操作栏 -->
+		<!--s 操作栏 -->
 		<div class="control-group-button">
 			<!-- 控制按钮组 -->
-			<el-badge
-				:offset="[-8, 0]"
-				style="z-index: 3"
+			<n-badge
+				:offset="[-8, 2]"
 				type="info"
 				:max="999"
-				:hidden="!cardStore.validCardList.length"
-				:value="cardStore.validCardList.length">
+				:show="!!validCardList.length"
+				:value="validCardList.length">
 				<var-menu
 					placement="bottom-start"
-					:default-style="false"
+					:same-width="false"
 					:trigger="isMobile() ? 'click' : 'hover'"
+					close-on-click-reference
 					:teleport="false">
-					<var-button-group type="success">
-						<!-- 加载按钮 -->
+					<var-button-group type="primary">
+						<!--s 加载按钮 -->
 						<var-button
 							@click.stop="getCards"
 							:loading="loadingStore.loading"
-							block
-							icon-container>
+							block>
 							加载
 						</var-button>
 						<var-button style="padding: 0 4px">
@@ -56,53 +55,69 @@
 						</var-button>
 					</var-button-group>
 					<template #menu>
-						<var-button-group vertical>
-							<!-- 清空按钮 -->
-							<var-button type="danger" icon-container block @click="clear">
-								所有清空
-							</var-button>
-						</var-button-group>
+						<var-cell
+							@click="reload"
+							title="重新加载"
+							v-if="!loadingStore.loading"
+							ripple>
+							<template #icon>
+								<i-ant-design-reload-outlined />
+							</template>
+						</var-cell>
+						<var-cell @click="resetFilters" title="重置过滤器" ripple>
+							<template #icon>
+								<Icon
+									icon="material-symbols:reset-settings-rounded"
+									width="1.2em"
+									height="1.2em" />
+							</template>
+						</var-cell>
+						<var-cell
+							@click="clear"
+							title="清空所有"
+							v-if="!!validCardList.length && !loadingStore.loading"
+							ripple>
+							<template #icon>
+								<i-mdi-delete-empty style="color: red" />
+							</template>
+						</var-cell>
 					</template>
 				</var-menu>
-			</el-badge>
+			</n-badge>
 		</div>
-		<!-- 排序方式 -->
+		<!--s 排序方式 -->
 		<div class="sort-method-select">
 			<n-select
-				v-model:value="cardStore.sort.method"
+				v-model:value="sort.method"
 				placeholder="请选择一个排序方式"
 				:to="false"
-				:options="cardStore.sort.groups" />
+				:options="sort.groups" />
 		</div>
-		<!-- 选择器 -->
+		<!--s 选择器 -->
 		<div class="control-group-button">
-			<el-badge
-				:offset="[-118, 0]"
-				style="z-index: 2"
-				type="primary"
+			<n-badge
+				:offset="[-116, 2]"
+				type="success"
 				:max="999"
-				:hidden="!cardStore.filteredCardList.length"
-				:value="cardStore.filteredCardList.length">
+				:show="!!filterCardList[nowType].length"
+				:value="filterCardList[nowType].length">
 				<!-- 选择器按钮组 -->
 				<var-button-group class="control-button-group">
 					<var-button type="primary" @click="checkAll"> 全选 </var-button>
 					<var-button type="info" @click="inverseAll"> 反选 </var-button>
 					<var-button @click="cancel"> 取消 </var-button>
 				</var-button-group>
-			</el-badge>
+			</n-badge>
 		</div>
-		<!-- 下载控制 -->
+		<!--s 下载控制 -->
 		<div class="control-group-button">
-			<!-- 下载按钮 -->
-			<el-badge
-				type="success"
-				style="z-index: 2"
+			<n-badge
+				:offset="[0, 2]"
 				:max="999"
-				:hidden="!checkedCardList.length"
-				:value="`${checkedCardList.length} (${checkedTotalSize})`">
+				:show="!!checkedCardList.length"
+				:value="`${checkedCardList.length}${checkedTotalSizeTip}`">
 				<var-menu
 					placement="bottom-start"
-					:default-style="false"
 					:trigger="isMobile() ? 'click' : 'hover'"
 					:teleport="false">
 					<var-button-group type="primary">
@@ -112,7 +127,9 @@
 							下载
 						</var-button>
 						<var-button
-							:disabled="!cardStore.validCardList.length"
+							:disabled="
+								!filterCardList[nowType].length || loadingStore.loading
+							"
 							style="padding: 0 4px">
 							<i-material-symbols-arrow-drop-down-rounded
 								style="fill: white"
@@ -121,47 +138,75 @@
 						</var-button>
 					</var-button-group>
 					<template #menu>
-						<var-button-group vertical>
-							<var-button @click="downloadAll"> 全部下载 </var-button>
-							<var-button type="danger" @click="deleteSelected">
-								删除选中项
-							</var-button>
-						</var-button-group>
+						<var-cell title="全部下载" @click="downloadAll" ripple>
+							<template #icon>
+								<i-mdi-auto-download />
+							</template>
+						</var-cell>
+						<var-cell
+							title="删除选中项"
+							@click="deleteSelected"
+							v-if="!!selectionCardList[nowType].length"
+							ripple>
+							<template #icon>
+								<i-mdi-delete-sweep style="color: red" />
+							</template>
+						</var-cell>
+						<var-cell
+							title="收藏选中项"
+							@click="favoriteSelected"
+							v-if="!!selectionCardList[nowType].length"
+							ripple>
+							<template #icon>
+								<i-mdi-book-favorite style="color: purple" />
+							</template>
+						</var-cell>
+						<var-cell
+							title="批量添加标签"
+							@click="showTagEdit = true"
+							v-if="!!selectionCardList[nowType].length"
+							ripple>
+							<template #icon>
+								<i-mdi-tag-text style="color: purple" />
+							</template>
+						</var-cell>
 					</template>
 				</var-menu>
-			</el-badge>
+			</n-badge>
 		</div>
-		<!-- 过滤控制器 -->
+		<!--s 过滤控制器 -->
 		<div class="control-group">
-			<!-- 类型过滤器 -->
-			<div class="type-select">
-				<n-select
-					v-model:value="cardStore.filters.type"
-					placeholder="类型过滤"
-					multiple
-					clearable
-					:to="false"
-					:render-tag="renderTag"
-					:render-label="renderOptionLabelWithCount"
-					:options="cardStore.typeOptions"
-					max-tag-count="responsive" />
-			</div>
-			<!-- 扩展名过滤器 -->
+			<!--s 扩展名过滤器 -->
 			<div class="ext-select">
 				<n-select
-					v-model:value="cardStore.filters.extension"
+					v-model:value="storeFilters.extension"
 					placeholder="扩展名过滤"
 					multiple
 					clearable
 					:to="false"
 					:render-tag="renderTag"
 					:render-label="renderOptionLabelWithCount"
-					:options="cardStore.extensionOptions"
+					:options="extOptions"
 					max-tag-count="responsive" />
 			</div>
+			<!--s 关键词过滤 -->
+			<n-badge
+				:offset="[-4, 2]"
+				class="keyword-filter-input"
+				:value="filterCardList.all.length"
+				:max="999"
+				type="info">
+				<n-input
+					type="text"
+					v-model:value="filters.keyword"
+					placeholder="输入检索关键词"
+					clearable
+					@clear="handleKeywordFilter('')"
+					@keydown.enter="handleKeywordFilter()" />
+			</n-badge>
 		</div>
-		<!-- 尺寸过滤器 -->
-		<div class="size-filter">
+		<!--s 尺寸过滤器 -->
+		<div v-if="nowType === 'image' || nowType === 'video'" class="size-filter">
 			<!-- 宽度过滤器 -->
 			<div class="width-filter">
 				<el-text type="primary">宽度</el-text>
@@ -170,9 +215,9 @@
 					v-model="filters.size.width"
 					range
 					:step="1"
-					:max="cardStore.info.size.width[1]"
-					:min="cardStore.info.size.width[0]"
-					:marks="cardStore.filters.size.marks"
+					:min="sizeRange.width[0]"
+					:max="sizeRange.width[1]"
+					:marks="storeFilters.size.marks"
 					@change="filterChange('width', $event as [number, number])" />
 			</div>
 			<!-- 高度过滤器 -->
@@ -183,52 +228,78 @@
 					v-model="filters.size.height"
 					range
 					:step="1"
-					:max="cardStore.info.size.height[1]"
-					:min="cardStore.info.size.height[0]"
-					:marks="cardStore.filters.size.marks"
+					:min="sizeRange.height[0]"
+					:max="sizeRange.height[1]"
+					:marks="storeFilters.size.marks"
 					@change="filterChange('height', $event as [number, number])" />
 			</div>
 		</div>
+		<!--s Tag编辑器  -->
+		<TagEdit
+			:title="`批量添加标签(${selectionCardList[nowType].length}个卡片)`"
+			v-model:show="showTagEdit"
+			@on-save="batchAddTag">
+		</TagEdit>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { h, ref, reactive, computed, watch } from "vue";
 	import type { VNodeChild } from "vue";
-	import { NEllipsis, NTag } from "naive-ui";
+	import { NEllipsis, NTag, NBadge } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
 	import type { ComputedRef } from "vue";
-	import type { BaseCard } from "@/stores/cardStore/interface";
+	import type { BaseCard } from "@/stores/CardStore/interface";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
 	import BaseImg from "@/components/base/base-img.vue";
+	import TagEdit from "./tag-edit.vue";
+	import { Icon } from "@iconify/vue";
 
 	// 导入公用ts库
 	import { byteAutoUnit, isMobile } from "@/utils/common";
 
 	// 导入仓库
-	import { useCardStore, useLoadingStore, usePatternStore } from "@/stores";
-	import { Pattern } from "@/stores/patternStore/class/Pattern";
+	import { storeToRefs } from "pinia";
+	import useLoadingStore from "@/stores/LoadingStore";
+	import usePatternStore from "@/stores/PatternStore";
+	import useCardStore from "@/stores/CardStore";
+	import useFavoriteStore from "@/stores/FavoriteStore";
+	import type Card from "@/stores/CardStore/class/Card";
 
 	const cardStore = useCardStore();
+	const {
+		sort,
+		sizeRange,
+		filterCardList,
+		validCardList,
+		selectionCardList,
+		// typeOptions,
+		extensionOptions: extOptions,
+		filters: storeFilters,
+		nowType,
+	} = storeToRefs(cardStore);
+	const favoriteStore = useFavoriteStore();
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
 
-	// 过滤器定义
+	//s 过滤器定义
 	const filters = reactive({
+		keyword: "",
 		size: {
-			width: ref([
-				cardStore.filters.size.width[0],
-				cardStore.filters.size.width[1],
-			]),
-			height: ref([
-				cardStore.filters.size.height[0],
-				cardStore.filters.size.height[1],
-			]),
+			width: [
+				storeFilters.value.size.width[0],
+				storeFilters.value.size.width[1],
+			],
+			height: [
+				storeFilters.value.size.height[0],
+				storeFilters.value.size.height[1],
+			],
 		},
 	});
 
 	// 监听card仓库卡片尺寸最大值变化
 	watch(
-		() => [cardStore.info.size.width[1], cardStore.info.size.height[1]],
+		() => [cardStore.sizeRange.width[1], cardStore.sizeRange.height[1]],
 		([width, height]) => {
 			// console.log("过滤器变化", width, height);
 			// 更新组件过滤器最大值
@@ -242,18 +313,30 @@
 	);
 
 	// 被选中的卡片
-	const checkedCardList: ComputedRef<BaseCard[]> = computed(() => {
-		return cardStore.validCardList.filter((x) => x.isSelected);
+	const checkedCardList: ComputedRef<Card[]> = computed(() => {
+		return filterCardList.value[nowType.value].filter((x) => x.isSelected);
 	});
 
 	// 计算被选中的卡片对应的体积大小总和
-	const checkedTotalSize: ComputedRef<string> = computed(() => {
-		const totalByte = checkedCardList.value.reduce(
-			(total, curr) =>
-				total + (curr.source.blob! && curr.source.blob.size) || 0,
-			0
-		);
-		return byteAutoUnit(totalByte);
+	const checkedTotalSizeTip: ComputedRef = computed(() => {
+		let existUnDownload = false; // 标记是否存在为下载的卡片
+		// 先计算尺寸大小
+		const totalByte = checkedCardList.value.reduce((total, curr) => {
+			if (curr.source.blob) {
+				return total + curr.source.blob.size;
+			} else {
+				existUnDownload = true;
+				return total;
+			}
+		}, 0);
+		// 合成显示文本
+		if (totalByte) {
+			return ` (${byteAutoUnit(totalByte)})${
+				existUnDownload ? " 存在未下载" : ""
+			}`;
+		} else {
+			return "";
+		}
 	});
 
 	// f控制相关
@@ -268,7 +351,8 @@
 			} as SelectOption;
 		});
 	});
-	// 方案选项标签渲染函数
+
+	//f 方案选项标签渲染函数
 	const renderPatternSelectOptionsLabel = (
 		option: SelectOption
 	): VNodeChild => {
@@ -286,14 +370,26 @@
 					: null,
 				h(
 					NEllipsis,
-					{ style: "user-select: none;" },
+					{
+						style: {
+							userSelect: "none",
+							//s 这里如果判断选项对应的方案与当前站点匹配则字体显示为红色
+							color:
+								!(option.rowData as Pattern).id.includes("#") &&
+								(option.rowData as Pattern).mainInfo.matchHost.some((host) => {
+									return new RegExp(`${host}`).test(location.origin);
+								})
+									? "red"
+									: null,
+						},
+					},
 					{ default: () => option.label as string }
 				),
 			]
 		);
 	};
 
-	// 选择器多选Tag渲染函数
+	//f 选择器多选Tag渲染函数
 	const renderTag: SelectRenderTag = ({ option, handleClose }) => {
 		return h(
 			NTag,
@@ -312,7 +408,7 @@
 		);
 	};
 
-	// 带数量的选项标签渲染函数
+	//f 带数量的选项标签渲染函数
 	const renderOptionLabelWithCount = (option: SelectOption): VNodeChild => {
 		return h(
 			"div",
@@ -322,72 +418,114 @@
 			[
 				h(NEllipsis, {}, { default: () => option.label as string }),
 				h(
-					NTag,
+					NBadge,
 					{
 						type: "info",
-						size: "small",
+						max: 999,
 						style: "margin-left:auto;",
 					},
-					{ default: () => option.count + "个" }
+					{
+						value: () =>
+							(option.count as number) <= 999 ? option.count : "999+" + "个",
+					}
 				),
 			]
 		);
 	};
 
-	// 获取卡片
+	//f 获取卡片
 	async function getCards() {
 		await cardStore.getPageCard();
 	}
 
-	// 过滤器改变
+	//f 重新加载
+	async function reload() {
+		await clear(); // 先清空
+		await getCards(); // 后重载
+	}
+
+	//f 清空
+	async function clear() {
+		await cardStore.clearCardList();
+		filters.size.width = storeFilters.value.size.width;
+		filters.size.height = storeFilters.value.size.height;
+	}
+
+	//f 过滤器改变
 	function filterChange(key: "width" | "height", value: [number, number]) {
 		// console.log("过滤器变化", key, value);
-		cardStore.filters.size[key] = value; // 更新仓库过滤器
+		storeFilters.value.size[key] = value; // 更新仓库过滤器
 	}
 
-	// 全选
+	//f 处理关键词过滤(回车或点击搜索按钮触发)
+	const handleKeywordFilter = (value?: string) => {
+		const keyword = value !== undefined ? value : filters.keyword;
+		console.log("触发关键词过滤", keyword);
+		storeFilters.value.keyword = keyword;
+	};
+
+	//f 全选
 	function checkAll() {
-		cardStore.filteredCardList.forEach((c) => (c.isSelected = true));
+		filterCardList.value[nowType.value].forEach((c) => (c.isSelected = true));
 	}
 
-	// 反选
+	//f 反选
 	function inverseAll() {
-		cardStore.filteredCardList.forEach((c) => (c.isSelected = !c.isSelected));
+		filterCardList.value[nowType.value].forEach(
+			(c) => (c.isSelected = !c.isSelected)
+		);
 	}
 
-	// 取消
+	//f 取消
 	function cancel() {
-		cardStore.validCardList.forEach((c) => (c.isSelected = false));
+		filterCardList.value[nowType.value].forEach((c) => (c.isSelected = false));
 	}
 
-	// 清空
-	function clear() {
-		cardStore.clearCardList();
-		filters.size.width = cardStore.filters.size.width;
-		filters.size.height = cardStore.filters.size.height;
+	//f 重置过滤器
+	function resetFilters() {
+		cardStore.resetFilters();
+		filters.size.width = storeFilters.value.size.width;
+		filters.size.height = storeFilters.value.size.height;
 	}
 
-	// 下载选中项
+	//f 下载选中项
 	function downloadSelected() {
-		const ids = cardStore.validCardList
-			.filter((x) => x.isSelected)
-			.map((x) => x.id);
-		cardStore.downloadCards(ids);
+		const cards =
+			filterCardList.value[nowType.value].filter((x) => x.isSelected) || [];
+		cardStore.downloadCards(cards);
 	}
 
-	// 下载全部
+	//f 下载全部
 	function downloadAll() {
-		const ids = cardStore.filteredCardList.map((x) => x.id);
-		cardStore.downloadCards(ids);
+		const cards = filterCardList.value[nowType.value] || [];
+		cardStore.downloadCards(cards);
 	}
 
-	// 删除选中项
+	//f 删除选中项
 	function deleteSelected() {
-		const ids = cardStore.validCardList
+		const ids = filterCardList.value[nowType.value]
 			.filter((x) => x.isSelected)
 			.map((x) => x.id);
 		cardStore.removeCard(ids);
 	}
+
+	//f 收藏选中项
+	function favoriteSelected() {
+		favoriteStore.addCard(selectionCardList.value[nowType.value]); // 添加卡片到Favorite仓库
+		selectionCardList.value[nowType.value].forEach(
+			(c) => (c.isFavorite = true)
+		); // 更新卡片收藏状态
+	}
+
+	//TODO 等待实现  批量添加标签
+	const showTagEdit = ref(false);
+	//f 批量添加标签
+	const batchAddTag = (tags: string[]) => {
+		console.log("批量添加标签,等待实现……", tags);
+		selectionCardList.value[nowType.value].forEach((c) => {
+			c.tags = [...new Set([...c.tags, ...tags])];
+		});
+	};
 </script>
 
 <style lang="scss" scoped>
@@ -454,10 +592,14 @@
 		gap: 2px;
 	}
 
+	// 关键词过滤器
+	.keyword-filter-input {
+		width: 180px;
+	}
 	// 类型、扩展名选择器样式
 	.type-select,
 	.ext-select {
-		width: 150px;
+		width: 130px;
 	}
 
 	// 尺寸过滤器样式
@@ -472,7 +614,7 @@
 		.height-filter {
 			flex: 1 0;
 			min-width: 200px;
-			max-width: 400px;
+			max-width: 250px;
 			display: flex;
 			flex-flow: row nowrap;
 			padding-right: 10px;
@@ -491,8 +633,14 @@
 	:deep(.wic2-badge) {
 		display: block;
 	}
+	:deep(.wic2-n-badge-sup) {
+		z-index: 5;
+	}
 
 	:deep(.wic2-n-base-select-option__content) {
 		flex: 1;
+	}
+	:deep(.var-menu__menu) {
+		width: max-content;
 	}
 </style>

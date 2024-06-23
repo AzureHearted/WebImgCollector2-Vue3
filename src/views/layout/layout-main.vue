@@ -8,9 +8,18 @@
 				width="130"
 				:collapsed="collapsed"
 				show-trigger
-				trigger-style="transition: 0.5s;z-index:10000"
+				:trigger-style="{
+					transition: '0.5s',
+					zIndex: 10000,
+					scale: isMobile() ? 1.5 : 1,
+				}"
 				:collapsed-trigger-style="
-					isMobile() ? 'transform: translateX(80%) translateY(-50%)' : {}
+					isMobile()
+						? {
+								transform: ' translateX(60%) translateY(-50%) ',
+								scale: 1.5,
+						  }
+						: {}
 				"
 				@collapse="collapsed = true"
 				@expand="collapsed = false">
@@ -24,11 +33,9 @@
 					:options="menuOptions" />
 			</n-layout-sider>
 			<n-layout class="main__content">
-				<transition appear>
-					<keep-alive :include="/gallery|pattern|setting/i" :max="10">
-						<component :is="nowPage" />
-					</keep-alive>
-				</transition>
+				<keep-alive :include="/gallery|pattern|favorite|setting/i">
+					<component :is="nowPage" />
+				</keep-alive>
 			</n-layout>
 		</n-layout>
 	</div>
@@ -44,11 +51,12 @@
 	import Gallery from "@/views/gallery/gallery-index.vue";
 	import PatternEdit from "@/views/pattern-edit/pattern-edit-index.vue";
 	import Setting from "@/views/setting/setting-index.vue";
+	import Favorite from "@/views/favorite/favorite-index.vue";
 	import Test from "@/views/test/test-index.vue";
+	import { isMobile } from "@/utils/common";
 
 	import { storeToRefs } from "pinia";
-	import { useGlobalStore } from "@/stores";
-	import { isMobile } from "@/utils/common";
+	import useGlobalStore from "@/stores/GlobalStore";
 	const globalStore = useGlobalStore();
 	const { tab: activeKey, navCollapse: collapsed } = storeToRefs(globalStore);
 
@@ -56,8 +64,9 @@
 	const views: { [key: string]: Component } = {
 		Gallery,
 		PatternEdit,
-		Test,
+		Favorite,
 		Setting,
+		Test,
 	};
 	// 动态组件
 	const nowPage = computed(() => {
@@ -77,10 +86,16 @@
 			icon: renderIcon("material-symbols:box-edit"),
 		},
 		{
+			label: "收藏",
+			key: "Favorite",
+			icon: renderIcon("mdi:favorite"),
+		},
+		{
 			label: "设置",
 			key: "Setting",
 			icon: renderIcon("ant-design:setting-twotone"),
 		},
+
 		{
 			label: "测试页面",
 			key: "Test",

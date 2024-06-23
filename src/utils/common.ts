@@ -138,7 +138,7 @@ export async function getPicMetaByBlob(blob: Blob) {
 		const reader = new FileReader();
 		if (blob) {
 			reader.readAsDataURL(blob);
-			reader.onload = (theFile) => {
+			reader.onload = () => {
 				const image = new Image();
 				image.src = (reader.result as string) || "";
 				image.onload = () => {
@@ -194,7 +194,7 @@ export async function getPicMetaByImage(url: string) {
 		};
 		return errMeta;
 	}
-	return await new Promise((resolve, reject) => {
+	return await new Promise((resolve) => {
 		const img = new Image();
 		img.src = url;
 		if (img.complete) {
@@ -349,22 +349,116 @@ export function GM_storage(
 	}
 }
 
-// 监控window.open方法(可能会被站点篡改, 在其被篡改时阻止)
-export function monitorWindowOpen() {
-	console.log("window.open 保护器开启");
-	const iframe = document.createElement("iframe");
-	iframe.style.display = "none";
-	document.body.appendChild(iframe);
-	const originalWindowOpen = iframe.contentWindow?.open;
+//f 合法化路径字符串
+export function legalizationPathString(str: string) {
+	return decodeURI(str)
+		.replace("*", "×")
+		.replace("/", "／")
+		.replace("⁄", "／")
+		.replace("\\", "＼")
+		.replace("|", "︱")
+		.replace(":", "：")
+		.replace("?", "？")
+		.replace('"', "＂")
+		.replace("<", "＜")
+		.replace(">", "＞")
+		.replace("$", "＄");
+}
 
-	Object.defineProperty(window, "open", {
-		set(value) {
-			console.log("成功阻止 window.open 方法被篡改", value);
-			return;
-		},
-		get() {
-			console.log("正在:读取/使用 window.open");
-			return originalWindowOpen;
-		},
-	});
+//f 判断两个URL字符串是否相等(可选择是否包含search查询部分)
+export function isEqualUrl(
+	url1: string,
+	url2: string,
+	option?: {
+		/**是否排除查询字符串(默认值:false) */
+		excludeSearch?: boolean;
+	}
+) {
+	const { excludeSearch: includeSearch } = {
+		...({ includeSearch: false } as { includeSearch: boolean }), //s 默认配置对象
+		...option, //s 用户传入的配置对象
+	};
+	//s 判断是否需要判断查询字符串
+	if (includeSearch) {
+		let oURL1: URL | false = false,
+			oURL2: URL | false = false;
+
+		// 分别尝试转换两个url字符串未URL对象
+		try {
+			oURL1 = new URL(url1);
+		} catch (error) {
+			console.log(`url字符串：${url1} 转换为URL对象失败!`, error);
+		}
+		try {
+			oURL2 = new URL(url2);
+		} catch (error) {
+			console.log(`url字符串：${url2} 转换为URL对象失败!`, error);
+		}
+
+		// 判断是否两个url字符串都是合法url
+		if (oURL1 instanceof URL && oURL2 instanceof URL) {
+			// 如果两个URL都合法
+			return oURL1.origin + oURL1.pathname === oURL2.origin + oURL2.pathname;
+		} else {
+			// 如果两个URL有不合法URL对象(直接比较两个字符串结果是否相同)
+			return url1 === url2;
+		}
+	} else {
+		// 如果不需要判断查询字符串就直接比较两个字符串是否相等
+		return url1 === url2;
+	}
+}
+
+//f 防抖函数
+export function debounce(func: Function, delay = 500) {
+	// 声明全局变量timeout
+	let timeout: number;
+	// 返回一个函数(通过解构的方式将所有变量传给args)
+	return function (...args: any[]) {
+		// 清除超时
+		clearTimeout(timeout);
+		// 设置超时
+		timeout = window.setTimeout(() => {
+			// 调用函数
+			func(args);
+		}, delay);
+	};
+}
+
+//f 节流函数
+export function throttle(func: Function, wait = 500) {
+	// 声明全局变量timeout
+	let timeout: number | null;
+	// 返回一个函数(通过解构的方式将所有变量传给args)
+	return function (...args: any) {
+		// 如果定时器为null才执行
+		if (!timeout) {
+			// 设置定时器
+			timeout = window.setTimeout(function () {
+				timeout = null;
+				func(args);
+			}, wait);
+		}
+	};
+}
+
+//f 元素盒模型相关尺寸获取
+export function getDOMBoxValue(
+	element: HTMLElement,
+	property:
+		| "padding-top"
+		| "padding-right"
+		| "padding-bottom"
+		| "padding-left"
+		| "margin-top"
+		| "margin-right"
+		| "margin-bottom"
+		| "margin-left"
+		| "border-top-width"
+		| "border-right-width"
+		| "border-bottom-width"
+		| "border-left-width"
+) {
+	const computedStyle = window.getComputedStyle(element);
+	return parseInt(computedStyle.getPropertyValue(property as string), 10);
 }

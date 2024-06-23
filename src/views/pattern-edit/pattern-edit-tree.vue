@@ -27,7 +27,7 @@
 			</el-input>
 		</el-card>
 		<div class="pattern-tree__tree">
-			<BaseScrollbar :show-bakctop-button="false">
+			<BaseScrollbar :show-back-top-button="false">
 				<el-tree
 					ref="treeRef"
 					:data="treeData"
@@ -119,18 +119,19 @@
 <script setup lang="ts">
 	import { ref, watch, computed } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
-	import { storeToRefs } from "pinia";
+	import BaseImg from "@/components/base/base-img.vue";
 	import type { ElTree } from "element-plus";
 	import type Node from "element-plus/es/components/tree/src/model/node";
-	import type { DragEvents } from "element-plus/es/components/tree/src/model/useDragNode";
+	// import type { DragEvents } from "element-plus/es/components/tree/src/model/useDragNode";
 	import type {
 		AllowDropType,
 		NodeDropType,
 	} from "element-plus/es/components/tree/src/tree.type";
-	import BaseImg from "@/components/base/base-img.vue";
-	import { usePatternStore } from "@/stores";
-	import { Pattern } from "@/stores/patternStore/class/Pattern";
-	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
+
+	import { storeToRefs } from "pinia";
+	import usePatternStore from "@/stores/PatternStore";
 
 	const patternStore = usePatternStore();
 	const { createPattern, deletePattern, findPattern, pastePattern } =
@@ -240,8 +241,8 @@
 	const handleDrop = (
 		draggingNode: Node,
 		dropNode: Node,
-		dropType: NodeDropType,
-		ev: DragEvents
+		dropType: NodeDropType
+		// ev: DragEvents
 	) => {
 		if (dropType === "none") return;
 		// 将"规则"拖拽到指定"方案"中

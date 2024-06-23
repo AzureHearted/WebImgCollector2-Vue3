@@ -17,6 +17,7 @@ export interface PatternRowData {
 export interface BaseMainInfo {
 	name: string; //s 规则名称
 	host: string; //s 域名
+	matchHost:string[]; //s 匹配域名列表
 	// 路径过滤器
 	filter: Pick<BaseRegex, "expression" | "flags">;
 	icon: string; //s 站点图标链接

@@ -1,4 +1,4 @@
-import { ref, toRefs, reactive, computed } from "vue";
+import { ref, reactive, computed } from "vue";
 import type { ComputedRef } from "vue";
 import { defineStore } from "pinia";
 import { Pattern, defaultPattern } from "./class/Pattern";
@@ -9,29 +9,26 @@ import {
 } from "./utils/handle-user-data";
 import { ElNotification } from "@/plugin/element-plus";
 
-// import { GM_getValue, GM_setValue } from "$";
-
-export default defineStore("patternStore", () => {
-	// console.log("用户方案列表：", userPatternList);
-	// 方案列表
+export default defineStore("PatternStore", () => {
+	//s 方案列表
 	const list = ref<Pattern[]>([defaultPattern]);
-	// 获取用户方案信息
+	//f 获取用户方案信息
 	function getUserPatternInfo() {
 		list.value = [defaultPattern];
 		// 用户方案数据
 		const userPatternList: Pattern[] = getUserPatternList();
 		console.log(
 			"%c[日志]%cWebImgCollector2:",
-			"color: #800080; background: #FFFF00; font-size: 14px;font-weight: bold; padding: 0 5px;",
+			"color: #800081; background: #FFFF00; font-size: 14px;font-weight: bold; padding: 0 5px;",
 			"color: #00FF00; font-size: 14px; padding: 0 5px;margin:5px",
 			"读取用户方案",
 			userPatternList
 		);
 		list.value.push(...userPatternList);
 	}
-	// 保存(设置)用户方案信息
+	//f 保存(设置)用户方案信息
 	function saveUserPatternInfo() {
-		// 使用备份数据进行存储
+		//s 使用备份数据进行存储
 		const rowDataList = list.value
 			.slice(1)
 			.map((p) => p.getRowData({ type: "backup" }));
@@ -50,18 +47,19 @@ export default defineStore("patternStore", () => {
 		id: "#",
 	});
 
-	// 获取初始方案id
+	//f 获取初始方案id
 	function setInitPattern() {
 		let targetPattern: Pattern | null = null;
 
 		const matchedPatterns: Pattern[] = list.value.filter((p) => {
 			if (p.id.includes("#")) return false;
-			// 先过滤域名
-			return new RegExp(`${p.mainInfo.host}`).test(location.origin);
+			//s 先过滤域名
+			return p.mainInfo.matchHost.some((host) => {
+				return new RegExp(`${host}`).test(location.origin);
+			});
 		});
-		// console.log("matchedPatterns", matchedPatterns, matchedPatterns.length);
 		if (matchedPatterns.length) {
-			// 路径过滤
+			//s 在路径过滤
 			for (let i = 0; i < matchedPatterns.length; i++) {
 				const pattern = matchedPatterns[i];
 
@@ -105,6 +103,10 @@ export default defineStore("patternStore", () => {
 		console.log("初始方案", targetPattern);
 		if (targetPattern) {
 			used.id = targetPattern.id;
+			editing.pid = targetPattern.id;
+			if (targetPattern.rules.length) {
+				editing.rid = targetPattern.rules[0].id;
+			}
 			// return targetPattern.id;
 			//? 初始化filter
 			// initFilter(targetPattern);
@@ -115,12 +117,12 @@ export default defineStore("patternStore", () => {
 		}
 	}
 
-	// 当前方案信息
+	//s 当前方案信息
 	const current = reactive({
 		id: "#",
 	});
 
-	// 当前编辑中的方案信息
+	//s 当前编辑中的方案信息
 	const editing = reactive({
 		pid: "#", // 方案id
 		rid: "", // 规则id (默认为空)

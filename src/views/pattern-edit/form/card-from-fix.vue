@@ -122,9 +122,9 @@
 </template>
 
 <script setup lang="ts">
-	import { computed, defineProps, defineModel, withDefaults } from "vue";
-	import { Rule } from "@/stores/patternStore/class/Rule";
-	import type { BaseFix } from "@/stores/patternStore/interface/Pattern";
+	import { computed, defineModel, withDefaults } from "vue";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
+	import type { BaseFix } from "@/stores/PatternStore/interface/Pattern";
 
 	const rule = defineModel("rule", { type: Rule, required: true });
 	const props = withDefaults(

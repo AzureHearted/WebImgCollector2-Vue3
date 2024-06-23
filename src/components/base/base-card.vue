@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 	// 导入必要的类型和组件
-	import { defineProps, defineEmits, withDefaults, computed } from "vue";
+	import { withDefaults, computed } from "vue";
 	import type { CSSProperties } from "vue";
 	import BaseImg from "./base-img.vue";
 
@@ -32,8 +32,8 @@
 	// 定义props
 	const props = withDefaults(
 		defineProps<{
-			data: any;
-			imgUrl: string; // 图片地址，必传参数，用于显示图片
+			data?: any;
+			imgUrl?: string; // 图片地址，必传参数，用于显示图片
 			useThumb?: boolean; // 是否使用缩略图，可选参数，默认false
 			imgThumb?: string; // 图片缩略图地址，可选参数，用于预加载图片
 			backgroundColor?: string; // 卡片背景颜色，可选参数，默认白色
@@ -68,6 +68,7 @@
 <style lang="scss" scoped>
 	// 容器基础样式
 	.img-card-container {
+		box-sizing: border-box;
 		position: relative; // 设置相对定位，以便于其他内容可以定位到图片上。
 		display: flex;
 		flex-flow: column;
@@ -84,8 +85,10 @@
 		box-shadow: 0 0 10px 0 rgba(0, 0, 0, 1); // 阴影效果，根据需要自行调整。
 	}
 	.base-card-header {
+		box-sizing: border-box;
 		position: relative;
 		z-index: 1;
+		overflow: hidden;
 
 		pointer-events: none;
 		* {
@@ -100,14 +103,15 @@
 		}
 	}
 	.base-card-footer {
-		position: relative;
-
+		box-sizing: border-box;
+		overflow: hidden;
 		pointer-events: none;
 		* {
 			pointer-events: auto;
 		}
 
 		&[data-layout="absolute"] {
+			box-sizing: border-box;
 			position: absolute;
 			bottom: 0;
 			left: 0;

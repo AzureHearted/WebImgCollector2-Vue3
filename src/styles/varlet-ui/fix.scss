@@ -20,3 +20,28 @@
 		margin: unset;
 	}
 }
+
+// .var-checkbox__icon {
+// 	display: block !important;
+// }
+
+.var-button__loading {
+	overflow: hidden;
+}
+
+.var-select__chip {
+	margin: 0 !important;
+}
+
+div[data-v-app]:has(.var-transition-group .var-snackbar) {
+	position: relative;
+	z-index: 2147483647;
+}
+
+svg {
+	vertical-align: initial;
+}
+
+body {
+	line-height: initial;
+}

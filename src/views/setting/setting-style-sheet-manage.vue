@@ -1,106 +1,88 @@
 <template>
 	<div class="style-sheet-manage__container">
 		<!-- 获取当前页面样式表 -->
-		<n-config-provider
-			:hljs="hljs"
-			namespace="wic2-n"
-			cls-prefix="wic2-n"
-			abstract>
-			<n-card embedded class="style-sheet-manage__toolbar">
-				<n-flex :size="8" align="center">
-					<n-button type="primary" @click="getStyleSheets">
-						获取页面样式表
-					</n-button>
-					<n-badge
-						:value="filteredStyleSheetList.length"
-						:max="999"
-						type="info">
-						<n-switch
-							v-model:value="filterThisScriptStyle"
-							@change="getStyleSheets">
-							<template #checked> 已过滤当前脚本样式 </template>
-							<template #unchecked> 未过滤当前脚本样式 </template>
-						</n-switch>
-					</n-badge>
-
-					<n-form-item :show-label="false" :show-feedback="false">
-						<n-input
-							v-model:value="keyword"
-							type="text"
-							placeholder="关键词检索"
-							clearable />
-					</n-form-item>
-				</n-flex>
-			</n-card>
-			<n-collapse accordion>
-				<transition-group name="fade">
-					<n-collapse-item
-						v-for="item in filteredStyleSheetList"
-						:key="item.index">
-						<template #header>
-							<n-flex :size="8" align="center">
-								<span>
-									{{ item.index }}
-								</span>
-								<n-flex vertical :size="4">
-									<div v-for="key in Object.keys(item.attributes)" :key="key">
-										<n-tag type="info">{{ key }}:</n-tag>
-										{{ item.attributes[key] }}
-									</div>
-								</n-flex>
+		<n-card embedded class="style-sheet-manage__toolbar">
+			<n-flex :size="8" align="center">
+				<n-button type="primary" @click="getStyleSheets">
+					获取页面样式表
+				</n-button>
+				<n-badge :value="filteredStyleSheetList.length" :max="999" type="info">
+					<n-switch
+						v-model:value="filterThisScriptStyle"
+						@update:value="getStyleSheets">
+						<template #checked> 已过滤当前脚本样式 </template>
+						<template #unchecked> 未过滤当前脚本样式 </template>
+					</n-switch>
+				</n-badge>
+				<n-form-item :show-label="false" :show-feedback="false">
+					<n-input
+						v-model:value="keyword"
+						type="text"
+						placeholder="关键词检索"
+						clearable />
+				</n-form-item>
+			</n-flex>
+		</n-card>
+		<n-collapse accordion>
+			<transition-group name="fade">
+				<n-collapse-item
+					v-for="item in filteredStyleSheetList"
+					:key="item.index">
+					<template #header>
+						<n-flex :size="8" align="center">
+							<span>
+								{{ item.index }}
+							</span>
+							<n-flex vertical :size="4">
+								<div v-for="key in Object.keys(item.attributes)" :key="key">
+									<n-tag type="info">{{ key }}:</n-tag>
+									{{ item.attributes[key] }}
+								</div>
 							</n-flex>
-						</template>
-						<template #header-extra>
-							<n-flex :size="8" align="center" @click.stop>
-								<n-button
-									type="error"
-									@click="styleSheetList.splice(item.index, 1)">
-									删除
-								</n-button>
-								<n-switch
-									v-model:value="item.disabled"
-									:checked-value="false"
-									:unchecked-value="true"
-									:rail-style="railStyle"
-									@change="getStyleSheets">
-									<template #checked> 已启用 </template>
-									<template #unchecked> 已禁用 </template>
-								</n-switch>
-								<n-tag :type="item.dom?.tagName === 'STYLE' ? 'info' : 'error'">
-									{{ item.dom?.tagName.toLocaleLowerCase() }}
-								</n-tag>
-							</n-flex>
-						</template>
-						<div v-if="item.dom?.tagName === 'STYLE'">
-							<div v-for="(rule, rIndex) in item.cssRules" :key="rIndex">
-								{{ (rule as CSSStyleRule).selectorText }}
-							</div>
-							<n-code
-								:code="item.dom.textContent || ''"
-								language="css"
-								show-line-numbers />
+						</n-flex>
+					</template>
+					<template #header-extra>
+						<n-flex :size="8" align="center" @click.stop>
+							<n-button
+								type="error"
+								@click="styleSheetList.splice(item.index, 1)">
+								删除
+							</n-button>
+							<n-switch
+								v-model:value="item.disabled"
+								:checked-value="false"
+								:unchecked-value="true"
+								:rail-style="railStyle"
+								@update:value="getStyleSheets">
+								<template #checked> 已启用 </template>
+								<template #unchecked> 已禁用 </template>
+							</n-switch>
+							<n-tag :type="item.dom?.tagName === 'STYLE' ? 'info' : 'error'">
+								{{ item.dom?.tagName.toLocaleLowerCase() }}
+							</n-tag>
+						</n-flex>
+					</template>
+					<div v-if="item.dom?.tagName === 'STYLE'">
+						<div v-for="(rule, rIndex) in item.cssRules" :key="rIndex">
+							{{ (rule as CSSStyleRule).selectorText }}
 						</div>
-						<div v-if="item.ownerNode?.nodeName === 'LINK'">
-							<n-code
-								:code="item.href || ''"
-								language="css"
-								show-line-numbers />
-						</div>
-					</n-collapse-item>
-				</transition-group>
-			</n-collapse>
-		</n-config-provider>
+						<n-code
+							:code="item.dom.textContent || ''"
+							language="css"
+							show-line-numbers />
+					</div>
+					<div v-if="item.ownerNode?.nodeName === 'LINK'">
+						<n-code :code="item.href || ''" language="css" show-line-numbers />
+					</div>
+				</n-collapse-item>
+			</transition-group>
+		</n-collapse>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { ref, computed, onMounted } from "vue";
+	import { ref, computed, onMounted, onActivated } from "vue";
 	import type { CSSProperties } from "vue";
-
-	import hljs from "highlight.js/lib/core";
-	import css from "highlight.js/lib/languages/css";
-
-	hljs.registerLanguage("css", css);
 
 	// 样式表对象接口
 	interface StyleSheet extends CSSStyleSheet {
@@ -112,12 +94,15 @@
 	onMounted(() => {
 		console.log("样式管理器挂载！");
 		// 组件挂载完成后就获取样式表
-		getStyleSheets();
+		// getStyleSheets();
+	});
+	onActivated(() => {
+		// getStyleSheets();
 	});
 
 	const styleSheetList = ref<StyleSheet[]>([]);
 	const keyword = ref(""); //检索关键词
-	const filterThisScriptStyle = ref(false); //是否过滤掉当前脚本的样式
+	const filterThisScriptStyle = ref(true); //是否过滤掉当前脚本的样式
 	// 过滤后的样式表
 	const filteredStyleSheetList = computed<StyleSheet[]>(() => {
 		return styleSheetList.value.filter((s) => {

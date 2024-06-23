@@ -1,4 +1,3 @@
-import { ElNotification } from "@/plugin/element-plus";
 import { getHostByUrl, isUrl } from "../common";
 import { GMRequest } from "./GMRequest";
 
@@ -16,25 +15,29 @@ export function getBlobByUrl(
 		return new Promise<Blob | null>((resolve) => {
 			(async () => {
 				// 首次尝试：直接通过链接获取
+				// console.log("首次尝试：直接通过链接获取");
 				let blob = await fetch(url)
 					.then((res) => res.blob())
 					.catch(() => null);
 				if (blob && blob.size) {
 					// console.log("Fetch请求成功", blob);
 					console.count("Fetch请求成功!");
-					resolve(blob);
+					return resolve(blob);
 				}
 				// 第二次尝试：如果第一次尝试失败则再次设置cache为no-cache再次尝试
+				// console.log(
+				// 	"第二次尝试：如果第一次尝试失败则再次设置cache为no-cache再次尝试"
+				// );
 				blob = await fetch(url, { cache: "no-cache" })
 					.then((res) => res.blob())
 					.catch(() => null);
 				if (blob && blob.size) {
 					// console.log("Fetch请求成功", blob);
-					console.count("Fetch请求成功!");
-					resolve(blob);
+					console.count("Fetch请求成功(no-cache)!");
+					return resolve(blob);
 				} else {
 					console.count("Fetch请求失败");
-					resolve(null);
+					return resolve(null);
 				}
 			})();
 		});
@@ -44,11 +47,11 @@ export function getBlobByUrl(
 			GMRequest({ url, referer, responseType: "blob" }).then((blob) => {
 				if (blob && blob.size) {
 					// console.log("GM请求成功", blob);
-					console.count("GM跨域请求成功!");
+					console.count(`GM跨域请求成功${referer ? `(${referer})` : ""}!`);
 					resolve(blob);
 				} else {
 					// console.log("GM请求失败", blob);
-					console.count("GM跨域请求失败");
+					console.count(`GM跨域请求失败${referer ? `(${referer})` : ""}`);
 					resolve(null);
 				}
 			});

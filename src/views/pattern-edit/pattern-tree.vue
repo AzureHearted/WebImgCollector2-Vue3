@@ -21,7 +21,7 @@
 			<template #checked> 展示无关节点 </template>
 			<template #unchecked> 隐藏无关节点 </template>
 		</n-switch>
-		<BaseScrollbar class="pattern-tree__tree" :show-bakctop-button="false">
+		<BaseScrollbar class="pattern-tree__tree" :show-back-top-button="false">
 			<n-tree
 				ref="treeRef"
 				:data="data"
@@ -46,22 +46,21 @@
 </template>
 
 <script setup lang="ts">
-	import { h, ref, computed } from "vue";
+	import { h, ref, computed, onActivated, onMounted } from "vue";
 	import { NButton, NEllipsis } from "naive-ui";
 	import type { TreeOption, TreeInst, TreeDropInfo, TreeProps } from "naive-ui";
 	import { DeleteFilled, Plus } from "@element-plus/icons-vue";
 	import { ElButton, ElPopconfirm } from "element-plus";
-	import { Pattern } from "@/stores/patternStore/class/Pattern";
-	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { Pattern } from "@/stores/PatternStore/class/Pattern";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
-
-	import { usePatternStore } from "@/stores";
 	import BaseImg from "@/components/base/base-img.vue";
+
+	import usePatternStore from "@/stores/PatternStore";
 	const patternStore = usePatternStore();
 	const {
 		createPattern,
 		deletePattern,
-		findPattern,
 		pastePattern,
 		adjustPatternPosition,
 		adjustRulePosition,
@@ -74,6 +73,13 @@
 	const showIrrelevantNodes = ref(false); //展示无关节点
 	const defaultExpandedKeys = ref<string[]>([patternStore.editing.pid]); // 默认展开的节点
 	const defaultSelectedKeys = ref<string[]>([patternStore.editing.rid]); // 默认选中的节点
+
+	// onMounted(()=>{
+
+	// })
+	// onActivated(()=>{
+
+	// })
 
 	// 关键数据结构定义
 	interface PatternNode extends TreeOption {
@@ -197,16 +203,19 @@
 		});
 	});
 
-	// 节点内容渲染
+	//f 节点内容渲染
 	const renderLabel: TreeProps["renderLabel"] = ({ option }) => {
 		const node = option as PatternNode | RuleNode;
 		return h(
 			NEllipsis,
 			{
+				//s 这里如果判断当前节点对应的方案与当前站点匹配则字体显示为红色
 				style:
 					node.type === "pattern" &&
 					!node.id.includes("#") &&
-					new RegExp(`${node.rowData.mainInfo.host}`).test(location.origin)
+					node.rowData.mainInfo.matchHost.some((host) => {
+						return new RegExp(`${host}`).test(location.origin);
+					})
 						? "color:red;"
 						: null,
 			},
@@ -214,9 +223,10 @@
 		);
 	};
 
-	// 拖拽相关
+	//* 拖拽相关
 	const nowDragNode = ref<TreeOption>();
-	// 拖拽开始时
+
+	//f 拖拽开始时
 	const dragstart: (data: { node: TreeOption; event: DragEvent }) => void = ({
 		node,
 	}) => {
@@ -224,7 +234,8 @@
 		// 记录当前拖拽的节点
 		nowDragNode.value = node;
 	};
-	// 判断是否可以放置
+
+	//f 判断是否可以放置
 	const allowDrop: (info: {
 		dropPosition: TreeDropInfo["dropPosition"];
 		node: TreeOption;
@@ -243,7 +254,7 @@
 		}
 	};
 
-	// 放置时执行
+	//f 放置时执行
 	const handleDrop: (data: TreeDropInfo) => void = ({
 		dragNode,
 		node,
@@ -309,7 +320,7 @@
 		}
 	};
 
-	// 定义节点属性
+	//f 定义节点属性
 	const nodeProps: TreeProps["nodeProps"] = ({ option }) => {
 		return {
 			// 点击事件的定义
@@ -358,6 +369,7 @@
 	}
 	.pattern-tree__tree {
 		border-radius: 4px;
+		overflow: hidden;
 	}
 	:deep(.wic2-n-tree) {
 		border-radius: 4px;

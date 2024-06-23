@@ -97,7 +97,7 @@
 	import { defineProps, ref, reactive, onMounted } from "vue";
 	import { isMobile } from "@/utils/common";
 
-	import useGlobalStore from "@/stores/global"; //导入全局仓库
+	import useGlobalStore from "@/stores/Global"; //导入全局仓库
 	const globalStore = useGlobalStore();
 
 	const active = ref(false); // 控制悬浮按钮的显示状态

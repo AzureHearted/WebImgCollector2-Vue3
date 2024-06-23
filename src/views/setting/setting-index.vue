@@ -7,8 +7,9 @@
 </template>
 
 <script setup lang="ts">
+	// 等待实现:需要对设置页面进行二级菜单分类
 	import Scrollbar from "@/components/base/base-scrollbar.vue";
-	import StyleSheetManage from "@/components/style-sheet-manage.vue";
+	import StyleSheetManage from "@/views/setting/setting-style-sheet-manage.vue";
 	// import { onMounted } from "vue";
 	// onMounted(() => {
 	// 	console.log("设置页面挂载！");

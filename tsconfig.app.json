@@ -14,6 +14,10 @@
 			"@/*": ["./src/*"],
 			"@svg/*": ["./src/assets/svg/*"]
 		},
-		"types": ["element-plus/global", "naive-ui/volar", "@varlet/ui/types"]
+		"types": [
+			"element-plus/global",
+			"naive-ui/volar",
+			"@varlet/ui/types"
+		]
 	}
 }

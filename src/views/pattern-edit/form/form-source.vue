@@ -6,7 +6,9 @@
 				placeholder="请输入css选择器"
 				clearable>
 				<template v-if="rule.region.enable" #prepend>
-					{{ rule.region.selector }}
+					<n-ellipsis tooltip style="max-width: 100px">
+						{{ rule.region.selector }}
+					</n-ellipsis>
 				</template>
 			</el-input>
 		</el-form-item>
@@ -32,7 +34,7 @@
 
 <script setup lang="ts">
 	import { defineModel } from "vue";
-	import { Rule } from "@/stores/patternStore/class/Rule";
+	import { Rule } from "@/stores/PatternStore/class/Rule";
 
 	import FixFrom from "./card-from-fix.vue";
 	const rule = defineModel("rule", { type: Rule, required: true });

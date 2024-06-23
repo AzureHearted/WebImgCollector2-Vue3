@@ -1,5 +1,9 @@
 import { defineStore } from "pinia";
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch, nextTick } from "vue";
+import { ElNotification, ElMessageBox } from "@/plugin/element-plus";
+import type { BaseMeta } from "@/stores/CardStore/interface";
+import type { ExcludeType } from "@/types/tools";
+
 // 导入类
 import Card from "./class/Card";
 import { TaskQueue } from "@/utils/taskQueue"; // 任务队列
@@ -9,6 +13,7 @@ import {
 	getBlobType,
 	getExtByBlob,
 	getNameByUrl,
+	legalizationPathString,
 	mixSort,
 } from "@/utils/common";
 // 导入网络工具请求
@@ -18,17 +23,19 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver"; //* 用于原生浏览器"保存"来实现文件保存
 
 // 导入其他仓库
-import { useLoadingStore, usePatternStore } from "@/stores";
+import useLoadingStore from "@/stores/LoadingStore";
+import usePatternStore from "@/stores/PatternStore";
+import useFavoriteStore from "@/stores/FavoriteStore";
 
-import { ElNotification } from "@/plugin/element-plus";
-
-export default defineStore("cardStore", () => {
+export default defineStore("CardStore", () => {
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
+	const favoriteStore = useFavoriteStore();
+	const { isExist: isFavorite } = favoriteStore;
 
-	// 数据定义
+	//s 数据定义
 	const data = reactive({
-		cardList: [] as Card[], //s 卡片列表
+		cardList: [] as (Card | undefined)[],
 		// 所有匹配到的链接集合
 		urlSet: new Set() as Set<string>,
 		// 所有匹配到的dom集合
@@ -36,27 +43,69 @@ export default defineStore("cardStore", () => {
 		// 所有被排除的卡片集合
 		excludeIdSet: new Set() as Set<Card["id"]>,
 		// 类型与数量的映射表
-		typeMap: new Map<string, number>([]),
+		typeMap: new Map<string, number>(),
 		// 扩展名与数量的映射表
-		extensionMap: new Map<string, number>([]),
+		extensionMap: new Map<string, number>(),
 		// 记录所有链接与Blob的映射表
 		urlBlobMap: new Map<string, Blob>(),
 	});
 
-	// 卡片数据信息定义，用于过滤。
-	const info = reactive({
-		size: {
-			width: ref<[number, number]>([0, 2000]), //宽度范围
-			height: ref<[number, number]>([0, 2000]), //高度范围
-			max: ref(2000),
-		},
+	//j 有效的卡片
+	const validCardList = computed<Card[]>(() => {
+		return data.cardList.filter((x) => !!x && x !== undefined) as Card[];
 	});
 
-	// 过滤器
+	//* 设置初始类型
+	data.typeMap.set("image", 0);
+	data.typeMap.set("html", 0);
+
+	//j 仓库尺寸范围
+	const sizeRange = computed<{
+		width: [number, number];
+		height: [number, number];
+		max: number;
+		min: number;
+	}>(() => {
+		return validCardList.value.reduce(
+			(prev, curr) => {
+				const { width, height } = curr.source.meta;
+				if (prev.width[0] > width) prev.width[0] = width;
+				if (prev.height[0] > height) prev.height[0] = height;
+				if (prev.width[1] < width) prev.width[1] = width;
+				if (prev.height[1] < height) prev.height[1] = height;
+				prev.min = Math.min(prev.min, prev.width[0], prev.height[0]);
+				prev.max = Math.max(prev.max, prev.width[1], prev.height[1]);
+				return prev;
+			},
+			{
+				width: [0, 2000],
+				height: [0, 2000],
+				min: 0,
+				max: 2000,
+			}
+		);
+	});
+
+	//w 监听仓库尺寸范围变化
+	watch(
+		[() => sizeRange.value.width[1], () => sizeRange.value.height[1]],
+		([maxW, maxH]) => {
+			// console.log("仓库最大尺寸变化");
+			filters.size.width[1] = maxW; // 更新过滤器最大宽度。
+			filters.size.height[1] = maxH; // 更新过滤器最大宽度。
+		}
+	);
+
+	//t 卡片类型(类型)
+	type CardType = ExcludeType<"all" | BaseMeta["type"], false>;
+	//s 当前类型
+	const nowType = ref<CardType>("image");
+	//s 过滤器
 	const filters = reactive({
+		keyword: "",
 		size: {
-			width: ref<[number, number]>([300, info.size.width[1]]), //宽度过滤器
-			height: ref<[number, number]>([300, info.size.height[1]]), //高度过滤器
+			width: [250, sizeRange.value.width[1]] as [number, number], //宽度过滤器
+			height: [250, sizeRange.value.height[1]] as [number, number], //高度过滤器
 			marks: computed(() => {
 				const markStyle = reactive({
 					"font-size": "10px !important",
@@ -72,50 +121,49 @@ export default defineStore("cardStore", () => {
 						label: "720",
 						style: {
 							...markStyle,
-							display: info.size.max / 720 < 3 ? "" : "none",
+							display: sizeRange.value.max / 720 < 3 ? "" : "none",
 						},
 					},
 					1080: {
 						label: "1080",
 						style: {
 							...markStyle,
-							display: info.size.max / 1080 < 3 ? "" : "none",
+							display: sizeRange.value.max / 1080 < 3 ? "" : "none",
 						},
 					},
 					1920: {
 						label: "1920",
 						style: {
 							...markStyle,
-							display: info.size.max / 1920 < 3 ? "" : "none",
+							display: sizeRange.value.max / 1920 < 3 ? "" : "none",
 						},
 					},
 					2560: {
 						label: "2560",
 						style: {
 							...markStyle,
-							display: info.size.max / 2560 < 3 ? "" : "none",
+							display: sizeRange.value.max / 2560 < 3 ? "" : "none",
 						},
 					},
 					3840: {
 						label: "3840",
 						style: markStyle,
 					},
-					[`${info.size.max}`]: {
-						label: `${info.size.max}`,
+					[`${sizeRange.value.max}`]: {
+						label: `${sizeRange.value.max}`,
 						style: {
 							...markStyle,
-							display: info.size.max > 1.8 * 3840 ? "" : "none",
+							display: sizeRange.value.max > 1.8 * 3840 ? "" : "none",
 						},
 					},
 				};
 				return tempMarks;
 			}),
 		},
-		type: ref<string[]>(["image"]), //类型过滤器
-		extension: ref<string[]>([]), //扩展名过滤器
+		type: [] as string[], //类型过滤器
+		extension: [] as string[], //扩展名过滤器
 	});
-
-	// 排序相关
+	//s 排序相关
 	const sortOptions = [
 		{ value: "#", label: "默认排序", group: "#" },
 		{ value: "name-asc", label: "名称-升序", group: "名称" },
@@ -131,7 +179,7 @@ export default defineStore("cardStore", () => {
 		key: string;
 		children: ((typeof sortOptions)[number] & { key: string })[];
 	};
-	// 排序对象
+	//s 排序对象
 	const sort = reactive({
 		method: "#" as (typeof sortOptions)[number]["value"],
 		options: sortOptions,
@@ -157,67 +205,115 @@ export default defineStore("cardStore", () => {
 		},
 	});
 
-	// j 有效的卡片
-	const validCardList = computed(() => {
-		return data.cardList.filter((x) => !!x);
-	});
+	//j 过滤后的卡片
+	const filterCardList = computed<{
+		[key in CardType]: Card[];
+	}>(() => {
+		const image = [] as Card[],
+			video = [] as Card[],
+			audio = [] as Card[],
+			html = [] as Card[],
+			zip = [] as Card[],
+			other = [] as Card[];
+		let all = [...validCardList.value];
 
-	// j 过滤后的卡片
-	const filteredCardList = computed(() => {
-		// 后续添加处理逻辑，例如过滤、排序等操作。
-		let matchList = data.cardList.filter((x) => {
-			// * 暂时取消最大尺寸限制的过滤
+		//s 先排序
+		switch (sort.method) {
+			case "name-asc":
+				all.sort((a, b) => mixSort(a.description.title, b.description.title));
+				break;
+			case "name-desc":
+				all.sort((a, b) => mixSort(b.description.title, a.description.title));
+				break;
+			case "width-asc":
+				all.sort((a, b) => a.source.meta.width - b.source.meta.width);
+				break;
+			case "width-desc":
+				all.sort((a, b) => b.source.meta.width - a.source.meta.width);
+				break;
+			case "height-asc":
+				all.sort((a, b) => a.source.meta.height - b.source.meta.height);
+				break;
+			case "height-desc":
+				all.sort((a, b) => b.source.meta.height - a.source.meta.height);
+				break;
+		}
+
+		//s 再过滤
+		all = all.filter((x) => {
+			const { id, tags, isLoaded } = x;
+			const {
+				type: sType,
+				width: sWidth,
+				height: sHeight,
+				ext: sExt,
+			} = x.source.meta;
+			const { title } = x.description;
+			//* 暂时取消最大尺寸限制的过滤
 			const isMatch =
-				!!x && // 过滤排除
-				!data.excludeIdSet.has(x.id) && // 过滤被排除的项
-				(filters.type.length > 0
-					? filters.type.includes(String(x.source.meta.type))
-					: true) &&
+				(title
+					.trim()
+					.toLocaleLowerCase()
+					.includes(filters.keyword.trim().toLocaleLowerCase()) ||
+					tags.some((tag) => {
+						return tag
+							.trim()
+							.toLocaleLowerCase()
+							.includes(filters.keyword.trim().toLocaleLowerCase());
+					})) &&
+				!data.excludeIdSet.has(id) && // 过滤被排除的项
 				(filters.extension.length > 0
-					? filters.extension.includes(String(x.source.meta.ext))
+					? filters.extension.includes(String(sExt))
 					: true) &&
-				(x.source.meta.type === "image"
-					? x.source.meta.width! >= filters.size.width[0] &&
-					  x.source.meta.height! >= filters.size.height[0]
+				(sType === "image" || sType === "video"
+					? sWidth! >= filters.size.width[0] &&
+					  sHeight! >= filters.size.height[0]
 					: true);
-			if (!isMatch) {
-				// 如果不匹配的需要将选中状态设置为false
-				x.isSelected = false;
-				// console.log("未被选中");
+			if (!isMatch) x.isSelected = false; // 如果不匹配的需要将选中状态设置为false
+			if (isMatch) {
+				switch (sType) {
+					case "image":
+						image.push(x);
+						break;
+					case "video":
+						video.push(x);
+						break;
+					case "audio":
+						audio.push(x);
+						break;
+					case "html":
+						html.push(x);
+						break;
+					case "zip":
+						zip.push(x);
+						break;
+					default:
+						other.push(x);
+						break;
+				}
 			}
 			return isMatch;
 		});
-		// 排序
-		if (sort.method === "#") return matchList;
-		if (sort.method === "name-asc") {
-			matchList = matchList.sort((a, b) =>
-				mixSort(a.description.title, b.description.title)
-			);
-		} else if (sort.method === "name-desc") {
-			matchList = matchList.sort((a, b) =>
-				mixSort(b.description.title, a.description.title)
-			);
-		} else if (sort.method === "width-asc") {
-			matchList = matchList.sort(
-				(a, b) => a.source.meta.width - b.source.meta.width
-			);
-		} else if (sort.method === "width-desc") {
-			matchList = matchList.sort(
-				(a, b) => b.source.meta.width - a.source.meta.width
-			);
-		} else if (sort.method === "height-asc") {
-			matchList = matchList.sort(
-				(a, b) => a.source.meta.height - b.source.meta.height
-			);
-		} else if (sort.method === "height-desc") {
-			matchList = matchList.sort(
-				(a, b) => b.source.meta.height - a.source.meta.height
-			);
-		}
-		return matchList;
+
+		return { all, image, video, zip, audio, html, other };
 	});
 
-	// j 类型列表
+	//j 选中的卡片
+	const selectionCardList = computed<{
+		[key in CardType]: Card[];
+	}>(() => {
+		return {
+			all: filterCardList.value.all.filter((x) => x.isSelected),
+			image: filterCardList.value.image.filter((x) => x.isSelected),
+			video: filterCardList.value.video.filter((x) => x.isSelected),
+			audio: filterCardList.value.audio.filter((x) => x.isSelected),
+			zip: filterCardList.value.zip.filter((x) => x.isSelected),
+			html: filterCardList.value.html.filter((x) => x.isSelected),
+			other: filterCardList.value.other.filter((x) => x.isSelected),
+		};
+	});
+
+	//j 类型列表
 	const typeOptions = computed(() => {
 		const typeNameMap = new Map<string, string>([
 			["image", "图片"],
@@ -238,17 +334,10 @@ export default defineStore("cardStore", () => {
 					count: data.typeMap.get(x),
 				};
 			});
-		if (!options.length) {
-			options.push({
-				label: "图片",
-				value: "image",
-				count: 0,
-			});
-		}
 		return options;
 	});
 
-	// j 扩展名列表
+	//j 扩展名列表
 	const extensionOptions = computed(() => {
 		return [...data.extensionMap.keys()]
 			.sort((a, b) => {
@@ -264,7 +353,7 @@ export default defineStore("cardStore", () => {
 			});
 	});
 
-	// 获取页面资源
+	//f 获取页面资源
 	async function getPageCard() {
 		const patternId = patternStore.used.id;
 		const patternNow =
@@ -280,7 +369,7 @@ export default defineStore("cardStore", () => {
 			return;
 		}
 		loadingStore.start();
-		// 依次执行每个规则
+		//s 依次执行每个规则
 		let amount = 0; // 累计数量(用于统计每次匹配过程中的结果数量)
 		for (let i = 0; i < patternNow.rules.length; i++) {
 			const rule = patternNow.rules[i];
@@ -302,13 +391,20 @@ export default defineStore("cardStore", () => {
 						loadingStore.current++;
 						// console.log("当前进度", loadingStore.current, loadingStore.total);
 						const sourceMeta = card.source.meta;
+						const previewMeta = card.preview.meta;
+						// console.log(sourceMeta, previewMeta);
 						// 判断该卡片中的链接是否已经存在于集合中，如果存在则不添加到卡片列表中。
-						if (sourceMeta.valid && !data.urlSet.has(card.source.url)) {
+						if (
+							(sourceMeta.valid || previewMeta.valid) &&
+							(!data.urlSet.has(card.source.url) ||
+								!data.urlSet.has(card.preview.url))
+						) {
 							// console.log("新增卡片", card, dom);
 							if (dom) {
 								data.domSet.add(dom); // 记录dom用于排序
 							}
 							data.urlSet.add(card.source.url); // 添加到链接集合中
+							data.urlSet.add(card.preview.url); // 添加到链接集合中
 							// 如果类型存在则记录类型
 							if (sourceMeta.type) {
 								if (data.typeMap.has(sourceMeta.type)) {
@@ -339,46 +435,56 @@ export default defineStore("cardStore", () => {
 							}
 							// data.cardList.push(card); // 添加到卡片列表中。
 							data.cardList[startIndex + index] = card; // 添加到卡片列表中。
-							updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
+							// updateMaxSize(sourceMeta.width, sourceMeta.height); // 更新最大宽高。
+							nextTick(async () => {
+								// s  判断卡片是否被收藏
+								// s 然后判断该card是否被收藏
+								card.isFavorite = await isFavorite(card);
+								if (card.isFavorite) {
+									//s 如果卡片已经被收藏了则从仓库获取该卡片对应的tags信息
+									const target = await favoriteStore.findCardByData(card);
+									if (!target) return;
+									card.tags = target.tags;
+								}
+							});
 							await addCard(); //执行回调函数
 						}
 					},
 					// 匹配结束后的回调
 					onFinished() {
+						// 记录当前数量
 						amount = data.cardList.length;
 					},
-					// 传入已有url和blob的map对象,用于防止重复发送请求
-					existingUrlBlobMap: data.urlBlobMap,
 				}
 			);
 		}
 
-		if (!validCardList.value.length) {
-			ElNotification({
-				title: "提示",
-				type: "info",
-				message: "该方案未匹配到任何有效结果",
-				appendTo: ".web-img-collector-notification-container",
-			});
-		}
+		nextTick(() => {
+			console.log("data.cardList", data.cardList.length);
+			console.log("validCardList.value.length", validCardList.value.length);
+			if (!validCardList.value.length) {
+				ElNotification({
+					title: "提示",
+					type: "info",
+					message: "该方案未匹配到任何有效结果",
+					appendTo: ".web-img-collector-notification-container",
+				});
+			}
+		});
 
 		loadingStore.end();
 	}
 
-	// 更新最大宽高
-	function updateMaxSize(
-		width: number | undefined,
-		height: number | undefined
-	) {
-		info.size.width[1] = Math.max(info.size.width[1], width ? width : 0); // 更新最大宽度。
-		info.size.height[1] = Math.max(info.size.height[1], height ? height : 0); // 更新最大高度。
-		info.size.max = Math.max(info.size.width[1], info.size.height[1]);
-		filters.size.width[1] = info.size.width[1]; // 更新过滤器最大宽度。
-		filters.size.height[1] = info.size.height[1]; // 更新过滤器最大宽度。
+	//f 重置过滤器
+	function resetFilters() {
+		filters.size.width = [250, sizeRange.value.width[1]];
+		filters.size.height = [250, sizeRange.value.height[1]];
+		filters.extension = [];
+		filters.type = [];
 	}
 
-	// 清空卡片
-	function clearCardList() {
+	//f 清空卡片
+	async function clearCardList() {
 		data.urlSet.clear(); // 清空链接集合
 		data.domSet.clear(); // 清空DOM集合
 		data.excludeIdSet.clear(); //清空被排除卡片id集合
@@ -386,31 +492,33 @@ export default defineStore("cardStore", () => {
 		data.extensionMap.clear(); // 清空扩展名映射表
 		data.urlBlobMap.clear(); // 清空url和blob的Map对象
 		data.cardList = []; // 清空卡片列表
-		info.size.width = [0, 2000]; // 重置宽度范围。
-		info.size.height = [0, 2000]; // 重置高度范围。
-		info.size.max = 2000;
-		filters.size.width = [300, 2000];
-		filters.size.height = [300, 2000];
-		filters.extension = [];
-		filters.type = ["image"];
+		// resetFilters();
 	}
 
-	// 移除卡片
+	//f 移除卡片
 	function removeCard(ids: string[]) {
 		for (let i = 0; i < ids.length; i++) {
 			const id = ids[i];
 			data.excludeIdSet.add(id);
 		}
-		return;
 	}
 
-	// 下载卡片
-	async function downloadCards(ids: string[]) {
-		if (!ids.length) return;
-		// 先找到对应的卡片
-		const cards = validCardList.value.filter((x) => ids.includes(x.id));
+	//f 查询卡片
+	function findCard(id: string): Card | undefined {
+		return validCardList.value.find((c) => c.id === id);
+	}
+
+	//f 查询多张卡片
+	function findCards(ids: string[]): Card[] {
+		return validCardList.value.filter((c) => ids.includes(c.id)) || [];
+	}
+
+	//f 下载卡片
+	async function downloadCards(cards: Card[]) {
+		if (!cards.length) return;
 		if (cards.length === 1) {
 			const card = cards[0];
+			card.loading = true;
 			// 等于1的时候不打包，直接下载
 			if (!card.source.blob) {
 				// 如果没有blob先获取
@@ -419,18 +527,39 @@ export default defineStore("cardStore", () => {
 					card.source.blob = blob;
 				}
 			}
-			let name = card.description.title.trim();
-			if (!name) {
-				name = getNameByUrl(card.source.url);
+			let initName = card.description.title.trim();
+			if (!initName) {
+				initName = getNameByUrl(card.source.url);
 			}
-			if (card.source.meta.type !== "html") {
-				name = name + `.${card.source.meta.ext}`;
-			}
-			console.log(name);
-			// 保存
-			saveAs(card.source.blob!, name);
+			card.loading = false;
+			// console.log(name);
+			// 下载完成后让用户进行文件名确认
+			ElMessageBox.prompt("文件已准备完成,请确认文件名", "提示", {
+				appendTo: ".web-img-collector-notification-container",
+				confirmButtonText: "确认",
+				cancelButtonText: "取消",
+				inputPlaceholder: "请输入要保存的文件名称",
+				inputValue: legalizationPathString(initName),
+				closeOnClickModal: false,
+				draggable: true,
+			})
+				.then(({ value: name }) => {
+					name = legalizationPathString(name);
+					console.log("保存文件名称:", name);
+					// 添加后缀名
+					name =
+						card.source.meta.type !== "html"
+							? name + `.${card.source.meta.ext}`
+							: name + ".html";
+					// 保存
+
+					saveAs(card.source.blob!, name);
+				})
+				.catch(() => {
+					console.log("取消操作");
+				});
 		} else {
-			loadingStore.start(ids.length); // 开启进度条
+			loadingStore.start(cards.length); // 开启进度条
 
 			ElNotification({
 				title: "提示",
@@ -478,7 +607,7 @@ export default defineStore("cardStore", () => {
 
 					// 下载压缩包
 					// 获取标题
-					let zipName: string;
+					let initZipName: string;
 					const titles = [
 						document.title,
 						...[...document.querySelectorAll("h1")].map((dom) => dom.innerText),
@@ -489,20 +618,37 @@ export default defineStore("cardStore", () => {
 						.filter((title) => !!title && !!title.trim().length)
 						.map((title) => title.replace("\\", "-").replace(",", "_"));
 					if (titles.length) {
-						zipName = titles[0]; // 如果标题获取成功就使用首个标题
+						initZipName = titles[0]; // 如果标题获取成功就使用首个标题
 					} else {
-						zipName = getNameByUrl(decodeURI(location.href)); // 如果标题获取失败就直接使用href提取标题
+						initZipName = getNameByUrl(decodeURI(location.href)); // 如果标题获取失败就直接使用href提取标题
 					}
 
-					// console.log("压缩包名称:", zipName);
-					saveAs(zip, `${zipName}.zip`);
-
-					ElNotification({
-						title: "成功",
-						message: "开始下载压缩包……",
-						type: "success",
+					//s 下载完成后让用户进行文件名确认
+					ElMessageBox.prompt("压缩包已准备完成,请确认文件名", "提示", {
 						appendTo: ".web-img-collector-notification-container",
-					});
+						confirmButtonText: "确认",
+						cancelButtonText: "取消",
+						inputPlaceholder: "请输入要保存的压缩包名称",
+						inputValue: legalizationPathString(initZipName),
+						closeOnClickModal: false,
+						draggable: true,
+					})
+						.then(({ value: zipName }) => {
+							zipName = legalizationPathString(zipName);
+							console.log("保存压缩包名称:", zipName);
+							saveAs(zip, `${zipName}.zip`);
+
+							ElNotification({
+								title: "成功",
+								message: "开始下载压缩包……",
+								type: "success",
+								appendTo: ".web-img-collector-notification-container",
+							});
+						})
+						.catch(() => {
+							console.log("取消操作");
+						});
+
 					loadingStore.end(); // 结束进度条
 					// console.groupEnd();
 				},
@@ -516,7 +662,9 @@ export default defineStore("cardStore", () => {
 								(async () => {
 									if (!card.source.blob) {
 										// 如果没有blob先获取
+										card.loading = true;
 										const blob = await getBlobByUrlAuto(card.source.url);
+										card.loading = false;
 										if (blob) {
 											card.source.blob = blob;
 										} else {
@@ -549,16 +697,21 @@ export default defineStore("cardStore", () => {
 
 	return {
 		data,
-		info,
+		sizeRange,
 		sort,
 		filters,
+		nowType,
 		validCardList,
-		filteredCardList,
+		selectionCardList,
+		filterCardList,
 		typeOptions,
 		extensionOptions,
 		getPageCard,
 		clearCardList,
 		removeCard,
+		findCard,
+		findCards,
 		downloadCards,
+		resetFilters,
 	};
 });
