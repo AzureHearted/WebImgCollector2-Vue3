@@ -12,7 +12,7 @@
 <script setup lang="ts">
 	import { ref, onMounted, watch, onUnmounted, onUpdated } from "vue";
 
-	import useGlobalStore from "@/stores/Global"; //导入全局仓库
+	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	const globalStore = useGlobalStore();
 
 	// 导入组件
