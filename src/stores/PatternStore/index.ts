@@ -117,12 +117,12 @@ export default defineStore("PatternStore", () => {
 		}
 	}
 
-	// 当前方案信息
+	//s 当前方案信息
 	const current = reactive({
 		id: "#",
 	});
 
-	// 当前编辑中的方案信息
+	//s 当前编辑中的方案信息
 	const editing = reactive({
 		pid: "#", // 方案id
 		rid: "", // 规则id (默认为空)
