@@ -11,7 +11,7 @@
 			<template #default="{ item }">
 				<GalleryCard
 					v-model:data="(item as any)"
-					viewport-selector=".web-img-collector-container"
+					viewport-selector=".web-img-collector__container"
 					@change:selected="item.isSelected = $event"
 					@delete="removeCard([$event])"
 					@loaded="handleLoaded"

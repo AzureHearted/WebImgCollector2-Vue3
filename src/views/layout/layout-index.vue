@@ -1,10 +1,10 @@
 <template>
 	<div
-		class="layout-container"
+		class="layout__container"
 		ref="containerDOM"
 		:class="{ open: globalStore.openWindow }">
-		<AppBar class="layout-app-bar" />
-		<Main class="layout-main" />
+		<AppBar class="layout__app-bar" />
+		<Main class="layout__main" />
 	</div>
 </template>
 
@@ -45,7 +45,7 @@
 
 <style lang="scss" scoped>
 	// 布局容器样式
-	.layout-container {
+	.layout__container {
 		position: absolute;
 		width: 100%;
 		height: 100%;
@@ -72,10 +72,10 @@
 			top: 0;
 		}
 	}
-	// .layout-app-bar {
+	// .layout__app-bar {
 	// 	flex: 0 0;
 	// }
-	.layout-main {
+	.layout__main {
 		flex: auto; // 设置为auto用于自动占满剩余空间
 		overflow: auto; // 设置hidden用于确保内容溢出可以隐藏
 		display: flex;

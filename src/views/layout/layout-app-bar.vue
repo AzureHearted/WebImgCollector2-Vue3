@@ -1,37 +1,51 @@
 <template>
-	<div class="layout-app-bar">
-		<!-- 标题 -->
-		<div class="layout-app-bar__title">
+	<div class="app-bar__container">
+		<!--s 移动端的菜单按钮 -->
+		<n-button
+			v-if="isMobile()"
+			circle
+			:bordered="false"
+			@click="navCollapse = !navCollapse">
+			<template #icon>
+				<i-ep-menu />
+			</template>
+		</n-button>
+		<!--s 标题 -->
+		<div class="app-bar__title">
 			<n-gradient-text type="primary"> Web Img Collector 2 </n-gradient-text>
 			<n-tag type="info" size="tiny" round :bordered="false">
 				{{ VERSION }}
 			</n-tag>
 		</div>
-		<el-button
-			class="layout-app-bar__close-button"
-			type="danger"
-			text
+		<!--s  关闭按钮 -->
+		<n-button
+			type="error"
 			circle
-			v-ripple
+			ghost
+			:bordered="false"
+			class="app-bar__close-button"
 			@click="globalStore.openWindow = false">
 			<template #icon>
 				<i-ant-design-close-circle-filled />
 			</template>
-		</el-button>
+		</n-button>
 	</div>
 </template>
 
 <script setup lang="ts">
 	import { GM_info } from "$";
+	import { storeToRefs } from "pinia";
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
+	import { isMobile } from "@/utils/common";
 	const globalStore = useGlobalStore();
+	const { navCollapse } = storeToRefs(globalStore);
 	const VERSION = GM_info.script.version; // 导入版本号
 </script>
 
 <style lang="scss" scoped>
 	@use "@/styles/shadow.scss" as shadow;
 
-	.layout-app-bar {
+	.app-bar__container {
 		display: flex;
 		height: 34px;
 		// padding: 0 4px;
@@ -50,15 +64,16 @@
 		}
 	}
 
-	.layout-app-bar__title {
+	.app-bar__title {
 		margin-left: 16px;
 		margin-right: auto;
 		font-size: 20px;
 		text-align: left;
 	}
 
-	.layout-app-bar__close-button {
+	.app-bar__close-button {
 		aspect-ratio: 1;
 		font-size: 24px;
+		--n-icon-size: 24px;
 	}
 </style>

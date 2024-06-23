@@ -308,7 +308,7 @@
 						obj instanceof Pattern
 							? `方案“${obj.mainInfo.name}”拷贝成功！`
 							: `规则“${obj.name}”拷贝成功！`,
-					appendTo: ".web-img-collector-notification-container",
+					appendTo: ".web-img-collector__notification-container",
 				});
 			})
 			.catch(() => {
@@ -319,7 +319,7 @@
 						obj instanceof Pattern
 							? `方案“${obj.mainInfo.name}”拷贝失败`
 							: `规则“${obj.name}”拷贝失败`,
-					appendTo: ".web-img-collector-notification-container",
+					appendTo: ".web-img-collector__notification-container",
 				});
 			});
 	}
@@ -364,7 +364,7 @@
 						type: "error",
 						title: "失败",
 						message: "剪贴板内容解析失败",
-						appendTo: ".web-img-collector-notification-container",
+						appendTo: ".web-img-collector__notification-container",
 					});
 					return;
 				}
@@ -381,7 +381,7 @@
 							type: "error",
 							title: "失败",
 							message: "请在方案中进行此操作",
-							appendTo: ".web-img-collector-notification-container",
+							appendTo: ".web-img-collector__notification-container",
 						});
 						return;
 					}
@@ -392,7 +392,7 @@
 						type: "success",
 						title: "成功",
 						message: "成功解析为规则",
-						appendTo: ".web-img-collector-notification-container",
+						appendTo: ".web-img-collector__notification-container",
 					});
 				} catch (e) {
 					// 如果解析失败则提示错误
@@ -400,7 +400,7 @@
 						type: "error",
 						title: "失败",
 						message: "剪贴板内容不符合规则的数据格式",
-						appendTo: ".web-img-collector-notification-container",
+						appendTo: ".web-img-collector__notification-container",
 					});
 				}
 			})
@@ -409,7 +409,7 @@
 					type: "error",
 					title: "失败",
 					message: "剪贴板内容读取失败",
-					appendTo: ".web-img-collector-notification-container",
+					appendTo: ".web-img-collector__notification-container",
 				});
 			});
 	}

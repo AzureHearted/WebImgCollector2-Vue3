@@ -1,9 +1,9 @@
 <template>
 	<!--s 脚本应用容器 -->
-	<dialog :data-host="host" ref="appDOM" class="web-img-collector-container">
+	<dialog :data-host="host" ref="appDOM" class="web-img-collector__container">
 		<!--s 消息通知类信息容器 -->
 		<el-config-provider namespace="el">
-			<div class="web-img-collector-notification-container"></div>
+			<div class="web-img-collector__notification-container"></div>
 		</el-config-provider>
 		<!--s 内容区 -->
 		<el-config-provider namespace="wic2">
@@ -17,11 +17,11 @@
 				<!--s 布局 -->
 				<Layout />
 				<!--s 悬浮按钮 -->
-				<HoverButton :show="!globalStore.openWindow" :teleport-to="false" />
+				<hover-button :show="!globalStore.openWindow" :teleport-to="false" />
 				<!--s 顶层元素的承载容器 -->
 				<div
 					ref="windowContainer"
-					class="web-img-collector-top-container"></div>
+					class="web-img-collector__top-container"></div>
 			</n-config-provider>
 		</el-config-provider>
 	</dialog>
@@ -36,7 +36,8 @@
 		defineAsyncComponent,
 		watch,
 	} from "vue";
-	import { useGlobalStore, usePatternStore } from "@/stores";
+	import useGlobalStore from "@/stores/GlobalStore";
+	import usePatternStore from "@/stores/PatternStore";
 
 	import hljs from "highlight.js/lib/core";
 	import css from "highlight.js/lib/languages/css";
@@ -51,7 +52,7 @@
 
 	// 异步导入HoverButton组件
 	const HoverButton = defineAsyncComponent(
-		() => import("@/views/hover-button.vue")
+		() => import("@/views/app-hover-button.vue")
 	);
 
 	const globalStore = useGlobalStore();
@@ -64,12 +65,13 @@
 	const host = ref(location.host);
 
 	onMounted(() => {
-		// 配置信息获取
-		patternStore.getUserPatternInfo(); //获取本地方案信息
+		//s 用户配置信息获取
+		patternStore.getUserPatternInfo(); // 获取本地方案信息
 		patternStore.setInitPattern(); // 获取初始方案
 	});
 	onActivated(() => {});
 
+	//s 原生dialog相关
 	const appDOM = ref<HTMLDialogElement>();
 	onMounted(() => {
 		if (!appDOM.value) return;
@@ -95,7 +97,7 @@
 	}
 
 	// 布局容器(鼠标可以穿透，只用于划定组件的活动范围，不遮挡其他内容)
-	.web-img-collector-container {
+	.web-img-collector__container {
 		box-sizing: border-box;
 		position: fixed;
 		// position: absolute;
@@ -140,7 +142,7 @@
 	}
 
 	//! 子窗口容器样式(主要作为弹窗的容器)
-	.web-img-collector-top-container {
+	.web-img-collector__top-container {
 		position: absolute;
 		inset: 0;
 		width: 100%;

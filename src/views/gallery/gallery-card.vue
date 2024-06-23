@@ -181,7 +181,7 @@
 				<div class="extra-tag-list">
 					<BaseLineOverFlowList
 						:list="tags"
-						model-to=".web-img-collector-top-container">
+						model-to=".web-img-collector__top-container">
 						<template #default="{ item, openShowMore }">
 							<var-chip :key="item.id" size="mini" @click="openShowMore">
 								{{ (item as Tag).label }}
@@ -407,7 +407,7 @@
 	function rename(item: Card) {
 		// 删除卡片数据模型中的卡片。
 		ElMessageBox.prompt(`重命名卡片"${item.description.title}"为……`, "重命名", {
-			appendTo: ".web-img-collector-notification-container",
+			appendTo: ".web-img-collector__notification-container",
 			confirmButtonText: "确认",
 			cancelButtonText: "取消",
 			inputPlaceholder: "请输入新卡片名称",

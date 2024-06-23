@@ -109,7 +109,7 @@ async function tryGetBlob(
 		// 		request.referer
 		// 	},请求结果:${!!blob}`,
 		// 	type: "info",
-		// 	appendTo: ".web-img-collector-notification-container",
+		// 	appendTo: ".web-img-collector__notification-container",
 		// });
 		// 如果第一次失败且url去除查询语句后于与去除后不相同，则进行一次对去除查询语句后的url的请求
 		if (!blob && url !== urlUnSearch) {
@@ -121,7 +121,7 @@ async function tryGetBlob(
 			// 		request.referer
 			// 	},请求结果:${!!blob}`,
 			// 	type: "info",
-			// 	appendTo: ".web-img-collector-notification-container",
+			// 	appendTo: ".web-img-collector__notification-container",
 			// });
 		}
 		// 一旦成功就跳出循环

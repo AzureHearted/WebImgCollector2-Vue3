@@ -11,7 +11,7 @@
 					:show-to-locate-button="false"
 					:show-delete-button="false"
 					:show-download-button="(item as Card).source.meta.type!=='html'"
-					viewport-selector=".web-img-collector-container"
+					viewport-selector=".web-img-collector__container"
 					@change:selected="item.isSelected = $event"
 					@change:title="updateCard([item as Card])"
 					@loaded="handleLoaded"
