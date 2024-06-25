@@ -15,6 +15,7 @@ import Card from "../class/Card";
 import { getExtByUrl, getNameByUrl, isUrl } from "@/utils/common";
 import { TaskQueue } from "@/utils/taskQueue";
 import type { Task } from "@/utils/taskQueue";
+import { getContentType } from "@/utils/http/GMRequest";
 
 // 配置接口
 interface Options {
@@ -81,12 +82,20 @@ export default async function getCard(
 						regionDOM,
 						callback: async (value, dom) => {
 							dom = dom || regionDOM;
+							// 先修正内容
+							value = await fixResult(value, rule.source.fix);
 							// 元信息获取
 							let meta = await getMeta(dom, { url: value }); // 获取元信息(通过dom)
 							if (!meta.valid) {
 								meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
 							}
-							meta.ext = getExtByUrl(value);
+							if (!meta.ext) {
+								meta.ext = getExtByUrl(value);
+								// if (!meta.ext) {
+								// 	const { subType } = getMIMEinfo(await getContentType(value));
+								// 	meta.ext = subType;
+								// }
+							}
 							return {
 								url: value,
 								// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
@@ -117,18 +126,36 @@ export default async function getCard(
 								dom = dom || source.dom || regionDOM;
 								// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
 								value = value.trim() || source.url;
-								// 元信息获取
-								let meta = await getMeta(dom, { url: value }); // 获取元信息(通过dom)
-								if (!meta.valid) {
-									meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
+								// 先修正内容
+								value = await fixResult(value, rule.preview.fix);
+								if (value !== source.url) {
+									// 元信息获取
+									let meta = await getMeta(dom, { url: value }); // 获取元信息(通过dom)
+									if (!meta.valid) {
+										meta = await getMeta(value); // 获取元信息(通过可能是url的匹配结果)
+									}
+									if (!meta.ext) {
+										meta.ext = getExtByUrl(value);
+										// if (!meta.ext) {
+										// 	const { subType } = getMIMEinfo(
+										// 		await getContentType(value)
+										// 	);
+										// 	meta.ext = subType;
+										// }
+									}
+									// console.log(meta);
+									return {
+										url: value,
+										dom,
+										meta,
+									};
+								} else {
+									return {
+										url: value,
+										dom,
+										meta: { ...source.meta },
+									};
 								}
-								meta.ext = getExtByUrl(value);
-
-								return {
-									url: value,
-									dom,
-									meta,
-								};
 							},
 						});
 					} else {
@@ -147,10 +174,18 @@ export default async function getCard(
 						preview.meta = await getMeta(preview.dom as HTMLElement, {
 							url: preview.url,
 						});
-						preview.meta.ext = getExtByUrl(preview.url);
 						if (!preview.meta.valid) {
 							// 如果无效在使用匹配到的内容判断
 							preview.meta = await getMeta(preview.url);
+						}
+						if (!preview.meta.ext) {
+							preview.meta.ext = getExtByUrl(preview.url);
+							if (!preview.meta.ext) {
+								const { subType } = getMIMEinfo(
+									await getContentType(preview.url)
+								);
+								preview.meta.ext = subType;
+							}
 						}
 					}
 
@@ -179,6 +214,8 @@ export default async function getCard(
 								dom = dom || source.dom || regionDOM || preview.dom;
 								// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
 								value = value.trim() || source.url || preview.url;
+								// 先修正内容
+								value = await fixResult(value, rule.description.fix);
 								if (isUrl(value)) {
 									value = getNameByUrl(value);
 								}
@@ -216,8 +253,16 @@ export default async function getCard(
 						source.originUrls = [location.origin + location.pathname];
 					}
 
+					//! 特殊情况处理
+					if (source.url === preview.url) {
+						source.meta.type = preview.meta.type;
+						source.meta.ext = preview.meta.ext;
+					}
+
 					// f 创建卡片
 					const card = new Card({ source, preview, description });
+
+					// console.log(card.source.meta, card.preview.meta);
 
 					// 触发回调
 					onCardGet(card, i, regionDOM, async () => {
@@ -402,6 +447,12 @@ export default async function getCard(
 						source.originUrls.push(location.origin + location.pathname);
 					} else {
 						source.originUrls = [location.origin + location.pathname];
+					}
+
+					//! 特殊情况处理
+					if (source.url === preview.url) {
+						source.meta.type = preview.meta.type;
+						source.meta.ext = preview.meta.ext;
 					}
 
 					//f 创建卡片
@@ -672,15 +723,34 @@ async function getMetaByUrl(url: URL, _default: Partial<BaseMeta> = {}) {
 	};
 	meta = { ...meta, ..._default };
 	// 先推断链接类型
-	const type = inferUrlType(url);
-	// console.log("链接类型==>", type);
+	//s 初步推断
+	let type = inferUrlType(url);
+
+	if (type === "html") {
+		//s 如果还是html类型则尝试通过Head请求获取类型
+		const mime = await getContentType(url.href);
+		const { mainType, subType } = getMIMEinfo(mime);
+		if (mainType) {
+			if (mainType !== "text") {
+				type = mainType;
+				meta.ext = subType;
+			}
+		}
+		// console.log("链接类型==>", type, mainType, subType);
+	}
+
 	if (type === "image") {
 		//s 处理图片类型
 		// console.log("通过getImgMetaByImage获取Meta信息", url.href);
-		meta = { ...meta, ...(await getImgMetaByImage(url.href)) };
+		const res = await getMetaByImage(url.href);
+		res.ext = meta.ext || res.ext;
+		meta = { ...meta, ...res };
+		// console.log(meta);
 	} else if (type === "video") {
+		const res = await getMetaByVideo(url.href);
+		res.ext = meta.ext || res.ext;
 		//s 处理视频类型
-		meta = { ...meta, ...(await getMetaByVideo(url.href)) };
+		meta = { ...meta, ...res };
 	} else {
 		meta = {
 			valid: true,
@@ -690,6 +760,7 @@ async function getMetaByUrl(url: URL, _default: Partial<BaseMeta> = {}) {
 			ext: false,
 		};
 	}
+
 	return meta;
 }
 
@@ -724,7 +795,7 @@ async function getMetaByBlob(blob: Blob) {
 }
 
 //f [功能封装]通过Image对象获取图片meta
-export function getImgMetaByImage(url: string): Promise<BaseMeta> {
+export function getMetaByImage(url: string): Promise<BaseMeta> {
 	if (!url || !url.trim().length) {
 		console.log("链接无效", url);
 		const errMeta: BaseMeta = {
