@@ -67,6 +67,11 @@
 		showScrollbar.value = !isMobile.value;
 	});
 
+	onActivated(() => {
+		isMobile.value = judgeIsMobile();
+		showScrollbar.value = !isMobile.value;
+	});
+
 	//w 手动刷新showScrollbar,临时解决scrollbar组件中wrapper的scroll尺寸未及时更新的bug
 	// watch(
 	// 	() => props.cardList,
@@ -126,8 +131,8 @@
 	};
 
 	//* 激活时进行比对所有卡片收藏状态
-	onActivated(() => {
-		refreshFavoriteStore();
+	onActivated(async () => {
+		await refreshFavoriteStore();
 		props.cardList.forEach(async (c) => {
 			c.isFavorite = await isFavorite(c);
 		});

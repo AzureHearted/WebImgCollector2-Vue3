@@ -249,7 +249,15 @@
 </template>
 
 <script setup lang="ts">
-	import { h, ref, reactive, onMounted, computed, watch } from "vue";
+	import {
+		h,
+		ref,
+		reactive,
+		onMounted,
+		computed,
+		watch,
+		onActivated,
+	} from "vue";
 	import type { VNodeChild } from "vue";
 	import { NEllipsis, NTag, NBadge } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
@@ -290,6 +298,9 @@
 	//s 移动端标识符
 	const isMobile = ref(false);
 	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+	});
+	onActivated(() => {
 		isMobile.value = judgeIsMobile();
 	});
 

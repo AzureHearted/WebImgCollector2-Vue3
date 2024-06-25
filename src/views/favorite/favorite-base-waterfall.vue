@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, defineProps, withDefaults, onMounted } from "vue";
+	import { ref, defineProps, withDefaults, onMounted, onActivated } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import WaterFallList from "@/components/base/waterfall-list.vue";
 	import GalleryCard from "../gallery/gallery-card.vue";
@@ -77,6 +77,11 @@
 	//s 移动端标识符
 	const isMobile = ref(false);
 	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+		showScrollbar.value = !isMobile.value;
+	});
+	
+	onActivated(() => {
 		isMobile.value = judgeIsMobile();
 		showScrollbar.value = !isMobile.value;
 	});

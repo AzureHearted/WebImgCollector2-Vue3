@@ -52,19 +52,21 @@
 
 <script setup lang="ts">
 	import { GM_info } from "$";
-	import { ref } from "vue";
+	import { ref, onMounted, onActivated } from "vue";
 	import { storeToRefs } from "pinia";
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	import NavMenu from "./layout-nav-menu.vue";
 
 	import { isMobile as judgeIsMobile } from "@/utils/common";
-	import { onMounted } from "vue";
 	const globalStore = useGlobalStore();
 	const { navCollapse } = storeToRefs(globalStore);
 	const VERSION = GM_info.script.version; // 导入版本号
 
 	const isMobile = ref(false);
 	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+	});
+	onActivated(() => {
 		isMobile.value = judgeIsMobile();
 	});
 </script>
