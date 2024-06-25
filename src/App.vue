@@ -37,6 +37,7 @@
 		ref,
 		onMounted,
 		onBeforeUnmount,
+		onDeactivated,
 		onActivated,
 		defineAsyncComponent,
 		watch,
@@ -69,12 +70,12 @@
 	// 当前站点host
 	const host = ref(location.host);
 
+
 	onMounted(() => {
 		//s 用户配置信息获取
 		patternStore.getUserPatternInfo(); // 获取本地方案信息
 		patternStore.setInitPattern(); // 获取初始方案
 	});
-	onActivated(() => {});
 
 	//s 原生dialog相关
 	const appDOM = ref<HTMLDialogElement>();

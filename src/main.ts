@@ -1,5 +1,5 @@
 import "./styles/index.scss";
-import "./styles/fix";
+import { lowerHighZIndex } from "./styles/fix";
 
 import "default-passive-events";
 import { createApp } from "vue";
@@ -24,6 +24,15 @@ const app = createApp(App);
 app.use(createPinia());
 // app.use(router);
 
-app.mount(appContainer); // 挂载app
-// document.documentElement.appendChild(appContainer);
-document.documentElement.appendChild(fragment);
+function init() {
+	lowerHighZIndex();
+	app.mount(appContainer); // 挂载app
+	// document.documentElement.appendChild(appContainer);
+	document.documentElement.appendChild(fragment);
+}
+
+if (document.readyState !== "loading") {
+	init();
+} else {
+	document.addEventListener("DOMContentLoaded", () => init(), { once: true });
+}

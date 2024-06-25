@@ -80,7 +80,7 @@
 		isMobile.value = judgeIsMobile();
 		showScrollbar.value = !isMobile.value;
 	});
-	
+
 	onActivated(() => {
 		isMobile.value = judgeIsMobile();
 		showScrollbar.value = !isMobile.value;
@@ -121,7 +121,7 @@
 			updateCard([card]);
 		}
 		//s 卡片加载完成后手动刷新一次瀑布流
-		waterFallRef.value?.handleResetPosition();
+		// waterFallRef.value?.handleResetPosition();
 	};
 
 	//f 处理卡片标签变化

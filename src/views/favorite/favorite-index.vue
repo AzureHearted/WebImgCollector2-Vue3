@@ -157,6 +157,7 @@
 		onUpdated,
 		onUnmounted,
 		onActivated,
+		onDeactivated,
 		nextTick,
 	} from "vue";
 	import type { VNodeChild } from "vue";
@@ -199,8 +200,8 @@
 	});
 
 	//f 刷新函数
-	const reFresh = () => {
-		refreshStore();
+	const reFresh = async () => {
+		await refreshStore();
 		filters.size.width[1] = sizeRange.value.width[1];
 		filters.size.height[1] = sizeRange.value.height[1];
 		storeFilters.value.size.width[1] = sizeRange.value.width[1];
@@ -273,7 +274,6 @@
 	import { Fancybox, configFancybox } from "@/plugin/fancyapps-ui";
 	import toolbarConfig from "@/plugin/fancyapps-ui/toolbar";
 	import type { ToolbarOptionsType } from "@fancyapps/ui/types/Fancybox/plugins";
-	import { onDeactivated } from "vue";
 	onMounted(() => FancyboxBind(containerDOM.value?.$el, "[data-fancybox]"));
 	onActivated(() => FancyboxBind(containerDOM.value?.$el, "[data-fancybox]"));
 	onUnmounted(() => Fancybox.destroy());
