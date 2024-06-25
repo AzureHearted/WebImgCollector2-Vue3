@@ -322,10 +322,10 @@
 		mounted: () => {
 			// console.log("图片挂载", el.src, el);
 			// 将任务放入宏队列(防止有些时候交叉检测失败的bug)
+			if (imgDOM.value) {
+				imgDOM.value.src = ""; //s 先去除原先的src
+			}
 			setTimeout(() => {
-				if (imgDOM.value) {
-					imgDOM.value.src = ""; //s 先去除原先的src
-				}
 				let src: string = props.src; // 默认使用原图
 				const handleIntersection = async (
 					entries: IntersectionObserverEntry[]

@@ -1,6 +1,7 @@
 import "./styles/index.scss";
+import "./styles/fix";
 
-import 'default-passive-events'
+import "default-passive-events";
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 

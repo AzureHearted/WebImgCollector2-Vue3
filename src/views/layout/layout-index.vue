@@ -1,11 +1,11 @@
 <template>
-	<div
+	<dialog
 		class="layout__container"
 		ref="containerDOM"
 		:class="{ open: globalStore.openWindow }">
 		<AppBar class="layout__app-bar" />
 		<Main class="layout__main" />
-	</div>
+	</dialog>
 </template>
 
 <script setup lang="ts">
@@ -19,7 +19,7 @@
 	import AppBar from "./layout-app-bar.vue";
 	import Main from "./layout-main.vue";
 
-	let containerDOM = ref<HTMLElement>();
+	let containerDOM = ref<HTMLDialogElement>();
 
 	onMounted(() => {
 		// const { start, stop } = useDisableScroll(document.documentElement);
@@ -31,10 +31,13 @@
 					//s 页面滚动元素进行滚动
 					// start();
 					if (!containerDOM.value) return;
+					containerDOM.value.show();
 					containerDOM.value.focus();
 				} else {
 					//s 取消页面元素的滚动阻止事件
 					// stop();
+					if (!containerDOM.value) return;
+					containerDOM.value.close();
 				}
 			},
 			{ immediate: true }
@@ -48,13 +51,16 @@
 <style lang="scss" scoped>
 	// 布局容器样式
 	.layout__container {
-		position: absolute;
+		// position: absolute;
+		position: fixed;
 		width: 100%;
 		height: 100%;
-		margin: unset !important;
+		max-width: unset !important;
+		max-height: unset !important;
 		padding: unset !important;
+		margin: unset !important;
 		border: unset !important;
-		outline: unset;
+		outline: unset !important;
 
 		display: flex;
 		flex-flow: column nowrap;
@@ -64,14 +70,18 @@
 		background: rgba(255, 255, 255, 0.3);
 		backdrop-filter: blur(10px);
 
-		transition: top 0.5s ease-in-out;
-		top: 0;
+		transition: top 0.5s ease-in-out, opacity 0.5s ease-in-out;
+		// top: 0;
 
 		// 未打开时的样式
-		top: -100%;
+		opacity: 0;
+		// top: -100%;
+		pointer-events: none;
 		// 打开时的样式
 		&.open {
-			top: 0;
+			pointer-events: auto;
+			// top: 0;
+			opacity: 1;
 		}
 	}
 	// .layout__app-bar {

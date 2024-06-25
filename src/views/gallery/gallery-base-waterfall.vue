@@ -11,7 +11,7 @@
 			<template #default="{ item }">
 				<GalleryCard
 					v-model:data="(item as any)"
-					viewport-selector=".web-img-collector__container"
+					:is-mobile="isMobile"
 					@change:selected="item.isSelected = $event"
 					@delete="removeCard([$event])"
 					@loaded="handleLoaded"
@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, watch, nextTick, onActivated } from "vue";
+	import { ref, watch, nextTick, onMounted, onActivated } from "vue";
 	import WaterFallList from "@/components/base/waterfall-list.vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import BaseDock from "@/components/base/base-dock.vue";
@@ -32,7 +32,7 @@
 	import GalleryCard from "./gallery-card.vue";
 	import Card from "@/stores/CardStore/class/Card";
 
-	import { isEqualUrl, isMobile } from "@/utils/common";
+	import { isEqualUrl, isMobile as judgeIsMobile } from "@/utils/common";
 	//i 导入仓库
 	import useCardStore from "@/stores/CardStore";
 	import useFavoriteStore from "@/stores/FavoriteStore";
@@ -58,22 +58,29 @@
 	//s 滚动条组件的Ref
 	const scrollbarRef = ref<InstanceType<typeof BaseScrollbar> | null>(null);
 	//s 是否显示滚动条
-	const showScrollbar = ref(!isMobile());
+	const showScrollbar = ref(true);
+
+	//s 移动端标识符
+	const isMobile = ref(false);
+	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+		showScrollbar.value = !isMobile.value;
+	});
 
 	//w 手动刷新showScrollbar,临时解决scrollbar组件中wrapper的scroll尺寸未及时更新的bug
-	watch(
-		() => props.cardList,
-		(newList, oldList) => {
-			if (scrollbarRef.value && newList.length === 0 && oldList.length > 0) {
-				showScrollbar.value = !showScrollbar.value;
-				nextTick(() => {
-					setTimeout(() => {
-						showScrollbar.value = !showScrollbar.value;
-					}, 1000);
-				});
-			}
-		}
-	);
+	// watch(
+	// 	() => props.cardList,
+	// 	(newList, oldList) => {
+	// 		if (scrollbarRef.value && newList.length === 0 && oldList.length > 0) {
+	// 			showScrollbar.value = !showScrollbar.value;
+	// 			nextTick(() => {
+	// 				setTimeout(() => {
+	// 					showScrollbar.value = !showScrollbar.value;
+	// 				}, 1000);
+	// 			});
+	// 		}
+	// 	}
+	// );
 
 	//s 瀑布流组件实例
 	const waterFallRef = ref<InstanceType<typeof WaterFallList> | null>(null);

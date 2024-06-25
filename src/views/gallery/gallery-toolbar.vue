@@ -36,7 +36,7 @@
 				<var-menu
 					placement="bottom-start"
 					:same-width="false"
-					:trigger="isMobile() ? 'click' : 'hover'"
+					:trigger="isMobile ? 'click' : 'hover'"
 					close-on-click-reference
 					:teleport="false">
 					<var-button-group type="primary">
@@ -118,7 +118,7 @@
 				:value="`${checkedCardList.length}${checkedTotalSizeTip}`">
 				<var-menu
 					placement="bottom-start"
-					:trigger="isMobile() ? 'click' : 'hover'"
+					:trigger="isMobile ? 'click' : 'hover'"
 					:teleport="false">
 					<var-button-group type="primary">
 						<var-button
@@ -127,6 +127,7 @@
 							下载
 						</var-button>
 						<var-button
+							v-if="!!filterCardList[nowType].length"
 							:disabled="
 								!filterCardList[nowType].length || loadingStore.loading
 							"
@@ -138,7 +139,11 @@
 						</var-button>
 					</var-button-group>
 					<template #menu>
-						<var-cell title="全部下载" @click="downloadAll" ripple>
+						<var-cell
+							title="全部下载"
+							v-if="!!filterCardList[nowType].length"
+							@click="downloadAll"
+							ripple>
 							<template #icon>
 								<i-mdi-auto-download />
 							</template>
@@ -211,7 +216,7 @@
 			<div class="width-filter">
 				<el-text type="primary">宽度</el-text>
 				<el-slider
-					:size="isMobile() ? 'small' : 'default'"
+					:size="isMobile ? 'small' : 'default'"
 					v-model="filters.size.width"
 					range
 					:step="1"
@@ -224,7 +229,7 @@
 			<div class="height-filter">
 				<el-text type="primary">高度</el-text>
 				<el-slider
-					:size="isMobile() ? 'small' : 'default'"
+					:size="isMobile ? 'small' : 'default'"
 					v-model="filters.size.height"
 					range
 					:step="1"
@@ -244,7 +249,7 @@
 </template>
 
 <script setup lang="ts">
-	import { h, ref, reactive, computed, watch } from "vue";
+	import { h, ref, reactive, onMounted, computed, watch } from "vue";
 	import type { VNodeChild } from "vue";
 	import { NEllipsis, NTag, NBadge } from "naive-ui";
 	import type { SelectOption, SelectRenderTag } from "naive-ui";
@@ -256,7 +261,7 @@
 	import { Icon } from "@iconify/vue";
 
 	// 导入公用ts库
-	import { byteAutoUnit, isMobile } from "@/utils/common";
+	import { byteAutoUnit, isMobile as judgeIsMobile } from "@/utils/common";
 
 	// 导入仓库
 	import { storeToRefs } from "pinia";
@@ -281,6 +286,12 @@
 	const favoriteStore = useFavoriteStore();
 	const loadingStore = useLoadingStore();
 	const patternStore = usePatternStore();
+
+	//s 移动端标识符
+	const isMobile = ref(false);
+	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+	});
 
 	//s 过滤器定义
 	const filters = reactive({

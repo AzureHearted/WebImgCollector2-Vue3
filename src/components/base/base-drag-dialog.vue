@@ -364,15 +364,6 @@
 				nextTick(() => {
 					showDialog.value = true;
 				});
-
-				//s 绑定事件
-				// onClickOutside(dom, (e: MouseEvent) => {
-				// 	// console.log("点击了外部");
-				// 	// 点击dialog外部时判断是否关闭dialog
-				// 	if (props.clickOutsideClose) {
-				// 		show.value = false;
-				// 	}
-				// });
 			} else {
 				//! 已经初始化过了(判断是否重置位置和尺寸)
 				if (props.closeResetState) {
@@ -1063,14 +1054,20 @@
 	// $radius: 4px;
 	//s dialog容器默认样式
 	.base-drag-dialog {
+		box-sizing: border-box !important;
 		position: fixed;
 
-		min-width: v-bind("minWidth+'px'");
-		min-height: v-bind("minHeight+'px'");
+		min-width: v-bind("minWidth+'px'") !important;
+		min-height: v-bind("minHeight+'px'") !important;
 
-		margin: unset !important;
-		padding: unset !important;
-		border: unset !important;
+		max-width: unset;
+		max-height: unset;
+		padding: unset;
+		margin: unset;
+		border: unset;
+		outline: unset;
+		overflow: visible;
+
 		background-color: transparent !important;
 
 		// border-radius: 4px;
@@ -1084,6 +1081,11 @@
 
 		&[data-show="false"] {
 			opacity: 0 !important;
+		}
+
+		&::backdrop {
+			display: none !important;
+			background: unset !important;
 		}
 	}
 

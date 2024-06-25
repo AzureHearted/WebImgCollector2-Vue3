@@ -2,20 +2,20 @@
 	<div class="main__container">
 		<n-layout class="main__layout" has-sider>
 			<n-layout-sider
-				v-if="!isMobile()"
+				v-if="false"
 				style="z-index: 10"
 				collapse-mode="width"
-				:collapsed-width="isMobile() ? 0 : 64"
+				:collapsed-width="isMobile ? 0 : 64"
 				width="130"
 				:collapsed="collapsed"
 				show-trigger
 				:trigger-style="{
 					transition: '0.5s',
 					zIndex: 10000,
-					scale: isMobile() ? 1.5 : 1,
+					scale: isMobile ? 1.5 : 1,
 				}"
 				:collapsed-trigger-style="
-					isMobile()
+					isMobile
 						? {
 								transform: ' translateX(60%) translateY(-50%) ',
 								scale: 1.5,
@@ -32,27 +32,11 @@
 				</keep-alive>
 			</n-layout>
 		</n-layout>
-		<n-drawer
-			v-if="isMobile()"
-			:show="!collapsed"
-			width="fit-content"
-			placement="left"
-			:trap-focus="false"
-			:block-scroll="false"
-			@mask-click="collapsed = true"
-			to=".web-img-collector__container .main__layout">
-			<n-drawer-content
-				:body-content-style="{
-					padding: '0',
-				}">
-				<NavMenu @select="collapsed = true" />
-			</n-drawer-content>
-		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
-	import { computed } from "vue";
+	import { ref, computed, onMounted } from "vue";
 	import type { Component } from "vue";
 
 	import Gallery from "@/views/gallery/gallery-index.vue";
@@ -60,7 +44,7 @@
 	import Setting from "@/views/setting/setting-index.vue";
 	import Favorite from "@/views/favorite/favorite-index.vue";
 	import Test from "@/views/test/test-index.vue";
-	import { isMobile } from "@/utils/common";
+	import { isMobile as judgeIsMobile } from "@/utils/common";
 
 	import NavMenu from "./layout-nav-menu.vue";
 
@@ -68,6 +52,12 @@
 	import useGlobalStore from "@/stores/GlobalStore";
 	const globalStore = useGlobalStore();
 	const { tab: activeKey, navCollapse: collapsed } = storeToRefs(globalStore);
+
+	//s 移动端标识符
+	const isMobile = ref(false);
+	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+	});
 
 	// 组件键值对
 	const views: { [key: string]: Component } = {

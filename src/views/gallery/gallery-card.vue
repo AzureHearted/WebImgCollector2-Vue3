@@ -4,7 +4,7 @@
 		:data-id="data.id"
 		background-color="transparent"
 		style="border: unset"
-		:data-show="isMobile()"
+		:data-show="isMobile"
 		:data-source-type="data.source.meta.type"
 		:data-preview-type="data.preview.meta.type"
 		:data-checked="data.isSelected">
@@ -307,7 +307,6 @@
 	import {
 		buildUUID,
 		byteAutoUnit,
-		isMobile,
 		legalizationPathString,
 	} from "@/utils/common";
 
@@ -333,6 +332,7 @@
 			showDownloadButton?: boolean;
 			showFavoriteButton?: boolean;
 			showToLocateButton?: boolean;
+			isMobile?: boolean; //s 移动端标识
 		}>(),
 		{
 			showCheckBox: true,
@@ -508,8 +508,7 @@
 		transition: transform 0.2s;
 	}
 
-	.gallery-card[data-show="true"][data-visible="true"]
-		.gallery-card-header-right,
+	.gallery-card[data-show="true"] .gallery-card-header-right,
 	.gallery-card:hover .gallery-card-header-right {
 		transform: translateY(0);
 		transition: transform 0.2s;
@@ -578,7 +577,7 @@
 		}
 	}
 
-	.gallery-card[data-show="true"][data-visible="true"] .gallery-card-footer,
+	.gallery-card[data-show="true"] .gallery-card-footer,
 	.gallery-card:hover .gallery-card-footer {
 		transform: translateY(0);
 	}

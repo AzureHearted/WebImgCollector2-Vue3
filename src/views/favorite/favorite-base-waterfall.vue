@@ -8,10 +8,10 @@
 			<template #default="{ item }">
 				<GalleryCard
 					v-model:data="(item as Card)"
+					:is-mobile="isMobile"
 					:show-to-locate-button="false"
 					:show-delete-button="false"
 					:show-download-button="(item as Card).source.meta.type!=='html'"
-					viewport-selector=".web-img-collector__container"
 					@change:selected="item.isSelected = $event"
 					@change:title="updateCard([item as Card])"
 					@loaded="handleLoaded"
@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-	import { ref, defineProps, withDefaults } from "vue";
+	import { ref, defineProps, withDefaults, onMounted } from "vue";
 	import BaseScrollbar from "@/components/base/base-scrollbar.vue";
 	import WaterFallList from "@/components/base/waterfall-list.vue";
 	import GalleryCard from "../gallery/gallery-card.vue";
@@ -46,7 +46,7 @@
 
 	import useFavoriteStore from "@/stores/FavoriteStore";
 	import useGlobalStore from "@/stores/GlobalStore";
-	import { isEqualUrl } from "@/utils/common";
+	import { isEqualUrl, isMobile as judgeIsMobile } from "@/utils/common";
 
 	const favoriteStore = useFavoriteStore();
 	const globalStore = useGlobalStore();
@@ -68,6 +68,18 @@
 			cardList: () => [],
 		}
 	);
+
+	//s 滚动条组件的Ref
+	const scrollbarRef = ref<InstanceType<typeof BaseScrollbar> | null>(null);
+	//s 是否显示滚动条
+	const showScrollbar = ref(true);
+
+	//s 移动端标识符
+	const isMobile = ref(false);
+	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+		showScrollbar.value = !isMobile.value;
+	});
 
 	//f 处理卡片下载
 	const handleDownload = async (card: Card) => {

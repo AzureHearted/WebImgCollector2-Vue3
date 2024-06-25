@@ -7,8 +7,8 @@
 		bottom="20vh"
 		right="8vh"
 		direction="top"
-		:trigger="isMobile() ? 'click' : 'hover'"
-		drag
+		:trigger="isMobile ? 'click' : 'hover'"
+		:drag="FabDragConfig"
 		:teleport="false">
 		<template #trigger>
 			<!--s 图库显示切换按钮 -->
@@ -91,7 +91,8 @@
 
 <script setup lang="ts">
 	import { ref, reactive, onMounted } from "vue";
-	import { isMobile } from "@/utils/common";
+	import type { FabProps } from "@varlet/ui";
+	import { isMobile as judgeIsMobile } from "@/utils/common";
 	import { storeToRefs } from "pinia";
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
 	import useCardStore from "@/stores/CardStore";
@@ -103,7 +104,7 @@
 	const loadingStore = useLoadingStore();
 	const { loading } = storeToRefs(loadingStore);
 
-	const active = ref(false); // 控制悬浮按钮的显示状态
+	const active = ref(false); //s 控制悬浮按钮的显示状态
 
 	// 定义Props
 	withDefaults(
@@ -117,14 +118,29 @@
 		}
 	);
 
+	//s 移动端标识符
+	const isMobile = ref(false);
+	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+	});
+
+	//s Fab配置信息
+	const FabDragConfig = ref<FabProps["drag"]>({
+		boundary: {
+			top: "20px",
+			left: "20px",
+			right: "20px",
+			bottom: "20px",
+		},
+	});
+
+	//s 状态信息
 	const state = reactive({
 		scrolling: false,
 		scrollingToDown: false,
 		scrollingToUp: false,
 		mounted: false,
 	});
-	// const scrollingToDown = ref(false); // 控制滚动按钮的显示状态
-	// const scrollingToUp = ref(false); // 控制滚动按钮的显示状态
 
 	onMounted(() => {
 		state.mounted = true;

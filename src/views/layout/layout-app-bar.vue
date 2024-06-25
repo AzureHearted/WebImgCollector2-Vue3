@@ -2,14 +2,32 @@
 	<div class="app-bar__container">
 		<!--s 移动端的菜单按钮 -->
 		<n-button
-			v-if="isMobile()"
 			circle
 			:bordered="false"
-			@click="navCollapse = !navCollapse">
+			@click="navCollapse = !navCollapse"
+			@mouseenter="!isMobile && (navCollapse = false)">
 			<template #icon>
 				<i-ep-menu />
 			</template>
 		</n-button>
+		<!--! 侧边导航菜单抽屉 -->
+		<n-drawer
+			:show="!navCollapse"
+			width="fit-content"
+			placement="left"
+			:trap-focus="false"
+			:block-scroll="false"
+			display-directive="show"
+			@mask-click="navCollapse = true"
+			@mouseleave="!isMobile && (navCollapse = true)"
+			to=".web-img-collector__container>.layout__container">
+			<n-drawer-content
+				:body-content-style="{
+					padding: '0',
+				}">
+				<NavMenu @select="navCollapse = true" />
+			</n-drawer-content>
+		</n-drawer>
 		<!--s 标题 -->
 		<div class="app-bar__title">
 			<n-gradient-text type="primary"> Web Img Collector 2 </n-gradient-text>
@@ -34,12 +52,21 @@
 
 <script setup lang="ts">
 	import { GM_info } from "$";
+	import { ref } from "vue";
 	import { storeToRefs } from "pinia";
 	import useGlobalStore from "@/stores/GlobalStore"; //导入全局仓库
-	import { isMobile } from "@/utils/common";
+	import NavMenu from "./layout-nav-menu.vue";
+
+	import { isMobile as judgeIsMobile } from "@/utils/common";
+	import { onMounted } from "vue";
 	const globalStore = useGlobalStore();
 	const { navCollapse } = storeToRefs(globalStore);
 	const VERSION = GM_info.script.version; // 导入版本号
+
+	const isMobile = ref(false);
+	onMounted(() => {
+		isMobile.value = judgeIsMobile();
+	});
 </script>
 
 <style lang="scss" scoped>
