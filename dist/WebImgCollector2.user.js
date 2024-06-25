@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WebImgCollector2
 // @namespace    npm/vite-plugin-monkey
-// @version      1.4.24
+// @version      1.4.25
 // @author       ls
 // @description  图片聚合器
 // @license      MIT
