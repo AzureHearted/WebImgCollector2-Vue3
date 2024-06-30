@@ -6,7 +6,6 @@
 		<WaterFallList
 			ref="waterFallRef"
 			:data="cardList"
-			:pause-layout="!globalStore.openWindow"
 			item-padding="2px">
 			<template #default="{ item }">
 				<GalleryCard
