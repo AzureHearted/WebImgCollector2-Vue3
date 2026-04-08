@@ -30,35 +30,35 @@ export async function getBlobByUrlAuto(
 				console.warn(`GM请求失败 (${attempt}/${maxRetry}) ：${url}`);
 			},
 		},
-		// GM请求2 (referer为当前域名)
+		// GM请求2 (referrer为当前域名)
 		{
 			mode: "GM",
-			referer: location.origin + "/",
+			referrer: location.origin + "/",
 			retray,
 			onProgress(loaded, total) {
 				console.log(
-					`GM请求(referer为当前域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
+					`GM请求(referrer为当前域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
 				);
 			},
 			onError(_error, attempt, maxRetry) {
 				console.warn(
-					`GM请求(referer为当前域名)失败 (${attempt}/${maxRetry}) ：${url}`,
+					`GM请求(referrer为当前域名)失败 (${attempt}/${maxRetry}) ：${url}`,
 				);
 			},
 		},
-		// GM请求3 (referer为链接域名)
+		// GM请求3 (referrer为链接域名)
 		{
 			mode: "GM",
-			referer: getHostByUrl(url) + "/",
+			referrer: getHostByUrl(url) + "/",
 			retray,
 			onProgress(loaded, total) {
 				console.log(
-					`GM请求(referer为链接域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
+					`GM请求(referrer为链接域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
 				);
 			},
 			onError(_error, attempt, maxRetry) {
 				console.warn(
-					`GM请求(referer为链接域名)失败 (${attempt}/${maxRetry}) ：${url}`,
+					`GM请求(referrer为链接域名)失败 (${attempt}/${maxRetry}) ：${url}`,
 				);
 			},
 		},
@@ -82,7 +82,7 @@ export async function getBlobByUrlAuto(
 // t 请求尝试队列
 export interface TryGetBlobRequest {
 	mode: "Fetch" | "GM";
-	referer?: string;
+	referrer?: string;
 	// 重试次数
 	retray?: number;
 	onProgress?: (loaded: number, total: number) => void;
@@ -114,7 +114,7 @@ async function tryGetBlob(
 				// 1️⃣ 主请求
 				blob = await getBlobByUrl(url, {
 					mode: request.mode,
-					referer: request.referer,
+					referrer: request.referrer,
 					onProgress: request.onProgress,
 				}).catch(() => null);
 
@@ -122,7 +122,7 @@ async function tryGetBlob(
 				if (!blob && url !== urlUnSearch) {
 					blob = await getBlobByUrl(urlUnSearch, {
 						mode: request.mode,
-						referer: request.referer,
+						referrer: request.referrer,
 						onProgress: request.onProgress,
 					}).catch(() => null);
 				}
@@ -148,7 +148,7 @@ async function tryGetBlob(
 // t 配置选项
 interface GetBlobByUrlOptions {
 	mode: "Fetch" | "GM";
-	referer?: string;
+	referrer?: string;
 	onProgress?: (loaded: number, total: number) => void;
 }
 
@@ -156,19 +156,20 @@ interface GetBlobByUrlOptions {
  * 通过链接获取blob
  * @param url 链接
  * @param mode 模式
- * @param referer
+ * @param referrer
  * @returns
  */
 export async function getBlobByUrl(url: string, options?: GetBlobByUrlOptions) {
 	if (!url || !url.trim().length) return null;
 
-	const { mode = "Fetch", referer, onProgress } = options ?? {};
+	const { mode = "Fetch", referrer, onProgress } = options ?? {};
 
 	switch (mode) {
 		case "Fetch":
 			try {
 				// Fetch 第一次尝试
 				let res = await fetchWithProgress(url, {
+					referrer,
 					onProgress(info) {
 						onProgress?.(info.loaded, info.total);
 					},
@@ -183,6 +184,7 @@ export async function getBlobByUrl(url: string, options?: GetBlobByUrlOptions) {
 
 				// Fetch 第二次尝试（no-cache）
 				res = await fetchWithProgress(url, {
+					referrer,
 					cache: "no-cache",
 					onProgress(info) {
 						onProgress?.(info.loaded, info.total);
@@ -204,7 +206,7 @@ export async function getBlobByUrl(url: string, options?: GetBlobByUrlOptions) {
 			const res = await GMRequest({
 				method: "GET",
 				url,
-				referer,
+				referrer,
 				responseType: "blob",
 				anonymous: true,
 				onprogress(event) {

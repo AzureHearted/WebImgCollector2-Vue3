@@ -7,7 +7,7 @@ type GM_xmlhttpRequestParameters = Parameters<typeof GM_xmlhttpRequest>["0"];
 interface GMRequestOptions {
 	url: GM_xmlhttpRequestParameters["url"];
 	method?: "GET" | "POST" | "HEAD";
-	referer?: string;
+	referrer?: string;
 	responseType?: GM_xmlhttpRequestParameters["responseType"];
 	data?: GM_xmlhttpRequestParameters["data"];
 	timeout?: GM_xmlhttpRequestParameters["timeout"];
@@ -49,7 +49,7 @@ export function GMRequest(options: GMRequestOptions) {
 	const {
 		url,
 		method = "GET",
-		referer,
+		referrer,
 		responseType = "json",
 		data,
 		timeout = 10000,
@@ -66,8 +66,8 @@ export function GMRequest(options: GMRequestOptions) {
 	}
 
 	// 合并 referer
-	if (referer) {
-		headers["referer"] = referer;
+	if (referrer) {
+		headers["Referer"] = referrer;
 	}
 
 	// 返回一个Promise（支持 reject，避免吞错）
