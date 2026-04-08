@@ -13,9 +13,9 @@ export class Pattern implements IPattern {
 	public readonly id: string; // 方案id
 	public mainInfo: IPattern["mainInfo"] = {
 		name: "新方案",
-		host: location.hostname,
+		host: "",
 		matchHost: [],
-		icon: getFavicon(),
+		icon: "",
 		titleSelector: "title",
 		filter: {
 			expression: "",
@@ -37,7 +37,11 @@ export class Pattern implements IPattern {
 			...this.mainInfo,
 			...options?.mainInfo,
 		};
-		this.rules = (options?.rules || []).map((x) => new Rule(x));
+		try {
+			this.mainInfo.host = options?.mainInfo?.host ?? location.hostname;
+			this.mainInfo.icon = options?.mainInfo?.icon ?? getFavicon();
+		} catch {}
+		this.rules = (options?.rules ?? []).map((x) => new Rule(x));
 		this.state = {
 			...this.state,
 			...options?.state,
