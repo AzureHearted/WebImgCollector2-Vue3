@@ -646,6 +646,9 @@ function onKeyDown(e: KeyboardEvent) {
 
 			& > .base-img__wrapper {
 				height: 100%;
+				img {
+					object-fit: cover;
+				}
 			}
 
 			&__error > .base-img__wrapper {
@@ -668,6 +671,9 @@ function onKeyDown(e: KeyboardEvent) {
 
 			& > .base-video__wrapper {
 				height: 100%;
+				video {
+					object-fit: cover;
+				}
 			}
 
 			&__error > .base-video__wrapper {
