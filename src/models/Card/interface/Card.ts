@@ -1,3 +1,4 @@
+import type { Rule } from "../../Rule";
 import type { Meta } from "./Meta";
 
 // t 卡片接口
@@ -12,6 +13,8 @@ export interface Card {
 	source: Source;
 	/** 标签 */
 	tags: string[];
+	/** 匹配规则 */
+	matchedRule?: Rule;
 }
 
 // t 源

@@ -1,6 +1,7 @@
 import { cloneDeep } from "lodash";
 import type { Card as ICard } from "./interface/Card";
 import { Meta } from "./Meta";
+import type { Rule } from "../Rule";
 
 // 不带状态的卡片类型
 export class RawCard implements ICard {
@@ -9,6 +10,7 @@ export class RawCard implements ICard {
 	public preview: ICard["preview"];
 	public description: ICard["description"];
 	public tags: string[];
+	public matchedRule?: Rule;
 
 	constructor(raw: Partial<ICard>) {
 		const { id, source, preview, description, tags } = raw;

@@ -8,7 +8,7 @@ export class Meta implements IMeta {
 	public size: number;
 	public ext: string;
 	public get aspectRatio() {
-		if (this.width === 0 || this.height === 0) {
+		if (this.width <= 0 || this.height <= 0) {
 			return 1;
 		} else {
 			return this.width / this.height;
