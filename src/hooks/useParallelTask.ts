@@ -1,42 +1,110 @@
-export interface Task<T = unknown> {
+// 令牌桶算法实现的并发任务调度器
+class TokenBucket {
+	private capacity: number; // 令牌桶的总容量
+	private tokens: number; // 当前令牌的数量
+	private refillRate: number; // 每毫秒补充的令牌数量
+	private lastRefill: number; // 上次补充令牌的时间戳（毫秒）
+
+	/**
+	 * 创建令牌桶
+	 * @param capacity 容量，表示令牌桶的最大容量
+	 * @param refillPerSecond 每秒补充的令牌数量
+	 */
+	constructor(capacity: number, refillPerSecond: number) {
+		this.capacity = capacity; // 初始化令牌桶的容量
+		this.tokens = capacity; // 初始令牌数量等于容量
+		this.refillRate = refillPerSecond / 1000; // 计算每毫秒补充的令牌数量
+		this.lastRefill = Date.now(); // 记录当前时间作为上次补充令牌的时间戳
+	}
+
+	// 私有方法，用于补充令牌
+	private refill() {
+		const now = Date.now(); // 获取当前时间
+		const delta = now - this.lastRefill; // 计算自上次补充令牌以来的时间差（毫秒）
+
+		const add = delta * this.refillRate; // 计算需要补充的令牌数量
+		this.tokens = Math.min(this.capacity, this.tokens + add); // 更新令牌数量，但不能超过容量
+
+		this.lastRefill = now; // 更新上次补充令牌的时间戳为当前时间
+	}
+
+	// 尝试移除指定数量的令牌
+	tryRemove(count = 1): boolean {
+		this.refill(); // 补充令牌
+
+		if (this.tokens >= count) {
+			// 如果当前令牌数量足够
+			this.tokens -= count; // 减去指定数量的令牌
+			return true; // 返回成功
+		}
+
+		return false; // 返回失败，令牌不足
+	}
+
+	// 异步等待令牌
+	async waitForToken(count = 1, shouldStop?: () => boolean): Promise<boolean> {
+		while (true) {
+			if (shouldStop?.()) return false;
+
+			// 无限循环，直到获取到足够的令牌
+			if (this.tryRemove(count)) return true; // 尝试获取令牌，如果成功则返回
+
+			// 等一小段时间再试（可调优）
+			await new Promise((r) => setTimeout(r, 10)); // 等待10毫秒后重试
+		}
+	}
+}
+
+export interface Task<T> {
 	/** 任务执行函数 */
-	handle: () => Promise<T>;
-	/** 当任务执行完成后，空位补任务延迟 @default undefined (默认受 options.refillDelay 控制) */
-	refillDelay?: number | null;
+	handle: () => Promise<T> | Awaited<T>;
 }
 
 interface Options<T> {
-	/** 并发数（ms） @default 3 */
+	/** 并发数 @default 3 */
 	parallelCount: number;
 
-	/** 空位补任务延迟（ms） @default 250 */
-	refillDelay?: number;
+	// 新增令牌桶配置
+	tokenBucket?: {
+		/** 令牌桶容量 */
+		capacity: number;
+		/** 每秒补充的令牌数量  */
+		refillPerSecond: number;
+	};
+
+	onTaskBeforeRun: (index: number, task: Task<T>, stop: () => void) => void;
 
 	onTaskComplete: (
 		index: number,
 		result: T,
 		completedCount: number,
 		stop: () => void,
+		duration: number,
 	) => void;
 
 	onTaskError: (index: number, error: any, task: Task<T>) => void;
 
-	onAllTasksComplete: (completedCount: number, failedCount: number) => void;
+	onAllTasksComplete: (
+		completedCount: number,
+		failedCount: number,
+		QPS: number,
+	) => void;
 }
 
 export function useParallelTask<T = void>(
 	tasks: Task<T>[],
 	options?: Partial<Options<T>>,
 ) {
-	const {
-		parallelCount = 3,
-		refillDelay = 250, // 延迟
-	} = options || {};
+	const { parallelCount = 3, tokenBucket } = options || {};
+
+	const bucket = tokenBucket
+		? new TokenBucket(tokenBucket.capacity, tokenBucket.refillPerSecond)
+		: null;
 
 	let nextIndex = 0; // 下一个要执行的任务索引
-	let finishedCount = 0; // 成功数
-	let failedCount = 0; // 失败数
-	let runningCount = 0; // 当前运行中的任务数
+	const finishedTaskSet = new Set<Task<T>>(); // 已完成任务集合
+	const failedTaskSet = new Set<Task<T>>(); // 出错的任务集合
+	const runningTaskSet = new Set<Task<T>>(); // 正在运行的任务集合
 
 	let stopFlag = false;
 	let resolved = false;
@@ -46,9 +114,10 @@ export function useParallelTask<T = void>(
 	}
 
 	function run() {
+		const parallelStart = Date.now();
 		return new Promise<void>((resolve) => {
 			if (tasks.length === 0) {
-				options?.onAllTasksComplete?.(0, 0);
+				options?.onAllTasksComplete?.(0, 0, 0);
 				resolve();
 				return;
 			}
@@ -58,85 +127,96 @@ export function useParallelTask<T = void>(
 				if (resolved) return;
 
 				// 正常完成
-				if (finishedCount + failedCount === tasks.length) {
+				if (finishedTaskSet.size + failedTaskSet.size === tasks.length) {
 					resolved = true;
-					options?.onAllTasksComplete?.(finishedCount, failedCount);
+					const QPS =
+						((finishedTaskSet.size + failedTaskSet.size) /
+							(Date.now() - parallelStart)) *
+						1000;
+					options?.onAllTasksComplete?.(
+						finishedTaskSet.size,
+						failedTaskSet.size,
+						QPS,
+					);
 					resolve();
 					return;
 				}
 
 				// 停止后：只要没有在运行的任务，就结束
-				if (stopFlag && runningCount === 0) {
+				if (stopFlag && runningTaskSet.size === 0) {
 					resolved = true;
-					options?.onAllTasksComplete?.(finishedCount, failedCount);
+					const QPS =
+						((finishedTaskSet.size + failedTaskSet.size) /
+							(Date.now() - parallelStart)) *
+						1000;
+					options?.onAllTasksComplete?.(
+						finishedTaskSet.size,
+						failedTaskSet.size,
+						QPS,
+					);
 					resolve();
 				}
 			}
 
 			// 核心调度器：补任务
 			function schedule() {
-				// 已停止就不再调度
 				if (stopFlag) return;
 
 				// 有空位 && 有任务
-				while (runningCount < parallelCount && nextIndex < tasks.length) {
+				while (
+					runningTaskSet.size < parallelCount &&
+					nextIndex < tasks.length
+				) {
 					runNext();
 				}
 			}
 
 			// 执行一个任务
-			function runNext() {
+			async function runNext() {
 				if (stopFlag) return;
 
 				const currentIndex = nextIndex++;
 				const task = tasks[currentIndex];
 
-				runningCount++;
+				runningTaskSet.add(task);
 
-				task
-					.handle()
-					.then((res) => {
-						finishedCount++;
-						// console.debug(`Task执行成功！:${currentIndex}`);
-						options?.onTaskComplete?.(currentIndex, res, finishedCount, stop);
-					})
-					.catch((err) => {
-						// console.debug(`Task执行失败！！:${currentIndex}`);
-						failedCount++;
-						options?.onTaskError?.(currentIndex, err, task);
-					})
-					.finally(() => {
-						runningCount--;
+				try {
+					// 等待 token
+					if (bucket) {
+						const ok = await bucket.waitForToken(1, () => stopFlag);
+						if (!ok) return;
+					}
+					options?.onTaskBeforeRun?.(currentIndex, task, stop);
+					const start = Date.now();
+					const res = await task.handle();
+					const end = Date.now();
 
-						// 如果停止，直接尝试结束
-						if (stopFlag) {
-							tryFinish();
-							return;
-						}
+					finishedTaskSet.add(task);
+					options?.onTaskComplete?.(
+						currentIndex,
+						res,
+						finishedTaskSet.size,
+						stop,
+						end - start,
+					);
+				} catch (err) {
+					failedTaskSet.add(task);
+					options?.onTaskError?.(currentIndex, err, task);
+				} finally {
+					runningTaskSet.delete(task);
 
-						const delay =
-							task.refillDelay === undefined
-								? refillDelay
-								: (task.refillDelay ?? 0);
-
-						// 延迟补位（核心新增）
-						if (delay > 0) {
-							setTimeout(() => {
-								// 判断是否阻断 schedule
-								if (!stopFlag) {
-									schedule();
-								}
-							}, delay);
-						} else {
-							schedule();
-						}
-
-						// 检查是否全部完成
+					if (stopFlag) {
 						tryFinish();
-					});
+						return;
+					}
+
+					schedule();
+
+					tryFinish();
+				}
 			}
 
-			// 🚀 初始化启动
+			// 初始化启动
 			schedule();
 		});
 	}
