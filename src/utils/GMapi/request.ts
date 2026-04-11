@@ -52,7 +52,7 @@ export function GMRequest(options: GMRequestOptions) {
 		referrer,
 		responseType = "json",
 		data,
-		timeout = 10000,
+		timeout = 3000,
 		headers = {},
 		anonymous,
 		onprogress,

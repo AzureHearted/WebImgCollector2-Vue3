@@ -1,31 +1,30 @@
 // 匹配类型
-type matchType =
-	| "value"
-	| "attribute"
-	| "property"
-	| "innerText"
-	| "innerHTML"
-	| "outerHTML";
-// 获取Dom信息
-export async function getDOMInfo(
-	dom: HTMLElement,
-	type: matchType,
-	name: string,
-) {
-	let result = "";
-	// console.log("getDOMInfo日志：", type, name, dom);
-	switch (type) {
+type MatchType =
+	| { type: "value" }
+	| { type: "innerText" | "innerHTML" | "outerHTML" }
+	| { type: "attribute" | "property"; name: string };
+
+/**
+ * 获取Dom信息
+ * @param dom DOM元素
+ * @param type 匹配类型
+ * @param name 属性名
+ * @returns 信息文本
+ */
+export function getDOMInfo(dom: HTMLElement, match: MatchType) {
+	let result: string;
+	switch (match.type) {
 		case "value":
 			// 处理值的情况
-			result = getDOMValue(dom);
+			result = String(getDOMValue(dom));
 			break;
 		case "attribute":
 			// 处理Attribute属性的情况
-			result = getDOMAttribute(dom, name);
+			result = getDOMAttribute(dom, match.name);
 			break;
 		case "property":
 			// 处理Property属性的情况
-			result = getDOMProperty(dom, name);
+			result = getDOMProperty(dom, match.name);
 			break;
 		case "innerText":
 			// 处理innerText的情况
@@ -40,7 +39,8 @@ export async function getDOMInfo(
 			result = dom.outerHTML;
 			break;
 		default:
-		// 默认情况
+			// 默认情况
+			result = "";
 	}
 	// 最后判断匹配结果是否是路径(或者路径的一部分)
 	if (isUrl(result)) {

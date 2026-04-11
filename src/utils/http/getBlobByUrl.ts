@@ -21,11 +21,11 @@ export async function getBlobByUrlAuto(
 		{
 			mode: "GM",
 			retray,
-			onProgress(loaded, total) {
-				console.log(
-					`GM请求 (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
-				);
-			},
+			// onProgress(loaded, total) {
+			// 	console.log(
+			// 		`GM请求 (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
+			// 	);
+			// },
 			onError(_error, attempt, maxRetry) {
 				console.warn(`GM请求失败 (${attempt}/${maxRetry}) ：${url}`);
 			},
@@ -35,11 +35,11 @@ export async function getBlobByUrlAuto(
 			mode: "GM",
 			referrer: location.origin + "/",
 			retray,
-			onProgress(loaded, total) {
-				console.log(
-					`GM请求(referrer为当前域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
-				);
-			},
+			// onProgress(loaded, total) {
+			// 	console.log(
+			// 		`GM请求(referrer为当前域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
+			// 	);
+			// },
 			onError(_error, attempt, maxRetry) {
 				console.warn(
 					`GM请求(referrer为当前域名)失败 (${attempt}/${maxRetry}) ：${url}`,
@@ -51,11 +51,11 @@ export async function getBlobByUrlAuto(
 			mode: "GM",
 			referrer: getHostByUrl(url) + "/",
 			retray,
-			onProgress(loaded, total) {
-				console.log(
-					`GM请求(referrer为链接域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
-				);
-			},
+			// onProgress(loaded, total) {
+			// 	console.log(
+			// 		`GM请求(referrer为链接域名) (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
+			// 	);
+			// },
 			onError(_error, attempt, maxRetry) {
 				console.warn(
 					`GM请求(referrer为链接域名)失败 (${attempt}/${maxRetry}) ：${url}`,
@@ -66,11 +66,11 @@ export async function getBlobByUrlAuto(
 		{
 			mode: "Fetch",
 			retray,
-			onProgress(loaded, total) {
-				console.log(
-					`Fetch请求 (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
-				);
-			},
+			// onProgress(loaded, total) {
+			// 	console.log(
+			// 		`Fetch请求 (${((loaded / total) * 100).toFixed(2)}%) ：${url}`,
+			// 	);
+			// },
 			onError(_error, attempt, maxRetry) {
 				console.warn(`Fetch请求失败 (${attempt}/${maxRetry}) ：${url}`);
 			},
@@ -209,6 +209,7 @@ export async function getBlobByUrl(url: string, options?: GetBlobByUrlOptions) {
 				referrer,
 				responseType: "blob",
 				anonymous: true,
+				timeout: 2000,
 				onprogress(event) {
 					onProgress?.(event.loaded, event.total);
 				},

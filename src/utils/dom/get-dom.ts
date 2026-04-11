@@ -3,7 +3,7 @@ type optionsType = {
 	/** 返回模式 @default "first" */
 	mode: "all" | "first" | "last";
 	/** 指定从哪个DOM节点开始查找 @default document */
-	regionDOM: HTMLElement | Document;
+	root: HTMLElement | Document;
 	/** 要排除的祖先选择器 */
 	excludeParentSelectors?: string[];
 };
@@ -24,12 +24,16 @@ export function getDOM(
 	// 默认选项
 	const defaultOptions: optionsType = {
 		mode: "first",
-		regionDOM: document,
+		root: document,
 		excludeParentSelectors: [],
 	};
 
 	// 合并选项
-	const { mode, regionDOM, excludeParentSelectors } = {
+	const {
+		mode,
+		root: regionDOM,
+		excludeParentSelectors,
+	} = {
 		...defaultOptions,
 		...options,
 	};
