@@ -1,10 +1,14 @@
 import { Meta } from "@/models";
 import { getExtByUrl, isBase64Img, isUrl } from "@/utils";
-import { getDOMNaturalSize } from "./get-dom-natural-size";
+import {
+	getDOMNaturalSize,
+	waitForImageSize,
+	waitForVideoSize,
+} from "./get-dom-natural-size";
 
-// i 元信息陪自己对象
+// t 获取元信息配置对象
 interface GetMetaOption {
-	method: "auto" | "byNaturalSize" | "byImage" | "byUrl" | "byBlob";
+	method: "auto" | "byImage" | "byUrl" | "byBlob";
 	url?: string;
 }
 
@@ -25,9 +29,6 @@ export async function getMeta(
 
 	// 根据方式分发
 	switch (method) {
-		case "byNaturalSize":
-			if (isDOMImageOrVideo(target)) return await getDOMMeta(target);
-			break;
 		case "byUrl":
 			if (typeof target === "string" && isUrl(target))
 				return await getMetaByUrl(new URL(target));
@@ -57,28 +58,31 @@ async function getMetaAuto(
 
 	// DOM元素处理
 	if (isDOMElement(target)) {
-		meta = await getDOMMeta(target, url);
+		meta = await getDOMMeta(target, { url, fallback: true });
 		// 假如meta有效，则直接返回
 		if (meta.valid) return meta;
 	}
 
 	// URL字符串
 	if (typeof target === "string" && (isUrl(target) || isBase64Img(target))) {
-		const res = await getMetaByUrl(new URL(target), { type: "html" });
-		// console.log(`推断结果`, res);
-		return res;
+		return getMetaByUrl(new URL(target), { type: "html" });
 	}
 
 	// Blob对象
 	if (target instanceof Blob) {
-		return await getMetaByBlob(target);
+		return getMetaByBlob(target);
 	}
 
 	// 其他情况
 	return null;
 }
 
-// 获取元信息(通过url)
+/**
+ * 获取元信息(通过url)
+ * @param url 链接
+ * @param defaultMeta 默认元信息
+ * @returns
+ */
 async function getMetaByUrl(url: URL, defaultMeta?: Partial<Meta>) {
 	// meta初始值
 	let meta = new Meta();
@@ -91,7 +95,6 @@ async function getMetaByUrl(url: URL, defaultMeta?: Partial<Meta>) {
 	if (inferType === "image") {
 		// s 处理图片类型
 		const res = await getMetaByImage(url.href);
-		// console.log(`${url.href},推断为image，getMetaByImage结果`, res);
 		res.ext = meta.ext || res.ext;
 		meta = new Meta({ ...meta, ...res });
 	} else if (inferType === "video") {
@@ -110,7 +113,11 @@ async function getMetaByUrl(url: URL, defaultMeta?: Partial<Meta>) {
 	return meta;
 }
 
-// 通过Image对象获取图片meta
+/**
+ * 通过Image对象获取图片元信息
+ * @param url 链接
+ * @returns
+ */
 function getMetaByImage(url: string): Promise<Meta> {
 	if (!url || !url.trim().length) {
 		const errMeta: Meta = new Meta();
@@ -170,7 +177,11 @@ function getMetaByImage(url: string): Promise<Meta> {
 	});
 }
 
-// 通过Video对象获取视频meta
+/**
+ * 通过Video对象获取视频元信息
+ * @param url 链接
+ * @returns
+ */
 function getMetaByVideo(url: string): Promise<Meta> {
 	if (!url || !url.trim().length) {
 		console.log("链接无效", url);
@@ -208,7 +219,11 @@ function getMetaByVideo(url: string): Promise<Meta> {
 	});
 }
 
-// 获取元信息(通过Blob对象)
+/**
+ * 通过Blob对象获取元信息
+ * @param blob Blob对象
+ * @returns
+ */
 async function getMetaByBlob(blob: Blob) {
 	// meta初始值
 	let meta: Meta = new Meta();
@@ -232,7 +247,11 @@ async function getMetaByBlob(blob: Blob) {
 	return meta;
 }
 
-// 通过blob获取图片meta
+/**
+ * 通过blob获取图片元信息
+ * @param blob 图片blob
+ * @returns
+ */
 function getImgMetaByBlob(blob: Blob) {
 	let meta: Meta;
 	return new Promise((resolve) => {
@@ -278,49 +297,36 @@ function isDOMElement(target: any): target is HTMLElement {
 	return target instanceof HTMLElement;
 }
 
-// 判断是否是DOM Image/Video/Source
-function isDOMImageOrVideo(
-	target: any,
-): target is HTMLImageElement | HTMLVideoElement {
-	return (
-		target instanceof HTMLImageElement || target instanceof HTMLVideoElement
-	);
-}
-
 /**
  * DOM元素获取元信息
  * @param dom DOM元素
  * @param url 补充链接（可选, 通常是可能携带meta的url）
  * @returns
  */
-async function getDOMMeta(dom: HTMLElement, url?: string): Promise<Meta> {
+export async function getDOMMeta(
+	dom: HTMLElement,
+	options?: {
+		// 参考链接
+		url?: string;
+		// 是否启用请求兜底
+		fallback?: boolean;
+	},
+) {
 	const meta: Meta = new Meta({ type: "html" });
 
 	if (
 		dom instanceof HTMLImageElement &&
-		url != null &&
-		isUrl(url) &&
-		inferUrlType(new URL(url)) === "image"
+		options?.url != null &&
+		isUrl(options.url) &&
+		inferUrlType(new URL(options.url)) === "image"
 	) {
 		meta.type = "image";
-		const size = await getDOMNaturalSize(dom);
-		if (size.ok)
-			return new Meta({
-				...meta,
-				...size,
-				valid: size.width > 0 && size.height > 0,
-			});
-	}
+		let res = getDOMNaturalSize(dom);
+		if (!res.ok && options.fallback) {
+			res = await waitForImageSize(dom, 3000);
+		}
 
-	if (
-		dom instanceof HTMLVideoElement &&
-		url != null &&
-		isUrl(url) &&
-		inferUrlType(new URL(url)) === "video"
-	) {
-		meta.type = "video";
-		const res = await getMetaByUrl(new URL(url));
-		if (res.valid)
+		if (res.ok)
 			return new Meta({
 				...meta,
 				...res,
@@ -328,7 +334,30 @@ async function getDOMMeta(dom: HTMLElement, url?: string): Promise<Meta> {
 			});
 	}
 
-	if (dom instanceof HTMLSourceElement && url != null && isUrl(url)) {
+	if (
+		dom instanceof HTMLVideoElement &&
+		options?.url != null &&
+		isUrl(options.url) &&
+		inferUrlType(new URL(options.url)) === "video"
+	) {
+		meta.type = "video";
+		let res = getDOMNaturalSize(dom);
+		if (!res.ok && options.fallback) {
+			res = await waitForVideoSize(dom, 3000);
+		}
+		if (res.ok)
+			return new Meta({
+				...meta,
+				...res,
+				valid: res.width > 0 && res.height > 0,
+			});
+	}
+
+	if (
+		dom instanceof HTMLSourceElement &&
+		options?.url != null &&
+		isUrl(options.url)
+	) {
 		if (/^video/.test(dom.type))
 			return new Meta({ ...meta, valid: true, type: "video" });
 		if (/^audio/.test(dom.type))
@@ -384,7 +413,7 @@ export function inferUrlType(url: URL) {
 export async function inferUrlTypeByRequest(url: string) {
 	console.log(`准备发送请求推断链接类型：${url}`);
 	try {
-		const res = await fetch(url, { method: "HEAD" });
+		const res = await fetch(url);
 
 		const contentType = res.headers.get("content-type") || "";
 
@@ -395,17 +424,21 @@ export async function inferUrlTypeByRequest(url: string) {
 
 		return "html";
 	} catch {
-		return "other";
+		return "unknown";
 	}
 }
 
-// blob类型接口
+// t blob类型接口
 interface BlobType {
 	mainType: "image" | "video" | "audio" | "html" | false;
 	subType: string;
 }
 
-// 推测Blob类型
+/**
+ * 推测Blob类型
+ * @param blob
+ * @returns
+ */
 function inferBlobType(blob: Blob) {
 	// 获取Blob的MIME类型，并判断是否为图片类型。
 	const mimeType = getMIMEinfo(blob.type);

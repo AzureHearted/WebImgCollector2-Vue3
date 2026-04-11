@@ -1,5 +1,5 @@
 import FilenameInputVue from "@/components/utils/filename-input/filename-input.vue";
-import { useParallelTask, type Task } from "@/hooks/useParallelTask";
+import { createParallelTaskRunner, type Task } from "@/hooks";
 import type { Card } from "@/models";
 import {
 	getBlobByUrlAuto,
@@ -46,7 +46,7 @@ export async function downloadsBlob(
 	},
 ) {
 	// 使用并行任务队列
-	let { run } = useParallelTask(
+	let { run } = createParallelTaskRunner(
 		cards.map<Task<Card>>((card, index) => {
 			return {
 				handle: async () => {
@@ -64,28 +64,33 @@ export async function downloadsBlob(
 						}
 
 						card.source.blob = blob;
-						// card.source.meta.type = getBlobType(card.source.blob);
-						card.source.meta.ext = getExtByBlob(card.source.blob);
 					}
 
+					if (card.source.meta.ext.trim() == "")
+						card.source.meta.ext = getExtByBlob(card.source.blob);
 					return card;
 				},
-				// 如果卡片的blob存在则补位延时设置为0，否则按照全局延时补位
-				refillDelay: card.source.blob != null ? 0 : undefined,
 			};
 		}),
 		{
-			parallelCount: 3, // 并行任务数
-			refillDelay: 250, // 补位延时
-			onTaskComplete(index, card, completed) {
-				// loadingStore.update(completed);
+			parallelCount: 5, // 并行任务数
+			tokenBucket: {
+				capacity: 10,
+				refillPerSecond: 8,
+			},
+			onTaskBeforeRun(_index, _task, _stop) {
+				// console.log(`准备获取卡片 ${index} blob`);
+			},
+			onTaskComplete(index, card, completed, _stop, _duration) {
+				// console.log(`卡片 ${index} blob 获取完成 (耗时：${duration}ms)`);
 				options.OnCardDownloadSuccess?.(card, index, completed);
 			},
 			onTaskError(index, error) {
 				console.log("卡片下载出错：", error);
 				options.OnCardDownloadError?.(cards[index], index);
 			},
-			async onAllTasksComplete(completedCount, failedCount) {
+			async onAllTasksComplete(completedCount, failedCount, QPS) {
+				console.log(`downloadsBlob 完成 (QPS: ${QPS})`);
 				options.OnAllCardDownload(cards, completedCount, failedCount);
 				return cards;
 			},
@@ -131,9 +136,14 @@ export async function downloadCard(
 		}
 	} else if (type === "html") {
 		const blob = await getSingleFileBlobByUrl(card.source.url);
-		console.log("网页下载结果：", blob);
+		// console.log("网页下载结果：", blob);
 		card.source.blob = blob;
 	}
+
+	if (card.source.blob == null) return;
+
+	if (card.source.meta.ext.trim() == "")
+		card.source.meta.ext = getExtByBlob(card.source.blob);
 
 	let initName = card.description.content.trim();
 	if (!initName) {

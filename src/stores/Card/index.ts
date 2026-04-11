@@ -1,4 +1,5 @@
-import type { Pattern } from "@/models";
+import { createParallelTaskRunner } from "@/hooks";
+import type { CardGroup, CardType, Pattern } from "@/models";
 import { Card, Meta } from "@/models";
 import { naturalCompare } from "@/utils";
 import { useDebounceFn } from "@vueuse/core";
@@ -9,8 +10,8 @@ import { defineStore } from "pinia";
 import type { Ref } from "vue";
 import { computed, reactive, ref, watch } from "vue";
 import { useLoadingStore } from "../Loading";
-import { downloadCard, downloadCards } from "../shared/utils/download-cards";
-import getCard from "./utils/get-cards";
+import { downloadCard, downloadCards } from "../shared/utils";
+import { getCurrentPageCard, getMeta } from "./utils";
 
 export const useCardStore = defineStore("CardStore", () => {
 	const loadingStore = useLoadingStore();
@@ -84,9 +85,6 @@ export const useCardStore = defineStore("CardStore", () => {
 		},
 	);
 
-	// t 卡片类型(类型)
-	type CardType = "all" | Meta["type"];
-
 	// s 当前类型
 	const nowType = ref<CardType>("image");
 
@@ -111,6 +109,7 @@ export const useCardStore = defineStore("CardStore", () => {
 		{ value: "height-asc", label: "高度-升序", group: "尺寸" },
 		{ value: "height-desc", label: "高度-降序", group: "尺寸" },
 	] as const; // 这里断言数组中的所有属性值为只读(为了能正确进行类型提示)
+
 	type sortGroup = {
 		type: "group";
 		label: string;
@@ -146,11 +145,6 @@ export const useCardStore = defineStore("CardStore", () => {
 			);
 		},
 	});
-
-	// t 卡片分组类型
-	type CardGroup = {
-		[key in CardType]: Card[];
-	};
 
 	// s 过滤器后的卡片列表
 	const filterCardList = ref<CardGroup>({
@@ -190,7 +184,7 @@ export const useCardStore = defineStore("CardStore", () => {
 			html = [] as Card[],
 			zip = [] as Card[],
 			unknown = [] as Card[];
-		let all = [...data.cardList];
+		let all = [...data.cardList] as Card[];
 
 		// s 先排序
 		switch (sortInfo.method) {
@@ -406,99 +400,143 @@ export const useCardStore = defineStore("CardStore", () => {
 		// 记录新卡片数据
 		let newCardList: Card[] = [];
 		const newCardFingerprintSet = new Set<string>();
-		let totalNewCardCount = 0;
 
-		loadingStore.start();
+		const rawCards = await getCurrentPageCard(pattern, {
+			excludeParentSelectors: [".resource-extractor"],
+		});
 
-		// s 依次执行每个规则
-		for (let i = 0; i < pattern.rules.length; i++) {
-			if (stopFlag?.value) break;
-			const rule = pattern.rules[i];
-			// 跳过未启用的规则
-			if (!rule.enable) continue;
-			await getCard(
-				// 规则配置
-				rule,
-				// 选项配置
-				{
-					excludeParentSelectors: [".resource-extractor"],
-					// * 当获取到所有基准dom时的回调
-					onAllDOMGet: async (doms) => {
-						// console.log("匹配到的DOM", doms);
-						loadingStore.update(0, doms.length);
-						return doms;
-					},
-					// * 当获得卡片时的回调
-					onCardGet: async (card, index, _dom, addCard, stop) => {
-						// 更新进度条
-						loadingStore.update(index + 1);
-						const sourceMeta = card.source.meta;
-
-						if (
-							card.source.url.trim() === "" ||
-							newCardFingerprintSet.has(card.fingerprint) ||
-							cardFingerprintSet.value.has(card.fingerprint) ||
-							data.removedCardFingerprintSet.has(card.fingerprint)
-						)
-							return;
-
-						// 记录指纹
-						newCardFingerprintSet.add(card.fingerprint);
-
-						// 更新类型记录
-						if (sourceMeta.type) {
-							if (data.typeMap.has(sourceMeta.type)) {
-								// 如果已经存在了就++
-								data.typeMap.set(
-									sourceMeta.type,
-									data.typeMap.get(sourceMeta.type)! + 1,
-								);
-							} else {
-								data.typeMap.set(sourceMeta.type, 1);
-							}
-						}
-
-						// 更新扩展名记录
-						if (sourceMeta.ext) {
-							if (data.extensionMap.has(sourceMeta.ext)) {
-								// 如果已经存在了就++
-								data.extensionMap.set(
-									sourceMeta.ext,
-									data.extensionMap.get(sourceMeta.ext)! + 1,
-								);
-							} else {
-								data.extensionMap.set(sourceMeta.ext, 1);
-							}
-						}
-
-						// 记录卡片
-						newCardList[index] = card;
-						totalNewCardCount++;
-
-						await addCard(); // 执行回调函数
-
-						if (stopFlag?.value) {
-							stop();
-							return;
-						}
-					},
-					// * 当前规则匹配结束后的回调
-					onFinished() {
-						const validNewCardList = newCardList.filter((x) => x != null);
-						data.cardList.push(...validNewCardList);
-						newCardList = [];
-					},
-				},
-			);
-		}
-
-		if (!totalNewCardCount) {
+		if (!rawCards.length) {
 			notification.warning({
 				title: "注意",
 				content: "该方案未匹配到任何有效结果",
 				duration: 5000,
 			});
 		}
+
+		newCardList = rawCards.filter((card) => {
+			const sourceMeta = card.source.meta;
+
+			if (
+				card.source.url.trim() === "" ||
+				newCardFingerprintSet.has(card.fingerprint) ||
+				cardFingerprintSet.value.has(card.fingerprint) ||
+				data.removedCardFingerprintSet.has(card.fingerprint)
+			)
+				return false;
+
+			// 记录指纹
+			newCardFingerprintSet.add(card.fingerprint);
+
+			// 更新类型记录
+			if (sourceMeta.type) {
+				if (data.typeMap.has(sourceMeta.type)) {
+					// 如果已经存在了就++
+					data.typeMap.set(
+						sourceMeta.type,
+						data.typeMap.get(sourceMeta.type)! + 1,
+					);
+				} else {
+					data.typeMap.set(sourceMeta.type, 1);
+				}
+			}
+
+			// 更新扩展名记录
+			if (sourceMeta.ext) {
+				if (data.extensionMap.has(sourceMeta.ext)) {
+					// 如果已经存在了就++
+					data.extensionMap.set(
+						sourceMeta.ext,
+						data.extensionMap.get(sourceMeta.ext)! + 1,
+					);
+				} else {
+					data.extensionMap.set(sourceMeta.ext, 1);
+				}
+			}
+
+			return true;
+		});
+
+		const validNewCardList = newCardList.filter((x) => x != null);
+		// 先记录卡片
+		data.cardList.push(...validNewCardList);
+
+		// 然后开始对 preview 元信息无效的卡片进行并行获取
+		// 定义任务队列
+		const tasks = validNewCardList
+			.filter(
+				(c) =>
+					c.preview.meta.type === "html" ||
+					c.preview.meta.type === "unknown" ||
+					(c.preview.meta.type === "image" && !c.preview.meta.valid) ||
+					(c.preview.meta.type === "video" && !c.preview.meta.valid),
+			)
+			.map((card) => {
+				return {
+					async handle() {
+						let sourceMeta: Meta = card.source.meta;
+						let previewMeta: Meta = card.preview.meta;
+
+						if (card.source.dom != null) {
+							sourceMeta = await getMeta(card.source.dom, {
+								url: card.source.url,
+							}); // 获取元信息 (通过dom)
+						}
+
+						// 当规则中没有启用 preview 匹配功能且 meta.valid 为 false 时，则尝试通过 card.source.url 进行元信息获取。
+						if (!sourceMeta.valid) {
+							if (!card.matchedRule?.preview.enable) {
+								sourceMeta = await getMeta(card.source.url); // 获取元信息 (通过可能是url的匹配结果)
+							}
+						}
+
+						if (card.preview.url === card.source.url && sourceMeta.valid) {
+							previewMeta = new Meta({ ...sourceMeta });
+						} else {
+							if (card.preview.dom != null) {
+								previewMeta = await getMeta(card.preview.dom, {
+									url: card.preview.url,
+								}); // 获取元信息(通过dom)
+								if (!previewMeta.valid) {
+									previewMeta = await getMeta(card.preview.url); // 获取元信息(通过可能是url的匹配结果)
+								}
+							}
+						}
+
+						if (sourceMeta != null && sourceMeta.valid) {
+							card.source.meta = sourceMeta;
+						}
+						if (previewMeta != null && previewMeta.valid) {
+							card.preview.meta = previewMeta;
+						}
+						return card;
+					},
+				};
+			});
+
+		loadingStore.start(tasks.length);
+
+		const { run } = createParallelTaskRunner(tasks, {
+			parallelCount: 5,
+			tokenBucket: {
+				capacity: 10,
+				refillPerSecond: 8,
+			},
+			onTaskBeforeRun(_index, _task, _stop) {},
+			onTaskComplete(index, _result, completedCount, stop, duration) {
+				console.log(`获取卡片 ${index + 1} 的 meta (耗时：${duration}ms)`);
+				loadingStore.update(completedCount);
+				if (stopFlag?.value) {
+					stop();
+					return;
+				}
+			},
+			onTaskError(_index, _error, _task) {},
+			onAllTasksComplete(_completedCount, _failedCount, _QPS) {
+				console.log(`所有卡片 Meta 均获取完成 (QPS：${_QPS}ms)`);
+			},
+		});
+
+		await run();
 
 		loadingStore.end();
 	}
@@ -536,12 +574,12 @@ export const useCardStore = defineStore("CardStore", () => {
 
 	// f 查询卡片
 	function findCard(id: string): Card | null {
-		return data.cardList.find((c) => c.id === id) ?? null;
+		return (data.cardList.find((c) => c.id === id) as Card | null) ?? null;
 	}
 
 	// f 查询多张卡片
 	function findCards(ids: string[]): Card[] {
-		return data.cardList.filter((c) => ids.includes(c.id)) || [];
+		return (data.cardList.filter((c) => ids.includes(c.id)) as Card[]) || [];
 	}
 
 	/**

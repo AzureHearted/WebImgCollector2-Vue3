@@ -1,5 +1,5 @@
-import { useListIndexedDB } from "@/hooks/useIndexedDB";
-import type { Card, Meta } from "@/models";
+import { useListIndexedDB } from "@/hooks";
+import type { Card, CardGroup, CardType } from "@/models";
 import { FavoriteCard } from "@/models";
 import { naturalCompare } from "@/utils";
 import { useDebounceFn } from "@vueuse/core";
@@ -9,7 +9,7 @@ import type { NotificationApiInjection } from "naive-ui/es/notification/src/Noti
 import { defineStore } from "pinia";
 import { computed, onActivated, reactive, ref, watch } from "vue";
 import { useLoadingStore } from "../Loading";
-import { downloadCard, downloadCards } from "../shared/utils/download-cards";
+import { downloadCard, downloadCards } from "../shared/utils";
 
 export const useFavoriteStore = defineStore("FavoriteStore", () => {
 	const loadingStore = useLoadingStore();
@@ -46,9 +46,6 @@ export const useFavoriteStore = defineStore("FavoriteStore", () => {
 		// 下载中的卡片id集合
 		downloadingCardIdSet: new Set<Card["id"]>(),
 	});
-
-	// s 卡片数据列表
-	// const cardList = ref<FavoriteCard[]>([]);
 
 	// j 类型->数量映射列表
 	const typeMap = computed<Map<string, number>>(() => {
@@ -157,9 +154,6 @@ export const useFavoriteStore = defineStore("FavoriteStore", () => {
 		};
 	});
 
-	// t 卡片类型(类型)
-	type CardType = "all" | Meta["type"];
-
 	// s 当前类型
 	const nowType = ref<CardType>("image");
 
@@ -258,11 +252,6 @@ export const useFavoriteStore = defineStore("FavoriteStore", () => {
 			);
 		},
 	});
-
-	// t 卡片分组类型
-	type CardGroup = {
-		[key in CardType]: FavoriteCard[];
-	};
 
 	// s 过滤器后的卡片列表
 	const filterCardList = ref<CardGroup>({

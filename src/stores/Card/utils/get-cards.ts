@@ -1,5 +1,5 @@
-import { Card, Meta } from "@/models";
-import type { BaseFix, BaseMatch, Rule } from "@/models/Rule/interface/Rule";
+import { Card, Meta, Pattern } from "@/models";
+import type { BaseFix, Rule } from "@/models/Rule/interface/Rule";
 import {
 	getDOM,
 	getDOMInfo,
@@ -9,670 +9,392 @@ import {
 	isUrl,
 	safeDecodeURI,
 } from "@/utils";
-
-import type { Task } from "@/hooks/useParallelTask";
-import { useParallelTask } from "@/hooks/useParallelTask";
-import { getMeta, inferUrlType } from "./get-meta";
+import { getDOMMeta, inferUrlType } from "./get-meta";
 
 // 配置接口
 interface Options {
-	/** 要排除的祖先选择器 */
+	// 要排除的祖先选择器
 	excludeParentSelectors?: string[];
-	// 当获取到所有DOM时的回调
-	onAllDOMGet: (doms: HTMLElement[]) => Promise<HTMLElement[]>;
-	// 每当有一个卡片获取到的时候的回调
-	onCardGet: (
-		card: Card,
-		index: number,
-		dom: HTMLElement | null,
-		addCard: () => Promise<void>,
-		stop: () => void,
-	) => Promise<void>;
-	onFinished: () => void;
 }
 
 /**
- * f 获取卡片
+ * 获取卡片
  * @param rule 匹配规则
  * @param options 选项
  * @returns
  */
-export default function getCard(rule: Rule, options: Partial<Options>) {
-	// 默认配置
-	const defaultOptions: Options = {
-		onAllDOMGet: async (doms) => doms,
-		onCardGet: async () => {},
-		onFinished: () => {},
-	};
-	// 合并配置
-	options = { ...defaultOptions, ...options };
-	const {
-		onAllDOMGet,
-		onCardGet,
-		onFinished,
-		excludeParentSelectors = [],
-	} = options as Options;
+export async function getCurrentPageCard(pattern: Pattern, options: Options) {
+	const { excludeParentSelectors } = options;
+	const { rules } = pattern;
+	const newItems: Card[] = [];
+	const doms: HTMLElement[] = [];
+	// 依次执行每个规则
+	for (const rule of rules) {
+		if (!rule.enable) continue;
 
-	return new Promise<void>(async (resolve) => {
-		// 卡片列表
-		const newCardList: Card[] = [];
-		// 任务列表
-		const taskList: Task<Card>[] = [];
-		// dom列表
-		const domList: HTMLElement[] = [];
+		const {
+			region: regionMatch,
+			source: sourceMatch,
+			preview: previewMatch,
+			description: descriptionMatch,
+		} = rule;
 
-		// 判断是否开启区域匹配
-		if (rule.region.enable) {
-			// ! 区域匹配模式
+		if (regionMatch.enable) {
+			// 开启区域匹配
 
-			// 区域DOM元素列表
+			// 区域 DOM 元素列表
 			let regionDOMs = getDOM(rule.region.selector, {
 				mode: "all",
 				excludeParentSelectors,
-			}) as HTMLElement[];
+			});
+			// 过滤无效值
+			regionDOMs = regionDOMs.filter((x): x is HTMLElement => x != null); // ★ 修改：类型收窄，避免后续 undefined
+			// 记录 DOM 元素
+			doms.push(...regionDOMs);
 
-			if (!regionDOMs) return;
-
-			regionDOMs = regionDOMs.filter((x) => x) as HTMLElement[]; //过滤无效值
-
-			// 触发回调(进行dom过滤)
-			regionDOMs = await onAllDOMGet(regionDOMs);
-
-			// * 记录dom列表
-			domList.push(...regionDOMs);
-
-			// 遍历所有区域dom，获取卡片dom列表
+			// 遍历区域 DOM 元素
 			for (let i = 0; i < regionDOMs.length; i++) {
-				const regionDOM = regionDOMs[i]; // 拿到当前区域DOM
-				// ? 定义任务
-				const task: Task<Card> = {
-					handle: async () => {
-						// console.time(`任务：${i}`);
-						// s source的匹配
-						// console.timeLog(`任务：${i}`, "获取source信息");
-						// console.log("source的匹配……");
-						const source = await handleRegionGetInfo<Card["source"]>({
-							rule: rule.source,
-							regionDOM,
-							callback: async (sourceValue, dom) => {
-								dom = dom || regionDOM;
-								// 元信息获取
-								// console.timeLog(
-								// 	`任务：${i}`,
-								// 	"获取source信息 => 尝试通过DOM获取元信息",
-								// );
+				const regionDOM = regionDOMs[i];
 
-								// 先修正内容
-								sourceValue = await fixResult(
-									sourceValue.trim(),
-									rule.source.fix,
-								);
-
-								let meta = await getMeta(dom, { url: sourceValue }); // 获取元信息 (通过dom)
-								// console.log(
-								// 	`(${i}) 第 1 次获取 source 元信息 (dom):`,
-								// 	meta,
-								// 	sourceValue,
-								// );
-
-								// 当规则中没有启用 preview 匹配功能且 meta.valid 为 false 时，则尝试通过 sourceValue 进行元信息获取。
-								if (!meta.valid) {
-									if (!rule.preview.enable) {
-										// console.timeLog(
-										// 	`任务：${i}`,
-										// 	"获取source信息 => 尝试通过Url获取元信息",
-										// );
-										meta = await getMeta(sourceValue); // 获取元信息 (通过可能是url的匹配结果)
-										// console.log(
-										// 	`(${i}) 第 2 次获取 source 元信息 (sourceValue):`,
-										// 	meta,
-										// 	sourceValue,
-										// );
-									}
-								}
-
-								// 推断类型
-								try {
-									if (rule.source.assertionType !== "auto") {
-										meta.type = rule.source.assertionType;
-									} else {
-										if (!meta.valid || meta.type === "unknown")
-											meta.type = inferUrlType(new URL(sourceValue));
-									}
-									// console.log(
-									// 	`(${i}) source 元信息类型推断成功:`,
-									// 	meta,
-									// 	sourceValue,
-									// );
-								} catch {}
-
-								if (!meta.ext) {
-									meta.ext = getExtByUrl(sourceValue);
-								}
-
-								return {
-									url: sourceValue,
-									// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-									dom,
-									meta,
-									host: location.host, // 设置来源
-								};
-							},
-						});
-
-						// s preview的匹配
-						// console.log("preview的匹配……");
-						let preview: Card["preview"];
-						// 判断是否启用匹配preview
-						if (rule.preview.enable) {
-							// console.timeLog(`任务：${i}`, "获取preview信息");
-							// 判断是否指定了来源DOM
-							let targetDOM: HTMLElement | null = null; //默认不指定
-
-							switch (rule.preview.origin) {
-								case "region":
-									targetDOM = regionDOM;
-									break;
-								case "source":
-									targetDOM = source.dom;
-									break;
-								case "custom":
-							}
-
-							// 获取preview
-							preview = await handleRegionGetInfo<Card["preview"]>({
-								rule: rule.preview,
-								regionDOM,
-								targetDOM,
-								callback: async (previewValue, dom) => {
-									// 如果sourceDOM不存在，则使用当前区域DOM作为sourceDOM。
-									dom = dom || source.dom || regionDOM;
-
-									// 如果preview.url为空，则尝试使用source.url作为preview.url，因为可能没有预览图，只有链接。
-									previewValue = previewValue.trim() || source.url;
-									// console.log("previewValue 匹配结果：", previewValue);
-
-									// 先修正内容
-									previewValue = await fixResult(
-										previewValue,
-										rule.preview.fix,
-									);
-
-									let meta: Meta;
-
-									if (previewValue === source.url && source.meta.valid) {
-										meta = new Meta({ ...source.meta });
-									} else {
-										// 元信息获取
-										// console.timeLog(
-										// 	`任务：${i}`,
-										// 	"获取preview信息 => 尝试通过DOM获取元信息"
-										// );
-										meta = await getMeta(dom, { url: previewValue }); // 获取元信息(通过dom)
-										// console.log("第 1 次获取 preview 元信息 (dom)", meta);
-										if (!meta.valid) {
-											// console.timeLog(
-											// 	`任务：${i}`,
-											// 	"获取preview信息 => 尝试通过Url获取元信息"
-											// );
-											meta = await getMeta(previewValue); // 获取元信息(通过可能是url的匹配结果)
-											// console.log(
-											// 	"第 2 次获取 preview 元信息 (previewValue):",
-											// 	meta,
-											// );
-										}
-									}
-
-									// 推断类型
-									try {
-										if (rule.preview.assertionType !== "auto") {
-											meta.type = rule.preview.assertionType;
-										} else {
-											if (!meta.valid || meta.type === "unknown") {
-												meta.type = inferUrlType(new URL(previewValue));
-											}
-										}
-										// console.log(
-										// 	`(${i}) preview 元信息类型推断成功:`,
-										// 	meta,
-										// 	sourceValue,
-										// );
-									} catch {}
-
-									if (!meta.ext) {
-										meta.ext = getExtByUrl(previewValue);
-									}
-
-									return {
-										url: previewValue,
-										dom,
-										meta,
-									};
-								},
-							});
-						} else {
-							// 如果不匹配就直接使用source
-							preview = {
-								url: source.url,
-								dom: source.dom,
-								meta: new Meta({
-									...source.meta,
-								}),
-							};
-							// 对preview进行进一步处理
-							preview.url = await fixResult(preview.url, rule.preview.fix);
-							// 获取preview.meta
-							// 先使用dom进行判断
-							preview.meta = await getMeta(preview.dom as HTMLElement, {
-								url: preview.url,
-							});
-							if (!preview.meta.valid) {
-								// 如果无效在使用匹配到的内容判断
-								preview.meta = await getMeta(preview.url);
-							}
-
-							// 由于没有启用 preview 匹配，所以使用 source 类型
-							preview.meta.type = source.meta.type;
-
-							if (!preview.meta.ext) {
-								preview.meta.ext = getExtByUrl(preview.url);
-							}
-						}
-
-						// s description的匹配
-						// console.timeLog(`任务：${i}`, "获取description信息");
-						let description: Card["description"];
-						if (rule.description.enable) {
-							// 判断是否指定了来源DOM
-							let targetDOM: HTMLElement | null = null; //默认不指定
-
-							switch (rule.description.origin) {
-								case "region":
-									targetDOM = regionDOM;
-									break;
-								case "source":
-									targetDOM = source.dom;
-									break;
-								case "preview":
-									if (rule.preview.enable) {
-										targetDOM = preview.dom;
-									}
-									break;
-								case "custom":
-							}
-
-							// 匹配描述信息
-							description = await handleRegionGetInfo<Card["description"]>({
-								rule: rule.description,
-								regionDOM,
-								targetDOM,
-								callback: async (descriptionValue, dom) => {
-									dom = dom || source.dom || regionDOM;
-
-									descriptionValue = descriptionValue.trim();
-
-									// 先修正内容
-									descriptionValue = await fixResult(
-										descriptionValue,
-										rule.description.fix,
-									);
-
-									if (isUrl(descriptionValue)) {
-										descriptionValue = getNameByUrl(descriptionValue);
-									}
-
-									descriptionValue = safeDecodeURI(descriptionValue);
-
-									return {
-										content: descriptionValue,
-										dom,
-									};
-								},
-							});
-						} else {
-							// 如果不匹配就直接使用source
-							description = {
-								content: source.url,
-								dom: source.dom,
-							};
-
-							// 对description进行进一步处理
-							description.content = await fixResult(
-								description.content,
-								rule.description.fix,
-							);
-							// 最后判断是否是链接，如果是链接则进行名称提取
-							if (isUrl(description.content)) {
-								description.content = getNameByUrl(description.content);
-							}
-							description.content = safeDecodeURI(description.content);
-						}
-
-						if (source.originUrls?.length) {
-							source.originUrls.push(location.origin + location.pathname);
-						} else {
-							source.originUrls = [location.origin + location.pathname];
-						}
-
-						// ! 特殊情况处理
-						if (source.url === preview.url) {
-							source.meta.type = preview.meta.type;
-							source.meta.ext = preview.meta.ext;
-						}
-
-						// f 创建卡片
-						const card = new Card({ source, preview, description });
-						// console.timeLog(`任务：${i}`, `创建卡片`, card);
-
-						// ? 触发回调
-						onCardGet(
-							card,
-							i,
-							regionDOM,
-							// ? 传出函数用给外部判断是否要添加该卡片
-							async () => {
-								newCardList.push(card);
-							},
-							// ? 传出函数用给外部判断是否终止操作
-							() => {
-								stop();
-							},
-						);
-
-						// console.timeEnd(`任务：${i}`);
-						return card;
-					},
+				const source: Card["source"] = {
+					url: "",
+					host: location.host,
+					meta: new Meta(),
+					dom: null,
 				};
-				// 存入任务
-				taskList.push(task);
-				// break;
+				let preview: Card["preview"] = {
+					url: "",
+					meta: new Meta(),
+					dom: null,
+				};
+				let description: Card["description"] = { content: "", dom: null };
+
+				// 获取 source 的 DOM 元素
+				if (sourceMatch.selector.trim() !== "") {
+					// 选择器不为空
+					// ★ 修改：区域模式下，source selector 应相对 regionDOM 查询
+					const [dom] = getDOM(sourceMatch.selector, {
+						root: regionDOM,
+					});
+					source.dom = dom ?? regionDOM; // ★ 新增：兜底
+				} else {
+					// 选择器为空
+					source.dom = regionDOM;
+				}
+
+				// 获取 preview 的 DOM 元素
+				switch (previewMatch.origin) {
+					case "custom":
+						if (previewMatch.selector.trim() !== "") {
+							// 选择器不为空
+							// ★ 修改：相对 regionDOM 查询
+							const [dom] = getDOM(previewMatch.selector, {
+								root: regionDOM,
+							});
+							preview.dom = dom ?? source.dom; // ★ 新增兜底
+						} else {
+							// 选择器为空
+							preview.dom = regionDOM;
+						}
+						break;
+					case "region":
+						preview.dom = regionDOM;
+						break;
+					case "source":
+						preview.dom = source.dom;
+						break;
+				}
+
+				// 获取 description 的 DOM 元素
+				switch (descriptionMatch.origin) {
+					case "custom":
+						if (descriptionMatch.selector.trim() !== "") {
+							// 选择器不为空
+							// ★ 修改：相对 regionDOM 查询
+							const [dom] = getDOM(descriptionMatch.selector, {
+								root: regionDOM,
+							});
+							description.dom = dom ?? preview.dom; // ★ 新增兜底
+						} else {
+							// 选择器为空
+							description.dom = regionDOM;
+						}
+						break;
+					case "region":
+						description.dom = regionDOM;
+						break;
+					case "source":
+						description.dom = source.dom;
+						break;
+					case "preview":
+						description.dom = preview.dom;
+						break;
+				}
+
+				// 获取 source 的信息
+				source.url = matchInfo(source.dom, sourceMatch);
+
+				// ? 修正 source 的信息
+				source.url = await fixResult(source.url, sourceMatch.fix);
+
+				// 简单尝试通过DOM获取meta信息
+				if (source.dom != null)
+					source.meta = await getDOMMeta(source.dom, { url: source.url });
+
+				// 推断类型
+				try {
+					if (rule.source.assertionType !== "auto") {
+						source.meta.type = rule.source.assertionType;
+					} else {
+						if (!source.meta.valid || source.meta.type === "unknown")
+							source.meta.type = inferUrlType(new URL(source.url));
+					}
+				} catch {}
+
+				// 扩展名推断
+				source.meta.ext = getExtByUrl(source.url);
+
+				// 获取 preview 的信息
+				if (previewMatch.enable) {
+					// 启用了 preview 匹配
+					preview.url = matchInfo(preview.dom, previewMatch);
+				} else {
+					// 未启用 preview 匹配
+					preview = { ...source };
+				}
+
+				// ? 修正 preview 的信息
+				preview.url = await fixResult(preview.url, previewMatch.fix);
+
+				// 简单尝试通过DOM获取meta信息
+				if (preview.dom != null)
+					preview.meta = await getDOMMeta(preview.dom, { url: preview.url });
+
+				// 推断类型
+				try {
+					if (rule.preview.assertionType !== "auto") {
+						preview.meta.type = rule.preview.assertionType;
+					} else {
+						if (!preview.meta.valid || preview.meta.type === "unknown") {
+							preview.meta.type = inferUrlType(new URL(preview.url));
+						}
+					}
+				} catch {}
+
+				preview.meta.ext = getExtByUrl(preview.url);
+
+				// 获取 description 的信息
+				if (descriptionMatch.enable) {
+					// 启用了 description 匹配
+					description.content = matchInfo(description.dom, descriptionMatch);
+				} else {
+					// 未启用 description 匹配
+					const { url, ...remain } = source;
+					description = { ...remain, content: url };
+				}
+
+				// ? 修正 description 的信息
+				description.content = await fixResult(
+					description.content,
+					descriptionMatch.fix,
+				);
+
+				// 最后判断是否是链接，如果是链接则进行名称提取
+				if (isUrl(description.content)) {
+					description.content = getNameByUrl(description.content);
+				}
+				description.content = safeDecodeURI(description.content);
+
+				// 设置 source 来源
+				source.originUrls = [location.origin + location.pathname];
+
+				const resource = new Card({ source, preview, description });
+
+				resource.matchedRule = rule;
+
+				// 记录结果
+				newItems.push(resource);
 			}
 		} else {
-			// ! 全局匹配模式(先分别匹配source、preview、description，然后创建卡片)
-			// 获取所有 sourceDOMs
+			// 未开启区域匹配
+
+			// 获取所有 source 的 DOM
 			let sourceDOMs = getDOM(rule.source.selector, {
 				mode: "all",
 				excludeParentSelectors,
-			}) as HTMLElement[];
-			sourceDOMs = sourceDOMs.filter((x) => x); //过滤无效值
-			// 触发回调(进行dom过滤)
-			sourceDOMs = await onAllDOMGet(sourceDOMs);
+			});
 
-			// * 记录dom列表
-			domList.push(...sourceDOMs);
+			// 过滤无效值
+			sourceDOMs = sourceDOMs.filter((x): x is HTMLElement => x != null); // ★ 修改：类型收窄
+			// 记录 DOM 元素
+			doms.push(...sourceDOMs);
 
-			// 获取所有 previewDOMs
-			let previewDOMs: Array<HTMLElement | null> = rule.preview.enable
-				? (getDOM(rule.preview.selector, { mode: "all" }) as HTMLElement[])
+			// 获取所有 preview 的 DOM
+			let previewDOMs: (HTMLElement | null)[] = rule.preview.enable
+				? getDOM(rule.preview.selector, { mode: "all" })
 				: sourceDOMs;
 
-			// 获取所有 descriptionDOMs
-			let descriptionDOMs: Array<HTMLElement | null> = rule.description.enable
-				? (getDOM(rule.description.selector, { mode: "all" }) as HTMLElement[])
+			// 获取所有 description 的 DOM
+			let descriptionDOMs: (HTMLElement | null)[] = rule.description.enable
+				? getDOM(rule.description.selector, { mode: "all" })
 				: sourceDOMs;
 
-			// 将所有DOMs长度统一成sourceDOMs的长度，因为它们应该是一一对应的。
+			// 将所有 DOM 类比长度统一成 sourceDOMs 的长度，因为它们应该是一一对应的。
 			const maxLength = Math.max(
 				sourceDOMs.length,
 				previewDOMs.length,
 				descriptionDOMs.length,
 			);
-			// 填充到最大长度，如果为空则用null填充。
+
+			// 填充到最大长度，如果为空则用 null 填充。
 			previewDOMs = fillArrayToLength(previewDOMs, maxLength, null);
 			descriptionDOMs = fillArrayToLength(descriptionDOMs, maxLength, null);
 
-			// 遍历所有sourceDOMs，获取卡片信息。
+			// 遍历所有 sourceDOM 获取卡片信息。
 			for (let i = 0; i < sourceDOMs.length; i++) {
 				const sourceDOM = sourceDOMs[i];
-				// ? 定义任务
-				const task: Task<Card> = {
-					// dom: sourceDOM,
-					handle: async () => {
-						// console.time(`任务：${i}`);
-						// s 直接获取source信息
-						// console.timeLog(`任务：${i}`, "获取source信息");
-						const source: Card["source"] = {
-							url: await getDOMInfo(
-								sourceDOM,
-								rule.source.infoType,
-								rule.source.name,
-							),
-							dom: sourceDOM,
-							meta: new Meta(), // 初始化meta未一个无效值
-							host: location.host,
-						};
-						// 对source进行进一步处理
-						source.url = await fixResult(source.url.trim(), rule.source.fix);
-						// 获取source.meta
-						// 先使用dom进行判断
-						if (source.dom != null)
-							source.meta = await getMeta(source.dom, { url: source.url });
-
-						// 如果还是获取到无效的元信息，则尝试通过url获取元信息 (前提是规则中没有启用 preview 匹配功能)
-						if (!source.meta.valid && !rule.preview.enable) {
-							// 如果无效在使用匹配到的内容判断
-							source.meta = await getMeta(source.url);
-						}
-
-						// 类型判断
-						try {
-							if (rule.source.assertionType !== "auto") {
-								source.meta.type = rule.source.assertionType;
-							} else {
-								if (!source.meta.valid || source.meta.type === "unknown") {
-									source.meta.type = inferUrlType(new URL(source.url));
-								}
-							}
-						} catch {}
-
-						if (!source.meta.ext) {
-							source.meta.ext = getExtByUrl(source.url);
-						}
-
-						// s 获取preview信息
-						// console.timeLog(`任务：${i}`, "获取preview信息");
-						let preview: Card["preview"];
-						if (rule.preview.enable) {
-							let previewDOM: HTMLElement | null;
-							if (rule.preview.origin === "source") previewDOM = source.dom;
-							else previewDOM = previewDOMs[i];
-
-							// 获取到基础信息
-							preview = {
-								url: previewDOM
-									? await getDOMInfo(
-											previewDOM,
-											rule.preview.infoType,
-											rule.preview.name,
-										)
-									: "",
-								dom: previewDOM,
-								meta: new Meta(), // 初始化meta未一个无效值
-							};
-						} else {
-							preview = {
-								url: source.url,
-								dom: source.dom,
-								meta: new Meta({
-									...source.meta,
-								}),
-								blob: source.blob,
-							};
-						}
-						// 对preview进行进一步处理
-						preview.url = await fixResult(preview.url, rule.preview.fix);
-
-						// 获取preview.meta
-						// 先使用dom进行判断
-						if (preview.dom != null)
-							preview.meta = await getMeta(preview.dom, { url: preview.url });
-
-						if (!preview.meta.valid) {
-							// 如果无效在使用匹配到的内容判断
-							preview.meta = await getMeta(preview.url);
-						}
-
-						// 类型判断
-						try {
-							if (rule.preview.enable) {
-								if (rule.preview.assertionType !== "auto") {
-									preview.meta.type = rule.preview.assertionType;
-								} else {
-									if (!preview.meta.valid || preview.meta.type === "unknown") {
-										preview.meta.type = inferUrlType(new URL(preview.url));
-									}
-								}
-							} else {
-								preview.meta.type = source.meta.type;
-							}
-						} catch {}
-
-						if (!preview.meta.ext) {
-							preview.meta.ext = getExtByUrl(preview.url);
-						}
-
-						// s 获取description信息
-						// console.timeLog(`任务：${i}`, "获取description信息");
-						let description: Card["description"];
-						if (rule.description.enable) {
-							let descriptionDOM: HTMLElement | null;
-							if (rule.description.origin === "preview")
-								descriptionDOM = preview.dom;
-							else if (rule.description.origin === "source")
-								descriptionDOM = source.dom;
-							else descriptionDOM = descriptionDOMs[i];
-							// 获取描述信息
-							description = {
-								content: descriptionDOM
-									? await getDOMInfo(
-											descriptionDOM,
-											rule.description.infoType,
-											rule.description.name,
-										)
-									: "",
-								dom: descriptionDOM,
-							};
-						} else {
-							description = {
-								content: source.url,
-								dom: source.dom,
-							};
-						}
-						// 对description进行进一步处理
-						description.content = await fixResult(
-							description.content,
-							rule.description.fix,
-						);
-						// 最后判断是否是链接，如果是链接则进行名称提取
-						if (isUrl(description.content)) {
-							description.content = getNameByUrl(description.content);
-						}
-						description.content = safeDecodeURI(description.content);
-
-						if (source.originUrls?.length) {
-							source.originUrls.push(location.origin + location.pathname);
-						} else {
-							source.originUrls = [location.origin + location.pathname];
-						}
-
-						// ! 特殊情况处理
-						if (source.url === preview.url) {
-							source.meta.type = preview.meta.type;
-							source.meta.ext = preview.meta.ext;
-						}
-
-						// f 创建卡片
-						const card = new Card({ source, preview, description });
-						// console.timeLog(`任务：${i}`, `创建卡片`, card);
-
-						// ? 触发回调
-						onCardGet(
-							card,
-							i,
-							source.dom,
-							// ? 传出函数用给外部判断是否要添加该卡片
-							async () => {
-								newCardList.push(card);
-							},
-							// ? 传出函数用给外部判断是否终止操作
-							() => {
-								stop();
-							},
-						);
-
-						// console.timeEnd(`任务：${i}`);
-						return card;
-					},
+				const source: Card["source"] = {
+					url: "",
+					host: location.host,
+					meta: new Meta(),
+					dom: null,
 				};
-				// 存入任务
-				taskList.push(task);
+				let preview: Card["preview"] = {
+					url: "",
+					meta: new Meta(),
+					dom: null,
+				};
+				let description: Card["description"] = { content: "", dom: null };
+
+				// 获取 source 的信息
+				source.url = matchInfo(sourceDOM, sourceMatch);
+				// 简单尝试通过DOM获取meta信息
+				if (source.dom != null)
+					source.meta = await getDOMMeta(source.dom, { url: source.url });
+
+				// ? 修正 source 的信息
+				source.url = await fixResult(source.url, sourceMatch.fix);
+
+				// 推断类型
+				try {
+					if (rule.source.assertionType !== "auto") {
+						source.meta.type = rule.source.assertionType;
+					} else {
+						if (!source.meta.valid || source.meta.type === "unknown")
+							source.meta.type = inferUrlType(new URL(source.url));
+					}
+				} catch {}
+
+				// 扩展名推断
+				source.meta.ext = getExtByUrl(source.url);
+
+				// 获取 preview 的信息
+				if (previewMatch.enable) {
+					// 启用了 preview 匹配
+					preview.url = matchInfo(
+						previewDOMs[i] ?? sourceDOM, // ★ 修改：null 合理兜底
+						previewMatch,
+					);
+				} else {
+					// 未启用 preview 匹配
+					preview = { ...source };
+				}
+
+				// ? 修正 preview 的信息
+				preview.url = await fixResult(preview.url, previewMatch.fix);
+
+				// 简单尝试通过DOM获取meta信息
+				if (preview.dom != null)
+					preview.meta = await getDOMMeta(preview.dom, { url: preview.url });
+
+				// 推断类型
+				try {
+					if (rule.preview.assertionType !== "auto") {
+						preview.meta.type = rule.preview.assertionType;
+					} else {
+						if (!preview.meta.valid || preview.meta.type === "unknown")
+							preview.meta.type = inferUrlType(new URL(preview.url));
+					}
+				} catch {}
+
+				// 扩展名推断
+				preview.meta.ext = getExtByUrl(preview.url);
+
+				// 获取 description 的信息
+				if (descriptionMatch.enable) {
+					// 启用了 description 匹配
+					description.content = matchInfo(
+						descriptionDOMs[i] ?? sourceDOM, // ★ 修改：null 合理兜底
+						descriptionMatch,
+					);
+				} else {
+					// 未启用 description 匹配
+					const { url, ...remain } = source;
+					description = { ...remain, content: url };
+				}
+
+				// ? 修正 description 的信息
+				description.content = await fixResult(
+					description.content,
+					descriptionMatch.fix,
+				);
+
+				// 最后判断是否是链接，如果是链接则进行名称提取
+				if (isUrl(description.content)) {
+					description.content = getNameByUrl(description.content);
+				}
+				description.content = safeDecodeURI(description.content);
+
+				// 设置 source 来源
+				source.originUrls = [location.origin + location.pathname];
+
+				const resource = new Card({ source, preview, description });
+
+				resource.matchedRule = rule;
+
+				// 记录结果
+				newItems.push(resource);
 			}
 		}
+	}
 
-		let { run, stop } = useParallelTask(taskList, {
-			parallelCount: 3,
-			refillDelay: 250,
-			onTaskComplete: async (_index, _card, _completedCount, _stop) => {
-				// console.log("完成", card);
-			},
-			onTaskError: (_index, error, task) => {
-				console.log("执行出错", error, task);
-			},
-			// * 所有任务执行完成后调用resolve
-			onAllTasksComplete: (_completedCount, _failedCount) => {
-				// console.log(
-				// 	`处理完成 completedCount: ${completedCount}, failedCount: ${failedCount}`
-				// );
-				onFinished();
-				resolve();
-			},
-		});
-		await run();
-	});
+	return newItems;
 }
 
-// 获取在region模式下信息的处理函数
-async function handleRegionGetInfo<T>(options: {
-	rule: BaseMatch | Omit<BaseMatch, "assertionType">; // 规则对象
-	regionDOM: HTMLElement | Document | null; // 区域DOM
-	targetDOM?: HTMLElement | undefined | null; // 指定DOM
-	callback: (value: string, dom: HTMLElement | null) => Promise<T>;
-}) {
-	const { rule, callback } = options;
-	let { regionDOM, targetDOM } = options;
-	regionDOM = regionDOM || document;
-	// 获取选择器
-	const { selector, infoType, name } = rule;
+// f 匹配信息
+function matchInfo(
+	dom: HTMLElement,
+	matchRule: Rule["source"] | Rule["preview"] | Rule["description"],
+) {
+	// ★ 新增：兜底保护，防止异常 DOM 导致整体规则中断
+	if (!dom) return "";
 
-	// 获取DOM(只有来源DOM未指定时执行)
-	if (targetDOM == null) {
-		// 判断选择器是否为空
-		if (!!selector && !!selector.trim().length) {
-			// 如果不为空则正常使用选择器获取dom
-			targetDOM = getDOM(selector, { regionDOM })[0];
-		} else {
-			// 如果选择器为空，则使用当前区域DOM作为sourceDOM。
-			targetDOM = regionDOM as HTMLElement;
-		}
+	switch (matchRule.infoType) {
+		case "attribute":
+			return getDOMInfo(dom, {
+				type: matchRule.infoType,
+				name: matchRule.name,
+			});
+		case "property":
+			return getDOMInfo(dom, {
+				type: matchRule.infoType,
+				name: matchRule.name,
+			});
+		case "value":
+		case "innerText":
+		case "innerHTML":
+		case "outerHTML":
+			return getDOMInfo(dom, {
+				type: matchRule.infoType,
+			});
 	}
-
-	// 匹配信息
-	let value: string = "";
-
-	if (targetDOM != null) {
-		value = await getDOMInfo(targetDOM as HTMLElement, infoType, name);
-	}
-
-	// 获取结果修正
-	// value = await fixResult(value, rule.fix);
-	// console.log(`修正结果`, value);
-
-	// 调用其回调函数将结果以对象形式返回
-	return await callback(value, targetDOM);
 }
 
 // 修正结果
-async function fixResult(value: string, fixRules: BaseFix[]): Promise<string> {
+export async function fixResult(
+	value: string,
+	fixRules: BaseFix[],
+): Promise<string> {
 	for (let i = 0; i < fixRules.length; i++) {
 		const fixRule = fixRules[i];
 		const { type: fixType } = fixRule;
@@ -709,9 +431,9 @@ async function fixResult(value: string, fixRules: BaseFix[]): Promise<string> {
 				// console.log(`url:${value}\n获取到的Document对象`, doc.documentElement);
 				const dom = getDOM(selector, {
 					mode: "first",
-					regionDOM: doc.documentElement,
+					root: doc.documentElement,
 				})[0];
-				value = await getDOMInfo(dom, infoType, name);
+				value = getDOMInfo(dom, { type: infoType, name });
 				// console.log(`抓取页面并提取内容`, dom, value);
 			}
 		}

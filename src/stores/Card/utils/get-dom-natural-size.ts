@@ -9,14 +9,7 @@ export type NaturalSizeResult =
  * @param options 配置
  * @returns 自然尺寸
  */
-export async function getDOMNaturalSize(
-	dom: HTMLElement,
-	options?: {
-		timeout?: number;
-	},
-): Promise<NaturalSizeResult> {
-	const { timeout = 3000 } = options || {};
-
+export function getDOMNaturalSize(dom: HTMLElement): NaturalSizeResult {
 	// IMG
 	if (dom instanceof HTMLImageElement) {
 		// ✅ 已成功加载
@@ -42,7 +35,7 @@ export async function getDOMNaturalSize(
 			return { ok: false, reason: "unsupported" };
 		}
 
-		return waitForImageSize(dom, timeout);
+		// return waitForImageSize(dom, timeout);
 	}
 
 	// VIDEO
@@ -66,7 +59,7 @@ export async function getDOMNaturalSize(
 			return { ok: false, reason: "unsupported" };
 		}
 
-		return waitForVideoSize(dom, timeout);
+		// return waitForVideoSize(dom, timeout);
 	}
 
 	return { ok: false, reason: "unsupported" };
@@ -78,7 +71,7 @@ export async function getDOMNaturalSize(
  * @param timeout 超时
  * @returns 对应图片的自然尺寸
  */
-function waitForImageSize(
+export function waitForImageSize(
 	img: HTMLImageElement,
 	timeout: number,
 ): Promise<NaturalSizeResult> {
@@ -132,7 +125,7 @@ function waitForImageSize(
  * @param timeout 超时
  * @returns 对应视频的自然尺寸
  */
-function waitForVideoSize(
+export function waitForVideoSize(
 	video: HTMLVideoElement,
 	timeout: number,
 ): Promise<NaturalSizeResult> {
