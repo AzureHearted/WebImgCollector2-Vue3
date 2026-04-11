@@ -257,7 +257,7 @@
 				<n-flex class="base-tag-list" :size="4">
 					<!-- s 尺寸信息 -->
 					<n-tag
-						v-if="data.source.meta.type === 'image'"
+						v-if="data.source.meta.type === 'image' && data.source.meta.valid"
 						size="small"
 						type="primary"
 						:title="`${validMeta.width}x${validMeta.height}`"
@@ -299,30 +299,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref } from "vue";
-import type { ComputedRef } from "vue";
+import { GM_openInTab } from "$";
+import BaseLineOverFlowList from "@/components/base/base-line-overflow-list.vue";
+import { Card } from "@/models";
+import { useDialog } from "@/plugin/naive-ui";
+import { useGlobalStore } from "@/stores";
+import { byteAutoUnit, legalizationPathString } from "@/utils";
+import HtmlTypeImg from "@svg/html.svg";
 import {
 	BaseCard,
+	BaseHighlightText,
 	BaseImg,
 	BaseVideo,
-	BaseHighlightText,
 	type BaseImgReadyInfo,
 	type BaseVideoReadyInfo,
 } from "base-ui";
-import BaseLineOverFlowList from "@/components/base/base-line-overflow-list.vue";
-import { Card } from "@/models";
-import { GM_openInTab } from "$";
-import { useDialog } from "@/plugin/naive-ui";
-import { NCheckbox } from "naive-ui";
-// 导入公用TS库
-import { byteAutoUnit, legalizationPathString } from "@/utils";
-// 导入svg
-import HtmlTypeImg from "@svg/html.svg";
-// 导入仓库
-import { useGlobalStore } from "@/stores";
+import { NButton, NCheckbox, NFlex, type FormValidationStatus } from "naive-ui";
 import { storeToRefs } from "pinia";
+import type { ComputedRef } from "vue";
+import { computed, h, ref } from "vue";
 import FilenameInputVue from "./filename-input/filename-input.vue";
-import { NButton, NFlex, type FormValidationStatus } from "naive-ui";
 
 const dialog = useDialog();
 
