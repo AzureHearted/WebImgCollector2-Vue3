@@ -1,6 +1,7 @@
 .fancybox__dialog {
 	.fancybox__container {
 		--fancybox-backdrop-bg: rgba(24, 24, 27, 0.95);
+		--f-html-bg: transparent;
 	}
 	.fancybox__container[theme="light"] {
 		--fancybox-backdrop-bg: rgba(255, 255, 255, 0.9);
