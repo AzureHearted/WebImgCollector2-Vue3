@@ -92,7 +92,7 @@
 			:to="false"
 			:render-tag="renderTag"
 			:render-label="renderOptionLabelWithCount"
-			:options="extOptions"
+			:options="extensionOptions"
 			max-tag-count="responsive"
 		/>
 		<!-- s 关键词过滤 -->
@@ -300,7 +300,7 @@ const {
 	sizeRange,
 	filterCardList,
 	selectionCardList,
-	extensionOptions: extOptions,
+	extensionOptions,
 	filters: storeFilters,
 	nowType,
 } = storeToRefs(cardStore);

@@ -101,7 +101,7 @@
 					/>
 				</BaseTabPane>
 				<!-- s 其他类 -->
-				<BaseTabPane name="other">
+				<BaseTabPane name="unknown">
 					<template #label>
 						<n-flex :size="4" align="center" :wrap="false">
 							<n-icon>
