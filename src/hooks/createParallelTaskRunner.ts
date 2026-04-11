@@ -91,7 +91,7 @@ interface Options<T> {
 	) => void;
 }
 
-export function useParallelTask<T = void>(
+export function createParallelTaskRunner<T = void>(
 	tasks: Task<T>[],
 	options?: Partial<Options<T>>,
 ) {
