@@ -1,17 +1,14 @@
 import { cloneDeep, isEqual } from "@/plugin/lodash";
 import { getFavicon } from "@/utils";
+import type { RawRule } from "../Rule";
 import { Rule } from "../Rule";
-import type { Rule as IRule } from "../Rule/interface/Rule";
-import type {
-	Pattern as IPattern,
-	RawPattern,
-	Status,
-} from "./interface/Pattern";
+import type { RawPattern, Status } from "./interface/Pattern";
+export type { RawPattern } from "./interface/Pattern";
 
 // 匹配方案
-export class Pattern implements IPattern {
+export class Pattern implements RawPattern {
 	public readonly id: string; // 方案id
-	public mainInfo: IPattern["mainInfo"] = {
+	public mainInfo: RawPattern["mainInfo"] = {
 		name: "新方案",
 		host: "",
 		matchHost: [],
@@ -28,10 +25,10 @@ export class Pattern implements IPattern {
 		editing: false,
 	};
 
-	public backup: IPattern["backup"] | null = null;
+	public backup: RawPattern | null = null;
 
 	// s 构造
-	constructor(options?: Partial<IPattern>) {
+	constructor(options?: Partial<Pattern>) {
 		this.id = options?.id || crypto.randomUUID(); // 为规则生成(拷贝)id
 		this.mainInfo = {
 			...this.mainInfo,
@@ -63,7 +60,7 @@ export class Pattern implements IPattern {
 	}
 
 	// 创建规则
-	public createRule(options?: Partial<IRule>) {
+	public createRule(options?: Partial<RawRule>) {
 		const rule = new Rule(options);
 		this.rules.push(rule);
 		return rule.id;

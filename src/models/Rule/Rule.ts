@@ -1,32 +1,24 @@
 import { cloneDeep, isEqual } from "@/plugin/lodash";
 import type { Status } from "../Pattern/interface/Pattern";
-import type {
-	BaseFix,
-	Description,
-	Filter,
-	Rule as IRule,
-	Preview,
-	RawRule,
-	Region,
-	Source,
-} from "../Rule/interface/Rule";
+import type { BaseFix, RawRule } from "./interface/Rule";
+export type { RawRule } from "./interface/Rule";
 
-export class Rule implements IRule {
+export class Rule implements RawRule {
 	public readonly id: string;
 	public enable: boolean = true;
 	public name: string = "新规则";
-	public region: Region = {
+	public region: RawRule["region"] = {
 		enable: false,
 		selector: "",
 	};
-	public source: Source = {
+	public source: RawRule["source"] = {
 		selector: "",
 		infoType: "property",
 		name: "",
 		fix: [],
 		assertionType: "auto",
 	};
-	public preview: Preview = {
+	public preview: RawRule["preview"] = {
 		enable: false,
 		origin: "source",
 		selector: "",
@@ -35,7 +27,7 @@ export class Rule implements IRule {
 		fix: [],
 		assertionType: "auto",
 	};
-	public description: Description = {
+	public description: RawRule["description"] = {
 		enable: false,
 		origin: "source",
 		selector: "",
@@ -43,7 +35,7 @@ export class Rule implements IRule {
 		name: "",
 		fix: [],
 	};
-	public filter: Filter = {
+	public filter: RawRule["filter"] = {
 		formats: [],
 		width: [0, -1],
 		height: [0, -1],
@@ -53,7 +45,7 @@ export class Rule implements IRule {
 	};
 	public backup: RawRule | null = null;
 
-	constructor(options?: Partial<IRule>) {
+	constructor(options?: Partial<Rule>) {
 		this.id = options?.id || crypto.randomUUID();
 		if (options?.enable !== undefined) {
 			this.enable = options?.enable;
@@ -133,6 +125,7 @@ export class Rule implements IRule {
 	public recoveryData() {
 		// 如果备份存在才进行恢复
 		if (this.backup) {
+			this.enable = cloneDeep(this.backup.enable);
 			this.name = cloneDeep(this.backup.name);
 			this.region = cloneDeep(this.backup.region);
 			this.source = cloneDeep(this.backup.source);
@@ -187,5 +180,10 @@ export class Rule implements IRule {
 				break;
 		}
 		this[matchItem].fix.push(fixItem);
+	}
+
+	// 转为 JSON 对象 (JSON.stringify能自动识别该方法)
+	public toJSON() {
+		return this.toRaw();
 	}
 }
