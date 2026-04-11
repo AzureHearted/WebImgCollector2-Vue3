@@ -38,13 +38,13 @@ export const useFavoriteStore = defineStore("FavoriteStore", () => {
 		// 卡片列表
 		cardList: new Array<FavoriteCard>(),
 		// 已经加载的卡片id集合
-		loadedCardIdSet: new Set<Card["id"]>(),
+		loadedCardIdSet: new Set<FavoriteCard["id"]>(),
 		// 选中的卡片id集合
-		selectedCardIdSet: new Set<Card["id"]>(),
+		selectedCardIdSet: new Set<FavoriteCard["id"]>(),
 		// 已收藏的卡片id集合
-		favoriteCardIdSet: new Set<Card["id"]>(),
+		favoriteCardIdSet: new Set<FavoriteCard["id"]>(),
 		// 下载中的卡片id集合
-		downloadingCardIdSet: new Set<Card["id"]>(),
+		downloadingCardIdSet: new Set<FavoriteCard["id"]>(),
 	});
 
 	// j 类型->数量映射列表
@@ -128,7 +128,7 @@ export const useFavoriteStore = defineStore("FavoriteStore", () => {
 	});
 
 	// j 选中的卡片
-	const selectionCardList = computed<CardGroup>(() => {
+	const selectionCardList = computed(() => {
 		return {
 			all: filterCardList.value.all.filter((x) =>
 				data.selectedCardIdSet.has(x.id),
@@ -254,7 +254,7 @@ export const useFavoriteStore = defineStore("FavoriteStore", () => {
 	});
 
 	// s 过滤器后的卡片列表
-	const filterCardList = ref<CardGroup>({
+	const filterCardList = ref<CardGroup<CardType, FavoriteCard>>({
 		all: [],
 		image: [],
 		video: [],

@@ -6,7 +6,6 @@ settings:
 
 overrides:
   base-ui: link:C:/Users/Lxs/AppData/Local/pnpm/global/5/node_modules/base-ui
-  baes-ui: link:C:/Users/Lxs/AppData/Local/pnpm/global/5/node_modules/baes-ui
 
 importers:
 

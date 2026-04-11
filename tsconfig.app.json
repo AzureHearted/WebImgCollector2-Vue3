@@ -7,20 +7,27 @@
 		"useDefineForClassFields": true,
 		"module": "ESNext",
 		"lib": ["ES2020", "DOM", "DOM.Iterable"],
+		/** 跳过所有 .d.ts 类型声明文件的类型检查 (忽略掉node_modules中的其他包的类型错误) */
 		"skipLibCheck": true,
 
 		/* Bundler mode */
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
+		/** 允许解析 .json 文件的导入 */
 		"resolveJsonModule": true,
+		/** 确保每个文件都作为一个单独的模块进行编译 */
 		"isolatedModules": true,
+		/** 不要生成任何编译后的文件（例如 .js 文件或 .d.ts 文件） */
 		"noEmit": true,
 		"jsx": "preserve",
 
-		/* Linting */
+		/* 开启所有严格模式（类型安全核心开关） */
 		"strict": true,
+		/* 未使用的变量直接报错 */
 		"noUnusedLocals": true,
+		/* 未使用的函数参数报错 */
 		"noUnusedParameters": true,
+		/* 禁止 switch case 穿透（防止漏写 break） */
 		"noFallthroughCasesInSwitch": true,
 
 		"baseUrl": ".",
