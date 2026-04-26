@@ -288,9 +288,10 @@ export async function downloadCards(
 			if (card.source.meta.type !== "html") {
 				name = name + `.${card.source.meta.ext}`;
 			}
+
 			// 将blob存入zip容器
 			zipContainer.file(
-				`${String(index).padStart(paddingZeroCount, "0")} - ${name}`,
+				`${String(index).padStart(paddingZeroCount, "0")} - ${legalizationPathString(name)}`,
 				card.source.blob!,
 			);
 			// 更新进度
